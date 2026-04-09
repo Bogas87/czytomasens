@@ -1,0 +1,21 @@
+{
+  "name": "czytomasens-server",
+  "version": "2.1.0",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "node index.js",
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.2.0",
+    "openai": "^5.23.2",
+    "resend": "^3.2.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "stripe": "^18.5.0"
+  }
+}
