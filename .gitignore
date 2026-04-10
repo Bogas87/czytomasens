@@ -1,0 +1,22 @@
+# root
+node_modules
+dist
+.env
+.env.local
+.env.production
+package-lock.json
+
+# server
+server/node_modules
+server/.env
+server/database.sqlite
+server/package-lock.json
+
+# build / cache
+*.tsbuildinfo
+.vite
+coverage
+
+# system
+.DS_Store
+Thumbs.db

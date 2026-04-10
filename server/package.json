@@ -2,20 +2,22 @@
   "name": "czytomasens-server",
   "version": "2.1.0",
   "main": "index.js",
-  "type": "commonjs",
   "scripts": {
-    "dev": "node index.js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "postinstall": "echo skip sqlite build"
+  },
+  "engines": {
+    "node": "20.x"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "express-rate-limit": "^7.2.0",
-    "openai": "^5.23.2",
-    "resend": "^3.2.0",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "openai": "^4.86.1",
+    "resend": "^4.0.0",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",
-    "stripe": "^18.5.0"
+    "stripe": "^17.7.0"
   }
 }
