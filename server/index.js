@@ -730,12 +730,16 @@ app.get("/assets/:file", (req, res) => {
     }
 
     if (fileName.endsWith(".js")) {
-      res.type("application/javascript");
-    } else if (fileName.endsWith(".css")) {
-      res.type("text/css");
+      res.type("application/javascript; charset=utf-8");
+      return res.send(fs.readFileSync(filePath, "utf8"));
     }
 
-    return res.sendFile(filePath);
+    if (fileName.endsWith(".css")) {
+      res.type("text/css; charset=utf-8");
+      return res.send(fs.readFileSync(filePath, "utf8"));
+    }
+
+    return res.send(fs.readFileSync(filePath));
   } catch (error) {
     console.error("Asset serve error:", error.message);
     return res.status(500).send("Błąd assetu");
@@ -747,7 +751,13 @@ app.get("/favicon.ico", (_req, res) => {
 });
 
 app.get("/", (_req, res) => {
-  return res.sendFile(path.join(FRONTEND_DIST, "index.html"));
+  try {
+    const htmlPath = path.join(FRONTEND_DIST, "index.html");
+    return res.type("text/html; charset=utf-8").send(fs.readFileSync(htmlPath, "utf8"));
+  } catch (error) {
+    console.error("Index serve error:", error.message);
+    return res.status(500).send("Błąd index.html");
+  }
 });
 
 app.use("/api", (_req, res) => {
@@ -755,7 +765,13 @@ app.use("/api", (_req, res) => {
 });
 
 app.get("*", (_req, res) => {
-  return res.sendFile(path.join(FRONTEND_DIST, "index.html"));
+  try {
+    const htmlPath = path.join(FRONTEND_DIST, "index.html");
+    return res.type("text/html; charset=utf-8").send(fs.readFileSync(htmlPath, "utf8"));
+  } catch (error) {
+    console.error("Wildcard index serve error:", error.message);
+    return res.status(500).send("Błąd fallback index.html");
+  }
 });
 
 initDb()
@@ -768,3 +784,4 @@ initDb()
     console.error("DB init error:", error.message);
     process.exit(1);
   });
+}
