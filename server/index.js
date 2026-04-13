@@ -720,6 +720,10 @@ app.get("/api/session/:token", async (req, res) => {
 
 app.use(express.static(FRONTEND_DIST));
 
+app.get("/", (_req, res) => {
+  res.sendFile(path.join(FRONTEND_DIST, "index.html"));
+});
+
 app.use("/api", (_req, res) => {
   res.status(404).json({ ok: false, message: "Nie znaleziono endpointu API." });
 });
@@ -727,7 +731,6 @@ app.use("/api", (_req, res) => {
 app.get("*", (_req, res) => {
   res.sendFile(path.join(FRONTEND_DIST, "index.html"));
 });
-
 initDb()
   .then(() => {
     app.listen(PORT, () => {
