@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const crypto = require("crypto");
+const path = require("path");
 const Stripe = require("stripe");
 const OpenAI = require("openai");
 const { Resend } = require("resend");
@@ -30,6 +31,8 @@ const limiter = rateLimit({
   legacyHeaders: false,
   message: { ok: false, message: "Za dużo zapytań. Spróbuj później." },
 });
+
+const FRONTEND_DIST = path.join(__dirname, "..", "dist");
 
 let db;
 
@@ -713,6 +716,16 @@ app.get("/api/session/:token", async (req, res) => {
     console.error("Session fetch error:", error.message);
     return res.status(500).json({ ok: false, message: "Błąd pobierania sesji." });
   }
+});
+
+app.use(express.static(FRONTEND_DIST));
+
+app.use("/api", (_req, res) => {
+  res.status(404).json({ ok: false, message: "Nie znaleziono endpointu API." });
+});
+
+app.get("*", (_req, res) => {
+  res.sendFile(path.join(FRONTEND_DIST, "index.html"));
 });
 
 initDb()
