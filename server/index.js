@@ -718,7 +718,21 @@ app.get("/api/session/:token", async (req, res) => {
   }
 });
 
-app.use(express.static(FRONTEND_DIST));
+app.use(
+  "/assets",
+  express.static(path.join(FRONTEND_DIST, "assets"), {
+    fallthrough: false,
+    index: false,
+    setHeaders(res, filePath) {
+      if (filePath.endsWith(".js")) {
+        res.type("application/javascript");
+      }
+      if (filePath.endsWith(".css")) {
+        res.type("text/css");
+      }
+    },
+  })
+);
 
 app.get("/", (_req, res) => {
   res.sendFile(path.join(FRONTEND_DIST, "index.html"));
