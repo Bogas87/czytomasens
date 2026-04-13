@@ -734,6 +734,10 @@ app.use(
   })
 );
 
+app.get("/favicon.ico", (_req, res) => {
+  res.status(204).end();
+});
+
 app.get("/", (_req, res) => {
   res.sendFile(path.join(FRONTEND_DIST, "index.html"));
 });
@@ -745,6 +749,7 @@ app.use("/api", (_req, res) => {
 app.get("*", (_req, res) => {
   res.sendFile(path.join(FRONTEND_DIST, "index.html"));
 });
+
 initDb()
   .then(() => {
     app.listen(PORT, () => {
