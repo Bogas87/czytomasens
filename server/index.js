@@ -32,7 +32,7 @@ const limiter = rateLimit({
   message: { ok: false, message: "Za dużo zapytań. Spróbuj później." },
 });
 
-const FRONTEND_DIST = path.join(__dirname, "..", "dist");
+const FRONTEND_DIST = path.join(__dirname, "dist");
 
 let db;
 
