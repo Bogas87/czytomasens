@@ -25,6 +25,7 @@ const resend = process.env.RESEND_API_KEY
   : null;
 
 const allowedOrigins = [CLIENT_URL].filter(Boolean);
+
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -720,23 +721,25 @@ app.get("/api/session/:token", async (req, res) => {
   }
 });
 
-app.get("/assets/:file", (req, res) => {
+app.get(/^\/assets\/(.+)$/, (req, res) => {
   try {
-    const fileName = path.basename(req.params.file || "");
-    const filePath = path.join(FRONTEND_ASSETS, fileName);
+    const relativePath = req.params[0];
+    const filePath = path.resolve(FRONTEND_ASSETS, relativePath);
+
+    if (!filePath.startsWith(FRONTEND_ASSETS)) {
+      return res.status(403).send("Brak dostępu");
+    }
 
     if (!fs.existsSync(filePath)) {
       return res.status(404).send("Brak pliku");
     }
 
-    if (fileName.endsWith(".js")) {
-      res.type("application/javascript; charset=utf-8");
-      return res.send(fs.readFileSync(filePath, "utf8"));
+    if (filePath.endsWith(".js")) {
+      return res.type("application/javascript; charset=utf-8").send(fs.readFileSync(filePath, "utf8"));
     }
 
-    if (fileName.endsWith(".css")) {
-      res.type("text/css; charset=utf-8");
-      return res.send(fs.readFileSync(filePath, "utf8"));
+    if (filePath.endsWith(".css")) {
+      return res.type("text/css; charset=utf-8").send(fs.readFileSync(filePath, "utf8"));
     }
 
     return res.send(fs.readFileSync(filePath));
