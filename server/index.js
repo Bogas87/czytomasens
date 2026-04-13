@@ -3,6 +3,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const crypto = require("crypto");
 const path = require("path");
+const fs = require("fs");
 const Stripe = require("stripe");
 const OpenAI = require("openai");
 const { Resend } = require("resend");
@@ -33,6 +34,7 @@ const limiter = rateLimit({
 });
 
 const FRONTEND_DIST = path.join(__dirname, "dist");
+const FRONTEND_ASSETS = path.join(FRONTEND_DIST, "assets");
 
 let db;
 
@@ -718,28 +720,34 @@ app.get("/api/session/:token", async (req, res) => {
   }
 });
 
-app.use(
-  "/assets",
-  express.static(path.join(FRONTEND_DIST, "assets"), {
-    fallthrough: false,
-    index: false,
-    setHeaders(res, filePath) {
-      if (filePath.endsWith(".js")) {
-        res.type("application/javascript");
-      }
-      if (filePath.endsWith(".css")) {
-        res.type("text/css");
-      }
-    },
-  })
-);
+app.get("/assets/:file", (req, res) => {
+  try {
+    const fileName = path.basename(req.params.file || "");
+    const filePath = path.join(FRONTEND_ASSETS, fileName);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).send("Brak pliku");
+    }
+
+    if (fileName.endsWith(".js")) {
+      res.type("application/javascript");
+    } else if (fileName.endsWith(".css")) {
+      res.type("text/css");
+    }
+
+    return res.sendFile(filePath);
+  } catch (error) {
+    console.error("Asset serve error:", error.message);
+    return res.status(500).send("Błąd assetu");
+  }
+});
 
 app.get("/favicon.ico", (_req, res) => {
   res.status(204).end();
 });
 
 app.get("/", (_req, res) => {
-  res.sendFile(path.join(FRONTEND_DIST, "index.html"));
+  return res.sendFile(path.join(FRONTEND_DIST, "index.html"));
 });
 
 app.use("/api", (_req, res) => {
@@ -747,7 +755,7 @@ app.use("/api", (_req, res) => {
 });
 
 app.get("*", (_req, res) => {
-  res.sendFile(path.join(FRONTEND_DIST, "index.html"));
+  return res.sendFile(path.join(FRONTEND_DIST, "index.html"));
 });
 
 initDb()
