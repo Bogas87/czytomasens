@@ -784,4 +784,3 @@ initDb()
     console.error("DB init error:", error.message);
     process.exit(1);
   });
-}
