@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+}
+
+enum ReportStatus {
+  NONE
+  QUEUED
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum EmailStatus {
+  NONE
+  PENDING
+  SENT
+  FAILED
+}
+
+model Session {
+  id                       String        @id @default(uuid())
+  email                    String?
+
+  payload                  Json          @default("{}")
+  patterns                 Json          @default("[]")
+  preview_report           Json?
+  full_report              Json?
+
+  payment_status           PaymentStatus @default(PENDING)
+  report_status            ReportStatus  @default(NONE)
+  email_status             EmailStatus   @default(NONE)
+
+  stripe_session_id        String?       @unique
+  stripe_payment_intent_id String?       @unique
+
+  last_error               String?
+  retry_count              Int           @default(0)
+  worker_locked_at         DateTime?
+
+  created_at               DateTime      @default(now())
+  updated_at               DateTime      @updatedAt
+  paid_at                  DateTime?
+  report_ready_at          DateTime?
+  email_sent_at            DateTime?
+
+  processed_events         ProcessedStripeEvent[]
+
+  @@index([payment_status, report_status])
+  @@index([report_status, worker_locked_at])
+}
+
+model ProcessedStripeEvent {
+  id          String   @id @default(uuid())
+  event_id    String   @unique
+  event_type  String
+  session_id  String?
+  created_at  DateTime @default(now())
+
+  session     Session? @relation(fields: [session_id], references: [id], onDelete: SetNull)
+
+  @@index([session_id])
+}

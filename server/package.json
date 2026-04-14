@@ -1,23 +1,32 @@
 {
   "name": "czytomasens-server",
-  "version": "2.1.0",
-  "main": "index.js",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/server.js",
   "scripts": {
-    "start": "node index.js",
-    "postinstall": "echo skip sqlite build"
-  },
-  "engines": {
-    "node": "20.x"
+    "dev:api": "nodemon src/server.js",
+    "dev:worker": "nodemon src/jobs/worker.js",
+    "start:api": "node src/server.js",
+    "start:worker": "node src/jobs/worker.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy"
   },
   "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.4.5",
-    "express": "^4.21.2",
-    "express-rate-limit": "^7.4.1",
-    "openai": "^4.86.1",
-    "resend": "^4.0.0",
-    "sqlite": "^5.1.1",
-    "sqlite3": "^5.1.7",
-    "stripe": "^17.7.0"
+    "@prisma/client": "^6.6.0",
+    "bullmq": "^5.73.5",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "express-rate-limit": "^7.5.1",
+    "ioredis": "^5.10.1",
+    "openai": "^4.104.0",
+    "resend": "^4.8.0",
+    "stripe": "^17.7.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "prisma": "^6.6.0"
   }
 }
