@@ -13,6 +13,13 @@ const PORT = process.env.PORT || 4000;
 const CLIENT_URL = (process.env.CLIENT_URL || "http://localhost:5173").trim();
 const FRONTEND_DIST = path.join(__dirname, "../../dist");
 
+/**
+ * Railway stoi przed aplikacją jako proxy.
+ * Bez tego express-rate-limit wywala:
+ * X-Forwarded-For header is set but trust proxy setting is false
+ */
+app.set("trust proxy", 1);
+
 app.use(
   cors({
     origin(origin, callback) {
