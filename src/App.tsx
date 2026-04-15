@@ -1140,4 +1140,3 @@ export default function App() {
     </div>
   );
 }
-ja wkleiłem to co mi wysłałeś i tak wygląda 
