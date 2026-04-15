@@ -9,10 +9,11 @@ const apiRoutes = require("./api/routes");
 const stripeController = require("./api/stripe.controller");
 
 const app = express();
+app.set("trust proxy", 1);
+
 const PORT = process.env.PORT || 4000;
 const CLIENT_URL = (process.env.CLIENT_URL || "http://localhost:5173").trim();
 const FRONTEND_DIST = path.join(__dirname, "../../dist");
-
 /**
  * Railway stoi przed aplikacją jako proxy.
  * Bez tego express-rate-limit wywala:
