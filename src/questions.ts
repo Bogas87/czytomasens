@@ -1,81 +1,92 @@
-export const questions = [
-  {
-    id: 1,
-    phase: "Pierwsze rozpoznanie",
-    lead: "Zaczniemy spokojnie. Nie od wielkich słów, tylko od tego, jak ta relacja działa na Ciebie od środka.",
-    text: "Czy przy tej osobie częściej czujesz spokój niż napięcie?",
-  },
-  {
-    id: 2,
-    phase: "Pierwsze rozpoznanie",
-    lead: "To, co czujesz zaraz po kontakcie, często mówi więcej niż deklaracje.",
-    text: "Czy po rozmowie albo spotkaniu zostaje w Tobie raczej ulga niż ścisk?",
-  },
-  {
-    id: 3,
-    phase: "Bezpieczeństwo",
-    lead: "Relacja nie musi być idealna. Ale bezpieczny grunt to jednak coś innego niż ciągłe zgadywanie.",
-    text: "Czy możesz być sobą bez obawy, że zostaniesz zawstydzony, zlekceważony albo ukarany emocjonalnie?",
-  },
-  {
-    id: 4,
-    phase: "Bezpieczeństwo",
-    lead: "Tu nie chodzi tylko o uczucia, ale o przewidywalność i poczucie, że grunt nie znika spod nóg.",
-    text: "Czy w tej relacji jest więcej stabilności niż chaosu?",
-  },
-  {
-    id: 5,
-    phase: "Wzajemność",
-    lead: "Jedna z kluczowych rzeczy to proporcja. Nie romantyczna wizja, tylko realny bilans.",
-    text: "Czy masz poczucie, że zaangażowanie po obu stronach jest w miarę podobne?",
-  },
-  {
-    id: 6,
-    phase: "Wzajemność",
-    lead: "Czasem ktoś mówi dużo, ale niewiele z tego wynika. Czasem odwrotnie.",
-    text: "Czy druga strona realnie daje Ci sygnały, że zależy jej nie tylko chwilowo?",
-  },
-  {
-    id: 7,
-    phase: "Komunikacja",
-    lead: "Bliskość bez rozmowy potrafi długo udawać coś głębokiego. Do czasu.",
-    text: "Czy możesz mówić o swoich potrzebach bez lęku, że zostaną obrócone przeciwko Tobie?",
-  },
-  {
-    id: 8,
-    phase: "Komunikacja",
-    lead: "Tu warto być uczciwym także wobec siebie, bo czasem nie słuchamy faktów, tylko tego, co chcemy usłyszeć.",
-    text: "Czy masz poczucie, że między Wami naprawdę coś się wyjaśnia, zamiast tylko krążyć w kółko?",
-  },
-  {
-    id: 9,
-    phase: "Granice",
-    lead: "Relacja zaczyna się psuć nie zawsze tam, gdzie jest konflikt. Często tam, gdzie granice przestają coś znaczyć.",
-    text: "Czy Twoje granice są zauważane i respektowane, nawet gdy komuś jest to nie po drodze?",
-  },
-  {
-    id: 10,
-    phase: "Granice",
-    lead: "To jest moment na niewygodną szczerość, bo tu wiele osób zaczyna tłumaczyć rzeczy, których nie powinno się tłumaczyć.",
-    text: "Czy łapiesz się na usprawiedliwianiu zachowań, które w środku czujesz jako raniące albo nie fair?",
-  },
-  {
-    id: 11,
-    phase: "Prawda pod spodem",
-    lead: "Nie każda więź opiera się na tym samym. Czasem to uczucie, czasem lęk, czasem samotność, czasem głód uwagi.",
-    text: "Czy masz poczucie, że to, co Was łączy, jest czymś więcej niż przywiązaniem, tęsknotą albo brakiem alternatywy?",
-  },
-  {
-    id: 12,
-    phase: "Prawda pod spodem",
-    lead: "Na koniec najprostsze pytanie bywa najmocniejsze.",
-    text: "Gdybyś odjął nadzieję, tęsknotę i lęk przed stratą, czy nadal widziałbyś w tej relacji sens?",
-  },
-];
+export type OptionBase = {
+  label: string;
+};
 
-export const options = [
+export type QuestionBase = {
+  id: number;
+  phase: string;
+  lead: string;
+  text: string;
+};
+
+export const options: OptionBase[] = [
   { label: "Tak, wyraźnie" },
   { label: "Momentami tak" },
   { label: "Raczej nie" },
   { label: "Nie, wcale" },
+];
+
+export const questions: QuestionBase[] = [
+  {
+    id: 1,
+    phase: "obraz relacji",
+    lead: "Na start nie interesuje mnie ładna wersja tej historii. Interesuje mnie to, jak to naprawdę działa na Ciebie.",
+    text: "Czy przy tej osobie częściej czujesz spokój niż napięcie?",
+  },
+  {
+    id: 2,
+    phase: "obraz relacji",
+    lead: "Ludzie często mylą intensywność z bliskością, a chaos z chemią.",
+    text: "Czy ta relacja daje Ci poczucie bezpieczeństwa, a nie tylko emocjonalny rollercoaster?",
+  },
+  {
+    id: 3,
+    phase: "obraz relacji",
+    lead: "Deklaracje są tanie. To, co zostaje po kontakcie, zwykle mówi więcej.",
+    text: "Czy słowa tej osoby zwykle pokrywają się z jej zachowaniem?",
+  },
+  {
+    id: 4,
+    phase: "granice",
+    lead: "Tu często wychodzi, czy relacja ma kręgosłup, czy tylko chwilowe wzloty.",
+    text: "Czy możesz powiedzieć, że coś Ci nie pasuje, bez lęku o karę, chłód albo odcięcie?",
+  },
+  {
+    id: 5,
+    phase: "granice",
+    lead: "Granice nie są agresją. Są testem dojrzałości drugiej strony.",
+    text: "Czy Twoje granice są szanowane, nawet gdy są niewygodne?",
+  },
+  {
+    id: 6,
+    phase: "granice",
+    lead: "W zdrowym układzie nie trzeba stale zasługiwać na podstawy.",
+    text: "Czy masz poczucie, że nie musisz zasługiwać na uwagę, czułość albo zwykły szacunek?",
+  },
+  {
+    id: 7,
+    phase: "zaufanie",
+    lead: "Bez zaufania nawet piękne momenty mają rysę pod spodem.",
+    text: "Czy czujesz, że możesz wierzyć tej osobie także wtedy, gdy jej nie kontrolujesz?",
+  },
+  {
+    id: 8,
+    phase: "zaufanie",
+    lead: "Nie chodzi tylko o zdradę. Chodzi też o lojalność emocjonalną i kierunek, w którym ta osoba stoi.",
+    text: "Czy masz poczucie, że ta osoba naprawdę stoi po Waszej stronie, a nie głównie po swojej?",
+  },
+  {
+    id: 9,
+    phase: "zaufanie",
+    lead: "Niepewność czasem krzyczy ciszej niż konflikt, ale zjada dokładnie tak samo.",
+    text: "Czy ta relacja daje Ci jasność zamiast ciągłego domyślania się, co naprawdę znaczysz?",
+  },
+  {
+    id: 10,
+    phase: "przyszłość",
+    lead: "Tu kończy się chemia, a zaczyna realność i rachunek kosztów.",
+    text: "Czy patrząc chłodno, widzisz tu sensowną przyszłość, a nie tylko nadzieję?",
+  },
+  {
+    id: 11,
+    phase: "przyszłość",
+    lead: "Nie wszystko, co da się ciągnąć, warto ciągnąć.",
+    text: "Czy ta relacja rozwija Cię częściej niż osłabia?",
+  },
+  {
+    id: 12,
+    phase: "przyszłość",
+    lead: "Ostatnie pytanie zwykle odcina złudzenia najczyściej.",
+    text: "Gdyby ktoś bliski był dokładnie w takiej relacji jak Ty, uznałbyś to za dobry układ dla niego?",
+  },
 ];

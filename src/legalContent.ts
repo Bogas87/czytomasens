@@ -1,60 +1,58 @@
+export const CONSENTS = [
+  "Rozumiem, że to narzędzie ma charakter analityczny i rozwojowy, a nie medyczny, psychoterapeutyczny ani prawny.",
+  "Rozumiem, że wynik raportu jest interpretacją opartą na moich odpowiedziach i nie stanowi nieomylnego werdyktu o drugiej osobie.",
+  "Wyrażam zgodę na przetwarzanie podanych przeze mnie danych w celu wygenerowania raportu i realizacji usługi cyfrowej.",
+];
+
 export const TERMS = {
   title: "Regulamin",
-  body: `§1. Charakter usługi
-Serwis CzyToMaSens jest narzędziem technologicznym opartym na algorytmach sztucznej inteligencji (AI), służącym do analizy wzorców zachowań i mechanizmów relacyjnych.
+  body: `Regulamin korzystania z usługi CzyToMaSens
 
-Usługa nie stanowi psychoterapii, porady medycznej ani diagnozy psychiatrycznej. Generowane treści mają charakter informacyjny, edukacyjny i autorefleksyjny.
-
-System może generować treści niedokładne lub niepełne (tzw. halucynacje AI). Użytkownik nie powinien traktować ich jako jedynego źródła decyzji.
-
-§2. Tryb konfrontacji
-Użytkownik wybierając tryb „Konfrontacja” wyraża zgodę na bezpośredni, analityczny i krytyczny sposób komunikacji.
-
-Komunikaty systemu odnoszą się wyłącznie do opisanych zachowań i mechanizmów. Nie stanowią oceny osoby, diagnozy klinicznej ani porady terapeutycznej.
-
-§3. Odpowiedzialność
-Właściciel serwisu nie ponosi odpowiedzialności za decyzje podjęte przez użytkownika na podstawie wygenerowanych treści.
-
-§4. Sytuacje kryzysowe
-Serwis nie jest przeznaczony dla osób w stanie kryzysu psychicznego. W przypadku myśli samobójczych lub zagrożenia zdrowia należy skontaktować się z numerem alarmowym 112 lub specjalistą.`,
+1. Usługa polega na wygenerowaniu analitycznego raportu tekstowego na podstawie odpowiedzi użytkownika.
+2. Raport ma charakter informacyjny, refleksyjny i rozwojowy. Nie jest poradą medyczną, psychologiczną, terapeutyczną ani prawną.
+3. Użytkownik odpowiada za prawdziwość i zakres przekazywanych informacji.
+4. Dostęp do pełnego raportu następuje po skutecznym opłaceniu usługi cyfrowej.
+5. Z uwagi na charakter treści cyfrowej dostarczanej bezpośrednio po zakupie, realizacja usługi rozpoczyna się niezwłocznie po płatności.
+6. Zabronione jest kopiowanie, odsprzedaż i dalsza dystrybucja wygenerowanych materiałów w celach komercyjnych bez zgody właściciela usługi.
+7. Usługodawca może aktualizować treść raportów, logikę analizy oraz interfejs w celu poprawy jakości działania.`,
 };
 
 export const PRIVACY = {
   title: "Polityka prywatności",
-  body: `Administrator danych: [UZUPEŁNIJ]
+  body: `Polityka prywatności
 
-Serwis stosuje zasadę minimalizacji danych.
-
-Nie wymagamy podawania danych osobowych do podstawowego korzystania z analizy.
-
-System może wykorzystywać pseudonimiczny identyfikator techniczny (np. Local Storage ID) w celu:
-- rozpoznawania powtarzalnych schematów
-- poprawy jakości analizy
-- zachowania ciągłości doświadczenia użytkownika
-
-Identyfikator nie służy do ustalenia tożsamości użytkownika w świecie rzeczywistym.
-
-Zapisywane mogą być wyłącznie:
-- tagi mechanizmów i schematów
-- wynik analizy
-- data wizyty
-- techniczne informacje niezbędne do działania systemu
-
-Treści rozmów nie są przechowywane długoterminowo dłużej niż jest to konieczne do działania usługi i realizacji płatnego raportu.
-
-Dane mogą być przetwarzane przez zewnętrzne API AI w sposób szyfrowany i wyłącznie w zakresie niezbędnym do wykonania usługi.
-
-W przypadku zakupu raportu płatnego dane transakcyjne mogą być przetwarzane przez operatora płatności zgodnie z jego polityką prywatności.`,
+1. Administratorem danych jest właściciel usługi CzyToMaSens.
+2. Dane podane przez użytkownika są przetwarzane wyłącznie w celu realizacji zamówienia, wygenerowania raportu, obsługi płatności oraz kontaktu z użytkownikiem.
+3. Zakres danych może obejmować adres e-mail, odpowiedzi udzielone w formularzu i treści wpisane samodzielnie przez użytkownika.
+4. Dane nie są sprzedawane podmiotom trzecim.
+5. Użytkownik ma prawo dostępu do swoich danych, ich poprawiania, ograniczenia przetwarzania oraz żądania usunięcia, z zastrzeżeniem obowiązków wynikających z przepisów prawa.
+6. Dane mogą być powierzane podmiotom technicznie obsługującym płatności, hosting oraz infrastrukturę systemu.`,
 };
 
-export const CONSENTS = [
-  "Rozumiem, że system jest narzędziem AI, a nie terapeutą, psychologiem ani lekarzem.",
-  "Akceptuję, że analiza może być bezpośrednia, krytyczna i konfrontacyjna.",
-  "Przyjmuję do wiadomości, że system może używać pseudonimicznego identyfikatora technicznego w celu rozpoznawania powtarzalnych schematów.",
-  "Oświadczam, że nie jestem w stanie kryzysu psychicznego wymagającego natychmiastowej pomocy medycznej.",
-];
+export const RODO = {
+  title: "RODO",
+  body: `Informacja RODO
 
-export const legalContent = {
-  terms: TERMS,
-  privacy: PRIVACY,
+Dane są przetwarzane w celu wykonania usługi cyfrowej, rozliczenia płatności oraz kontaktu z użytkownikiem. Podstawą prawną przetwarzania jest wykonanie umowy, obowiązki prawne oraz uzasadniony interes administratora polegający na zapewnieniu bezpieczeństwa i jakości usługi.`,
+};
+
+export const COOKIES = {
+  title: "Cookies",
+  body: `Pliki cookies
+
+Serwis może wykorzystywać pliki cookies i podobne technologie w celu utrzymania sesji, zapamiętania postępu, poprawnego działania strony oraz analityki technicznej.`,
+};
+
+export const DIGITAL = {
+  title: "Treść cyfrowa",
+  body: `Treść cyfrowa
+
+Raport stanowi treść cyfrową dostarczaną po zakupie. Użytkownik przyjmuje do wiadomości, że realizacja świadczenia rozpoczyna się bezpośrednio po dokonaniu płatności i wygenerowaniu dostępu do pełnego raportu.`,
+};
+
+export const CONTACT = {
+  title: "Kontakt",
+  body: `Kontakt
+
+W sprawach dotyczących usługi, płatności lub danych osobowych skontaktuj się z właścicielem projektu CzyToMaSens przez adres e-mail wskazany w finalnej wersji serwisu.`,
 };
