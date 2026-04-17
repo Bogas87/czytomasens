@@ -589,7 +589,7 @@ export default function App() {
         finalInterviews.map((i) => i.userText).join("\n\n").trim() ||
         finalAnswers.map((a) => a.text).join("\n");
 
-      const res = await fetch(`${API_BASE}/api/analyze`, {
+      const res = await fetch(`${API_BASE}/api/analyze/preview`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
