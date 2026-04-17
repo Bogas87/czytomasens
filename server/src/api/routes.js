@@ -32,7 +32,8 @@ router.post("/session/create", async (req, res) => {
 
     return res.json({
       ok: true,
-      sessionId,
+      token: sessionId,
+      sessionId: sessionId,
       session: {
         id: sessionId,
         entryKey,
