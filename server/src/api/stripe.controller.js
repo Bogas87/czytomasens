@@ -1,276 +1,89 @@
-const Stripe = require("stripe");
-const { Prisma } = require("@prisma/client");
+import Stripe from "stripe";
 
-const prisma = require("../db/prisma");
-const { enqueueReport } = require("../jobs/queue");
-
-const stripe = new Stripe((process.env.STRIPE_SECRET_KEY || "").trim());
+const stripe = new Stripe((process.env.STRIPE_SECRET_KEY || "").trim(), {
+  apiVersion: "2024-06-20",
+});
 
 function normalizeText(value) {
   return String(value || "").trim();
 }
 
-function isValidUUID(uuid) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    uuid || ""
-  );
-}
-
-function isValidEmail(email) {
-  const e = normalizeText(email);
-  return !e || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
-}
-
-exports.createCheckout = async (req, res) => {
+export async function createCheckout(req, res) {
   try {
-    const email = normalizeText(req.body.email || "");
-    const payload = req.body.payload || {};
-    const tokenFromBody = normalizeText(req.body.token || "");
-    const consentAcceptedAt = normalizeText(req.body.consentAcceptedAt || new Date().toISOString());
-
-    const customDescription = normalizeText(
-      payload.customDescription || payload.customText || payload.input || ""
+    const token = normalizeText(req.body?.token || req.body?.sessionToken || "");
+    const email = normalizeText(req.body?.email || "");
+    const consentAcceptedAt = normalizeText(
+      req.body?.consentAcceptedAt || new Date().toISOString()
     );
+    const payload = req.body?.payload || {};
 
-    if (!customDescription || customDescription.length < 10) {
-      return res.status(400).json({ ok: false, message: "Brak treści do analizy." });
+    if (!token) {
+      return res.status(400).json({
+        ok: false,
+        error: "Brak tokenu sesji.",
+      });
     }
 
-    if (customDescription.length > 20000) {
-      return res.status(400).json({ ok: false, message: "Opis jest zbyt długi." });
-    }
-
-    if (!isValidEmail(email)) {
-      return res.status(400).json({ ok: false, message: "Nieprawidłowy adres e-mail." });
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({
+        ok: false,
+        error: "Nieprawidłowy adres e-mail.",
+      });
     }
 
     const ipAddress =
-      normalizeText(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim() ||
-      normalizeText(req.ip || "");
+      normalizeText(req.headers["x-forwarded-for"] || "")
+        .split(",")[0]
+        ?.trim() || normalizeText(req.ip || "");
 
     const userAgent = normalizeText(req.headers["user-agent"] || "");
 
-    let sessionRecord = null;
+    const successUrl = `${process.env.CLIENT_URL}?success=1&token=${encodeURIComponent(token)}`;
+    const cancelUrl = `${process.env.CLIENT_URL}?cancelled=1`;
 
-    if (tokenFromBody && isValidUUID(tokenFromBody)) {
-      sessionRecord = await prisma.session.findUnique({
-        where: { id: tokenFromBody },
-      });
-    }
-
-    const nextPayload = {
-      ...payload,
-      checkoutEvidence: {
-        ipAddress,
-        userAgent,
-        consentAcceptedAt,
-        checkoutStartedAt: new Date().toISOString(),
-      },
-    };
-
-    if (sessionRecord) {
-      sessionRecord = await prisma.session.update({
-        where: { id: sessionRecord.id },
-        data: {
-          email: email || null,
-          payload: nextPayload,
-        },
-      });
-    } else {
-      sessionRecord = await prisma.session.create({
-        data: {
-          id: tokenFromBody && isValidUUID(tokenFromBody) ? tokenFromBody : undefined,
-          email: email || null,
-          payload: nextPayload,
-        },
-      });
-    }
-
-    const stripeSession = await stripe.checkout.sessions.create(
-      {
-        payment_method_types: ["card"],
-        mode: "payment",
-        customer_email: email || undefined,
-        line_items: [
-          {
-            price_data: {
-              currency: "pln",
-              product_data: {
-                name: "CzyToMaSens – pełny raport",
-                description: "Rozszerzona analiza wzorców relacyjnych",
-              },
-              unit_amount: 1500,
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      customer_email: email,
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: "pln",
+            unit_amount: 1500,
+            product_data: {
+              name: "CzyToMaSens — pełny raport premium",
+              description: "Dogłębna analiza relacji i pełny raport premium",
             },
-            quantity: 1,
           },
-        ],
-        metadata: {
-          token: sessionRecord.id,
-          ipAddress: ipAddress.slice(0, 200),
-          userAgent: userAgent.slice(0, 500),
-          consentAcceptedAt,
         },
-        client_reference_id: sessionRecord.id,
-        success_url: `${process.env.CLIENT_URL}?success=1&token=${sessionRecord.id}`,
-        cancel_url: `${process.env.CLIENT_URL}?cancel=1`,
+      ],
+      metadata: {
+        token,
+        email,
+        consentAcceptedAt,
+        ipAddress: ipAddress.slice(0, 200),
+        userAgent: userAgent.slice(0, 500),
+        entryKey: normalizeText(payload?.entryKey || ""),
       },
-      {
-        idempotencyKey: `checkout_${sessionRecord.id}`,
-      }
-    );
-
-    await prisma.session.update({
-      where: { id: sessionRecord.id },
-      data: {
-        stripe_session_id: stripeSession.id,
-      },
+      success_url: successUrl,
+      cancel_url: cancelUrl,
     });
 
     return res.json({
       ok: true,
-      checkoutUrl: stripeSession.url,
-      token: sessionRecord.id,
+      url: session.url,
+      checkoutUrl: session.url,
+      sessionId: session.id,
+      token,
     });
   } catch (error) {
-    console.error("[Stripe API] Checkout error:", error.message);
-    return res.status(500).json({ ok: false, message: "Błąd tworzenia płatności." });
-  }
-};
-
-exports.handleWebhook = async (req, res) => {
-  const signature = req.headers["stripe-signature"];
-
-  if (!process.env.STRIPE_WEBHOOK_SECRET) {
-    return res.status(500).send("Brak webhook secret.");
-  }
-
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(
-      req.body,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
-  } catch (error) {
-    return res.status(400).send(`Webhook Error: ${error.message}`);
-  }
-
-  res.json({ received: true });
-
-  void processWebhookEvent(event).catch((error) => {
-    console.error("[Webhook] Nieobsłużony błąd:", error.message);
-  });
-};
-
-async function processWebhookEvent(event) {
-  const stripeEventId = event.id;
-
-  let sessionData = null;
-  let paymentAction = "NONE";
-
-  if (event.type === "checkout.session.completed") {
-    sessionData = event.data.object;
-    if (sessionData.payment_status === "paid") {
-      paymentAction = "PAID";
-    }
-  } else if (event.type === "checkout.session.async_payment_succeeded") {
-    sessionData = event.data.object;
-    paymentAction = "PAID";
-  } else if (event.type === "checkout.session.async_payment_failed") {
-    sessionData = event.data.object;
-    paymentAction = "FAILED";
-  } else {
-    return;
-  }
-
-  const token = sessionData?.metadata?.token || sessionData?.client_reference_id;
-
-  if (!token || !isValidUUID(token)) {
-    return;
-  }
-
-  let enqueueNeeded = false;
-
-  try {
-    await prisma.$transaction(async (tx) => {
-      const dbSession = await tx.session.findUnique({
-        where: { id: token },
-      });
-
-      await tx.processedStripeEvent.create({
-        data: {
-          event_id: stripeEventId,
-          event_type: event.type,
-          session_id: dbSession ? token : null,
-        },
-      });
-
-      if (!dbSession) {
-        return;
-      }
-
-      if (paymentAction === "FAILED") {
-        if (dbSession.payment_status !== "PAID") {
-          await tx.session.update({
-            where: { id: token },
-            data: {
-              payment_status: "FAILED",
-              last_error:
-                "[STRIPE_ASYNC_FAILED] Płatność opóźniona zakończyła się niepowodzeniem.",
-            },
-          });
-        }
-        return;
-      }
-
-      if (paymentAction === "PAID" && dbSession.payment_status !== "PAID") {
-        await tx.session.update({
-          where: { id: token },
-          data: {
-            payment_status: "PAID",
-            report_status: "QUEUED",
-            stripe_session_id: sessionData.id || dbSession.stripe_session_id,
-            stripe_payment_intent_id:
-              sessionData.payment_intent || dbSession.stripe_payment_intent_id,
-            paid_at: new Date(),
-            last_error: null,
-          },
-        });
-
-        enqueueNeeded = true;
-      }
-    });
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      console.log(`[Webhook] Event ${stripeEventId} już był przetworzony.`);
-      return;
-    }
-
-    throw error;
-  }
-
-  if (!enqueueNeeded) {
-    return;
-  }
-
-  try {
-    await enqueueReport(token);
-    console.log(`[Webhook] Płatność ${token} zaksięgowana. Job dodany do kolejki.`);
-  } catch (queueError) {
-    console.error(
-      `[Webhook] Zaksięgowano płatność, ale enqueue się nie udał dla ${token}:`,
-      queueError.message
-    );
-
-    await prisma.session.update({
-      where: { id: token },
-      data: {
-        report_status: "QUEUED",
-        last_error: `[ENQUEUE_FAILED] ${queueError.message}`,
-      },
+    console.error("POST /api/create-checkout error:", error);
+    return res.status(500).json({
+      ok: false,
+      error: "Błąd inicjalizacji płatności.",
     });
   }
 }
+
+export default { createCheckout };
