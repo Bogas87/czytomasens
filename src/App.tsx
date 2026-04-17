@@ -18,13 +18,12 @@ type Screen =
   | "consents"
   | "entry"
   | "chat"
-  | "open_response"
+  | "checkpoint"
   | "processing"
   | "preview"
   | "paid_report";
 
 type LegalKey = "terms" | "privacy" | null;
-type Mode = "soft" | "hard";
 
 type EntryPoint = {
   id: string;
@@ -72,9 +71,19 @@ type PreviewReport = {
   closing?: string;
 };
 
+type FullReport = {
+  headline: string;
+  subheadline?: string;
+  previewLine?: string;
+  rebuildPercent?: number;
+  tensionPercent?: number;
+  driftPercent?: number;
+  sections?: PreviewSection[];
+  closing?: string;
+};
+
 type PersistedDraft = {
   screen?: Screen;
-  mode?: Mode;
   selectedPath?: string;
   step?: number;
   answers?: Answer[];
@@ -336,9 +345,49 @@ function normalizePreview(raw: any): PreviewReport {
   };
 }
 
+function normalizeFullReport(raw: any): FullReport {
+  if (!raw) {
+    return {
+      headline: "Raport premium",
+      subheadline: "Raport nie został jeszcze poprawnie znormalizowany.",
+      rebuildPercent: 41,
+      sections: [],
+      closing: "Spróbuj ponownie za chwilę.",
+    };
+  }
+
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      return normalizeFullReport(parsed);
+    } catch {
+      return {
+        headline: "Raport premium",
+        subheadline: "Wersja tekstowa",
+        rebuildPercent: 41,
+        sections: [{ title: "Treść raportu", text: raw, tone: "normal" }],
+        closing: "To jest wersja tekstowa zwrócona przez backend.",
+      };
+    }
+  }
+
+  return {
+    headline: raw.headline || "Raport premium",
+    subheadline: raw.subheadline || raw.previewLine || "Pełna analiza relacji.",
+    previewLine: raw.previewLine || "",
+    rebuildPercent: Number(raw.rebuildPercent ?? raw.score ?? 41),
+    tensionPercent: Number(raw.tensionPercent ?? raw.tension ?? 46),
+    driftPercent: Number(raw.driftPercent ?? raw.drift ?? 52),
+    sections: Array.isArray(raw.sections)
+      ? raw.sections
+      : [{ title: "Treść raportu", text: JSON.stringify(raw, null, 2), tone: "normal" }],
+    closing: raw.closing || "Raport został przygotowany.",
+  };
+}
+
 export default function App() {
   const [screen, setScreen] = useState<Screen>("landing");
-  const [mode, setMode] = useState<Mode>("soft");
+  const [mode, setMode] = useState<"soft" | "hard">("soft");
   const [legalModal, setLegalModal] = useState<LegalKey>(null);
   const [consents, setConsents] = useState<boolean[]>(new Array(CONSENTS.length).fill(false));
 
@@ -352,7 +401,7 @@ export default function App() {
   const [currentAiObservation, setCurrentAiObservation] = useState("");
   const [currentUserText, setCurrentUserText] = useState("");
   const [preview, setPreview] = useState<PreviewReport | null>(null);
-  const [fullReport, setFullReport] = useState<any>(null);
+  const [fullReport, setFullReport] = useState<FullReport | null>(null);
   const [email, setEmail] = useState("");
   const [loadingLabel, setLoadingLabel] = useState("Przetwarzanie...");
   const [loadingHint, setLoadingHint] = useState("");
@@ -364,13 +413,26 @@ export default function App() {
   const sessionFingerprint = useMemo(() => getSessionId(), []);
 
   const allConsentsChecked = consents.every(Boolean);
-  const selectedEntry = ENTRY_POINTS.find((item) => item.id === selectedPath);
   const pathQuestions = selectedPath ? QUESTIONS_BY_PATH[selectedPath] || QUESTIONS_BY_PATH.uncertainty : [];
   const currentQuestion = pathQuestions[step];
   const progress = currentQuestion ? Math.round(((step + 1) / pathQuestions.length) * 100) : 0;
 
+  const startLoader = (label: string, hint = "") => {
+    setLoadingLabel(label);
+    setLoadingHint(hint);
+    setCanRetryReport(false);
+    setScreen("processing");
+  };
+
+  const stopLoader = () => {
+    setLoadingLabel("Przetwarzanie...");
+    setLoadingHint("");
+    setCanRetryReport(false);
+  };
+
   const resetFlow = () => {
     clearAppState();
+    stopLoader();
     setSelectedPath("");
     setStep(0);
     setAnswers([]);
@@ -382,16 +444,12 @@ export default function App() {
     setPreview(null);
     setFullReport(null);
     setEmail("");
-    setLoadingLabel("Przetwarzanie...");
-    setLoadingHint("");
-    setCanRetryReport(false);
     setProcessingToken("");
     setDraftFound(false);
     setScreen("landing");
   };
 
   const restoreFromDraft = (draft: PersistedDraft) => {
-    setMode(draft.mode ?? "soft");
     setSelectedPath(draft.selectedPath ?? "");
     setStep(draft.step ?? 0);
     setAnswers(Array.isArray(draft.answers) ? draft.answers : []);
@@ -406,35 +464,54 @@ export default function App() {
     setDraftFound(false);
   };
 
-  useEffect(() => {
-    const savedConsent = getConsentState();
-    if (savedConsent) setConsents(new Array(CONSENTS.length).fill(true));
+  const handleSuccessReturn = async (token: string) => {
+    startLoader("Płatność przyjęta. Pobieram raport premium...", "Jeśli system nie zdążył go jeszcze domknąć, pokażemy Ci bezpieczny komunikat zamiast zapętlonego loadera.");
 
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-    const success = params.get("success");
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => {
+      controller.abort();
+    }, 8000);
 
-    if (success === "1" && token) {
-      setScreen("processing");
-      setLoadingLabel("Odbieranie pełnego raportu...");
-      setLoadingHint("Płatność wróciła poprawnie. System dopina ostatnią warstwę analizy.");
-      fetchPaidReportUntilReady(token);
+    try {
+      const res = await fetch(`${API_BASE}/api/report/${token}`, {
+        signal: controller.signal,
+      });
+
+      const text = await res.text();
+      let data: any = null;
+
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Backend nie zwrócił poprawnego JSON.");
+      }
+
+      if (!data.ok || !data.report) {
+        throw new Error("Raport nie jest dostępny.");
+      }
+
+      setFullReport(normalizeFullReport(data.report));
+      setSessionToken(token);
+      setScreen("paid_report");
+      clearAppState();
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } catch (error) {
+      console.error("handleSuccessReturn error:", error);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      alert("Płatność wróciła, ale raport nie został poprawnie załadowany. Wrócisz teraz na stronę główną.");
+      resetFlow();
       return;
+    } finally {
+      window.clearTimeout(timeout);
+      stopLoader();
     }
-
-    const draft = getAppState() as PersistedDraft | null;
-    if (draft && draft.screen && draft.screen !== "landing") {
-      setDraftFound(true);
-      restoreFromDraft(draft);
-    }
-  }, []);
+  };
 
   useEffect(() => {
-    if (screen === "landing" || screen === "consents" || screen === "paid_report") return;
+    if (screen === "landing" || screen === "consents" || screen === "paid_report" || screen === "processing") return;
 
     const state: PersistedDraft = {
       screen,
-      mode,
       selectedPath,
       step,
       answers,
@@ -448,7 +525,44 @@ export default function App() {
     };
 
     saveAppState(state as any);
-  }, [screen, mode, selectedPath, step, answers, interviews, sessionToken, preview, email, currentAiObservation, currentUserText, patterns]);
+  }, [screen, selectedPath, step, answers, interviews, sessionToken, preview, email, currentAiObservation, currentUserText, patterns]);
+
+  useEffect(() => {
+    const saved = getAppState() as PersistedDraft | null;
+
+    if (getConsentState()) {
+      setConsents(new Array(CONSENTS.length).fill(true));
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get("success");
+    const token = params.get("token");
+    const cancelled = params.get("cancelled");
+
+    if (cancelled === "1" || cancelled === "true") {
+      stopLoader();
+      window.history.replaceState({}, document.title, window.location.pathname);
+
+      if (saved?.preview) {
+        restoreFromDraft(saved);
+        setScreen("preview");
+      } else {
+        resetFlow();
+      }
+      return;
+    }
+
+    if (success === "1" && token) {
+      console.log("SUCCESS RETURN TOKEN:", token);
+      void handleSuccessReturn(token);
+      return;
+    }
+
+    if (saved && saved.screen && saved.screen !== "landing") {
+      restoreFromDraft(saved);
+      setDraftFound(true);
+    }
+  }, []);
 
   async function fetchPaidReportUntilReady(token: string) {
     setCanRetryReport(false);
@@ -463,7 +577,7 @@ export default function App() {
         const data = await res.json();
 
         if (data.ok && data.report) {
-          setFullReport(data.report);
+          setFullReport(normalizeFullReport(data.report));
           setScreen("paid_report");
           clearAppState();
           window.history.replaceState({}, "", window.location.pathname);
@@ -494,7 +608,7 @@ export default function App() {
       }
     };
 
-    poll();
+    void poll();
   }
 
   async function createSessionIfNeeded() {
@@ -511,7 +625,7 @@ export default function App() {
     return data.token;
   }
 
-  async function handleStart(selectedMode: Mode) {
+  async function handleStart(selectedMode: "soft" | "hard") {
     setMode(selectedMode);
     setScreen("consents");
   }
@@ -539,96 +653,113 @@ export default function App() {
     setFullReport(null);
     setCurrentAiObservation("");
     setCurrentUserText("");
-    setLoadingHint("");
-    setCanRetryReport(false);
-
-    try {
-      const token = await createSessionIfNeeded();
-
-      await fetch(`${API_BASE}/api/session/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token,
-          payload: {
-            mode,
-            path: pathId,
-            answers: [],
-            interviews: [],
-            patterns,
-            fingerprint: sessionFingerprint,
-          },
-        }),
-      });
-
-      setScreen("chat");
-    } catch (error) {
-      console.error(error);
-      alert("Nie udało się zapisać startu analizy.");
-    }
+    setPatterns([]);
+    setScreen("chat");
   }
 
-  async function handleAnswer(opt: Option) {
+  async function handleAnswer(option: Option) {
     if (!currentQuestion) return;
 
-    const newAnswers = [
-      ...answers,
-      { questionId: currentQuestion.id, text: opt.label, tags: opt.tags },
-    ];
+    const nextAnswer: Answer = {
+      questionId: currentQuestion.id,
+      text: option.label,
+      tags: option.tags,
+    };
 
-    const mergedPatterns = [...new Set([...patterns, ...opt.tags])];
-    setAnswers(newAnswers);
-    setPatterns(mergedPatterns);
+    const nextAnswers = [...answers.filter((a) => a.questionId !== currentQuestion.id), nextAnswer];
+    const nextPatterns = [...new Set([...patterns, ...option.tags])];
 
-    if (CHECKPOINTS.includes(step)) {
-      setScreen("checkpoint");
-      setLoadingLabel("AI składa fakty do kupy...");
-      setLoadingHint("Tu system szuka niespójności, a nie ładnych zdań.");
+    setAnswers(nextAnswers);
+    setPatterns(nextPatterns);
+
+    const isCheckpoint = CHECKPOINTS.includes(step);
+    const isLast = step >= pathQuestions.length - 1;
+
+    if (isCheckpoint && interviews.length === 0) {
+      startLoader("Analizuję niespójność...", "System zatrzyma Cię teraz tam, gdzie zaczyna się rozjazd między faktami a narracją.");
 
       try {
+        const token = await createSessionIfNeeded();
+        await fetch(`${API_BASE}/api/session/update`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token,
+            payload: {
+              path: selectedPath,
+              answers: nextAnswers,
+              patterns: nextPatterns,
+              fingerprint: sessionFingerprint,
+            },
+          }),
+        });
+
         const res = await fetch(`${API_BASE}/api/checkpoint`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mode, path: selectedPath, answers: newAnswers, interviews, patterns: mergedPatterns }),
+          body: JSON.stringify({
+            mode,
+            path: selectedPath,
+            answers: nextAnswers,
+            patterns: nextPatterns,
+          }),
         });
 
         const data = await res.json();
-        setCurrentAiObservation(
-          data?.checkpoint?.question ||
-            data?.observation ||
-            "Tu jest niespójność. Napisz szczerze, czego bronisz albo czego nie chcesz nazwać wprost."
-        );
+        if (!data.ok || !data.checkpoint) throw new Error("Brak checkpointu");
+
+        setCurrentAiObservation(data.checkpoint.insight || data.checkpoint.question || "W Twoich odpowiedziach pojawił się rozjazd, którego nie warto już pudrować.");
+        setCurrentUserText("");
+        setScreen("checkpoint");
       } catch (error) {
         console.error(error);
-        setCurrentAiObservation(
-          "Tu system widzi wzorzec, ale brakuje jednego brakującego ogniwa. Napisz bez wygładzania, co naprawdę się powtarza."
-        );
+        setCurrentAiObservation("W Twoich odpowiedziach pojawił się rozjazd między tym, co chcesz utrzymać, a tym, co naprawdę opisujesz.");
+        setCurrentUserText("");
+        setScreen("checkpoint");
+      } finally {
+        stopLoader();
       }
-
-      setScreen("open_response");
       return;
     }
 
-    if (step === pathQuestions.length - 1) {
-      await submitFinalAnalysis(newAnswers, interviews, mergedPatterns);
+    if (isLast) {
+      await finalizePreview(nextAnswers, nextPatterns);
       return;
     }
 
     setStep((prev) => prev + 1);
   }
 
-  async function submitOpenResponse() {
-    if (!currentUserText.trim()) {
-      alert("Tu musisz napisać coś własnego.");
+  async function handleCheckpointContinue() {
+    if (currentUserText.trim().length < 8) {
+      alert("Napisz to konkretnie. Tu nie chodzi o pół zdania.");
       return;
     }
 
-    const newInterviews = [...interviews, { aiPrompt: currentAiObservation, userText: currentUserText.trim() }];
-    setInterviews(newInterviews);
+    const newInterview: InterviewNode = {
+      aiPrompt: currentAiObservation,
+      userText: currentUserText.trim(),
+    };
+
+    setInterviews((prev) => [...prev, newInterview]);
+
+    if (step >= pathQuestions.length - 1) {
+      await finalizePreview(answers, patterns, [...interviews, newInterview]);
+      return;
+    }
+
     setCurrentUserText("");
+    setStep((prev) => prev + 1);
+    setScreen("chat");
+  }
+
+  async function finalizePreview(nextAnswers: Answer[], nextPatterns: string[], forcedInterviews?: InterviewNode[]) {
+    startLoader("Buduję wstępny raport...", "Najpierw zobaczysz chłodne lustro relacji. Dopiero potem zdecydujesz, czy chcesz wejść głębiej.");
 
     try {
       const token = await createSessionIfNeeded();
+      const finalInterviews = forcedInterviews ?? interviews;
+
       await fetch(`${API_BASE}/api/session/update`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -637,83 +768,37 @@ export default function App() {
           payload: {
             mode,
             path: selectedPath,
-            answers,
-            interviews: newInterviews,
-            patterns,
-            customText: newInterviews.map((i) => i.userText).join("\n\n"),
+            answers: nextAnswers,
+            interviews: finalInterviews,
+            patterns: nextPatterns,
             fingerprint: sessionFingerprint,
           },
         }),
       });
-    } catch (error) {
-      console.error(error);
-    }
-
-    if (step === pathQuestions.length - 1) {
-      await submitFinalAnalysis(answers, newInterviews, patterns);
-      return;
-    }
-
-    setStep((prev) => prev + 1);
-    setScreen("chat");
-  }
-
-  async function submitFinalAnalysis(finalAnswers: Answer[], finalInterviews: InterviewNode[], finalPatterns: string[]) {
-    setScreen("processing");
-    setLoadingLabel("Budowanie wstępnej diagnozy...");
-    setLoadingHint("Tu system łączy odpowiedzi zamknięte, Twoje dopowiedzenia i wykryte wzorce.");
-
-    try {
-      const token = await createSessionIfNeeded();
-      const combinedText = finalInterviews.map((i) => i.userText).join("\n\n").trim() || finalAnswers.map((a) => a.text).join("\n");
 
       const res = await fetch(`${API_BASE}/api/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          token,
           mode,
           path: selectedPath,
-          input: combinedText,
-          customDescription: combinedText,
-          answers: finalAnswers,
-          patterns: finalPatterns,
+          answers: nextAnswers,
+          patterns: nextPatterns,
+          customDescription: finalInterviews.map((item) => item.userText).join("\n\n"),
         }),
       });
 
       const data = await res.json();
       if (!data.ok || !data.preview) throw new Error("Brak preview");
 
-      const mergedPatterns = Array.isArray(data.patterns) ? [...new Set([...finalPatterns, ...data.patterns])] : finalPatterns;
-      const normalized = normalizePreview(data.preview);
-
-      setPatterns(mergedPatterns);
-      setPreview(normalized);
-
-      await fetch(`${API_BASE}/api/session/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          token,
-          payload: {
-            mode,
-            path: selectedPath,
-            answers: finalAnswers,
-            interviews: finalInterviews,
-            patterns: mergedPatterns,
-            customText: combinedText,
-            fingerprint: sessionFingerprint,
-            email,
-          },
-          preview: normalized,
-        }),
-      });
-
+      setPreview(normalizePreview(data.preview));
       setScreen("preview");
     } catch (error) {
       console.error(error);
       alert("Wystąpił błąd końcowej analizy.");
       setScreen("chat");
+    } finally {
+      stopLoader();
     }
   }
 
@@ -728,9 +813,7 @@ export default function App() {
       return;
     }
 
-    setScreen("processing");
-    setLoadingLabel("Przekierowanie do płatności...");
-    setLoadingHint("Po opłaceniu system wygeneruje pełny raport i zacznie go składać w tle.");
+    startLoader("Przekierowanie do płatności...", "Po opłaceniu system wygeneruje pełny raport i zacznie go składać w tle.");
 
     try {
       const token = await createSessionIfNeeded();
@@ -742,6 +825,7 @@ export default function App() {
         body: JSON.stringify({
           token,
           email,
+          consentAcceptedAt: new Date().toISOString(),
           payload: {
             mode,
             path: selectedPath,
@@ -763,13 +847,14 @@ export default function App() {
       console.error(error);
       alert("Błąd inicjalizacji płatności.");
       setScreen("preview");
+      stopLoader();
     }
   }
 
   async function retryReportStatus() {
     if (!processingToken) return;
     setLoadingLabel("Sprawdzam status raportu ponownie...");
-    setLoadingHint("Jeśli worker już skończył, raport za chwilę się pojawi.");
+    setLoadingHint("Jeśli system już skończył, raport za chwilę się pojawi.");
     await fetchPaidReportUntilReady(processingToken);
   }
 
@@ -820,7 +905,7 @@ export default function App() {
       }
       return;
     }
-    if (screen === "open_response") {
+    if (screen === "checkpoint") {
       setScreen("chat");
       return;
     }
@@ -973,19 +1058,33 @@ export default function App() {
                       </button>
                     ))}
                   </div>
+
+                  {draftFound && (
+                    <div className="ctms-draft-banner">
+                      <p>Znaleziono zapisaną sesję. Możesz wrócić do przerwanej analizy albo zacząć od zera.</p>
+                      <div className="ctms-actions">
+                        <button className="ctms-primary" onClick={() => {
+                          const draft = getAppState() as PersistedDraft | null;
+                          if (draft) restoreFromDraft(draft);
+                        }}>
+                          Wróć do sesji
+                        </button>
+                        <button className="ctms-text-btn" onClick={resetFlow}>Zacznij od nowa</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.section>
           )}
 
           {screen === "chat" && currentQuestion && (
-            <motion.section key={`chat-${selectedPath}-${step}`} className="ctms-page" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <motion.section key={`chat-${selectedPath}-${step}`} className="ctms-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <div className="ctms-question-shell">
                 <div className="ctms-topbar">
-                  <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <div className="ctms-topbar-left">
                     <button className="ctms-text-btn" onClick={handleBack}>Cofnij</button>
                     <button className="ctms-text-btn" onClick={resetFlow}>Od początku</button>
-                    <button className="ctms-text-btn" onClick={() => setScreen("entry")}>Zmień punkt wejścia</button>
                   </div>
                   <div className="ctms-progress-wrap">
                     <span>{progress}%</span>
@@ -996,14 +1095,14 @@ export default function App() {
                 </div>
 
                 <div className="ctms-question-card">
-                  <div className="ctms-copy">{selectedEntry ? `${selectedEntry.label} • ` : ""}Prawda</div>
-                  <p className="ctms-question-lead">{currentQuestion.lead}</p>
-                  <h2 className="ctms-question">{currentQuestion.text}</h2>
+                  <p className="ctms-eyebrow">{ENTRY_POINTS.find((p) => p.id === selectedPath)?.label || "Analiza"} • Prawda</p>
+                  <p className="ctms-copy">{currentQuestion.lead}</p>
+                  <h1 className="ctms-title">{currentQuestion.text}</h1>
 
                   <div className="ctms-list">
-                    {currentQuestion.options.map((opt, i) => (
-                      <button key={i} className="ctms-card-btn" onClick={() => handleAnswer(opt)}>
-                        <span className="ctms-card-main">{opt.label}</span>
+                    {currentQuestion.options.map((option, index) => (
+                      <button key={`${currentQuestion.id}-${index}`} className="ctms-card-btn" onClick={() => handleAnswer(option)}>
+                        <span className="ctms-card-main">{option.label}</span>
                       </button>
                     ))}
                   </div>
@@ -1013,48 +1112,24 @@ export default function App() {
           )}
 
           {screen === "checkpoint" && (
-            <motion.section key="checkpoint" className="ctms-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <div className="ctms-processing-card ctms-center">
-                <div className="ctms-spinner ctms-spinner-big" />
-                <p>{loadingLabel}</p>
-                <div className="ctms-processing-hint">{loadingHint}</div>
-              </div>
-            </motion.section>
-          )}
-
-          {screen === "open_response" && (
-            <motion.section key="open_response" className="ctms-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.section key="checkpoint" className="ctms-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <div className="ctms-question-shell">
-                <div className="ctms-question-card">
-                  <div className="ctms-copy" style={{ color: "var(--danger)" }}>Wykryto niespójność</div>
+                <div className="ctms-question-card ctms-question-card--checkpoint">
+                  <p className="ctms-eyebrow">Checkpoint AI</p>
                   <Typewriter text={currentAiObservation} />
+
                   <textarea
                     className="ctms-textarea"
-                    placeholder="Napisz konkretnie. Tu nie chodzi o ładną wersję."
                     value={currentUserText}
                     onChange={(e) => setCurrentUserText(e.target.value)}
-                    style={{ fontSize: "16px" }}
+                    placeholder="Napisz wprost to, co próbujesz jeszcze wygładzić albo ominąć."
                   />
-                  <div className="ctms-counter">{currentUserText.length} znaków</div>
-                  <div className="ctms-actions">
-                    <button className="ctms-primary ctms-full" onClick={submitOpenResponse}>Zatwierdź i idź dalej</button>
+
+                  <div className="ctms-actions" style={{ justifyContent: "space-between", marginTop: 20 }}>
+                    <button className="ctms-text-btn" onClick={handleBack}>Wróć</button>
+                    <button className="ctms-primary" onClick={handleCheckpointContinue}>Idź dalej</button>
                   </div>
                 </div>
-              </div>
-            </motion.section>
-          )}
-
-          {screen === "processing" && (
-            <motion.section key="processing" className="ctms-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <div className="ctms-processing-card ctms-center">
-                <div className="ctms-spinner ctms-spinner-big" />
-                <p>{loadingLabel}</p>
-                {loadingHint ? <div className="ctms-processing-hint">{loadingHint}</div> : null}
-                {canRetryReport ? (
-                  <div className="ctms-actions" style={{ marginTop: 20 }}>
-                    <button className="ctms-primary" onClick={retryReportStatus}>Sprawdź status raportu ponownie</button>
-                  </div>
-                ) : null}
               </div>
             </motion.section>
           )}
@@ -1063,20 +1138,18 @@ export default function App() {
             <motion.section key="preview" className="ctms-report-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <div className="ctms-report-shell">
                 <div className="ctms-report-card">
-                  <div className="ctms-report-line" />
-                  <div className="ctms-report-head">
+                  <div className="ctms-report-topline">
                     <div>
                       <div className="ctms-eyebrow">Wstępny raport</div>
                       <h2 className="ctms-report-title">{preview.headline}</h2>
-                      <p className="ctms-report-sub">{preview.subheadline}</p>
                     </div>
                     <div className="ctms-score-box">
                       <div className="ctms-score">15 zł</div>
-                      <div className="ctms-score-label">pełna analiza premium</div>
+                      <div className="ctms-score-label">Pełna analiza premium</div>
                     </div>
                   </div>
 
-                  <div className="ctms-report-preview">„{preview.previewLine}”</div>
+                  <div className="ctms-report-quote">“{preview.previewLine}”</div>
 
                   <PremiumSenseBadge score={preview.rebuildPercent} />
 
@@ -1095,38 +1168,75 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div style={{ filter: "blur(6px)", opacity: 0.35, userSelect: "none", pointerEvents: "none", marginTop: 18 }}>
-                    {preview.sections?.map((sec, i) => (
-                      <div key={i} className="ctms-preview-section">
-                        <h3 className={sec.tone === "danger" ? "ctms-tone-danger" : sec.tone === "gold" ? "ctms-tone-gold" : ""}>{sec.title}</h3>
-                        <p>{sec.text}</p>
+                  <div className="ctms-preview-summary">
+                    <p>{preview.subheadline}</p>
+                  </div>
+
+                  <div className="ctms-preview-blur">
+                    {preview.sections.map((section, idx) => (
+                      <div key={idx} className="ctms-preview-section">
+                        <h3>{section.title}</h3>
+                        <p>{section.text}</p>
                       </div>
                     ))}
                   </div>
 
-                  <div className="ctms-paywall-box" style={{ marginTop: -28, position: "relative", zIndex: 10 }}>
+                  <div className="ctms-payment-card">
                     <h3>Odblokuj pełny raport</h3>
-                    <p>Dostaniesz pełny dokument premium: rozwinięte metryki, scenariusze, analizę mechanizmów i końcowy werdykt systemu.</p>
+                    <p>
+                      Dostaniesz pełny dokument premium: rozwinięte metryki, scenariusze,
+                      analizę mechanizmów i końcowy werdykt systemu.
+                    </p>
 
                     <input
+                      className="ctms-input"
                       type="email"
-                      className="ctms-input ctms-mb"
-                      placeholder="Adres e-mail do dostarczenia raportu"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      onBlur={saveEmailSoft}
-                      style={{ fontSize: "16px" }}
+                      onBlur={() => {
+                        void saveEmailSoft();
+                      }}
+                      placeholder="Twój e-mail"
                     />
 
-                    <div className="ctms-actions">
-                      <button className="ctms-primary ctms-full" onClick={handlePayment}>Pobierz pełną analizę — 15 PLN</button>
-                    </div>
-
-                    <div className="ctms-actions" style={{ marginTop: 10, gap: 10, flexDirection: "column" }}>
-                      <button className="ctms-text-btn" onClick={handleBack} style={{ width: "100%", minHeight: "48px" }}>Wróć do pytań</button>
-                      <button className="ctms-text-btn" onClick={resetFlow} style={{ width: "100%", minHeight: "48px" }}>Zacznij od początku</button>
+                    <div className="ctms-actions" style={{ marginTop: 16 }}>
+                      <button className="ctms-primary ctms-full" onClick={handlePayment}>
+                        Pobierz pełną analizę — 15 PLN
+                      </button>
+                      <button className="ctms-text-btn ctms-full" onClick={handleBack}>
+                        Wróć do pytań
+                      </button>
+                      <button className="ctms-text-btn ctms-full" onClick={resetFlow}>
+                        Zacznij od początku
+                      </button>
                     </div>
                   </div>
+                </div>
+              </div>
+            </motion.section>
+          )}
+
+          {screen === "processing" && (
+            <motion.section key="processing" className="ctms-page" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="ctms-processing-card ctms-center">
+                <div className="ctms-spinner ctms-spinner-big" />
+                <p>{loadingLabel}</p>
+                {loadingHint ? <small className="ctms-loading-hint">{loadingHint}</small> : null}
+
+                <div className="ctms-actions" style={{ marginTop: 18, width: "100%" }}>
+                  {canRetryReport ? (
+                    <button className="ctms-primary ctms-full" onClick={() => void retryReportStatus()}>
+                      Sprawdź status raportu ponownie
+                    </button>
+                  ) : null}
+                  <button
+                    className="ctms-text-btn ctms-full"
+                    onClick={() => {
+                      resetFlow();
+                    }}
+                  >
+                    Przerwij i wróć na stronę główną
+                  </button>
                 </div>
               </div>
             </motion.section>
@@ -1137,26 +1247,30 @@ export default function App() {
               <div className="ctms-report-shell">
                 <div className="ctms-report-card" ref={reportRef}>
                   <div className="ctms-eyebrow">Raport premium</div>
-                  <h2 className="ctms-report-title">{fullReport.headline || "Dokument analityczny"}</h2>
+                  <h2 className="ctms-report-title">{fullReport.headline}</h2>
                   {fullReport.subheadline ? <p className="ctms-report-sub">{fullReport.subheadline}</p> : null}
 
                   {typeof fullReport.rebuildPercent === "number" ? <PremiumSenseBadge score={fullReport.rebuildPercent} /> : null}
 
                   {Array.isArray(fullReport.sections)
-                    ? fullReport.sections.map((sec: PreviewSection, i: number) => (
-                        <div key={i} className="ctms-preview-section" style={{ marginTop: 24 }}>
-                          <h3 className={sec.tone === "danger" ? "ctms-tone-danger" : sec.tone === "gold" ? "ctms-tone-gold" : ""}>{sec.title}</h3>
-                          <p>{sec.text}</p>
+                    ? fullReport.sections.map((section, idx) => (
+                        <div key={idx} className="ctms-preview-section ctms-preview-section--full">
+                          <h3>{section.title}</h3>
+                          <p>{section.text}</p>
                         </div>
                       ))
                     : null}
 
-                  {fullReport.closing ? <div className="ctms-report-preview" style={{ marginTop: 26 }}>{fullReport.closing}</div> : null}
+                  {fullReport.closing ? <div className="ctms-report-closing">{fullReport.closing}</div> : null}
                 </div>
 
-                <div className="ctms-report-actions" style={{ flexDirection: "column", gap: 12 }}>
-                  <button className="ctms-primary" onClick={downloadPDF} style={{ width: "100%", minHeight: "56px" }}>Pobierz raport jako PDF</button>
-                  <button className="ctms-text-btn" onClick={resetFlow} style={{ width: "100%", minHeight: "54px" }}>Zakończ i wróć na stronę główną</button>
+                <div className="ctms-report-actions">
+                  <button className="ctms-primary ctms-full" onClick={() => void downloadPDF()}>
+                    Pobierz raport jako PDF
+                  </button>
+                  <button className="ctms-text-btn ctms-full" onClick={resetFlow}>
+                    Zakończ i wróć na stronę główną
+                  </button>
                 </div>
               </div>
             </motion.section>
