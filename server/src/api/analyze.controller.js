@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const prisma = require("../db/prisma");
 const openaiService = require("../services/openai.service");
 
@@ -11,18 +12,30 @@ function isValidUUID(uuid) {
   );
 }
 
+function isValidEmail(email) {
+  const e = normalizeText(email);
+  return !e || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+}
+
+const CRISIS_PATTERNS = [
+  /\bnie\s*chc[eę]\s*[żz]y[cć]\b/i,
+  /\bsamob[oó]j/i,
+  /\bodebra[cć]\s+sobie\s+[żz]ycie\b/i,
+  /\bzabij[eę]\s+si[eę]\b/i,
+  /\bskrzywdz[ić]\s+siebie\b/i,
+  /\bboj[eę]\s+si[eę]\s+o\s+[żz]ycie\b/i,
+  /\bboj[eę]\s+si[eę],?\s+[żz]e\s+mnie\s+zabije\b/i,
+  /\bpobi[łl]\b/i,
+  /\buderzy[łl]\b/i,
+  /\bprzemoc\b/i,
+  /\bn[oó][żz]\b/i,
+  /\bkrew\b/i,
+];
+
 function hasCrisisContent(text) {
-  const lower = normalizeText(text).toLowerCase();
-  const triggers = [
-    "zabić się",
-    "nie chcę żyć",
-    "nie chce żyć",
-    "samobój",
-    "odebrać sobie życie",
-    "skrzywdzić siebie",
-    "krzywdę sobie",
-  ];
-  return triggers.some((t) => lower.includes(t));
+  const value = normalizeText(text);
+  if (!value) return false;
+  return CRISIS_PATTERNS.some((pattern) => pattern.test(value));
 }
 
 function extractPatterns(text) {
@@ -51,6 +64,50 @@ function extractPatterns(text) {
   }
 
   return [...new Set(patterns)];
+}
+
+function crisisResponse(extraMessage) {
+  return {
+    ok: true,
+    crisis: true,
+    message:
+      extraMessage ||
+      "W treści pojawił się sygnał możliwego kryzysu. Standardowa analiza została zatrzymana.",
+  };
+}
+
+function getSignedSecret() {
+  return (
+    process.env.REPORT_LINK_SECRET ||
+    process.env.STRIPE_WEBHOOK_SECRET ||
+    process.env.OPENAI_API_KEY ||
+    "ctms-dev-secret"
+  );
+}
+
+function createSignedSignature(token, exp) {
+  return crypto
+    .createHmac("sha256", getSignedSecret())
+    .update(`${token}.${exp}`)
+    .digest("hex");
+}
+
+function verifySignedSignature(token, exp, sig) {
+  const now = Date.now();
+  const expires = Number(exp);
+
+  if (!Number.isFinite(expires) || expires < now) {
+    return false;
+  }
+
+  const expected = createSignedSignature(token, String(exp));
+
+  const a = Buffer.from(expected);
+  const b = Buffer.from(String(sig));
+
+  if (a.length !== b.length) return false;
+
+  return crypto.timingSafeEqual(a, b);
 }
 
 exports.createSession = async (_req, res) => {
@@ -89,6 +146,36 @@ exports.updateSession = async (req, res) => {
   }
 };
 
+exports.captureEmail = async (req, res) => {
+  try {
+    const token = normalizeText(req.body.token || "");
+    const email = normalizeText(req.body.email || "");
+
+    if (!token || !isValidUUID(token)) {
+      return res.status(400).json({ ok: false, message: "Nieprawidłowy token." });
+    }
+
+    if (!isValidEmail(email) || !email) {
+      return res.status(400).json({ ok: false, message: "Nieprawidłowy adres e-mail." });
+    }
+
+    const existing = await prisma.session.findUnique({ where: { id: token } });
+    if (!existing) {
+      return res.status(404).json({ ok: false, message: "Nie znaleziono sesji." });
+    }
+
+    await prisma.session.update({
+      where: { id: token },
+      data: { email },
+    });
+
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error("[API] Capture email error:", error.message);
+    return res.status(500).json({ ok: false, message: "Błąd zapisu e-maila." });
+  }
+};
+
 exports.analyzeText = async (req, res) => {
   try {
     const token = normalizeText(req.body.token || "");
@@ -108,13 +195,11 @@ exports.analyzeText = async (req, res) => {
     }
 
     if (hasCrisisContent(input)) {
-      return res.json({
-        ok: true,
-        crisis: true,
-        analysis:
-          "Wygląda na to, że możesz być w kryzysie. To narzędzie nie jest właściwe w takiej sytuacji. Skontaktuj się z numerem 112 albo Centrum Wsparcia 800 70 2222.",
-        patterns: incomingPatterns,
-      });
+      return res.json(
+        crisisResponse(
+          "W treści pojawił się sygnał możliwego kryzysu lub przemocy. Standardowa analiza została zatrzymana."
+        )
+      );
     }
 
     const detectedPatterns = extractPatterns(input);
@@ -163,10 +248,28 @@ exports.analyzeText = async (req, res) => {
 
 exports.generateCheckpoint = async (req, res) => {
   try {
+    const answers = Array.isArray(req.body.answers) ? req.body.answers.slice(0, 30) : [];
+    const interviews = Array.isArray(req.body.interviews) ? req.body.interviews.slice(0, 10) : [];
+
+    const rawText = [
+      ...answers.map((a) => normalizeText(a.text || a.answer || a.label)),
+      ...interviews.map((i) => normalizeText(i.userText || i.user || "")),
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    if (hasCrisisContent(rawText)) {
+      return res.json(
+        crisisResponse(
+          "W odpowiedziach pojawiły się sygnały możliwego kryzysu. Standardowy checkpoint został zatrzymany."
+        )
+      );
+    }
+
     const payload = {
       path: normalizeText(req.body.path || ""),
       mode: req.body.mode === "hard" ? "hard" : "soft",
-      answers: Array.isArray(req.body.answers) ? req.body.answers.slice(0, 30) : [],
+      answers,
       patterns: Array.isArray(req.body.patterns) ? req.body.patterns.slice(0, 30) : [],
     };
 
@@ -271,5 +374,42 @@ exports.getReport = async (req, res) => {
   } catch (error) {
     console.error("[API] Report fetch error:", error.message);
     return res.status(500).json({ ok: false, message: "Błąd systemu pobierania raportu." });
+  }
+};
+
+exports.getSignedReport = async (req, res) => {
+  try {
+    const token = normalizeText(req.query.token || "");
+    const exp = normalizeText(req.query.exp || "");
+    const sig = normalizeText(req.query.sig || "");
+
+    if (!token || !exp || !sig || !isValidUUID(token)) {
+      return res.status(400).json({ ok: false, message: "Nieprawidłowy link dostępu." });
+    }
+
+    if (!verifySignedSignature(token, exp, sig)) {
+      return res.status(403).json({ ok: false, message: "Link dostępu wygasł albo jest nieprawidłowy." });
+    }
+
+    const session = await prisma.session.findUnique({
+      where: { id: token },
+      select: {
+        payment_status: true,
+        report_status: true,
+        full_report: true,
+      },
+    });
+
+    if (!session || session.payment_status !== "PAID" || session.report_status !== "READY" || !session.full_report) {
+      return res.status(404).json({ ok: false, message: "Raport nie jest dostępny." });
+    }
+
+    return res.json({
+      ok: true,
+      report: session.full_report,
+    });
+  } catch (error) {
+    console.error("[API] Signed report fetch error:", error.message);
+    return res.status(500).json({ ok: false, message: "Błąd dostępu do raportu." });
   }
 };

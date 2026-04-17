@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const { Worker, UnrecoverableError } = require("bullmq");
 const Redis = require("ioredis");
 const { Resend } = require("resend");
@@ -23,6 +24,25 @@ const resend = process.env.RESEND_API_KEY
   : null;
 
 const LOCK_STALE_MS = 10 * 60 * 1000;
+
+function getSignedSecret() {
+  return (
+    process.env.REPORT_LINK_SECRET ||
+    process.env.STRIPE_WEBHOOK_SECRET ||
+    process.env.OPENAI_API_KEY ||
+    "ctms-dev-secret"
+  );
+}
+
+function createSignedAccess(token, ttlMs = 1000 * 60 * 60 * 48) {
+  const exp = String(Date.now() + ttlMs);
+  const sig = crypto
+    .createHmac("sha256", getSignedSecret())
+    .update(`${token}.${exp}`)
+    .digest("hex");
+
+  return { token, exp, sig };
+}
 
 console.log("Worker uruchomiony. Oczekuję na zadania...");
 
@@ -143,11 +163,20 @@ const reportWorker = new Worker(
 
       if (session.email && resend) {
         try {
+          const access = createSignedAccess(token);
+          const baseUrl = process.env.CLIENT_URL || "http://localhost:5173";
+          const reportUrl = `${baseUrl}?access_token=${encodeURIComponent(access.token)}&exp=${encodeURIComponent(access.exp)}&sig=${encodeURIComponent(access.sig)}`;
+
           await resend.emails.send({
             from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
             to: session.email,
             subject: "Twój raport CzyToMaSens jest gotowy",
-            html: `<div><h2>Raport jest gotowy</h2><p><a href="${process.env.CLIENT_URL}?success=1&token=${token}">Otwórz raport</a></p></div>`,
+            html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
+              <h2>Twój raport jest gotowy</h2>
+              <p>System zakończył analizę. Otwórz dokument przez bezpieczny link poniżej.</p>
+              <p><a href="${reportUrl}" style="display:inline-block;padding:12px 18px;background:#111;color:#fff;text-decoration:none;border-radius:8px">Otwórz raport</a></p>
+              <p style="font-size:12px;color:#666">Link wygasa za 48 godzin ze względów bezpieczeństwa.</p>
+            </div>`,
           });
 
           await prisma.session.update({
@@ -198,6 +227,8 @@ const reportWorker = new Worker(
             worker_locked_at: null,
           },
         });
+
+        console.log(`[Worker] ${token} wraca do kolejki po błędzie.`);
       }
 
       throw error;

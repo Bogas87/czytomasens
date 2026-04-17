@@ -22,6 +22,7 @@ router.get("/health", (_req, res) => {
 
 router.post("/session/create", analyzeController.createSession);
 router.post("/session/update", analyzeController.updateSession);
+router.post("/capture-email", analyzeController.captureEmail);
 router.post("/analyze", analyzeController.analyzeText);
 router.post("/checkpoint", analyzeController.generateCheckpoint);
 
@@ -29,6 +30,7 @@ router.post("/create-checkout", stripeController.createCheckout);
 
 router.get("/report/:token", analyzeController.getReport);
 router.get("/report", analyzeController.getReport);
+router.get("/report-access", analyzeController.getSignedReport);
 router.get("/session/:token", analyzeController.getSessionData);
 
 router.use((_req, res) => {

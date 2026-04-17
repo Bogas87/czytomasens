@@ -26,6 +26,7 @@ exports.createCheckout = async (req, res) => {
     const email = normalizeText(req.body.email || "");
     const payload = req.body.payload || {};
     const tokenFromBody = normalizeText(req.body.token || "");
+    const consentAcceptedAt = normalizeText(req.body.consentAcceptedAt || new Date().toISOString());
 
     const customDescription = normalizeText(
       payload.customDescription || payload.customText || payload.input || ""
@@ -43,6 +44,12 @@ exports.createCheckout = async (req, res) => {
       return res.status(400).json({ ok: false, message: "Nieprawidłowy adres e-mail." });
     }
 
+    const ipAddress =
+      normalizeText(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim() ||
+      normalizeText(req.ip || "");
+
+    const userAgent = normalizeText(req.headers["user-agent"] || "");
+
     let sessionRecord = null;
 
     if (tokenFromBody && isValidUUID(tokenFromBody)) {
@@ -51,12 +58,22 @@ exports.createCheckout = async (req, res) => {
       });
     }
 
+    const nextPayload = {
+      ...payload,
+      checkoutEvidence: {
+        ipAddress,
+        userAgent,
+        consentAcceptedAt,
+        checkoutStartedAt: new Date().toISOString(),
+      },
+    };
+
     if (sessionRecord) {
       sessionRecord = await prisma.session.update({
         where: { id: sessionRecord.id },
         data: {
           email: email || null,
-          payload,
+          payload: nextPayload,
         },
       });
     } else {
@@ -64,7 +81,7 @@ exports.createCheckout = async (req, res) => {
         data: {
           id: tokenFromBody && isValidUUID(tokenFromBody) ? tokenFromBody : undefined,
           email: email || null,
-          payload,
+          payload: nextPayload,
         },
       });
     }
@@ -87,7 +104,12 @@ exports.createCheckout = async (req, res) => {
             quantity: 1,
           },
         ],
-        metadata: { token: sessionRecord.id },
+        metadata: {
+          token: sessionRecord.id,
+          ipAddress: ipAddress.slice(0, 200),
+          userAgent: userAgent.slice(0, 500),
+          consentAcceptedAt,
+        },
         client_reference_id: sessionRecord.id,
         success_url: `${process.env.CLIENT_URL}?success=1&token=${sessionRecord.id}`,
         cancel_url: `${process.env.CLIENT_URL}?cancel=1`,
