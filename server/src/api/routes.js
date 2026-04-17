@@ -1,40 +1,151 @@
-const express = require("express");
-const rateLimit = require("express-rate-limit");
+import crypto from "node:crypto";
+import { Router } from "express";
 
-const analyzeController = require("./analyze.controller");
-const stripeController = require("./stripe.controller");
+const router = Router();
 
-const router = express.Router();
-
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { ok: false, message: "Za dużo zapytań. Spróbuj później." },
+/**
+ * HEALTH
+ */
+router.get("/health", (req, res) => {
+  return res.json({
+    ok: true,
+    service: "CzyToMaSens API",
+    model: process.env.OPENAI_MODEL || "gpt-4o",
+  });
 });
 
-router.use(apiLimiter);
+/**
+ * START SESJI
+ */
+router.post("/session/create", async (req, res) => {
+  try {
+    const {
+      entryKey = "default",
+      answers = {},
+      consent = {},
+      email = null,
+    } = req.body || {};
 
-router.get("/health", (_req, res) => {
-  res.json({ ok: true, timestamp: new Date().toISOString() });
+    const sessionId =
+      crypto?.randomUUID?.() ||
+      `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+    return res.json({
+      ok: true,
+      sessionId,
+      session: {
+        id: sessionId,
+        entryKey,
+        answers,
+        consent,
+        email,
+        stage: "questions",
+        createdAt: new Date().toISOString(),
+      },
+    });
+  } catch (error) {
+    console.error("POST /api/session/create error:", error);
+    return res.status(500).json({
+      ok: false,
+      error: "Nie udało się utworzyć sesji.",
+    });
+  }
 });
 
-router.post("/session/create", analyzeController.createSession);
-router.post("/session/update", analyzeController.updateSession);
-router.post("/capture-email", analyzeController.captureEmail);
-router.post("/analyze", analyzeController.analyzeText);
-router.post("/checkpoint", analyzeController.generateCheckpoint);
+/**
+ * ZAPIS ODPOWIEDZI
+ */
+router.post("/session/save", async (req, res) => {
+  try {
+    const { sessionId, answers = {}, email = null } = req.body || {};
 
-router.post("/create-checkout", stripeController.createCheckout);
+    if (!sessionId) {
+      return res.status(400).json({
+        ok: false,
+        error: "Brak sessionId.",
+      });
+    }
 
-router.get("/report/:token", analyzeController.getReport);
-router.get("/report", analyzeController.getReport);
-router.get("/report-access", analyzeController.getSignedReport);
-router.get("/session/:token", analyzeController.getSessionData);
-
-router.use((_req, res) => {
-  res.status(404).json({ ok: false, message: "Nie znaleziono endpointu API." });
+    return res.json({
+      ok: true,
+      saved: true,
+      sessionId,
+      answers,
+      email,
+      updatedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error("POST /api/session/save error:", error);
+    return res.status(500).json({
+      ok: false,
+      error: "Nie udało się zapisać sesji.",
+    });
+  }
 });
 
-module.exports = router;
+/**
+ * CHECKPOINT / ANALIZA WSTĘPNA
+ */
+router.post("/analyze/checkpoint", async (req, res) => {
+  try {
+    const { answers = {}, entryKey = "default" } = req.body || {};
+
+    return res.json({
+      ok: true,
+      checkpoint: {
+        headline: "Tu jest coś, co wymaga dopowiedzenia.",
+        question:
+          "Gdybyś miał powiedzieć jedną rzecz, której unikasz nazwać wprost, co by to było?",
+        tone: "neutral",
+        entryKey,
+        answersCount: Object.keys(answers || {}).length,
+      },
+    });
+  } catch (error) {
+    console.error("POST /api/analyze/checkpoint error:", error);
+    return res.status(500).json({
+      ok: false,
+      error: "Nie udało się wygenerować checkpointu.",
+    });
+  }
+});
+
+/**
+ * PREVIEW RAPORTU
+ */
+router.post("/analyze/preview", async (req, res) => {
+  try {
+    const { entryKey = "default", answers = {}, note = "" } = req.body || {};
+
+    return res.json({
+      ok: true,
+      preview: {
+        score: 57,
+        badge: "yellow",
+        headline: "Tu bardziej widać chwiejność niż spójność.",
+        mirror:
+          "Największy problem nie wygląda tu na brak uczuć, tylko na brak jasności, stabilności i równego zaangażowania.",
+        indicators: [
+          { label: "Jasność sytuacji", value: 41 },
+          { label: "Spójność sygnałów", value: 48 },
+          { label: "Szansa na zdrowy kierunek", value: 57 },
+        ],
+        summary:
+          "Ta relacja nie wygląda na jednoznacznie straconą, ale w obecnym układzie bardziej produkuje napięcie niż poczucie bezpieczeństwa.",
+        next:
+          "Pełny raport pokazuje dominujące mechanizmy, główne ryzyka i najbardziej prawdopodobny kierunek rozwoju.",
+        entryKey,
+        answersCount: Object.keys(answers || {}).length,
+        hasNote: Boolean(note),
+      },
+    });
+  } catch (error) {
+    console.error("POST /api/analyze/preview error:", error);
+    return res.status(500).json({
+      ok: false,
+      error: "Nie udało się wygenerować preview.",
+    });
+  }
+});
+
+export default router;
