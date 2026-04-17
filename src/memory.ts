@@ -1,27 +1,30 @@
 export type PersistedAppState = {
   screen?: string;
   mode?: "soft" | "hard";
-  selectedPath?: string;
+  path?: string | null;
+  selectedPath?: string | null;
   step?: number;
-  answers?: Array<{
-    questionId: number;
-    text: string;
-    tags: string[];
-  }>;
-  interviews?: Array<{
-    aiPrompt: string;
-    userText: string;
-  }>;
-  sessionToken?: string;
-  preview?: any;
+  answers?: Array<{ q: string; a: string }>;
+  aiInterview?: Array<{ ai: string; user: string }>;
+  probeData?: { observation: string; question: string } | null;
+  previewData?: {
+    headline?: string;
+    subheadline?: string;
+    previewLine?: string;
+    tensionPercent?: number;
+    driftPercent?: number;
+    rebuildPercent?: number;
+    sections?: Array<{ title: string; text: string; tone?: "normal" | "gold" | "danger" }>;
+  } | null;
   email?: string;
-  currentAiObservation?: string;
   currentUserText?: string;
-  patterns?: string[];
+  acceptedConsents?: boolean[];
+  noRefundConsent?: boolean;
+  sessionToken?: string;
+  paymentStatus?: "idle" | "pending" | "paid" | "failed";
 };
 
 const SESSION_ID_KEY = "ctms_id";
-const PATTERNS_KEY = "ctms_patterns";
 const CONSENT_KEY = "ctms_consents";
 const APP_STATE_KEY = "ctms_app_state";
 
@@ -37,26 +40,15 @@ function safeRead<T>(key: string, fallback: T): T {
 function safeWrite(key: string, value: unknown) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // ignore
-  }
+  } catch {}
 }
 
 export function getSessionId() {
   const existing = localStorage.getItem(SESSION_ID_KEY);
   if (existing) return existing;
-
   const next = `ctms_${Math.random().toString(36).slice(2)}_${Date.now()}`;
   localStorage.setItem(SESSION_ID_KEY, next);
   return next;
-}
-
-export function getPatterns(): string[] {
-  return safeRead<string[]>(PATTERNS_KEY, []);
-}
-
-export function savePatterns(patterns: string[]) {
-  safeWrite(PATTERNS_KEY, patterns);
 }
 
 export function getConsentState() {
@@ -78,7 +70,5 @@ export function saveAppState(value: PersistedAppState) {
 export function clearAppState() {
   try {
     localStorage.removeItem(APP_STATE_KEY);
-  } catch {
-    // ignore
-  }
+  } catch {}
 }

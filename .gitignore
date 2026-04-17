@@ -4,13 +4,11 @@ dist
 .env
 .env.local
 .env.production
-package-lock.json
 
 # server
 server/node_modules
 server/.env
 server/database.sqlite
-server/package-lock.json
 
 # build / cache
 *.tsbuildinfo
