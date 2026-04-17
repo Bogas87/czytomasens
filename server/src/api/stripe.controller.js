@@ -99,7 +99,7 @@ exports.createCheckout = async (req, res) => {
                 name: "CzyToMaSens – pełny raport",
                 description: "Rozszerzona analiza wzorców relacyjnych",
               },
-              unit_amount: 4900,
+              unit_amount: 1500,
             },
             quantity: 1,
           },
