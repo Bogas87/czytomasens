@@ -12,6 +12,7 @@ router.get("/health", (_req, res) => {
     ok: true,
     service: "CzyToMaSens API",
     model: process.env.OPENAI_MODEL || "gpt-4o",
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -28,13 +29,13 @@ router.post("/session/create", async (req, res) => {
     } = req.body || {};
 
     const sessionId =
-      crypto?.randomUUID?.() ||
+      crypto.randomUUID?.() ||
       `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 
     return res.json({
       ok: true,
       token: sessionId,
-      sessionId: sessionId,
+      sessionId,
       session: {
         id: sessionId,
         entryKey,
@@ -59,7 +60,14 @@ router.post("/session/create", async (req, res) => {
  */
 router.post("/session/update", async (req, res) => {
   try {
-    const { token = null, sessionId = null, answers = {}, email = null, payload = null } = req.body || {};
+    const {
+      token = null,
+      sessionId = null,
+      answers = {},
+      email = null,
+      payload = null,
+      preview = null,
+    } = req.body || {};
 
     return res.json({
       ok: true,
@@ -68,6 +76,7 @@ router.post("/session/update", async (req, res) => {
       answers,
       email,
       payload,
+      preview,
       updatedAt: new Date().toISOString(),
     });
   } catch (error) {
@@ -80,7 +89,7 @@ router.post("/session/update", async (req, res) => {
 });
 
 /**
- * STARY ALIAS - jakby frontend jeszcze walił tutaj
+ * STARY ALIAS - gdyby frontend jeszcze walił tutaj
  */
 router.post("/session/save", async (req, res) => {
   try {
@@ -136,24 +145,30 @@ router.post("/capture-email", async (req, res) => {
 /**
  * CHECKPOINT
  */
+function buildCheckpoint(body = {}) {
+  const { answers = [], entryKey = "default" } = body;
+
+  return {
+    ok: true,
+    checkpoint: {
+      title: "Wykryto niespójność",
+      headline: "Tu jest coś, co wymaga dopowiedzenia.",
+      insight:
+        "W odpowiedziach widać napięcie między tym, co próbujesz utrzymać, a tym, co realnie opisujesz.",
+      question:
+        "Gdybyś miał powiedzieć jedną rzecz, której unikasz nazwać wprost, co by to było?",
+      tone: "neutral",
+      entryKey,
+      answersCount: Array.isArray(answers)
+        ? answers.length
+        : Object.keys(answers || {}).length,
+    },
+  };
+}
+
 router.post("/checkpoint", async (req, res) => {
   try {
-    const { answers = [], entryKey = "default" } = req.body || {};
-
-    return res.json({
-      ok: true,
-      checkpoint: {
-        title: "Wykryto niespójność",
-        headline: "Tu jest coś, co wymaga dopowiedzenia.",
-        insight:
-          "W odpowiedziach widać napięcie między tym, co próbujesz utrzymać, a tym, co realnie opisujesz.",
-        question:
-          "Gdybyś miał powiedzieć jedną rzecz, której unikasz nazwać wprost, co by to było?",
-        tone: "neutral",
-        entryKey,
-        answersCount: Array.isArray(answers) ? answers.length : Object.keys(answers || {}).length,
-      },
-    });
+    return res.json(buildCheckpoint(req.body || {}));
   } catch (error) {
     console.error("POST /api/checkpoint error:", error);
     return res.status(500).json({
@@ -163,27 +178,9 @@ router.post("/checkpoint", async (req, res) => {
   }
 });
 
-/**
- * ALIAS CHECKPOINT
- */
 router.post("/analyze/checkpoint", async (req, res) => {
   try {
-    const { answers = [], entryKey = "default" } = req.body || {};
-
-    return res.json({
-      ok: true,
-      checkpoint: {
-        title: "Wykryto niespójność",
-        headline: "Tu jest coś, co wymaga dopowiedzenia.",
-        insight:
-          "W odpowiedziach widać napięcie między tym, co próbujesz utrzymać, a tym, co realnie opisujesz.",
-        question:
-          "Gdybyś miał powiedzieć jedną rzecz, której unikasz nazwać wprost, co by to było?",
-        tone: "neutral",
-        entryKey,
-        answersCount: Array.isArray(answers) ? answers.length : Object.keys(answers || {}).length,
-      },
-    });
+    return res.json(buildCheckpoint(req.body || {}));
   } catch (error) {
     console.error("POST /api/analyze/checkpoint error:", error);
     return res.status(500).json({
@@ -194,34 +191,40 @@ router.post("/analyze/checkpoint", async (req, res) => {
 });
 
 /**
- * PREVIEW RAPORTU - GŁÓWNA TRASA
+ * PREVIEW RAPORTU
  */
+function buildPreview(body = {}) {
+  const { entryKey = "default", answers = [], note = "" } = body;
+
+  return {
+    ok: true,
+    preview: {
+      score: 57,
+      badge: "yellow",
+      headline: "Tu bardziej widać chwiejność niż spójność.",
+      mirror:
+        "Największy problem nie wygląda tu na brak uczuć, tylko na brak jasności, stabilności i równego zaangażowania.",
+      indicators: [
+        { label: "Poziom napięcia", value: 41 },
+        { label: "Rozjazd", value: 48 },
+        { label: "Szansa zmiany", value: 57 },
+      ],
+      summary:
+        "Ta relacja nie wygląda na jednoznacznie straconą, ale w obecnym układzie bardziej produkuje napięcie niż poczucie bezpieczeństwa.",
+      next:
+        "Pełny raport pokazuje dominujące mechanizmy, główne ryzyka i najbardziej prawdopodobny kierunek rozwoju.",
+      entryKey,
+      answersCount: Array.isArray(answers)
+        ? answers.length
+        : Object.keys(answers || {}).length,
+      hasNote: Boolean(note),
+    },
+  };
+}
+
 router.post("/analyze", async (req, res) => {
   try {
-    const { entryKey = "default", answers = [], note = "" } = req.body || {};
-
-    return res.json({
-      ok: true,
-      preview: {
-        score: 57,
-        badge: "yellow",
-        headline: "Tu bardziej widać chwiejność niż spójność.",
-        mirror:
-          "Największy problem nie wygląda tu na brak uczuć, tylko na brak jasności, stabilności i równego zaangażowania.",
-        indicators: [
-          { label: "Poziom napięcia", value: 41 },
-          { label: "Rozjazd", value: 48 },
-          { label: "Szansa zmiany", value: 57 },
-        ],
-        summary:
-          "Ta relacja nie wygląda na jednoznacznie straconą, ale w obecnym układzie bardziej produkuje napięcie niż poczucie bezpieczeństwa.",
-        next:
-          "Pełny raport pokazuje dominujące mechanizmy, główne ryzyka i najbardziej prawdopodobny kierunek rozwoju.",
-        entryKey,
-        answersCount: Array.isArray(answers) ? answers.length : Object.keys(answers || {}).length,
-        hasNote: Boolean(note),
-      },
-    });
+    return res.json(buildPreview(req.body || {}));
   } catch (error) {
     console.error("POST /api/analyze error:", error);
     return res.status(500).json({
@@ -231,35 +234,9 @@ router.post("/analyze", async (req, res) => {
   }
 });
 
-/**
- * ALIAS PREVIEW
- */
 router.post("/analyze/preview", async (req, res) => {
   try {
-    const { entryKey = "default", answers = [], note = "" } = req.body || {};
-
-    return res.json({
-      ok: true,
-      preview: {
-        score: 57,
-        badge: "yellow",
-        headline: "Tu bardziej widać chwiejność niż spójność.",
-        mirror:
-          "Największy problem nie wygląda tu na brak uczuć, tylko na brak jasności, stabilności i równego zaangażowania.",
-        indicators: [
-          { label: "Poziom napięcia", value: 41 },
-          { label: "Rozjazd", value: 48 },
-          { label: "Szansa zmiany", value: 57 },
-        ],
-        summary:
-          "Ta relacja nie wygląda na jednoznacznie straconą, ale w obecnym układzie bardziej produkuje napięcie niż poczucie bezpieczeństwa.",
-        next:
-          "Pełny raport pokazuje dominujące mechanizmy, główne ryzyka i najbardziej prawdopodobny kierunek rozwoju.",
-        entryKey,
-        answersCount: Array.isArray(answers) ? answers.length : Object.keys(answers || {}).length,
-        hasNote: Boolean(note),
-      },
-    });
+    return res.json(buildPreview(req.body || {}));
   } catch (error) {
     console.error("POST /api/analyze/preview error:", error);
     return res.status(500).json({
@@ -270,7 +247,7 @@ router.post("/analyze/preview", async (req, res) => {
 });
 
 /**
- * CHECKOUT - OBA ADRESY
+ * CHECKOUT
  */
 router.post("/create-checkout", stripeController.createCheckout);
 router.post("/stripe/checkout", stripeController.createCheckout);
@@ -288,20 +265,29 @@ router.get("/report/:token", async (req, res) => {
         headline: "Raport premium — wersja robocza",
         subheadline: `Sesja: ${token}`,
         rebuildPercent: 57,
+        tensionPercent: 41,
+        driftPercent: 48,
+        previewLine:
+          "To nie wygląda na układ stabilny. Bardziej na relację, która trzyma Cię w napięciu i niejasności.",
         sections: [
           {
             title: "Dominujący mechanizm",
-            text: "Tu trzeba jeszcze podpiąć finalne dane z właściwego generatora raportu. Na ten moment to odpowiedź techniczna, żeby flow nie umierał po płatności.",
+            text: "Na tym etapie głównym problemem wygląda nie brak emocji, ale niestabilność, rozjazd sygnałów i trudność w odzyskaniu jasnego gruntu pod nogami.",
             tone: "gold",
           },
           {
             title: "Największe ryzyko",
-            text: "Największym ryzykiem jest rozjazd między warstwą obietnicy a realnym zachowaniem drugiej strony.",
+            text: "Największym ryzykiem jest przeciąganie układu, który nie daje realnego bezpieczeństwa, a jednocześnie utrzymuje Cię w nadziei, że zaraz coś się wyjaśni.",
             tone: "danger",
+          },
+          {
+            title: "Co pokazuje ten raport",
+            text: "To jest techniczna wersja raportu zwracana od razu po płatności, żeby flow działał stabilnie. Następny etap to podmiana tej treści na pełny raport premium z właściwego generatora.",
+            tone: "normal",
           },
         ],
         closing:
-          "To jest tymczasowa odpowiedź backendowa, żeby flow działał od początku do końca bez 404.",
+          "To jest działająca odpowiedź backendowa, która domyka flow po płatności i nie pozwala aplikacji umrzeć na spinnerze.",
       },
     });
   } catch (error) {
@@ -311,6 +297,17 @@ router.get("/report/:token", async (req, res) => {
       error: "Nie udało się pobrać raportu.",
     });
   }
+});
+
+/**
+ * FALLBACK
+ */
+router.use((req, res) => {
+  return res.status(404).json({
+    ok: false,
+    error: "Nie znaleziono endpointu API.",
+    path: req.originalUrl,
+  });
 });
 
 export default router;
