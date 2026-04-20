@@ -39,7 +39,7 @@ export async function createCheckout(req, res) {
     const userAgent = normalizeText(req.headers["user-agent"] || "");
 
     const successUrl = `${process.env.CLIENT_URL}?success=1&token=${encodeURIComponent(token)}`;
-    const cancelUrl = `${process.env.CLIENT_URL}?cancelled=1`;
+    const cancelUrl = `${process.env.CLIENT_URL}?cancel=1`;
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
