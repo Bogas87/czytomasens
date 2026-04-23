@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import "./index.css";
 
 function readApiBase(): string {
   try {
@@ -15,16 +16,16 @@ function readApiBase(): string {
 const API_BASE = readApiBase();
 
 const BRAND = {
-  bg: "#050505",
+  gold: "#C5A059",
+  text: "#F5F1EA",
+  muted: "#A79F97",
+  border: "rgba(255,255,255,0.08)",
+  borderStrong: "rgba(197,160,89,0.28)",
   panel: "rgba(255,255,255,0.035)",
   panelStrong: "rgba(255,255,255,0.055)",
-  border: "rgba(255,255,255,0.08)",
-  text: "#F5F1EA",
-  muted: "#AAA198",
-  gold: "#C5A059",
-  danger: "#E2A3A3",
-  success: "#B9D4B3",
-  yellow: "#D7B978",
+  danger: "#DFA0A0",
+  success: "#B7D6B3",
+  yellow: "#D8BD7A",
 };
 
 type Stage =
@@ -108,7 +109,7 @@ type SessionCreateResponse = {
   sessionId?: string;
 };
 
-const STORAGE_KEY = "ctms_premium_front_v4";
+const STORAGE_KEY = "ctms_premium_front_v5";
 
 const CONSENTS = [
   "Rozumiem, że to narzędzie ma charakter analityczny i rozwojowy, a nie medyczny, psychoterapeutyczny ani prawny.",
@@ -601,15 +602,10 @@ function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): 
   const textPenalty =
     openText.trim().length > 220 ? 4 : openText.trim().length > 120 ? 2 : 0;
 
-  const chance = safeNumber(
-    100 - Math.round(intensity * 76) - textPenalty,
-    8,
-    88
-  );
+  const chance = safeNumber(100 - Math.round(intensity * 76) - textPenalty, 8, 88);
   const tension = safeNumber(Math.round(28 + intensity * 59), 14, 96);
   const asymmetry = safeNumber(Math.round(24 + intensity * 62), 12, 97);
   const change = safeNumber(Math.round(74 - intensity * 48), 8, 84);
-
   const truthLine = buildTruthLine(path, chance, openText);
 
   if (chance <= 24) {
@@ -733,6 +729,7 @@ async function fetchPaidReport(token: string): Promise<FullReport> {
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
     const res = await fetch(`${API_BASE}/api/report/${encodeURIComponent(token)}`);
+
     if (res.status === 202) {
       await new Promise((resolve) => setTimeout(resolve, INTERVAL_MS));
       continue;
@@ -758,44 +755,29 @@ async function fetchPaidReport(token: string): Promise<FullReport> {
 
 function LogoBlock() {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div
-          style={{
-            width: 14,
-            height: 14,
-            borderRadius: 999,
-            background: BRAND.gold,
-            boxShadow: `0 0 28px ${BRAND.gold}`,
-          }}
-        />
-        <div
-          style={{
-            fontSize: 32,
-            fontWeight: 900,
-            letterSpacing: -1.4,
-            color: BRAND.text,
-          }}
-        >
-          CzyToMaSens<span style={{ color: BRAND.gold }}>.</span>
-        </div>
+    <div className="ctms-logo-wrap">
+      <div className="ctms-logo">
+        <span className="ctms-logo-dot" />
+        <span className="ctms-logo-word">CzyToMaSens</span>
+        <span className="ctms-logo-gold">.</span>
       </div>
-      <div style={{ color: BRAND.muted, letterSpacing: 4, fontSize: 11 }}>
-        PRYWATNA ANALIZA RELACJI
-      </div>
+      <div className="ctms-logo-sub">PRYWATNA ANALIZA RELACJI</div>
     </div>
   );
 }
 
 function Glass({
   children,
+  className = "",
   style = {},
 }: {
   children: React.ReactNode;
+  className?: string;
   style?: React.CSSProperties;
 }) {
   return (
     <div
+      className={`ctms-glass ${className}`.trim()}
       style={{
         background: `linear-gradient(180deg, ${BRAND.panelStrong}, ${BRAND.panel})`,
         border: `1px solid ${BRAND.border}`,
@@ -820,22 +802,9 @@ function PrimaryButton({
   disabled?: boolean;
 }) {
   return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        borderRadius: 999,
-        padding: "16px 24px",
-        background: BRAND.gold,
-        color: "#101010",
-        border: `1px solid ${BRAND.gold}`,
-        fontWeight: 800,
-        fontSize: 15,
-        cursor: disabled ? "not-allowed" : "pointer",
-        opacity: disabled ? 0.55 : 1,
-      }}
-    >
-      {children}
+    <button className="ctms-btn ctms-btn-primary" onClick={onClick} disabled={disabled}>
+      <span>{children}</span>
+      <span className="ctms-btn-arrow">→</span>
     </button>
   );
 }
@@ -847,22 +816,22 @@ function GhostButton({
   children: React.ReactNode;
   onClick?: () => void;
 }) {
+    return (
+      <button className="ctms-btn ctms-btn-ghost" onClick={onClick}>
+        {children}
+      </button>
+    );
+}
+
+function ProgressBar({ index, total }: { index: number; total: number }) {
+  const percent = safeNumber(Math.round(((index + 1) / total) * 100), 0, 100);
   return (
-    <button
-      onClick={onClick}
-      style={{
-        borderRadius: 999,
-        padding: "16px 22px",
-        background: "rgba(255,255,255,0.03)",
-        color: BRAND.text,
-        border: `1px solid ${BRAND.border}`,
-        fontWeight: 700,
-        fontSize: 14,
-        cursor: "pointer",
-      }}
-    >
-      {children}
-    </button>
+    <div className="ctms-progress">
+      <div className="ctms-progress-label">{percent}%</div>
+      <div className="ctms-progress-track">
+        <div className="ctms-progress-fill" style={{ width: `${percent}%` }} />
+      </div>
+    </div>
   );
 }
 
@@ -875,63 +844,15 @@ function PremiumBadge({ preview }: { preview: Preview }) {
       : BRAND.yellow;
 
   return (
-    <Glass style={{ padding: 28, textAlign: "center", borderColor: color }}>
-      <div style={{ color: BRAND.muted, letterSpacing: 4, fontSize: 11 }}>
-        NA ILE TO MA SENS
-      </div>
-      <div
-        style={{
-          fontSize: "clamp(64px, 12vw, 92px)",
-          lineHeight: 1,
-          fontWeight: 900,
-          color,
-          marginTop: 8,
-        }}
-      >
+    <Glass className="ctms-preview-badge" style={{ borderColor: color }}>
+      <div className="ctms-kicker">NA ILE TO MA SENS</div>
+      <div className="ctms-preview-score" style={{ color }}>
         {preview.chance}%
       </div>
-      <div style={{ marginTop: 8, fontSize: 28, fontWeight: 800 }}>
-        {preview.badge}
-      </div>
-      <div style={{ marginTop: 12, color: BRAND.text, fontSize: 18, lineHeight: 1.65 }}>
-        {preview.truthLine}
-      </div>
-      <div style={{ marginTop: 12, color: BRAND.muted, lineHeight: 1.7 }}>
-        {preview.mirror}
-      </div>
+      <div className="ctms-preview-label">{preview.badge}</div>
+      <div className="ctms-preview-truth">{preview.truthLine}</div>
+      <div className="ctms-preview-mirror">{preview.mirror}</div>
     </Glass>
-  );
-}
-
-function ProgressBar({
-  index,
-  total,
-}: {
-  index: number;
-  total: number;
-}) {
-  const percent = safeNumber(Math.round(((index + 1) / total) * 100), 0, 100);
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-      <div style={{ color: BRAND.muted, fontSize: 14 }}>{percent}%</div>
-      <div
-        style={{
-          width: 120,
-          height: 3,
-          background: "rgba(255,255,255,0.08)",
-          borderRadius: 999,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            width: `${percent}%`,
-            height: "100%",
-            background: BRAND.gold,
-          }}
-        />
-      </div>
-    </div>
   );
 }
 
@@ -950,7 +871,7 @@ export default function App() {
   const [consents, setConsents] = useState<boolean[]>([false, false, false]);
 
   const path = useMemo(
-    () => ENTRY_CONFIGS.find((x) => x.key === selectedPath) || null,
+    () => ENTRY_CONFIGS.find((item) => item.key === selectedPath) || null,
     [selectedPath]
   );
 
@@ -972,9 +893,7 @@ export default function App() {
         setSessionToken(parsed.sessionToken || null);
         setConsents(parsed.consents || [false, false, false]);
       }
-    } catch {
-      // ignore restore error
-    }
+    } catch {}
 
     const params = new URLSearchParams(window.location.search);
     const success = params.get("success");
@@ -1092,7 +1011,7 @@ export default function App() {
       return;
     }
 
-    setQuestionIndex((v) => Math.max(0, v + 1));
+    setQuestionIndex((value) => Math.max(0, value + 1));
   };
 
   const answerCheckpoint = (optionId: string) => {
@@ -1109,7 +1028,7 @@ export default function App() {
         setStage("entry");
         return;
       }
-      setQuestionIndex((v) => Math.max(0, v - 1));
+      setQuestionIndex((value) => Math.max(0, value - 1));
       return;
     }
 
@@ -1160,9 +1079,7 @@ export default function App() {
           stage: "preview",
         });
       }
-    } catch {
-      // silent fallback
-    }
+    } catch {}
 
     setStage("preview");
   };
@@ -1212,18 +1129,9 @@ export default function App() {
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100dvh",
-        background:
-          "radial-gradient(circle at 12% 8%, rgba(197,160,89,0.15), transparent 28%), radial-gradient(circle at 85% 10%, rgba(255,255,255,0.05), transparent 20%), #050505",
-        color: BRAND.text,
-        fontFamily:
-          'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      }}
-    >
-      <div className="page-wrap">
-        <div className="topbar">
+    <div className="ctms-app-shell">
+      <div className="ctms-page">
+        <div className="ctms-topbar">
           <LogoBlock />
           {stage !== "landing" && <GhostButton onClick={resetAll}>Od początku</GhostButton>}
         </div>
@@ -1236,80 +1144,39 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <div className="hero-grid">
-                <Glass style={{ padding: 38, minHeight: 560 }}>
-                  <div
-                    style={{
-                      color: BRAND.gold,
-                      fontSize: 12,
-                      letterSpacing: 5,
-                      marginBottom: 18,
-                    }}
-                  >
-                    NIE TEST. NIE TERAPIA. NIE LUKIER.
+              <section className="ctms-hero">
+                <div className="ctms-hero-main">
+                  <div className="ctms-hero-line-wrap">
+                    <span className="ctms-eyebrow">PRYWATNA ANALIZA RELACJI</span>
+                    <span className="ctms-eyebrow-line" />
                   </div>
 
-                  <div className="hero-title">
-                    Coś Ci tu nie gra.
+                  <div className="ctms-kicker-large">NIE TEST. NIE TERAPIA. NIE LUKIER.</div>
+
+                  <h1 className="ctms-display">
+                    Zobacz, co ta relacja
                     <br />
-                    I bardzo możliwe,
-                    <br />
-                    że już to wiesz.
-                  </div>
+                    <span className="ctms-display-gold">naprawdę</span> z Tobą robi.
+                  </h1>
 
-                  <div className="hero-copy">
-                    To nie ma Cię pogłaskać. To ma oddzielić to, co naprawdę
-                    dzieje się w tej relacji, od tego, co jeszcze próbujesz
-                    obronić nadzieją, przywiązaniem albo strachem przed końcem.
-                  </div>
+                  <p className="ctms-hero-copy">
+                    Nie pytamy o idealną historię. Pytamy o to, co wraca, męczy,
+                    miesza i nie daje spokoju. Potem pokazujemy, ile tu jeszcze sensu,
+                    a ile już tylko napięcia, przywiązania albo nadziei bez pokrycia.
+                  </p>
 
-                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 30 }}>
+                  <div className="ctms-hero-actions">
                     <PrimaryButton onClick={() => setStage("consent")}>
                       Rozpocznij wgląd w relację
                     </PrimaryButton>
-                    <GhostButton onClick={() => setStage("entry")}>
-                      Zobacz, od czego możesz zacząć
-                    </GhostButton>
+                    <GhostButton onClick={() => setStage("entry")}>Jak to działa</GhostButton>
                   </div>
+                </div>
 
-                  <div className="feature-grid">
-                    {[
-                      [
-                        "Rozmowa, nie quiz",
-                        "System nie wrzuca wszystkich w jedną listę pytań. Wchodzi przez problem, a potem schodzi głębiej.",
-                      ],
-                      [
-                        "Lustro, nie pocieszanie",
-                        "Tu nie chodzi o ładne zdania. Chodzi o trafność, napięcie i nazwanie mechanizmu, który już działa.",
-                      ],
-                      [
-                        "Preview, które wbija hak",
-                        "Najpierw widzisz kierunek i jedno mocne lustro. Dopiero potem decydujesz, czy chcesz zejść głębiej.",
-                      ],
-                    ].map(([t, d]) => (
-                      <Glass key={t} style={{ padding: 20, borderRadius: 24 }}>
-                        <div style={{ fontWeight: 800, fontSize: 20 }}>{t}</div>
-                        <div style={{ marginTop: 10, color: BRAND.muted, lineHeight: 1.65 }}>
-                          {d}
-                        </div>
-                      </Glass>
-                    ))}
-                  </div>
-                </Glass>
-
-                <div style={{ display: "grid", gap: 18 }}>
-                  <Glass style={{ padding: 26 }}>
-                    <div
-                      style={{
-                        color: BRAND.gold,
-                        fontSize: 12,
-                        letterSpacing: 4,
-                        marginBottom: 14,
-                      }}
-                    >
-                      WEJŚCIA PROBLEMOWE
-                    </div>
-                    <div style={{ display: "grid", gap: 14, lineHeight: 1.7 }}>
+                <div className="ctms-hero-side">
+                  <Glass className="ctms-side-card">
+                    <div className="ctms-kicker">WEJŚCIA PROBLEMOWE</div>
+                    <div className="ctms-side-list">
                       <div>Wracacie do siebie i nic się nie naprawia.</div>
                       <div>To trwa, ale coraz mniej tam życia.</div>
                       <div>Była zdrada, kłamstwo albo pęknięcie zaufania.</div>
@@ -1319,42 +1186,55 @@ export default function App() {
                     </div>
                   </Glass>
 
-                  <Glass style={{ padding: 26 }}>
-                    <div
-                      style={{
-                        color: BRAND.gold,
-                        fontSize: 12,
-                        letterSpacing: 4,
-                        marginBottom: 14,
-                      }}
-                    >
-                      CO DOSTAJESZ
-                    </div>
-                    <div style={{ fontSize: 20, lineHeight: 1.7, color: BRAND.muted }}>
-                      Najpierw darmowe lustro sytuacji. Potem pełny raport premium:
-                      mechanizmy, ryzyka, scenariusze, praktyczne wskazówki i jasny werdykt.
-                    </div>
-                  </Glass>
-
-                  <Glass style={{ padding: 26 }}>
-                    <div
-                      style={{
-                        color: BRAND.gold,
-                        fontSize: 12,
-                        letterSpacing: 4,
-                        marginBottom: 14,
-                      }}
-                    >
-                      GŁOSY PO PIERWSZYCH ANALIZACH
-                    </div>
-                    <div style={{ display: "grid", gap: 12, color: BRAND.muted, lineHeight: 1.75 }}>
+                  <Glass className="ctms-side-card">
+                    <div className="ctms-kicker">GŁOSY PO PIERWSZYCH ANALIZACH</div>
+                    <div className="ctms-side-proof">
                       {SOCIAL_PROOF.map((item) => (
                         <div key={item}>{item}</div>
                       ))}
                     </div>
                   </Glass>
                 </div>
-              </div>
+              </section>
+
+              <section className="ctms-feature-editorial-grid">
+                {[
+                  {
+                    no: "01",
+                    icon: "◌",
+                    title: "Rozmowa, nie quiz",
+                    text: "System prowadzi Cię warstwowo, zamiast wrzucać wszystkich w jedną listę pytań.",
+                  },
+                  {
+                    no: "02",
+                    icon: "▤",
+                    title: "Wielowarstwowa analiza",
+                    text: "Wychwytuje napięcie, niespójność, unikanie, chaos i realny kierunek tej relacji.",
+                  },
+                  {
+                    no: "03",
+                    icon: "◐",
+                    title: "Preview zanim zapłacisz",
+                    text: "Najpierw widzisz lustro sytuacji. Potem decydujesz, czy chcesz zejść głębiej.",
+                  },
+                  {
+                    no: "04",
+                    icon: "↗",
+                    title: "Pełny raport premium",
+                    text: "Dostajesz mechanizmy, ryzyka, scenariusze i wskazówki, do których można wrócić później.",
+                  },
+                ].map((item) => (
+                  <Glass key={item.no} className="ctms-editorial-card">
+                    <div className="ctms-editorial-card-top">
+                      <div className="ctms-editorial-no">{item.no}</div>
+                      <div className="ctms-editorial-icon">{item.icon}</div>
+                    </div>
+                    <h3 className="ctms-editorial-title">{item.title}</h3>
+                    <div className="ctms-editorial-line" />
+                    <p className="ctms-editorial-text">{item.text}</p>
+                  </Glass>
+                ))}
+              </section>
             </motion.div>
           )}
 
@@ -1365,38 +1245,18 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <Glass style={{ padding: 34, maxWidth: 900, margin: "0 auto" }}>
-                <div
-                  style={{
-                    color: BRAND.gold,
-                    fontSize: 12,
-                    letterSpacing: 5,
-                    marginBottom: 18,
-                  }}
-                >
-                  ZANIM WEJDZIESZ GŁĘBIEJ
-                </div>
-
-                <div className="section-title">To ma być trafne, nie miłe.</div>
-
-                <div style={{ marginTop: 18, color: BRAND.muted, lineHeight: 1.8, fontSize: 17 }}>
+              <Glass className="ctms-panel-large">
+                <div className="ctms-kicker-large">ZANIM WEJDZIESZ GŁĘBIEJ</div>
+                <h2 className="ctms-panel-title">To ma być trafne, nie miłe.</h2>
+                <p className="ctms-panel-copy">
                   Ten produkt analizuje wzorce i dynamikę relacji. Nie zastępuje terapii,
                   diagnozy ani porady prawnej. Po płatności dostajesz treść cyfrową od razu.
                   To wejście jest dla ludzi, którzy chcą widzieć jaśniej, nie ładniej.
-                </div>
+                </p>
 
-                <div style={{ display: "grid", gap: 14, marginTop: 24 }}>
+                <div className="ctms-consent-list">
                   {CONSENTS.map((text, idx) => (
-                    <label
-                      key={idx}
-                      style={{
-                        display: "flex",
-                        gap: 12,
-                        alignItems: "flex-start",
-                        lineHeight: 1.75,
-                        cursor: "pointer",
-                      }}
-                    >
+                    <label key={idx} className="ctms-consent-row">
                       <input
                         type="checkbox"
                         checked={consents[idx]}
@@ -1405,14 +1265,13 @@ export default function App() {
                           next[idx] = e.target.checked;
                           setConsents(next);
                         }}
-                        style={{ marginTop: 4 }}
                       />
                       <span>{text}</span>
                     </label>
                   ))}
                 </div>
 
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 26 }}>
+                <div className="ctms-actions-row">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
                   <PrimaryButton
                     onClick={() => setStage("entry")}
@@ -1432,56 +1291,26 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "end",
-                  gap: 20,
-                  marginBottom: 18,
-                }}
-              >
+              <div className="ctms-stage-head">
                 <div>
-                  <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 5 }}>
-                    PUNKT WEJŚCIA
-                  </div>
-                  <div className="section-title">Od czego ta historia boli najmocniej?</div>
-                  <div style={{ marginTop: 12, color: BRAND.muted, lineHeight: 1.75 }}>
+                  <div className="ctms-kicker-large">PUNKT WEJŚCIA</div>
+                  <h2 className="ctms-panel-title">Od czego ta historia boli najmocniej?</h2>
+                  <p className="ctms-panel-copy">
                     Zacznij od miejsca, które najbardziej ciągnie Cię w dół. System dopasuje
                     dalszą rozmowę do Twojej sytuacji.
-                  </div>
+                  </p>
                 </div>
                 <GhostButton onClick={goBack}>Wróć</GhostButton>
               </div>
 
-              <div className="entry-grid">
+              <div className="ctms-entry-grid">
                 {ENTRY_CONFIGS.map((entry) => (
-                  <Glass key={entry.key} style={{ padding: 24 }}>
-                    <div
-                      style={{
-                        color: BRAND.gold,
-                        fontSize: 11,
-                        letterSpacing: 4,
-                        marginBottom: 10,
-                      }}
-                    >
-                      ŚCIEŻKA ANALIZY
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 30,
-                        lineHeight: 1.05,
-                        fontWeight: 800,
-                        letterSpacing: -1.4,
-                      }}
-                    >
-                      {entry.title}
-                    </div>
-                    <div style={{ marginTop: 10, lineHeight: 1.65 }}>{entry.subtitle}</div>
-                    <div style={{ marginTop: 14, color: BRAND.muted, lineHeight: 1.75 }}>
-                      {entry.intro}
-                    </div>
-                    <div style={{ marginTop: 20 }}>
+                  <Glass key={entry.key} className="ctms-entry-card">
+                    <div className="ctms-kicker">ŚCIEŻKA ANALIZY</div>
+                    <h3 className="ctms-entry-title">{entry.title}</h3>
+                    <p className="ctms-entry-subtitle">{entry.subtitle}</p>
+                    <p className="ctms-entry-intro">{entry.intro}</p>
+                    <div className="ctms-entry-action">
                       <PrimaryButton onClick={() => startPath(entry.key)}>
                         {busy ? "Przygotowuję..." : "Wejdź tą ścieżką"}
                       </PrimaryButton>
@@ -1499,51 +1328,28 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: 18,
-                  gap: 18,
-                  flexWrap: "wrap",
-                }}
-              >
-                <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 5 }}>
-                  {path.title.toUpperCase()}
-                </div>
+              <div className="ctms-stage-head">
+                <div className="ctms-kicker-large">{path.title.toUpperCase()}</div>
                 <ProgressBar index={questionIndex} total={path.questions.length} />
               </div>
 
-              <Glass style={{ padding: 34, maxWidth: 900 }}>
-                <div style={{ color: BRAND.muted, fontSize: 18, lineHeight: 1.65 }}>
-                  {currentQuestion.lead}
-                </div>
+              <Glass className="ctms-question-panel">
+                <div className="ctms-question-lead">{currentQuestion.lead}</div>
+                <h2 className="ctms-question-title">{currentQuestion.text}</h2>
 
-                <div className="question-title">{currentQuestion.text}</div>
-
-                <div style={{ marginTop: 28, display: "grid", gap: 12 }}>
+                <div className="ctms-options-grid">
                   {currentQuestion.options.map((opt) => (
                     <button
                       key={opt.id}
+                      className="ctms-option-btn"
                       onClick={() => answerQuestion(currentQuestion.id, opt.id)}
-                      style={{
-                        textAlign: "left",
-                        padding: "22px 18px",
-                        borderRadius: 22,
-                        background: "rgba(255,255,255,0.03)",
-                        border: `1px solid ${BRAND.border}`,
-                        color: BRAND.text,
-                        fontSize: 18,
-                        cursor: "pointer",
-                      }}
                     >
                       {opt.label}
                     </button>
                   ))}
                 </div>
 
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 22 }}>
+                <div className="ctms-actions-row">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
                   <GhostButton onClick={resetAll}>Od początku</GhostButton>
                 </div>
@@ -1558,42 +1364,23 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <Glass style={{ padding: 34, maxWidth: 900, margin: "0 auto" }}>
-                <div
-                  style={{
-                    color: BRAND.gold,
-                    fontSize: 12,
-                    letterSpacing: 5,
-                    marginBottom: 16,
-                  }}
-                >
-                  {path.checkpoint.title}
-                </div>
+              <Glass className="ctms-panel-large">
+                <div className="ctms-kicker-large">{path.checkpoint.title}</div>
+                <h2 className="ctms-panel-title">{path.checkpoint.text}</h2>
 
-                <div className="section-title">{path.checkpoint.text}</div>
-
-                <div style={{ display: "grid", gap: 12, marginTop: 26 }}>
+                <div className="ctms-options-grid">
                   {path.checkpoint.options.map((opt) => (
                     <button
                       key={opt.id}
+                      className="ctms-option-btn"
                       onClick={() => answerCheckpoint(opt.id)}
-                      style={{
-                        textAlign: "left",
-                        padding: "22px 18px",
-                        borderRadius: 22,
-                        background: "rgba(255,255,255,0.03)",
-                        border: `1px solid ${BRAND.border}`,
-                        color: BRAND.text,
-                        fontSize: 18,
-                        cursor: "pointer",
-                      }}
                     >
                       {opt.label}
                     </button>
                   ))}
                 </div>
 
-                <div style={{ marginTop: 22 }}>
+                <div className="ctms-actions-row">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
                 </div>
               </Glass>
@@ -1607,56 +1394,24 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <Glass style={{ padding: 34, maxWidth: 960, margin: "0 auto" }}>
-                <div
-                  style={{
-                    color: BRAND.gold,
-                    fontSize: 12,
-                    letterSpacing: 5,
-                    marginBottom: 16,
-                  }}
-                >
-                  OSTATNIA WARSTWA
-                </div>
-
-                <div className="section-title">{path.openPrompt}</div>
+              <Glass className="ctms-panel-large">
+                <div className="ctms-kicker-large">OSTATNIA WARSTWA</div>
+                <h2 className="ctms-panel-title">{path.openPrompt}</h2>
 
                 <textarea
+                  className="ctms-textarea"
                   value={openText}
                   onChange={(e) => setOpenText(e.target.value)}
                   placeholder="Napisz bez filtra. Im uczciwiej, tym bardziej trafne będzie lustro i późniejszy raport."
                   maxLength={3000}
-                  style={{
-                    width: "100%",
-                    minHeight: 220,
-                    marginTop: 22,
-                    padding: 18,
-                    borderRadius: 24,
-                    background: "rgba(255,255,255,0.03)",
-                    border: `1px solid ${BRAND.border}`,
-                    color: BRAND.text,
-                    fontSize: 17,
-                    lineHeight: 1.75,
-                    outline: "none",
-                    resize: "vertical",
-                  }}
                 />
 
-                <div
-                  style={{
-                    marginTop: 10,
-                    color: BRAND.muted,
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: 10,
-                    flexWrap: "wrap",
-                  }}
-                >
+                <div className="ctms-text-meta">
                   <div>Ta odpowiedź pogłębia lustro i ustawia ton raportu.</div>
                   <div>{openText.length}/3000</div>
                 </div>
 
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 22 }}>
+                <div className="ctms-actions-row">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
                   <PrimaryButton
                     onClick={buildPreviewAndGo}
@@ -1676,54 +1431,29 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <Glass
-                style={{
-                  padding: 34,
-                  maxWidth: 860,
-                  margin: "0 auto",
-                  borderColor: BRAND.danger,
-                }}
-              >
-                <div
-                  style={{
-                    color: BRAND.danger,
-                    fontSize: 12,
-                    letterSpacing: 5,
-                    marginBottom: 16,
-                  }}
-                >
+              <Glass className="ctms-panel-large" style={{ borderColor: BRAND.danger }}>
+                <div className="ctms-kicker-large" style={{ color: BRAND.danger }}>
                   TRYB KRYZYSOWY
                 </div>
-
-                <div className="section-title">
+                <h2 className="ctms-panel-title">
                   To nie jest właściwe narzędzie dla sytuacji bezpośredniego zagrożenia.
-                </div>
+                </h2>
+                <p className="ctms-panel-copy">
+                  Jeśli istnieje ryzyko przemocy, zagrożenia życia albo zrobienia sobie krzywdy,
+                  przerwij tę analizę i skorzystaj z natychmiastowej pomocy.
+                </p>
 
-                <div
-                  style={{
-                    marginTop: 18,
-                    color: BRAND.muted,
-                    lineHeight: 1.8,
-                    fontSize: 18,
-                  }}
-                >
-                  Jeśli istnieje ryzyko przemocy, zagrożenia życia albo zrobienia sobie
-                  krzywdy, przerwij tę analizę i skorzystaj z natychmiastowej pomocy.
-                </div>
-
-                <div style={{ display: "grid", gap: 14, marginTop: 24 }}>
-                  <Glass style={{ padding: 18, borderRadius: 20 }}>
-                    <strong>112</strong> — numer alarmowy
-                  </Glass>
-                  <Glass style={{ padding: 18, borderRadius: 20 }}>
+                <div className="ctms-crisis-grid">
+                  <Glass className="ctms-crisis-box"><strong>112</strong> — numer alarmowy</Glass>
+                  <Glass className="ctms-crisis-box">
                     <strong>116 123</strong> — telefon zaufania dla osób dorosłych w kryzysie emocjonalnym
                   </Glass>
-                  <Glass style={{ padding: 18, borderRadius: 20 }}>
+                  <Glass className="ctms-crisis-box">
                     <strong>116 111</strong> — telefon zaufania dla dzieci i młodzieży
                   </Glass>
                 </div>
 
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24 }}>
+                <div className="ctms-actions-row">
                   <GhostButton onClick={resetAll}>Zamknij analizę</GhostButton>
                 </div>
               </Glass>
@@ -1737,195 +1467,79 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <Glass style={{ padding: 34, maxWidth: 1040, margin: "0 auto" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "start",
-                    gap: 20,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        color: BRAND.gold,
-                        fontSize: 12,
-                        letterSpacing: 5,
-                        marginBottom: 14,
-                      }}
-                    >
-                      DARMOWE LUSTRO SYTUACJI
-                    </div>
-                    <div className="section-title" style={{ maxWidth: 760 }}>
-                      {preview.headline}
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 18,
-                        fontSize: 22,
-                        lineHeight: 1.65,
-                        color: BRAND.text,
-                        maxWidth: 800,
-                      }}
-                    >
-                      {preview.truthLine}
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 12,
-                        fontSize: 19,
-                        lineHeight: 1.75,
-                        color: BRAND.muted,
-                        maxWidth: 780,
-                      }}
-                    >
-                      {preview.mirror}
-                    </div>
-                  </div>
-                </div>
+              <Glass className="ctms-preview-wrap">
+                <div className="ctms-kicker-large">DARMOWE LUSTRO SYTUACJI</div>
+                <h2 className="ctms-panel-title ctms-preview-headline">{preview.headline}</h2>
+                <div className="ctms-preview-truth-top">{preview.truthLine}</div>
+                <div className="ctms-preview-mirror-top">{preview.mirror}</div>
 
-                <div style={{ marginTop: 22 }}>
-                  <PremiumBadge preview={preview} />
-                </div>
+                <PremiumBadge preview={preview} />
 
-                <div className="metrics-grid">
+                <div className="ctms-metrics-grid">
                   {[
                     [preview.tension, "POZIOM NAPIĘCIA"],
                     [preview.asymmetry, "ASYMETRIA"],
                     [preview.change, "SZANSA ZMIANY"],
                   ].map(([value, label]) => (
-                    <Glass key={label as string} style={{ padding: 22, textAlign: "center", borderRadius: 24 }}>
-                      <div
-                        style={{
-                          fontSize: 54,
-                          lineHeight: 1,
-                          fontWeight: 900,
-                          color: BRAND.gold,
-                        }}
-                      >
-                        {value}%
-                      </div>
-                      <div
-                        style={{
-                          marginTop: 10,
-                          color: BRAND.muted,
-                          fontSize: 11,
-                          letterSpacing: 4,
-                        }}
-                      >
-                        {label}
-                      </div>
+                    <Glass key={label as string} className="ctms-metric-card">
+                      <div className="ctms-metric-value">{value}%</div>
+                      <div className="ctms-metric-label">{label}</div>
                     </Glass>
                   ))}
                 </div>
 
-                <div className="teaser-grid">
-                  <Glass style={{ padding: 24, borderRadius: 24 }}>
-                    <div
-                      style={{
-                        color: BRAND.gold,
-                        fontSize: 12,
-                        letterSpacing: 4,
-                        marginBottom: 10,
-                      }}
-                    >
-                      CO WIDAĆ JUŻ TERAZ
-                    </div>
-                    <div style={{ lineHeight: 1.85 }}>{preview.summary}</div>
+                <div className="ctms-teaser-grid">
+                  <Glass className="ctms-teaser-card">
+                    <div className="ctms-kicker">CO WIDAĆ JUŻ TERAZ</div>
+                    <p>{preview.summary}</p>
                   </Glass>
 
-                  <Glass style={{ padding: 24, borderRadius: 24 }}>
-                    <div
-                      style={{
-                        color: BRAND.gold,
-                        fontSize: 12,
-                        letterSpacing: 4,
-                        marginBottom: 10,
-                      }}
-                    >
-                      NAJMOCNIEJSZY MECHANIZM
-                    </div>
-                    <div style={{ lineHeight: 1.85 }}>
+                  <Glass className="ctms-teaser-card">
+                    <div className="ctms-kicker">NAJMOCNIEJSZY MECHANIZM</div>
+                    <p>
                       {preview.tone === "green"
                         ? "Najmocniej działa tu jeszcze struktura i wzajemność, ale to nie zwalnia z patrzenia na słabsze miejsca."
                         : preview.tone === "yellow"
                         ? "Napięcie miesza się tu z nadzieją i przywiązaniem. To właśnie ta mieszanka najłatwiej utrzymuje ludzi w zawieszeniu."
                         : "Najmocniej pracuje tu układ ulgi po napięciu albo lęku przed stratą. To często sprawia, że ciężko odpuścić nawet wtedy, gdy relacja już kosztuje."}
-                    </div>
+                    </p>
                   </Glass>
 
-                  <Glass style={{ padding: 24, borderRadius: 24 }}>
-                    <div
-                      style={{
-                        color: BRAND.gold,
-                        fontSize: 12,
-                        letterSpacing: 4,
-                        marginBottom: 10,
-                      }}
-                    >
-                      CZEGO PEŁNY RAPORT NIE OMINIE
-                    </div>
-                    <div style={{ lineHeight: 1.85 }}>{preview.paidTease}</div>
+                  <Glass className="ctms-teaser-card">
+                    <div className="ctms-kicker">CZEGO PEŁNY RAPORT NIE OMINIE</div>
+                    <p>{preview.paidTease}</p>
                   </Glass>
                 </div>
 
-                <Glass style={{ padding: 24, marginTop: 20, borderRadius: 24 }}>
-                  <div
-                    style={{
-                      color: BRAND.gold,
-                      fontSize: 12,
-                      letterSpacing: 4,
-                      marginBottom: 10,
-                    }}
-                  >
-                    PEŁNY RAPORT PREMIUM
-                  </div>
+                <Glass className="ctms-paywall-card">
+                  <div className="ctms-kicker">PEŁNY RAPORT PREMIUM</div>
+                  <p className="ctms-paywall-copy">
+                    Odblokujesz pełną analizę: mechanizmy, ryzyka, scenariusze, praktyczne wskazówki
+                    i jasny werdykt. Dostajesz wersję, do której można wrócić później — nie jednorazowy ekran,
+                    który znika po odświeżeniu.
+                  </p>
 
-                  <div
-                    style={{
-                      fontSize: 18,
-                      color: BRAND.text,
-                      lineHeight: 1.75,
-                      maxWidth: 840,
-                    }}
-                  >
-                    Odblokujesz pełną analizę: mechanizmy, ryzyka, scenariusze,
-                    praktyczne wskazówki i jasny werdykt. Dostajesz wersję, do której
-                    można wrócić później — nie jednorazowy ekran, który znika po odświeżeniu.
-                  </div>
-
-                  <div style={{ marginTop: 16, display: "grid", gap: 12 }}>
+                  <div className="ctms-paywall-form">
                     <input
+                      className="ctms-input"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Adres e-mail do raportu premium"
-                      style={{
-                        width: "100%",
-                        padding: "18px 16px",
-                        background: "rgba(255,255,255,0.03)",
-                        border: `1px solid ${BRAND.border}`,
-                        borderRadius: 20,
-                        color: BRAND.text,
-                        fontSize: 16,
-                        outline: "none",
-                      }}
                     />
 
                     <PrimaryButton onClick={pay} disabled={busy}>
                       {busy ? "Przetwarzanie..." : "Odblokuj pełny raport — 15 zł"}
                     </PrimaryButton>
+                  </div>
 
-                    <div style={{ color: BRAND.muted, fontSize: 14 }}>
-                      Najpierw widzisz lustro sytuacji. Potem decydujesz, czy chcesz zejść głębiej.
-                    </div>
+                  <div className="ctms-paywall-note">
+                    Najpierw widzisz lustro sytuacji. Potem decydujesz, czy chcesz zejść głębiej.
                   </div>
                 </Glass>
 
-                {error && <div style={{ color: BRAND.danger, marginTop: 14 }}>{error}</div>}
+                {error && <div className="ctms-error-line">{error}</div>}
 
-                <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
+                <div className="ctms-actions-row">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
                   <GhostButton onClick={resetAll}>Od początku</GhostButton>
                 </div>
@@ -1940,23 +1554,11 @@ export default function App() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              <div style={{ minHeight: "72vh", display: "grid", placeItems: "center" }}>
-                <Glass style={{ padding: 34, textAlign: "center", minWidth: 280 }}>
-                  <div
-                    style={{
-                      width: 72,
-                      height: 72,
-                      margin: "0 auto 18px",
-                      borderRadius: 999,
-                      border: `3px solid rgba(197,160,89,0.25)`,
-                      borderTopColor: BRAND.gold,
-                      animation: "spin 1.1s linear infinite",
-                    }}
-                  />
-                  <div style={{ fontSize: 24, fontWeight: 700 }}>
-                    Przetwarzanie płatności i raportu…
-                  </div>
-                  <div style={{ marginTop: 10, color: BRAND.muted }}>
+              <div className="ctms-processing-screen">
+                <Glass className="ctms-processing-box">
+                  <div className="ctms-spinner" />
+                  <div className="ctms-processing-title">Przetwarzanie płatności i raportu…</div>
+                  <div className="ctms-processing-copy">
                     Jeśli to trwa chwilę, nie zamykaj karty. System sprawdza status płatności i raportu.
                   </div>
                 </Glass>
@@ -1971,126 +1573,62 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <Glass style={{ padding: 34, maxWidth: 980, margin: "0 auto" }}>
-                <div
-                  style={{
-                    color: BRAND.gold,
-                    fontSize: 12,
-                    letterSpacing: 5,
-                    marginBottom: 16,
-                  }}
-                >
-                  RAPORT PREMIUM
-                </div>
+              <Glass className="ctms-panel-large">
+                <div className="ctms-kicker-large">RAPORT PREMIUM</div>
 
-                <div className="section-title">
-                  {fullReport.headline ||
-                    "Ta relacja daje Ci kontakt, ale nie daje Ci oparcia."}
-                </div>
+                <h2 className="ctms-panel-title">
+                  {fullReport.headline || "Ta relacja daje Ci kontakt, ale nie daje Ci oparcia."}
+                </h2>
 
-                <div
-                  style={{
-                    marginTop: 14,
-                    fontSize: 20,
-                    color: BRAND.muted,
-                    lineHeight: 1.75,
-                  }}
-                >
+                <p className="ctms-panel-copy">
                   {fullReport.subheadline ||
                     "Największy problem nie leży w jednym zdarzeniu. Leży w tym, że napięcie stało się normą, a jasność nadal nie przychodzi."}
-                </div>
+                </p>
 
                 {typeof fullReport.rebuildPercent === "number" && (
-                  <div className="metrics-grid" style={{ marginTop: 26 }}>
+                  <div className="ctms-metrics-grid">
                     {[
                       [fullReport.rebuildPercent, "NA ILE TO MA SENS"],
                       [fullReport.tensionPercent || 0, "POZIOM NAPIĘCIA"],
                       [fullReport.driftPercent || 0, "ASYMETRIA"],
                     ].map(([value, label]) => (
-                      <Glass key={label as string} style={{ padding: 22, textAlign: "center", borderRadius: 24 }}>
-                        <div
-                          style={{
-                            fontSize: 48,
-                            lineHeight: 1,
-                            fontWeight: 900,
-                            color: BRAND.gold,
-                          }}
-                        >
-                          {value}%
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 10,
-                            color: BRAND.muted,
-                            fontSize: 11,
-                            letterSpacing: 4,
-                          }}
-                        >
-                          {label}
-                        </div>
+                      <Glass key={label as string} className="ctms-metric-card">
+                        <div className="ctms-metric-value">{value}%</div>
+                        <div className="ctms-metric-label">{label}</div>
                       </Glass>
                     ))}
                   </div>
                 )}
 
                 {fullReport.previewLine && (
-                  <div
-                    style={{
-                      marginTop: 22,
-                      borderLeft: `3px solid ${BRAND.gold}`,
-                      paddingLeft: 16,
-                      fontSize: 20,
-                      lineHeight: 1.75,
-                      color: BRAND.text,
-                    }}
-                  >
-                    {fullReport.previewLine}
-                  </div>
+                  <div className="ctms-paid-preview-line">{fullReport.previewLine}</div>
                 )}
 
-                <div style={{ display: "grid", gap: 18, marginTop: 22 }}>
+                <div className="ctms-paid-sections">
                   {(fullReport.sections || []).map((section, i) => (
-                    <Glass key={i} style={{ padding: 22, borderRadius: 24 }}>
+                    <Glass key={i} className="ctms-paid-section">
                       <div
+                        className="ctms-paid-section-title"
                         style={{
-                          fontSize: 11,
-                          letterSpacing: 5,
-                          textTransform: "uppercase",
-                          marginBottom: 8,
                           color: section.tone === "danger" ? BRAND.danger : BRAND.gold,
                         }}
                       >
                         {section.title}
                       </div>
-                      <div style={{ fontSize: 18, lineHeight: 1.85, color: "#d1d5db" }}>
-                        {section.text}
-                      </div>
+                      <div className="ctms-paid-section-text">{section.text}</div>
                     </Glass>
                   ))}
                 </div>
 
                 {fullReport.closing && (
-                  <div
-                    style={{
-                      marginTop: 26,
-                      paddingTop: 20,
-                      borderTop: `1px solid ${BRAND.border}`,
-                      fontSize: 18,
-                      lineHeight: 1.85,
-                      color: BRAND.muted,
-                    }}
-                  >
-                    {fullReport.closing}
-                  </div>
+                  <div className="ctms-paid-closing">{fullReport.closing}</div>
                 )}
 
-                <Glass style={{ padding: 20, marginTop: 22, borderRadius: 24 }}>
-                  <div style={{ color: BRAND.muted, lineHeight: 1.75 }}>
-                    Dostęp do raportu został zapisany. Możesz wrócić do niego później z bezpiecznego linku wysłanego na e-mail.
-                  </div>
+                <Glass className="ctms-mail-access-box">
+                  Dostęp do raportu został zapisany. Możesz wrócić do niego później z bezpiecznego linku wysłanego na e-mail.
                 </Glass>
 
-                <div style={{ marginTop: 28, display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <div className="ctms-actions-row">
                   <GhostButton onClick={resetAll}>Nowa analiza</GhostButton>
                 </div>
               </Glass>
@@ -2104,27 +1642,15 @@ export default function App() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
             >
-              <Glass style={{ padding: 34, maxWidth: 860, margin: "0 auto" }}>
-                <div
-                  style={{
-                    color: BRAND.danger,
-                    fontSize: 12,
-                    letterSpacing: 5,
-                    marginBottom: 16,
-                  }}
-                >
+              <Glass className="ctms-panel-large">
+                <div className="ctms-kicker-large" style={{ color: BRAND.danger }}>
                   BŁĄD
                 </div>
-
-                <div className="section-title">
+                <h2 className="ctms-panel-title">
                   Coś się wywaliło po drodze, ale przynajmniej wiemy gdzie.
-                </div>
-
-                <div style={{ marginTop: 16, color: BRAND.muted, lineHeight: 1.8 }}>
-                  {error}
-                </div>
-
-                <div style={{ marginTop: 22, display: "flex", gap: 12, flexWrap: "wrap" }}>
+                </h2>
+                <p className="ctms-panel-copy">{error}</p>
+                <div className="ctms-actions-row">
                   <GhostButton onClick={() => setStage(preview ? "preview" : "landing")}>
                     Wróć
                   </GhostButton>
@@ -2135,32 +1661,6 @@ export default function App() {
           )}
         </AnimatePresence>
       </div>
-
-      <style>{`
-        * { box-sizing: border-box; }
-        html, body, #root { margin: 0; min-height: 100%; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .page-wrap { max-width: 1220px; margin: 0 auto; padding: 26px 22px 60px; }
-        .topbar { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 26px; }
-        .hero-grid { display: grid; grid-template-columns: 1.18fr 0.82fr; gap: 18px; }
-        .feature-grid { margin-top: 34px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-        .entry-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
-        .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 18px; }
-        .teaser-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 18px; }
-        .hero-title { font-size: 78px; line-height: 0.93; font-weight: 900; letter-spacing: -3px; max-width: 780px; }
-        .hero-copy { margin-top: 22px; font-size: 22px; line-height: 1.7; color: ${BRAND.muted}; max-width: 760px; }
-        .section-title { font-size: 54px; line-height: 0.98; font-weight: 900; letter-spacing: -2.2px; max-width: 780px; }
-        .question-title { margin-top: 24px; font-size: 62px; line-height: 0.98; font-weight: 900; letter-spacing: -2.6px; }
-        @media (max-width: 980px) {
-          .hero-grid, .entry-grid, .feature-grid, .metrics-grid, .teaser-grid { grid-template-columns: 1fr; }
-          .hero-title { font-size: 54px; line-height: 1.01; letter-spacing: -2px; }
-          .hero-copy { font-size: 18px; line-height: 1.75; }
-          .section-title { font-size: 40px; line-height: 1.02; letter-spacing: -1.6px; }
-          .question-title { font-size: 42px; line-height: 1.02; letter-spacing: -1.7px; }
-          .topbar { align-items: flex-start; }
-          .page-wrap { padding: 20px 16px 48px; }
-        }
-      `}</style>
     </div>
   );
 }
