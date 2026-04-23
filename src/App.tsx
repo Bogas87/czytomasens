@@ -1075,175 +1075,123 @@ export default function App() {
 
         <AnimatePresence mode="wait">
           {stage === "landing" && (
-            <motion.div
-              key="landing"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <section className="ctms-hero">
-                <Glass className="ctms-hero-main">
-                  <div className="ctms-hero-line-wrap">
-                    <span className="ctms-eyebrow">PRYWATNA ANALIZA RELACJI</span>
-                    <span className="ctms-eyebrow-line" />
-                  </div>
+  <motion.div
+    key="landing"
+    initial={{ opacity: 0, y: 16 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0 }}
+  >
+    <section className="ctms-landing-premium">
+      <div className="ctms-landing-left">
+        <div className="ctms-hero-line-wrap">
+          <span className="ctms-eyebrow">PRYWATNA ANALIZA RELACJI</span>
+          <span className="ctms-eyebrow-line" />
+        </div>
 
-                  <div className="ctms-kicker-large">NIE TEST. NIE TERAPIA. NIE LUKIER.</div>
+        <div className="ctms-kicker-large">NIE TEST. NIE TERAPIA. NIE LUKIER.</div>
 
-                  <h1 className="ctms-display">
-                    Zobacz, co ta relacja
-                    <br />
-                    <span className="ctms-display-gold">naprawdę</span> z Tobą robi.
-                  </h1>
+        <h1 className="ctms-landing-title">
+          Zobacz, co ta relacja
+          <br />
+          <span className="ctms-landing-title-gold">naprawdę</span> z Tobą robi.
+        </h1>
 
-                  <p className="ctms-hero-copy">
-                    Nie pytamy o idealną historię. Pytamy o to, co wraca, męczy,
-                    miesza i nie daje spokoju. Potem pokazujemy, ile tu jeszcze
-                    sensu, a ile już tylko napięcia, przywiązania albo nadziei bez
-                    pokrycia.
-                  </p>
+        <p className="ctms-landing-sub">
+          Nie pytamy o idealną historię. Pytamy o to, co wraca, męczy, miesza i
+          nie daje spokoju. Potem pokazujemy, ile tu jeszcze sensu, a ile już
+          tylko napięcia, przywiązania albo nadziei bez pokrycia.
+        </p>
 
-                  <div className="ctms-hero-actions">
-                    <PrimaryButton onClick={() => setStage("consent")}>
-                      Rozpocznij wgląd w relację
-                    </PrimaryButton>
-                    <GhostButton onClick={() => setStage("entry")}>Jak to działa</GhostButton>
-                  </div>
-                </Glass>
+        <div className="ctms-landing-actions">
+          <PrimaryButton onClick={() => setStage("consent")}>
+            Rozpocznij wgląd w relację
+          </PrimaryButton>
+          <GhostButton onClick={() => setStage("entry")}>Jak to działa</GhostButton>
+        </div>
+      </div>
 
-                <div className="ctms-hero-side">
-                  <Glass className="ctms-side-card">
-                    <div className="ctms-kicker">SYSTEM ANALIZUJE</div>
-                    <div className="ctms-entry-title" style={{ maxWidth: 300 }}>
-                      wzorce, napięcia
-                      <br />i kierunek relacji
-                    </div>
+      <div className="ctms-landing-right">
+        <Glass className="ctms-landing-visual-card">
+          <div className="ctms-landing-visual-overlay" />
 
-                    <div style={{ display: "grid", gap: 18, marginTop: 22 }}>
-                      <div style={{ display: "grid", gridTemplateColumns: "24px 1fr", gap: 12 }}>
-                        <span style={{ color: BRAND.goldSoft, fontSize: 24 }}>≋</span>
-                        <div className="ctms-panel-copy" style={{ margin: 0, fontSize: 16 }}>
-                          Powtarzające się schematy co wraca i dlaczego
-                        </div>
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "24px 1fr", gap: 12 }}>
-                        <span style={{ color: BRAND.goldSoft, fontSize: 24 }}>◌</span>
-                        <div className="ctms-panel-copy" style={{ margin: 0, fontSize: 16 }}>
-                          Napięcie i niespójność co rozjeżdża Was w środku
-                        </div>
-                      </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "24px 1fr", gap: 12 }}>
-                        <span style={{ color: BRAND.goldSoft, fontSize: 24 }}>↗</span>
-                        <div className="ctms-panel-copy" style={{ margin: 0, fontSize: 16 }}>
-                          Kierunek i potencjał dokąd to zmierza naprawdę
-                        </div>
-                      </div>
-                    </div>
+          <div className="ctms-landing-visual-content">
+            <div className="ctms-landing-visual-icon">◎</div>
 
-                    <Glass
-                      style={{
-                        marginTop: 22,
-                        padding: 16,
-                        borderRadius: 18,
-                        background: "rgba(255,255,255,0.02)",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "42px 1fr",
-                          gap: 12,
-                          alignItems: "center",
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 42,
-                            height: 42,
-                            borderRadius: 999,
-                            display: "grid",
-                            placeItems: "center",
-                            color: BRAND.goldSoft,
-                            border: `1px solid rgba(197,160,89,0.25)`,
-                            background: "rgba(197,160,89,0.08)",
-                          }}
-                        >
-                          🔒
-                        </div>
-                        <div>
-                          <div style={{ fontWeight: 700, fontSize: 15 }}>
-                            Pełny wgląd dostępny po podjęciu decyzji
-                          </div>
-                          <div className="ctms-panel-copy" style={{ margin: "4px 0 0", fontSize: 14 }}>
-                            Najpierw zrozum. Potem zdecyduj.
-                          </div>
-                        </div>
-                      </div>
-                    </Glass>
-                  </Glass>
+            <div className="ctms-kicker">SYSTEM ANALIZUJE</div>
 
-                  <Glass className="ctms-side-card">
-                    <div className="ctms-kicker">GŁOSY PO PIERWSZYCH ANALIZACH</div>
-                    <div className="ctms-side-proof">
-                      <div>„Pierwszy raz coś nazwało to tak wprost, bez pocieszania.”</div>
-                      <div>„Najgorsze było to, że ten wynik brzmiał dokładnie jak moja sytuacja.”</div>
-                      <div>„To nie dało mi komfortu. Dało mi jasność. I tego właśnie potrzebowałam.”</div>
-                    </div>
-                  </Glass>
-                </div>
-              </section>
+            <h3 className="ctms-landing-visual-title">
+              wzorce, napięcia
+              <br />
+              i kierunek relacji
+            </h3>
 
-              <section className="ctms-feature-editorial-grid">
-                <Glass className="ctms-editorial-card">
-                  <div className="ctms-editorial-card-top">
-                    <div className="ctms-editorial-no">01</div>
-                    <div className="ctms-editorial-icon">◌</div>
-                  </div>
-                  <h3 className="ctms-editorial-title">Rozmowa, nie quiz</h3>
-                  <div className="ctms-editorial-line" />
-                  <p className="ctms-editorial-text">
-                    System prowadzi Cię warstwowo, zamiast wrzucać wszystkich w jedną listę pytań.
-                  </p>
-                </Glass>
+            <div className="ctms-landing-visual-list">
+              <div>
+                <span>≋</span>
+                <p>Powtarzające się schematy co wraca i dlaczego</p>
+              </div>
+              <div>
+                <span>◌</span>
+                <p>Napięcie i niespójność co rozjeżdża Was w środku</p>
+              </div>
+              <div>
+                <span>↗</span>
+                <p>Kierunek i potencjał dokąd to zmierza naprawdę</p>
+              </div>
+            </div>
 
-                <Glass className="ctms-editorial-card">
-                  <div className="ctms-editorial-card-top">
-                    <div className="ctms-editorial-no">02</div>
-                    <div className="ctms-editorial-icon">▤</div>
-                  </div>
-                  <h3 className="ctms-editorial-title">Wielowarstwowa analiza</h3>
-                  <div className="ctms-editorial-line" />
-                  <p className="ctms-editorial-text">
-                    Wychwytuje napięcie, niespójność, unikanie, chaos i realny kierunek tej relacji.
-                  </p>
-                </Glass>
+            <div className="ctms-landing-lock-box">
+              <div className="ctms-landing-lock-icon">🔒</div>
+              <div>
+                <strong>Pełny wgląd dostępny po podjęciu decyzji</strong>
+                <span>Najpierw zrozum. Potem zdecyduj.</span>
+              </div>
+            </div>
+          </div>
+        </Glass>
+      </div>
+    </section>
 
-                <Glass className="ctms-editorial-card">
-                  <div className="ctms-editorial-card-top">
-                    <div className="ctms-editorial-no">03</div>
-                    <div className="ctms-editorial-icon">◐</div>
-                  </div>
-                  <h3 className="ctms-editorial-title">Preview zanim zapłacisz</h3>
-                  <div className="ctms-editorial-line" />
-                  <p className="ctms-editorial-text">
-                    Najpierw widzisz lustro sytuacji. Potem decydujesz, czy chcesz zejść głębiej.
-                  </p>
-                </Glass>
+    <section className="ctms-landing-bottom-cards">
+      <Glass className="ctms-editorial-card">
+        <div className="ctms-editorial-card-top">
+          <div className="ctms-editorial-no">01</div>
+          <div className="ctms-editorial-icon">◌</div>
+        </div>
+        <h3 className="ctms-editorial-title">Rozmowa, nie quiz</h3>
+        <div className="ctms-editorial-line" />
+        <p className="ctms-editorial-text">
+          System prowadzi Cię warstwowo, zamiast wrzucać wszystkich w jedną listę pytań.
+        </p>
+      </Glass>
 
-                <Glass className="ctms-editorial-card">
-                  <div className="ctms-editorial-card-top">
-                    <div className="ctms-editorial-no">04</div>
-                    <div className="ctms-editorial-icon">↗</div>
-                  </div>
-                  <h3 className="ctms-editorial-title">Pełny raport premium</h3>
-                  <div className="ctms-editorial-line" />
-                  <p className="ctms-editorial-text">
-                    Dostajesz mechanizmy, ryzyka, scenariusze i wskazówki, do których można wrócić później.
-                  </p>
-                </Glass>
-              </section>
-            </motion.div>
-          )}
+      <Glass className="ctms-editorial-card">
+        <div className="ctms-editorial-card-top">
+          <div className="ctms-editorial-no">02</div>
+          <div className="ctms-editorial-icon">▤</div>
+        </div>
+        <h3 className="ctms-editorial-title">Wielowarstwowa analiza</h3>
+        <div className="ctms-editorial-line" />
+        <p className="ctms-editorial-text">
+          Wychwytuje napięcie, niespójność, unikanie, chaos i realny kierunek tej relacji.
+        </p>
+      </Glass>
+
+      <Glass className="ctms-editorial-card">
+        <div className="ctms-editorial-card-top">
+          <div className="ctms-editorial-no">03</div>
+          <div className="ctms-editorial-icon">◐</div>
+        </div>
+        <h3 className="ctms-editorial-title">Preview zanim zdecydujesz</h3>
+        <div className="ctms-editorial-line" />
+        <p className="ctms-editorial-text">
+          Najpierw widzisz lustro sytuacji. Potem decydujesz, czy chcesz zejść głębiej.
+        </p>
+      </Glass>
+    </section>
+  </motion.div>
+)}
+
 
           {stage === "consent" && (
             <motion.div
