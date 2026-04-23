@@ -1152,6 +1152,9 @@ export default function App() {
                   </div>
 
                   <div className="ctms-kicker-large">NIE TEST. NIE TERAPIA. NIE LUKIER.</div>
+		  <div style={{ color: "red", fontSize: 24, fontWeight: 800 }}>
+  		    TEST BUILD D45D00
+		  </div>
 
                   <h1 className="ctms-display">
                     Zobacz, co ta relacja
