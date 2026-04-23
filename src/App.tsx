@@ -1137,295 +1137,123 @@ export default function App() {
         </div>
 
         <AnimatePresence mode="wait">
-          {stage === "landing" && (
-            <motion.div
-              key="landing"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <section className="ctms-hero">
-                <div className="ctms-hero-main">
-                  <div className="ctms-hero-line-wrap">
-                    <span className="ctms-eyebrow">PRYWATNA ANALIZA RELACJI</span>
-                    <span className="ctms-eyebrow-line" />
-                  </div>
+         {stage === "landing" && (
+  <motion.div
+    key="landing"
+    initial={{ opacity: 0, y: 16 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0 }}
+  >
+    <section className="ctms-landing-premium">
+      <div className="ctms-landing-left">
+        <div className="ctms-hero-line-wrap">
+          <span className="ctms-eyebrow">PRYWATNA ANALIZA RELACJI</span>
+          <span className="ctms-eyebrow-line" />
+        </div>
 
-                  <div className="ctms-kicker-large">NIE TEST. NIE TERAPIA. NIE LUKIER.</div>
-		  <div style={{ color: "red", fontSize: 24, fontWeight: 800 }}>
-  		    TEST BUILD D45D00
-		  </div>
+        <div className="ctms-kicker-large">NIE TEST. NIE TERAPIA. NIE LUKIER.</div>
 
-                  <h1 className="ctms-display">
-                    Zobacz, co ta relacja
-                    <br />
-                    <span className="ctms-display-gold">naprawdę</span> z Tobą robi.
-                  </h1>
+        <h1 className="ctms-landing-title">
+          Zobacz, co ta relacja
+          <br />
+          <span className="ctms-landing-title-gold">naprawdę</span> z Tobą robi.
+        </h1>
 
-                  <p className="ctms-hero-copy">
-                    Nie pytamy o idealną historię. Pytamy o to, co wraca, męczy,
-                    miesza i nie daje spokoju. Potem pokazujemy, ile tu jeszcze sensu,
-                    a ile już tylko napięcia, przywiązania albo nadziei bez pokrycia.
-                  </p>
+        <p className="ctms-landing-sub">
+          Nie pytamy o idealną historię. Pytamy o to, co wraca, męczy, miesza i
+          nie daje spokoju. Potem pokazujemy, ile tu jeszcze sensu, a ile już
+          tylko napięcia, przywiązania albo nadziei bez pokrycia.
+        </p>
 
-                  <div className="ctms-hero-actions">
-                    <PrimaryButton onClick={() => setStage("consent")}>
-                      Rozpocznij wgląd w relację
-                    </PrimaryButton>
-                    <GhostButton onClick={() => setStage("entry")}>Jak to działa</GhostButton>
-                  </div>
-                </div>
+        <div className="ctms-landing-actions">
+          <PrimaryButton onClick={() => setStage("consent")}>
+            Rozpocznij wgląd w relację
+          </PrimaryButton>
+          <GhostButton onClick={() => setStage("entry")}>Jak to działa</GhostButton>
+        </div>
+      </div>
 
-                <div className="ctms-hero-side">
-                  <Glass className="ctms-side-card">
-                    <div className="ctms-kicker">WEJŚCIA PROBLEMOWE</div>
-                    <div className="ctms-side-list">
-                      <div>Wracacie do siebie i nic się nie naprawia.</div>
-                      <div>To trwa, ale coraz mniej tam życia.</div>
-                      <div>Była zdrada, kłamstwo albo pęknięcie zaufania.</div>
-                      <div>Jest ktoś trzeci i wszystko się miesza.</div>
-                      <div>Po rozstaniu nie wiesz, czy wracać.</div>
-                      <div>Niby nic wielkiego się nie stało, ale coś Ci nie pasuje.</div>
-                    </div>
-                  </Glass>
+      <div className="ctms-landing-right">
+        <Glass className="ctms-landing-visual-card">
+          <div className="ctms-landing-visual-overlay" />
 
-                  <Glass className="ctms-side-card">
-                    <div className="ctms-kicker">GŁOSY PO PIERWSZYCH ANALIZACH</div>
-                    <div className="ctms-side-proof">
-                      {SOCIAL_PROOF.map((item) => (
-                        <div key={item}>{item}</div>
-                      ))}
-                    </div>
-                  </Glass>
-                </div>
-              </section>
+          <div className="ctms-landing-visual-content">
+            <div className="ctms-landing-visual-icon">◎</div>
 
-              <section className="ctms-feature-editorial-grid">
-                {[
-                  {
-                    no: "01",
-                    icon: "◌",
-                    title: "Rozmowa, nie quiz",
-                    text: "System prowadzi Cię warstwowo, zamiast wrzucać wszystkich w jedną listę pytań.",
-                  },
-                  {
-                    no: "02",
-                    icon: "▤",
-                    title: "Wielowarstwowa analiza",
-                    text: "Wychwytuje napięcie, niespójność, unikanie, chaos i realny kierunek tej relacji.",
-                  },
-                  {
-                    no: "03",
-                    icon: "◐",
-                    title: "Preview zanim zapłacisz",
-                    text: "Najpierw widzisz lustro sytuacji. Potem decydujesz, czy chcesz zejść głębiej.",
-                  },
-                  {
-                    no: "04",
-                    icon: "↗",
-                    title: "Pełny raport premium",
-                    text: "Dostajesz mechanizmy, ryzyka, scenariusze i wskazówki, do których można wrócić później.",
-                  },
-                ].map((item) => (
-                  <Glass key={item.no} className="ctms-editorial-card">
-                    <div className="ctms-editorial-card-top">
-                      <div className="ctms-editorial-no">{item.no}</div>
-                      <div className="ctms-editorial-icon">{item.icon}</div>
-                    </div>
-                    <h3 className="ctms-editorial-title">{item.title}</h3>
-                    <div className="ctms-editorial-line" />
-                    <p className="ctms-editorial-text">{item.text}</p>
-                  </Glass>
-                ))}
-              </section>
-            </motion.div>
-          )}
+            <div className="ctms-kicker">SYSTEM ANALIZUJE</div>
 
-          {stage === "consent" && (
-            <motion.div
-              key="consent"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <Glass className="ctms-panel-large">
-                <div className="ctms-kicker-large">ZANIM WEJDZIESZ GŁĘBIEJ</div>
-                <h2 className="ctms-panel-title">To ma być trafne, nie miłe.</h2>
-                <p className="ctms-panel-copy">
-                  Ten produkt analizuje wzorce i dynamikę relacji. Nie zastępuje terapii,
-                  diagnozy ani porady prawnej. Po płatności dostajesz treść cyfrową od razu.
-                  To wejście jest dla ludzi, którzy chcą widzieć jaśniej, nie ładniej.
-                </p>
+            <h3 className="ctms-landing-visual-title">
+              wzorce, napięcia
+              <br />
+              i kierunek relacji
+            </h3>
 
-                <div className="ctms-consent-list">
-                  {CONSENTS.map((text, idx) => (
-                    <label key={idx} className="ctms-consent-row">
-                      <input
-                        type="checkbox"
-                        checked={consents[idx]}
-                        onChange={(e) => {
-                          const next = [...consents];
-                          next[idx] = e.target.checked;
-                          setConsents(next);
-                        }}
-                      />
-                      <span>{text}</span>
-                    </label>
-                  ))}
-                </div>
-
-                <div className="ctms-actions-row">
-                  <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton
-                    onClick={() => setStage("entry")}
-                    disabled={!consents.every(Boolean)}
-                  >
-                    Rozumiem, wchodzę dalej
-                  </PrimaryButton>
-                </div>
-              </Glass>
-            </motion.div>
-          )}
-
-          {stage === "entry" && (
-            <motion.div
-              key="entry"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="ctms-stage-head">
-                <div>
-                  <div className="ctms-kicker-large">PUNKT WEJŚCIA</div>
-                  <h2 className="ctms-panel-title">Od czego ta historia boli najmocniej?</h2>
-                  <p className="ctms-panel-copy">
-                    Zacznij od miejsca, które najbardziej ciągnie Cię w dół. System dopasuje
-                    dalszą rozmowę do Twojej sytuacji.
-                  </p>
-                </div>
-                <GhostButton onClick={goBack}>Wróć</GhostButton>
+            <div className="ctms-landing-visual-list">
+              <div>
+                <span>≋</span>
+                <p>Powtarzające się schematy co wraca i dlaczego</p>
               </div>
-
-              <div className="ctms-entry-grid">
-                {ENTRY_CONFIGS.map((entry) => (
-                  <Glass key={entry.key} className="ctms-entry-card">
-                    <div className="ctms-kicker">ŚCIEŻKA ANALIZY</div>
-                    <h3 className="ctms-entry-title">{entry.title}</h3>
-                    <p className="ctms-entry-subtitle">{entry.subtitle}</p>
-                    <p className="ctms-entry-intro">{entry.intro}</p>
-                    <div className="ctms-entry-action">
-                      <PrimaryButton onClick={() => startPath(entry.key)}>
-                        {busy ? "Przygotowuję..." : "Wejdź tą ścieżką"}
-                      </PrimaryButton>
-                    </div>
-                  </Glass>
-                ))}
+              <div>
+                <span>◌</span>
+                <p>Napięcie i niespójność co rozjeżdża Was w środku</p>
               </div>
-            </motion.div>
-          )}
-
-          {stage === "questions" && path && currentQuestion && (
-            <motion.div
-              key={currentQuestion.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="ctms-stage-head">
-                <div className="ctms-kicker-large">{path.title.toUpperCase()}</div>
-                <ProgressBar index={questionIndex} total={path.questions.length} />
+              <div>
+                <span>↗</span>
+                <p>Kierunek i potencjał dokąd to zmierza naprawdę</p>
               </div>
+            </div>
 
-              <Glass className="ctms-question-panel">
-                <div className="ctms-question-lead">{currentQuestion.lead}</div>
-                <h2 className="ctms-question-title">{currentQuestion.text}</h2>
+            <div className="ctms-landing-lock-box">
+              <div className="ctms-landing-lock-icon">🔒</div>
+              <div>
+                <strong>Pełny wgląd dostępny po podjęciu decyzji</strong>
+                <span>Najpierw zrozum. Potem zdecyduj.</span>
+              </div>
+            </div>
+          </div>
+        </Glass>
+      </div>
+    </section>
 
-                <div className="ctms-options-grid">
-                  {currentQuestion.options.map((opt) => (
-                    <button
-                      key={opt.id}
-                      className="ctms-option-btn"
-                      onClick={() => answerQuestion(currentQuestion.id, opt.id)}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
+    <section className="ctms-landing-bottom-cards">
+      <Glass className="ctms-editorial-card">
+        <div className="ctms-editorial-card-top">
+          <div className="ctms-editorial-no">01</div>
+          <div className="ctms-editorial-icon">◌</div>
+        </div>
+        <h3 className="ctms-editorial-title">Rozmowa, nie quiz</h3>
+        <div className="ctms-editorial-line" />
+        <p className="ctms-editorial-text">
+          System prowadzi Cię warstwowo, zamiast wrzucać wszystkich w jedną listę pytań.
+        </p>
+      </Glass>
 
-                <div className="ctms-actions-row">
-                  <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <GhostButton onClick={resetAll}>Od początku</GhostButton>
-                </div>
-              </Glass>
-            </motion.div>
-          )}
+      <Glass className="ctms-editorial-card">
+        <div className="ctms-editorial-card-top">
+          <div className="ctms-editorial-no">02</div>
+          <div className="ctms-editorial-icon">▤</div>
+        </div>
+        <h3 className="ctms-editorial-title">Wielowarstwowa analiza</h3>
+        <div className="ctms-editorial-line" />
+        <p className="ctms-editorial-text">
+          Wychwytuje napięcie, niespójność, unikanie, chaos i realny kierunek tej relacji.
+        </p>
+      </Glass>
 
-          {stage === "checkpoint" && path && (
-            <motion.div
-              key={`${path.key}-checkpoint`}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <Glass className="ctms-panel-large">
-                <div className="ctms-kicker-large">{path.checkpoint.title}</div>
-                <h2 className="ctms-panel-title">{path.checkpoint.text}</h2>
-
-                <div className="ctms-options-grid">
-                  {path.checkpoint.options.map((opt) => (
-                    <button
-                      key={opt.id}
-                      className="ctms-option-btn"
-                      onClick={() => answerCheckpoint(opt.id)}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="ctms-actions-row">
-                  <GhostButton onClick={goBack}>Wróć</GhostButton>
-                </div>
-              </Glass>
-            </motion.div>
-          )}
-
-          {stage === "open_text" && path && (
-            <motion.div
-              key={`${path.key}-open`}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <Glass className="ctms-panel-large">
-                <div className="ctms-kicker-large">OSTATNIA WARSTWA</div>
-                <h2 className="ctms-panel-title">{path.openPrompt}</h2>
-
-                <textarea
-                  className="ctms-textarea"
-                  value={openText}
-                  onChange={(e) => setOpenText(e.target.value)}
-                  placeholder="Napisz bez filtra. Im uczciwiej, tym bardziej trafne będzie lustro i późniejszy raport."
-                  maxLength={3000}
-                />
-
-                <div className="ctms-text-meta">
-                  <div>Ta odpowiedź pogłębia lustro i ustawia ton raportu.</div>
-                  <div>{openText.length}/3000</div>
-                </div>
-
-                <div className="ctms-actions-row">
-                  <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton
-                    onClick={buildPreviewAndGo}
-                    disabled={openText.trim().length < 40}
-                  >
-                    Pokaż darmowy preview
-                  </PrimaryButton>
-                </div>
-              </Glass>
-            </motion.div>
-          )}
+      <Glass className="ctms-editorial-card">
+        <div className="ctms-editorial-card-top">
+          <div className="ctms-editorial-no">03</div>
+          <div className="ctms-editorial-icon">◐</div>
+        </div>
+        <h3 className="ctms-editorial-title">Preview zanim zapłacisz</h3>
+        <div className="ctms-editorial-line" />
+        <p className="ctms-editorial-text">
+          Najpierw widzisz lustro sytuacji. Potem decydujesz, czy chcesz zejść głębiej.
+        </p>
+      </Glass>
+    </section>
+  </motion.div>
+)}
 
           {stage === "crisis" && (
             <motion.div
