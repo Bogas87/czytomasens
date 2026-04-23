@@ -1,16 +1,10 @@
-# CzyToMaSens — pakiet plików do podmiany
-
-Poniżej masz gotowce 1:1 do podmiany.
-
-## 1. `src/App.tsx`
-
-```tsx
 import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 function readApiBase(): string {
   try {
-    const metaEnv = typeof import.meta !== "undefined" ? (import.meta as any)?.env : undefined;
+    const metaEnv =
+      typeof import.meta !== "undefined" ? (import.meta as any)?.env : undefined;
     const value = metaEnv?.VITE_API_BASE;
     return typeof value === "string" ? value.replace(/\/$/, "") : "";
   } catch {
@@ -26,10 +20,11 @@ const BRAND = {
   panelStrong: "rgba(255,255,255,0.055)",
   border: "rgba(255,255,255,0.08)",
   text: "#F5F1EA",
-  muted: "#A8A099",
+  muted: "#AAA198",
   gold: "#C5A059",
-  danger: "#E5A4A4",
-  success: "#B9D5B1",
+  danger: "#E2A3A3",
+  success: "#B9D4B3",
+  yellow: "#D7B978",
 };
 
 type Stage =
@@ -53,15 +48,30 @@ type EntryKey =
   | "triangle"
   | "loop";
 
-type Option = { id: string; label: string; score: number };
-type Question = { id: string; lead: string; text: string; options: Option[] };
+type Option = {
+  id: string;
+  label: string;
+  score: number;
+};
+
+type Question = {
+  id: string;
+  lead: string;
+  text: string;
+  options: Option[];
+};
+
 type EntryConfig = {
   key: EntryKey;
   title: string;
   subtitle: string;
   intro: string;
   questions: Question[];
-  checkpoint: { title: string; text: string; options: Option[] };
+  checkpoint: {
+    title: string;
+    text: string;
+    options: Option[];
+  };
   openPrompt: string;
 };
 
@@ -78,6 +88,7 @@ type Preview = {
   summary: string;
   paidTease: string;
   tone: "red" | "yellow" | "green";
+  truthLine: string;
 };
 
 type FullReport = {
@@ -97,7 +108,7 @@ type SessionCreateResponse = {
   sessionId?: string;
 };
 
-const STORAGE_KEY = "ctms_premium_front_v3";
+const STORAGE_KEY = "ctms_premium_front_v4";
 
 const CONSENTS = [
   "Rozumiem, że to narzędzie ma charakter analityczny i rozwojowy, a nie medyczny, psychoterapeutyczny ani prawny.",
@@ -105,17 +116,26 @@ const CONSENTS = [
   "Wyrażam zgodę na przetwarzanie podanych przeze mnie danych w celu wygenerowania raportu i realizacji usługi cyfrowej.",
 ];
 
+const SOCIAL_PROOF = [
+  "„Pierwszy raz coś nazwało to tak wprost, bez pocieszania.”",
+  "„Najgorsze było to, że ten wynik brzmiał dokładnie jak moja sytuacja.”",
+  "„To nie dało mi komfortu. Dało mi jasność. I tego właśnie potrzebowałam.”",
+];
+
 const ENTRY_CONFIGS: EntryConfig[] = [
   {
     key: "betrayal",
     title: "Po zdradzie albo utracie zaufania",
-    subtitle: "Nie chodzi już tylko o fakt. Chodzi o to, co ta historia zrobiła z poczuciem bezpieczeństwa.",
-    intro: "Ta ścieżka sprawdza nie tylko ranę, ale też to, czy po niej pojawiła się odpowiedzialność, przejrzystość i realna odbudowa.",
+    subtitle:
+      "Tu nie chodzi już tylko o fakt. Chodzi o to, co ta historia zrobiła z poczuciem bezpieczeństwa.",
+    intro:
+      "Ta ścieżka sprawdza nie tylko ranę, ale też to, czy po niej pojawiła się odpowiedzialność, przejrzystość i realna odbudowa.",
     questions: [
       {
         id: "b1",
         lead: "Po pęknięciu liczą się nie słowa, tylko sposób dźwigania szkody.",
-        text: "Czy druga strona naprawdę wzięła odpowiedzialność, czy raczej próbowała rozmyć winę?",
+        text:
+          "Czy druga strona naprawdę wzięła odpowiedzialność, czy raczej próbowała rozmyć winę?",
         options: [
           { id: "a", label: "Rozmywała winę i mieszała odpowiedzialność", score: 3 },
           { id: "b", label: "Brała odpowiedzialność, ale niespójnie", score: 2 },
@@ -125,7 +145,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "b2",
         lead: "Zaufanie nie wraca od deklaracji. Wraca od przewidywalności.",
-        text: "Czy po tym wydarzeniu pojawiła się większa przejrzystość, czy nadal żyjesz w napięciu i domysłach?",
+        text:
+          "Czy po tym wydarzeniu pojawiła się większa przejrzystość, czy nadal żyjesz w napięciu i domysłach?",
         options: [
           { id: "a", label: "Nadal żyję głównie w napięciu", score: 3 },
           { id: "b", label: "Trochę się poprawiło, ale nie do końca", score: 2 },
@@ -135,7 +156,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "b3",
         lead: "Ciało zwykle wie szybciej niż głowa.",
-        text: "Czy mimo prób naprawy nadal łapiesz się na czujności, kontroli albo ciągłym sprawdzaniu?",
+        text:
+          "Czy mimo prób naprawy nadal łapiesz się na czujności, kontroli albo ciągłym sprawdzaniu?",
         options: [
           { id: "a", label: "Tak, bardzo mocno", score: 3 },
           { id: "b", label: "Czasem tak", score: 2 },
@@ -145,7 +167,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "b4",
         lead: "Tu wychodzi prawda o naprawie.",
-        text: "Gdy wracasz do bólu, druga strona jest obecna i cierpliwa, czy bardziej zirytowana, że temat jeszcze żyje?",
+        text:
+          "Gdy wracasz do bólu, druga strona jest obecna i cierpliwa, czy bardziej zirytowana, że temat jeszcze żyje?",
         options: [
           { id: "a", label: "Raczej zirytowana albo uciekająca", score: 3 },
           { id: "b", label: "Bywa różnie", score: 2 },
@@ -155,25 +178,30 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     ],
     checkpoint: {
       title: "Checkpoint",
-      text: "Co dziś bardziej trzyma tę relację: poczucie bezpieczeństwa czy lęk przed stratą i nadzieja, że jeszcze się ułoży?",
+      text:
+        "Co dziś bardziej trzyma tę relację: poczucie bezpieczeństwa czy lęk przed stratą i nadzieja, że jeszcze się ułoży?",
       options: [
         { id: "a", label: "Bardziej lęk i nadzieja", score: 3 },
         { id: "b", label: "Jedno i drugie", score: 2 },
         { id: "c", label: "Raczej bezpieczeństwo", score: 0 },
       ],
     },
-    openPrompt: "Napisz bez wygładzania: co dokładnie pękło po utracie zaufania i po czym poznajesz, że do dziś nie wróciło w pełni?",
+    openPrompt:
+      "Napisz bez wygładzania: co dokładnie pękło po utracie zaufania i po czym poznajesz, że do dziś nie wróciło w pełni?",
   },
   {
     key: "uncertain",
     title: "Nie wiem, na czym stoję",
-    subtitle: "Nadzieja miesza się z niejasnością, a Ty ciągle próbujesz to jakoś sobie wytłumaczyć.",
-    intro: "Ta ścieżka sprawdza, czy Twoja niepewność wynika z realnej złożoności, czy z długiego oswajania chaosu.",
+    subtitle:
+      "Nadzieja miesza się z niejasnością, a Ty ciągle próbujesz to jakoś sobie wytłumaczyć.",
+    intro:
+      "Ta ścieżka sprawdza, czy Twoja niepewność wynika z realnej złożoności, czy z długiego oswajania chaosu.",
     questions: [
       {
         id: "u1",
         lead: "Gdy coś jest ciągle niejasne, zwykle komuś to służy.",
-        text: "Czy często masz wrażenie, że nie do końca wiesz, co właściwie dla tej osoby znaczysz?",
+        text:
+          "Czy często masz wrażenie, że nie do końca wiesz, co właściwie dla tej osoby znaczysz?",
         options: [
           { id: "a", label: "Tak, bardzo często", score: 3 },
           { id: "b", label: "Czasem", score: 2 },
@@ -183,7 +211,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "u2",
         lead: "Słowa i czyny rzadko rozjeżdżają się przez przypadek miesiącami.",
-        text: "Czy druga strona mówi rzeczy dające nadzieję, ale jej zachowanie nie idzie za tym?",
+        text:
+          "Czy druga strona mówi rzeczy dające nadzieję, ale jej zachowanie nie idzie za tym?",
         options: [
           { id: "a", label: "Tak, dokładnie tak to działa", score: 3 },
           { id: "b", label: "Bywa różnie", score: 2 },
@@ -193,7 +222,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "u3",
         lead: "Czyjaś uwaga pojawiająca się głównie przy Twoim wycofaniu też coś mówi.",
-        text: "Czy druga strona daje Ci uwagę głównie wtedy, gdy zaczynasz się wycofywać?",
+        text:
+          "Czy druga strona daje Ci uwagę głównie wtedy, gdy zaczynasz się wycofywać?",
         options: [
           { id: "a", label: "Tak, dokładnie tak", score: 3 },
           { id: "b", label: "Czasem tak", score: 2 },
@@ -203,7 +233,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "u4",
         lead: "Kto chce jasno, zwykle nie boi się jasności.",
-        text: "Gdy próbujesz doprecyzować, czym to właściwie jest, druga strona wchodzi w konkret czy rozmywa temat?",
+        text:
+          "Gdy próbujesz doprecyzować, czym to właściwie jest, druga strona wchodzi w konkret czy rozmywa temat?",
         options: [
           { id: "a", label: "Rozmywa temat", score: 3 },
           { id: "b", label: "Trochę dopowiada, ale bez konkretu", score: 2 },
@@ -213,25 +244,30 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     ],
     checkpoint: {
       title: "Checkpoint",
-      text: "Czy Twoja niepewność wynika bardziej z realnej złożoności sytuacji, czy z tego, że druga strona daje Ci za mało jasności?",
+      text:
+        "Czy Twoja niepewność wynika bardziej z realnej złożoności sytuacji, czy z tego, że druga strona daje Ci za mało jasności?",
       options: [
         { id: "a", label: "Raczej z za małej jasności", score: 3 },
         { id: "b", label: "Jedno i drugie", score: 2 },
         { id: "c", label: "Raczej z samej złożoności", score: 0 },
       ],
     },
-    openPrompt: "Napisz bez upiększania: co dokładnie Ci tu nie pasuje, mimo że może jeszcze nie umiesz tego nazwać jednym zdaniem?",
+    openPrompt:
+      "Napisz bez upiększania: co dokładnie Ci tu nie pasuje, mimo że może jeszcze nie umiesz tego nazwać jednym zdaniem?",
   },
   {
     key: "stagnation",
     title: "To trwa, ale coraz mniej tam życia",
-    subtitle: "Brak wielkich awantur nie musi oznaczać spokoju. Czasem oznacza wygasanie.",
-    intro: "Ta ścieżka bada, czy między Wami jest cisza stabilna, czy cisza obojętności.",
+    subtitle:
+      "Brak wielkich awantur nie musi oznaczać spokoju. Czasem oznacza wygasanie.",
+    intro:
+      "Ta ścieżka bada, czy między Wami jest cisza stabilna, czy cisza obojętności.",
     questions: [
       {
         id: "s1",
         lead: "Relacja gaśnie najpierw w drobiazgach.",
-        text: "Czy coraz częściej czujesz, że jesteście obok siebie, ale nie naprawdę ze sobą?",
+        text:
+          "Czy coraz częściej czujesz, że jesteście obok siebie, ale nie naprawdę ze sobą?",
         options: [
           { id: "a", label: "Tak, dokładnie tak", score: 3 },
           { id: "b", label: "Czasem", score: 2 },
@@ -241,7 +277,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "s2",
         lead: "Gdy jedna strona ciągnie całość, to już nie jest równowaga.",
-        text: "Czy masz poczucie, że to Ty częściej inicjujesz rozmowę, bliskość albo ratowanie atmosfery?",
+        text:
+          "Czy masz poczucie, że to Ty częściej inicjujesz rozmowę, bliskość albo ratowanie atmosfery?",
         options: [
           { id: "a", label: "Tak, głównie ja", score: 3 },
           { id: "b", label: "Po części", score: 2 },
@@ -251,7 +288,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "s3",
         lead: "Długie usprawiedliwianie bywa sposobem na niepatrzenie prawdzie w oczy.",
-        text: "Czy coraz częściej tłumaczysz brak zaangażowania drugiej strony stresem albo trudnym czasem?",
+        text:
+          "Czy coraz częściej tłumaczysz brak zaangażowania drugiej strony stresem albo trudnym czasem?",
         options: [
           { id: "a", label: "Tak, często to robię", score: 3 },
           { id: "b", label: "Czasem", score: 2 },
@@ -261,7 +299,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "s4",
         lead: "Prawda często wychodzi wtedy, gdy przestajesz ciągnąć wszystko sam.",
-        text: "Gdybyś dziś przestał inicjować kontakt i ratować atmosferę, ta relacja dalej miałaby własny napęd?",
+        text:
+          "Gdybyś dziś przestał inicjować kontakt i ratować atmosferę, ta relacja dalej miałaby własny napęd?",
         options: [
           { id: "a", label: "Nie, raczej by siadła", score: 3 },
           { id: "b", label: "Nie wiem, mam wątpliwości", score: 2 },
@@ -271,25 +310,30 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     ],
     checkpoint: {
       title: "Checkpoint",
-      text: "Czy dziś bardziej czujesz zmęczenie tą relacją czy realną chęć budowania jej dalej?",
+      text:
+        "Czy dziś bardziej czujesz zmęczenie tą relacją czy realną chęć budowania jej dalej?",
       options: [
         { id: "a", label: "Bardziej zmęczenie", score: 3 },
         { id: "b", label: "Jedno i drugie", score: 2 },
         { id: "c", label: "Raczej realną chęć budowania", score: 0 },
       ],
     },
-    openPrompt: "Napisz szczerze: co dokładnie zgasło między Wami i od kiedy coraz trudniej Ci udawać, że to tylko chwilowe?",
+    openPrompt:
+      "Napisz szczerze: co dokładnie zgasło między Wami i od kiedy coraz trudniej Ci udawać, że to tylko chwilowe?",
   },
   {
     key: "returning",
     title: "Po rozstaniu nie wiem, czy wracać",
-    subtitle: "Tęsknota potrafi udawać sens. System oddzieli brak domknięcia od realnej szansy.",
-    intro: "Ta ścieżka odróżnia realny sens powrotu od głodu kontaktu, samotności i przywiązania.",
+    subtitle:
+      "Tęsknota potrafi udawać sens. Tu trzeba oddzielić brak domknięcia od realnej szansy.",
+    intro:
+      "Ta ścieżka odróżnia realny sens powrotu od głodu kontaktu, samotności i przywiązania.",
     questions: [
       {
         id: "r1",
         lead: "Tęsknić można za człowiekiem, ale też za ulgą po jego powrocie.",
-        text: "Czy bardziej tęsknisz za tą osobą, czy za poczuciem, że nie jesteś sam i coś jeszcze może wrócić?",
+        text:
+          "Czy bardziej tęsknisz za tą osobą, czy za poczuciem, że nie jesteś sam i coś jeszcze może wrócić?",
         options: [
           { id: "a", label: "Bardziej za ulgą i możliwością powrotu", score: 3 },
           { id: "b", label: "Trudno to oddzielić", score: 2 },
@@ -299,7 +343,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "r2",
         lead: "To, dlaczego się skończyło, dalej ma znaczenie.",
-        text: "Czy powody rozstania były czymś głębokim i powtarzalnym, czy raczej wynikały z jednego kryzysu?",
+        text:
+          "Czy powody rozstania były czymś głębokim i powtarzalnym, czy raczej wynikały z jednego kryzysu?",
         options: [
           { id: "a", label: "Były głębokie i powtarzalne", score: 3 },
           { id: "b", label: "Po trochu jedno i drugie", score: 2 },
@@ -309,7 +354,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "r3",
         lead: "Rozłąka lubi wygładzać to, co wcześniej bolało.",
-        text: "Czy zauważasz, że po czasie pamiętasz głównie dobre momenty, a słabiej czujesz to, co Cię niszczyło?",
+        text:
+          "Czy zauważasz, że po czasie pamiętasz głównie dobre momenty, a słabiej czujesz to, co Cię niszczyło?",
         options: [
           { id: "a", label: "Tak, mam tendencję do idealizowania", score: 3 },
           { id: "b", label: "Trochę tak", score: 2 },
@@ -319,7 +365,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "r4",
         lead: "Powrót bez nowych zasad zwykle kończy się starym układem.",
-        text: "Gdyby doszło do powrotu, czy wiesz jasno, czego już więcej nie chcesz powtórzyć?",
+        text:
+          "Gdyby doszło do powrotu, czy wiesz jasno, czego już więcej nie chcesz powtórzyć?",
         options: [
           { id: "a", label: "Nie, bardziej chcę wrócić niż mam jasność", score: 3 },
           { id: "b", label: "Częściowo", score: 2 },
@@ -329,25 +376,30 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     ],
     checkpoint: {
       title: "Checkpoint",
-      text: "Gdybyś miał odjąć samotność, tęsknotę i lęk przed ostatecznością — czy nadal równie mocno chciałbyś wrócić?",
+      text:
+        "Gdybyś miał odjąć samotność, tęsknotę i lęk przed ostatecznością — czy nadal równie mocno chciałbyś wrócić?",
       options: [
         { id: "a", label: "Nie, wtedy to byłoby słabsze", score: 3 },
         { id: "b", label: "Nie wiem", score: 2 },
         { id: "c", label: "Tak, nadal mocno", score: 0 },
       ],
     },
-    openPrompt: "Napisz uczciwie: za czym naprawdę tęsknisz po tym rozstaniu i co w Tobie najmocniej pcha Cię dziś w stronę powrotu?",
+    openPrompt:
+      "Napisz uczciwie: za czym naprawdę tęsknisz po tym rozstaniu i co w Tobie najmocniej pcha Cię dziś w stronę powrotu?",
   },
   {
     key: "triangle",
     title: "Jest ktoś trzeci i wszystko się miesza",
-    subtitle: "Pojawienie się innej osoby nie zawsze jest przyczyną. Czasem obnaża to, czego brakowało wcześniej.",
-    intro: "Ta ścieżka sprawdza, czy nowa osoba jest impulsem, ucieczką, czy sygnałem głębszego rozpadu obecnej relacji.",
+    subtitle:
+      "Pojawienie się innej osoby nie zawsze jest przyczyną. Czasem obnaża to, czego brakowało wcześniej.",
+    intro:
+      "Ta ścieżka sprawdza, czy nowa osoba jest impulsem, ucieczką, czy sygnałem głębszego rozpadu obecnej relacji.",
     questions: [
       {
         id: "t1",
         lead: "To rzadko bierze się znikąd.",
-        text: "Czy pojawienie się tej osoby uderzyło Cię dlatego, że w obecnej relacji czegoś od dawna brakowało?",
+        text:
+          "Czy pojawienie się tej osoby uderzyło Cię dlatego, że w obecnej relacji czegoś od dawna brakowało?",
         options: [
           { id: "a", label: "Tak, bardzo to odsłoniło", score: 3 },
           { id: "b", label: "Po części", score: 2 },
@@ -357,7 +409,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "t2",
         lead: "Fantazja działa inaczej niż relacja w codzienności.",
-        text: "Czy znasz tę nową osobę na tyle realnie, żeby oceniać ją poza emocjonalnym uniesieniem?",
+        text:
+          "Czy znasz tę nową osobę na tyle realnie, żeby oceniać ją poza emocjonalnym uniesieniem?",
         options: [
           { id: "a", label: "Nie, to bardziej napięcie i wyobrażenie", score: 2 },
           { id: "b", label: "Trochę tak", score: 1 },
@@ -367,7 +420,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "t3",
         lead: "Czasem nie szukamy kogoś, tylko wyjścia z własnego utknięcia.",
-        text: "Czy ta nowa osoba daje Ci bardziej ekscytację, czy poczucie zobaczenia czegoś, czego od dawna Ci brakowało?",
+        text:
+          "Czy ta nowa osoba daje Ci bardziej ekscytację, czy poczucie zobaczenia czegoś, czego od dawna Ci brakowało?",
         options: [
           { id: "a", label: "Bardziej poczucie zobaczenia", score: 3 },
           { id: "b", label: "Jedno i drugie", score: 2 },
@@ -377,7 +431,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "t4",
         lead: "Najgorzej, gdy trwa się w zawieszeniu i konsumuje oba światy.",
-        text: "Czy dziś bardziej odkładasz decyzję, niż naprawdę próbujesz zobaczyć, co jest prawdą o obecnej relacji?",
+        text:
+          "Czy dziś bardziej odkładasz decyzję, niż naprawdę próbujesz zobaczyć, co jest prawdą o obecnej relacji?",
         options: [
           { id: "a", label: "Tak, jestem w zawieszeniu", score: 3 },
           { id: "b", label: "Po części", score: 2 },
@@ -387,25 +442,30 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     ],
     checkpoint: {
       title: "Checkpoint",
-      text: "Gdyby tej trzeciej osoby nagle nie było, czy problem w obecnej relacji i tak dalej byłby dla Ciebie poważny?",
+      text:
+        "Gdyby tej trzeciej osoby nagle nie było, czy problem w obecnej relacji i tak dalej byłby dla Ciebie poważny?",
       options: [
         { id: "a", label: "Tak, i tak byłby poważny", score: 3 },
         { id: "b", label: "Nie wiem, ale chyba tak", score: 2 },
         { id: "c", label: "Nie, wtedy wszystko byłoby prostsze", score: 0 },
       ],
     },
-    openPrompt: "Napisz uczciwie: czego naprawdę szukasz w tej trzeciej osobie i co to mówi o tym, czego już nie znajdujesz w obecnej relacji?",
+    openPrompt:
+      "Napisz uczciwie: czego naprawdę szukasz w tej trzeciej osobie i co to mówi o tym, czego już nie znajdujesz w obecnej relacji?",
   },
   {
     key: "loop",
     title: "Kręcimy się w kółko",
-    subtitle: "Wracacie do siebie, odchodzicie, znowu wracacie — i nic realnie się nie zmienia.",
-    intro: "Ta ścieżka rozbiera cykl napięcie–ulga–powrót–kolejny zjazd.",
+    subtitle:
+      "Wracacie do siebie, odchodzicie, znowu wracacie — i nic realnie się nie zmienia.",
+    intro:
+      "Ta ścieżka rozbiera cykl napięcie–ulga–powrót–kolejny zjazd.",
     questions: [
       {
         id: "l1",
         lead: "Silne emocje często mylą się z głębią.",
-        text: "Czy najmocniej czujesz tę relację wtedy, gdy coś się sypie albo ktoś odchodzi?",
+        text:
+          "Czy najmocniej czujesz tę relację wtedy, gdy coś się sypie albo ktoś odchodzi?",
         options: [
           { id: "a", label: "Tak, wtedy wszystko robi się najmocniejsze", score: 3 },
           { id: "b", label: "Czasem tak", score: 2 },
@@ -415,7 +475,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "l2",
         lead: "Ciągłe gaszenie pożaru też staje się rytmem.",
-        text: "Czy masz poczucie, że bardziej walczysz o utrzymanie kontaktu niż naprawdę w nim jesteś?",
+        text:
+          "Czy masz poczucie, że bardziej walczysz o utrzymanie kontaktu niż naprawdę w nim jesteś?",
         options: [
           { id: "a", label: "Tak, to bardziej walka niż relacja", score: 3 },
           { id: "b", label: "Bywa różnie", score: 2 },
@@ -425,7 +486,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "l3",
         lead: "Obietnice bez nowego zachowania to tylko nowa wersja starego.",
-        text: "Czy po kolejnych kryzysach pojawiały się konkretne zmiany, które utrzymały się dłużej niż chwilę?",
+        text:
+          "Czy po kolejnych kryzysach pojawiały się konkretne zmiany, które utrzymały się dłużej niż chwilę?",
         options: [
           { id: "a", label: "Nie, raczej słowa niż realna zmiana", score: 3 },
           { id: "b", label: "Trochę tak, ale niestabilnie", score: 2 },
@@ -435,7 +497,8 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       {
         id: "l4",
         lead: "Prawdziwa relacja daje kierunek, nie tylko chwilę ulgi.",
-        text: "Czy kiedy myślisz o przyszłości, czujesz spokój czy raczej napięcie i niepewność?",
+        text:
+          "Czy kiedy myślisz o przyszłości, czujesz spokój czy raczej napięcie i niepewność?",
         options: [
           { id: "a", label: "Raczej napięcie i niepewność", score: 3 },
           { id: "b", label: "Mieszankę jednego i drugiego", score: 2 },
@@ -445,14 +508,16 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     ],
     checkpoint: {
       title: "Checkpoint",
-      text: "Kiedy wracasz do tej osoby, co jest silniejsze: realna poprawa czy ulga, że znowu nie tracisz kontaktu?",
+      text:
+        "Kiedy wracasz do tej osoby, co jest silniejsze: realna poprawa czy ulga, że znowu nie tracisz kontaktu?",
       options: [
         { id: "a", label: "Bardziej ulga niż realna poprawa", score: 3 },
         { id: "b", label: "Po trochu jedno i drugie", score: 2 },
         { id: "c", label: "Raczej realna poprawa", score: 0 },
       ],
     },
-    openPrompt: "Napisz bez filtra: co dokładnie wraca między Wami i dlaczego mimo tego nadal trudno Ci to odciąć?",
+    openPrompt:
+      "Napisz bez filtra: co dokładnie wraca między Wami i dlaczego mimo tego nadal trudno Ci to odciąć?",
   },
 ];
 
@@ -475,12 +540,56 @@ function hasCrisisContent(text: string): boolean {
   return patterns.some((re) => re.test(text));
 }
 
+function buildTruthLine(path: EntryConfig, chance: number, openText: string): string {
+  const lower = openText.toLowerCase();
+
+  if (chance <= 24) {
+    if (path.key === "loop") {
+      return "Najbardziej nie trzyma Was tu już rozwój relacji, tylko ulga po kolejnym powrocie.";
+    }
+    if (path.key === "betrayal") {
+      return "To nie wygląda jak rana, która naprawdę się zabliźnia. Bardziej jak rana, wokół której nauczyliście się chodzić.";
+    }
+    if (path.key === "uncertain") {
+      return "Najmocniej boli tu nie brak odpowiedzi. Najmocniej boli to, że za długo próbujesz nie nazywać tego po imieniu.";
+    }
+    if (path.key === "stagnation") {
+      return "To już bardziej przypomina wygaszanie niż chwilowy kryzys.";
+    }
+    if (path.key === "returning") {
+      return "To, co Cię cofa, wygląda bardziej na głód ulgi niż na realny fundament do powrotu.";
+    }
+    if (path.key === "triangle") {
+      return "Problemem nie jest tylko ktoś trzeci. Problemem jest to, co jego pojawienie się tak wyraźnie odsłoniło.";
+    }
+  }
+
+  if (chance <= 49) {
+    if (lower.includes("boję") || lower.includes("strach")) {
+      return "W tej historii obok więzi bardzo mocno pracuje też lęk. A lęk długo potrafi udawać sens.";
+    }
+    return "Jeszcze nie wszystko tu pękło, ale już zdecydowanie nie wszystko tu jest zdrowe i stabilne.";
+  }
+
+  if (chance <= 69) {
+    return "Coś tu jeszcze ma wartość, ale samo przywiązanie nie wystarczy, żeby to bezpiecznie unieść dalej.";
+  }
+
+  return "Tu nadal widać realny materiał, ale nawet relacja z potencjałem może się rozjechać, jeśli zignoruje swoje słabsze miejsca.";
+}
+
 function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): Preview {
   const scoreMap = new Map<string, number>();
+
   for (const q of path.questions) {
-    for (const opt of q.options) scoreMap.set(`${q.id}:${opt.id}`, opt.score);
+    for (const opt of q.options) {
+      scoreMap.set(`${q.id}:${opt.id}`, opt.score);
+    }
   }
-  for (const opt of path.checkpoint.options) scoreMap.set(`${path.key}_checkpoint:${opt.id}`, opt.score);
+
+  for (const opt of path.checkpoint.options) {
+    scoreMap.set(`${path.key}_checkpoint:${opt.id}`, opt.score);
+  }
 
   let total = 0;
   for (const [qid, oid] of Object.entries(answers)) {
@@ -489,12 +598,19 @@ function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): 
 
   const max = path.questions.length * 3 + 3;
   const intensity = max > 0 ? total / max : 0;
-  const textPenalty = openText.trim().length > 180 ? 4 : openText.trim().length > 80 ? 2 : 0;
+  const textPenalty =
+    openText.trim().length > 220 ? 4 : openText.trim().length > 120 ? 2 : 0;
 
-  const chance = safeNumber(100 - Math.round(intensity * 76) - textPenalty, 8, 88);
+  const chance = safeNumber(
+    100 - Math.round(intensity * 76) - textPenalty,
+    8,
+    88
+  );
   const tension = safeNumber(Math.round(28 + intensity * 59), 14, 96);
   const asymmetry = safeNumber(Math.round(24 + intensity * 62), 12, 97);
   const change = safeNumber(Math.round(74 - intensity * 48), 8, 84);
+
+  const truthLine = buildTruthLine(path, chance, openText);
 
   if (chance <= 24) {
     return {
@@ -502,9 +618,11 @@ function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): 
       tension,
       asymmetry,
       change,
+      truthLine,
       tone: "red",
       badge: "Wzorzec wysokiego ryzyka",
-      headline: "To bardziej wygląda na relację kosztowną emocjonalnie niż na układ, który sam się naprostuje.",
+      headline:
+        "To bardziej wygląda na relację kosztowną emocjonalnie niż na układ, który sam się naprostuje.",
       mirror:
         "Na dziś więcej wskazuje tu na przeciążający mechanizm niż na stabilny grunt. Coś jeszcze Cię trzyma, ale coraz mniej przypomina to bezpieczeństwo, a coraz bardziej napięcie, przywiązanie albo lęk przed odpuszczeniem.",
       summary:
@@ -520,6 +638,7 @@ function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): 
       tension,
       asymmetry,
       change,
+      truthLine,
       tone: "yellow",
       badge: "Układ chwiejny i niespójny",
       headline: "Tu bardziej widać chwiejność niż spójność.",
@@ -538,6 +657,7 @@ function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): 
       tension,
       asymmetry,
       change,
+      truthLine,
       tone: "yellow",
       badge: "Jest potencjał, ale nie bez zastrzeżeń",
       headline: "Tu coś jeszcze ma sens, ale nie na autopilocie.",
@@ -555,6 +675,7 @@ function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): 
     tension,
     asymmetry,
     change,
+    truthLine,
     tone: "green",
     badge: "Układ z realnym potencjałem",
     headline: "Tu jeszcze widać grunt, nie tylko emocje.",
@@ -589,14 +710,20 @@ async function updateSession(payload: any): Promise<any> {
   return data;
 }
 
-async function createCheckout(token: string, email: string, consentAcceptedAt: string): Promise<{ url: string }> {
+async function createCheckout(
+  token: string,
+  email: string,
+  consentAcceptedAt: string
+): Promise<{ url: string }> {
   const res = await fetch(`${API_BASE}/api/create-checkout`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token, email, consentAcceptedAt }),
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok || !data?.url) throw new Error(data?.error || "Błąd inicjalizacji płatności.");
+  if (!res.ok || !data?.url) {
+    throw new Error(data?.error || "Błąd inicjalizacji płatności.");
+  }
   return { url: data.url };
 }
 
@@ -606,7 +733,6 @@ async function fetchPaidReport(token: string): Promise<FullReport> {
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
     const res = await fetch(`${API_BASE}/api/report/${encodeURIComponent(token)}`);
-
     if (res.status === 202) {
       await new Promise((resolve) => setTimeout(resolve, INTERVAL_MS));
       continue;
@@ -625,24 +751,49 @@ async function fetchPaidReport(token: string): Promise<FullReport> {
     return data.report as FullReport;
   }
 
-  throw new Error("Raport jest nadal przygotowywany. Sprawdź e-mail — wyślemy Ci bezpieczny link, gdy będzie gotowy.");
+  throw new Error(
+    "Raport jest nadal przygotowywany. Sprawdź e-mail — wyślemy Ci bezpieczny link, gdy będzie gotowy."
+  );
 }
 
 function LogoBlock() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ width: 14, height: 14, borderRadius: 999, background: BRAND.gold, boxShadow: `0 0 30px ${BRAND.gold}` }} />
-        <div style={{ fontSize: 32, fontWeight: 900, letterSpacing: -1.4, color: BRAND.text }}>
+        <div
+          style={{
+            width: 14,
+            height: 14,
+            borderRadius: 999,
+            background: BRAND.gold,
+            boxShadow: `0 0 28px ${BRAND.gold}`,
+          }}
+        />
+        <div
+          style={{
+            fontSize: 32,
+            fontWeight: 900,
+            letterSpacing: -1.4,
+            color: BRAND.text,
+          }}
+        >
           CzyToMaSens<span style={{ color: BRAND.gold }}>.</span>
         </div>
       </div>
-      <div style={{ color: BRAND.muted, letterSpacing: 4, fontSize: 11 }}>PRYWATNA ANALIZA RELACJI</div>
+      <div style={{ color: BRAND.muted, letterSpacing: 4, fontSize: 11 }}>
+        PRYWATNA ANALIZA RELACJI
+      </div>
     </div>
   );
 }
 
-function Glass({ children, style = {} }: { children: React.ReactNode; style?: React.CSSProperties }) {
+function Glass({
+  children,
+  style = {},
+}: {
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+}) {
   return (
     <div
       style={{
@@ -659,7 +810,15 @@ function Glass({ children, style = {} }: { children: React.ReactNode; style?: Re
   );
 }
 
-function PrimaryButton({ children, onClick, disabled }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) {
+function PrimaryButton({
+  children,
+  onClick,
+  disabled,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+}) {
   return (
     <button
       onClick={onClick}
@@ -681,7 +840,13 @@ function PrimaryButton({ children, onClick, disabled }: { children: React.ReactN
   );
 }
 
-function GhostButton({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
+function GhostButton({
+  children,
+  onClick,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
   return (
     <button
       onClick={onClick}
@@ -702,14 +867,71 @@ function GhostButton({ children, onClick }: { children: React.ReactNode; onClick
 }
 
 function PremiumBadge({ preview }: { preview: Preview }) {
-  const color = preview.tone === "red" ? BRAND.danger : preview.tone === "green" ? BRAND.success : BRAND.gold;
+  const color =
+    preview.tone === "red"
+      ? BRAND.danger
+      : preview.tone === "green"
+      ? BRAND.success
+      : BRAND.yellow;
+
   return (
     <Glass style={{ padding: 28, textAlign: "center", borderColor: color }}>
-      <div style={{ color: BRAND.muted, letterSpacing: 4, fontSize: 11 }}>NA ILE TO MA SENS</div>
-      <div style={{ fontSize: 92, lineHeight: 1, fontWeight: 900, color, marginTop: 8 }}>{preview.chance}%</div>
-      <div style={{ marginTop: 8, fontSize: 28, fontWeight: 800 }}>{preview.badge}</div>
-      <div style={{ marginTop: 10, color: BRAND.muted, lineHeight: 1.7 }}>{preview.mirror}</div>
+      <div style={{ color: BRAND.muted, letterSpacing: 4, fontSize: 11 }}>
+        NA ILE TO MA SENS
+      </div>
+      <div
+        style={{
+          fontSize: "clamp(64px, 12vw, 92px)",
+          lineHeight: 1,
+          fontWeight: 900,
+          color,
+          marginTop: 8,
+        }}
+      >
+        {preview.chance}%
+      </div>
+      <div style={{ marginTop: 8, fontSize: 28, fontWeight: 800 }}>
+        {preview.badge}
+      </div>
+      <div style={{ marginTop: 12, color: BRAND.text, fontSize: 18, lineHeight: 1.65 }}>
+        {preview.truthLine}
+      </div>
+      <div style={{ marginTop: 12, color: BRAND.muted, lineHeight: 1.7 }}>
+        {preview.mirror}
+      </div>
     </Glass>
+  );
+}
+
+function ProgressBar({
+  index,
+  total,
+}: {
+  index: number;
+  total: number;
+}) {
+  const percent = safeNumber(Math.round(((index + 1) / total) * 100), 0, 100);
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ color: BRAND.muted, fontSize: 14 }}>{percent}%</div>
+      <div
+        style={{
+          width: 120,
+          height: 3,
+          background: "rgba(255,255,255,0.08)",
+          borderRadius: 999,
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            width: `${percent}%`,
+            height: "100%",
+            background: BRAND.gold,
+          }}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -727,7 +949,11 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [consents, setConsents] = useState<boolean[]>([false, false, false]);
 
-  const path = useMemo(() => ENTRY_CONFIGS.find((x) => x.key === selectedPath) || null, [selectedPath]);
+  const path = useMemo(
+    () => ENTRY_CONFIGS.find((x) => x.key === selectedPath) || null,
+    [selectedPath]
+  );
+
   const currentQuestion = path?.questions[questionIndex] || null;
 
   useEffect(() => {
@@ -746,12 +972,15 @@ export default function App() {
         setSessionToken(parsed.sessionToken || null);
         setConsents(parsed.consents || [false, false, false]);
       }
-    } catch {}
+    } catch {
+      // ignore restore error
+    }
 
     const params = new URLSearchParams(window.location.search);
     const success = params.get("success");
     const token = params.get("token");
-    const cancel = params.get("cancel") || params.get("cancelled") || params.get("canceled");
+    const cancel =
+      params.get("cancel") || params.get("cancelled") || params.get("canceled");
 
     if (cancel === "1" || cancel === "true") {
       setBusy(false);
@@ -763,6 +992,7 @@ export default function App() {
     if (success === "1" && token) {
       setBusy(true);
       setStage("processing");
+
       fetchPaidReport(token)
         .then((report) => {
           setFullReport(report);
@@ -773,7 +1003,10 @@ export default function App() {
         .catch((e: any) => {
           setBusy(false);
           setStage("error");
-          setError(e?.message || "Płatność wróciła poprawnie, ale nie udało się pobrać raportu.");
+          setError(
+            e?.message ||
+              "Płatność wróciła poprawnie, ale nie udało się pobrać raportu."
+          );
         })
         .finally(() => {
           window.history.replaceState({}, "", window.location.pathname);
@@ -784,9 +1017,31 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify({ stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, consents })
+      JSON.stringify({
+        stage,
+        selectedPath,
+        questionIndex,
+        answers,
+        openText,
+        email,
+        preview,
+        fullReport,
+        sessionToken,
+        consents,
+      })
     );
-  }, [stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, consents]);
+  }, [
+    stage,
+    selectedPath,
+    questionIndex,
+    answers,
+    openText,
+    email,
+    preview,
+    fullReport,
+    sessionToken,
+    consents,
+  ]);
 
   const resetAll = () => {
     localStorage.removeItem(STORAGE_KEY);
@@ -829,12 +1084,15 @@ export default function App() {
   const answerQuestion = (qid: string, optionId: string) => {
     const next = { ...answers, [qid]: optionId };
     setAnswers(next);
+
     if (!path) return;
+
     if (questionIndex >= path.questions.length - 1) {
       setStage("checkpoint");
       return;
     }
-    setQuestionIndex((v) => v + 1);
+
+    setQuestionIndex((v) => Math.max(0, v + 1));
   };
 
   const answerCheckpoint = (optionId: string) => {
@@ -845,6 +1103,7 @@ export default function App() {
 
   const goBack = () => {
     setError(null);
+
     if (stage === "questions") {
       if (questionIndex === 0) {
         setStage("entry");
@@ -853,22 +1112,27 @@ export default function App() {
       setQuestionIndex((v) => Math.max(0, v - 1));
       return;
     }
+
     if (stage === "checkpoint") {
       setStage("questions");
       return;
     }
+
     if (stage === "open_text") {
       setStage("checkpoint");
       return;
     }
+
     if (stage === "preview") {
       setStage("open_text");
       return;
     }
+
     if (stage === "consent") {
       setStage("landing");
       return;
     }
+
     if (stage === "entry") {
       setStage("consent");
     }
@@ -897,7 +1161,7 @@ export default function App() {
         });
       }
     } catch {
-      // fallback cichy — flow ma iść dalej
+      // silent fallback
     }
 
     setStage("preview");
@@ -908,16 +1172,20 @@ export default function App() {
       setError("Brak tokenu sesji.");
       return;
     }
+
     if (!email.includes("@")) {
       setError("Podaj prawidłowy e-mail.");
       return;
     }
+
     if (!preview || !selectedPath) {
       setError("Brak gotowego preview do zapisania.");
       return;
     }
+
     setBusy(true);
     setError(null);
+
     try {
       await updateSession({
         token: sessionToken,
@@ -929,7 +1197,13 @@ export default function App() {
         consentAcceptedAt: new Date().toISOString(),
         stage: "checkout_started",
       });
-      const checkout = await createCheckout(sessionToken, email, new Date().toISOString());
+
+      const checkout = await createCheckout(
+        sessionToken,
+        email,
+        new Date().toISOString()
+      );
+
       window.location.href = checkout.url;
     } catch (e: any) {
       setError(e?.message || "Nie udało się rozpocząć płatności.");
@@ -940,11 +1214,12 @@ export default function App() {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         background:
-          "radial-gradient(circle at 14% 8%, rgba(197,160,89,0.14), transparent 30%), radial-gradient(circle at 86% 12%, rgba(255,255,255,0.05), transparent 20%), #050505",
+          "radial-gradient(circle at 12% 8%, rgba(197,160,89,0.15), transparent 28%), radial-gradient(circle at 85% 10%, rgba(255,255,255,0.05), transparent 20%), #050505",
         color: BRAND.text,
-        fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+        fontFamily:
+          'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       }}
     >
       <div className="page-wrap">
@@ -955,29 +1230,68 @@ export default function App() {
 
         <AnimatePresence mode="wait">
           {stage === "landing" && (
-            <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <motion.div
+              key="landing"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
               <div className="hero-grid">
-                <Glass style={{ padding: 38, minHeight: 540 }}>
-                  <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 5, marginBottom: 18 }}>NIE TEST. NIE TERAPIA. NIE LUKIER.</div>
-                  <div className="hero-title">Zobacz, co ta relacja naprawdę z Tobą robi.</div>
-                  <div className="hero-copy">
-                    Nie pytamy o idealną historię. Pytamy o to, co wraca, męczy, miesza i nie daje spokoju. Potem pokazujemy,
-                    ile tu jeszcze sensu, a ile już tylko napięcia, przywiązania albo nadziei bez pokrycia.
+                <Glass style={{ padding: 38, minHeight: 560 }}>
+                  <div
+                    style={{
+                      color: BRAND.gold,
+                      fontSize: 12,
+                      letterSpacing: 5,
+                      marginBottom: 18,
+                    }}
+                  >
+                    NIE TEST. NIE TERAPIA. NIE LUKIER.
                   </div>
+
+                  <div className="hero-title">
+                    Coś Ci tu nie gra.
+                    <br />
+                    I bardzo możliwe,
+                    <br />
+                    że już to wiesz.
+                  </div>
+
+                  <div className="hero-copy">
+                    To nie ma Cię pogłaskać. To ma oddzielić to, co naprawdę
+                    dzieje się w tej relacji, od tego, co jeszcze próbujesz
+                    obronić nadzieją, przywiązaniem albo strachem przed końcem.
+                  </div>
+
                   <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 30 }}>
-                    <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij wgląd w relację</PrimaryButton>
-                    <GhostButton onClick={() => setStage("entry")}>Jak to działa</GhostButton>
+                    <PrimaryButton onClick={() => setStage("consent")}>
+                      Rozpocznij wgląd w relację
+                    </PrimaryButton>
+                    <GhostButton onClick={() => setStage("entry")}>
+                      Zobacz, od czego możesz zacząć
+                    </GhostButton>
                   </div>
 
                   <div className="feature-grid">
                     {[
-                      ["Rozmowa, nie quiz", "System prowadzi Cię warstwowo, zamiast wrzucać wszystkich w jedną listę pytań."],
-                      ["Wielowarstwowa analiza", "Wychwytuje napięcie, niespójność, unikanie, chaos i realny kierunek tej relacji."],
-                      ["Lustro zanim zdecydujesz", "Najpierw widzisz, co naprawdę dzieje się między Wami. Dopiero potem wybierasz, czy chcesz zejść głębiej."],
+                      [
+                        "Rozmowa, nie quiz",
+                        "System nie wrzuca wszystkich w jedną listę pytań. Wchodzi przez problem, a potem schodzi głębiej.",
+                      ],
+                      [
+                        "Lustro, nie pocieszanie",
+                        "Tu nie chodzi o ładne zdania. Chodzi o trafność, napięcie i nazwanie mechanizmu, który już działa.",
+                      ],
+                      [
+                        "Preview, które wbija hak",
+                        "Najpierw widzisz kierunek i jedno mocne lustro. Dopiero potem decydujesz, czy chcesz zejść głębiej.",
+                      ],
                     ].map(([t, d]) => (
                       <Glass key={t} style={{ padding: 20, borderRadius: 24 }}>
                         <div style={{ fontWeight: 800, fontSize: 20 }}>{t}</div>
-                        <div style={{ marginTop: 10, color: BRAND.muted, lineHeight: 1.6 }}>{d}</div>
+                        <div style={{ marginTop: 10, color: BRAND.muted, lineHeight: 1.65 }}>
+                          {d}
+                        </div>
                       </Glass>
                     ))}
                   </div>
@@ -985,8 +1299,17 @@ export default function App() {
 
                 <div style={{ display: "grid", gap: 18 }}>
                   <Glass style={{ padding: 26 }}>
-                    <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 4, marginBottom: 14 }}>WEJŚCIA PROBLEMOWE</div>
-                    <div style={{ display: "grid", gap: 12, lineHeight: 1.65 }}>
+                    <div
+                      style={{
+                        color: BRAND.gold,
+                        fontSize: 12,
+                        letterSpacing: 4,
+                        marginBottom: 14,
+                      }}
+                    >
+                      WEJŚCIA PROBLEMOWE
+                    </div>
+                    <div style={{ display: "grid", gap: 14, lineHeight: 1.7 }}>
                       <div>Wracacie do siebie i nic się nie naprawia.</div>
                       <div>To trwa, ale coraz mniej tam życia.</div>
                       <div>Była zdrada, kłamstwo albo pęknięcie zaufania.</div>
@@ -997,9 +1320,37 @@ export default function App() {
                   </Glass>
 
                   <Glass style={{ padding: 26 }}>
-                    <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 4, marginBottom: 14 }}>CO DOSTAJESZ</div>
-                    <div style={{ fontSize: 20, lineHeight: 1.6, color: BRAND.muted }}>
-                      Najpierw darmowe lustro sytuacji. Potem pełny raport premium: mechanizmy, ryzyka, scenariusze, praktyczne wskazówki i jasny werdykt.
+                    <div
+                      style={{
+                        color: BRAND.gold,
+                        fontSize: 12,
+                        letterSpacing: 4,
+                        marginBottom: 14,
+                      }}
+                    >
+                      CO DOSTAJESZ
+                    </div>
+                    <div style={{ fontSize: 20, lineHeight: 1.7, color: BRAND.muted }}>
+                      Najpierw darmowe lustro sytuacji. Potem pełny raport premium:
+                      mechanizmy, ryzyka, scenariusze, praktyczne wskazówki i jasny werdykt.
+                    </div>
+                  </Glass>
+
+                  <Glass style={{ padding: 26 }}>
+                    <div
+                      style={{
+                        color: BRAND.gold,
+                        fontSize: 12,
+                        letterSpacing: 4,
+                        marginBottom: 14,
+                      }}
+                    >
+                      GŁOSY PO PIERWSZYCH ANALIZACH
+                    </div>
+                    <div style={{ display: "grid", gap: 12, color: BRAND.muted, lineHeight: 1.75 }}>
+                      {SOCIAL_PROOF.map((item) => (
+                        <div key={item}>{item}</div>
+                      ))}
                     </div>
                   </Glass>
                 </div>
@@ -1008,16 +1359,44 @@ export default function App() {
           )}
 
           {stage === "consent" && (
-            <motion.div key="consent" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <motion.div
+              key="consent"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
               <Glass style={{ padding: 34, maxWidth: 900, margin: "0 auto" }}>
-                <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 5, marginBottom: 18 }}>ZANIM WEJDZIESZ GŁĘBIEJ</div>
-                <div className="section-title">To ma być trafne, nie miłe.</div>
-                <div style={{ marginTop: 18, color: BRAND.muted, lineHeight: 1.75, fontSize: 17 }}>
-                  Ten produkt analizuje wzorce i dynamikę relacji. Nie zastępuje terapii, diagnozy ani porady prawnej. Po płatności dostajesz treść cyfrową od razu. To wejście jest dla ludzi, którzy chcą widzieć jaśniej, nie ładniej.
+                <div
+                  style={{
+                    color: BRAND.gold,
+                    fontSize: 12,
+                    letterSpacing: 5,
+                    marginBottom: 18,
+                  }}
+                >
+                  ZANIM WEJDZIESZ GŁĘBIEJ
                 </div>
+
+                <div className="section-title">To ma być trafne, nie miłe.</div>
+
+                <div style={{ marginTop: 18, color: BRAND.muted, lineHeight: 1.8, fontSize: 17 }}>
+                  Ten produkt analizuje wzorce i dynamikę relacji. Nie zastępuje terapii,
+                  diagnozy ani porady prawnej. Po płatności dostajesz treść cyfrową od razu.
+                  To wejście jest dla ludzi, którzy chcą widzieć jaśniej, nie ładniej.
+                </div>
+
                 <div style={{ display: "grid", gap: 14, marginTop: 24 }}>
                   {CONSENTS.map((text, idx) => (
-                    <label key={idx} style={{ display: "flex", gap: 12, alignItems: "flex-start", lineHeight: 1.7, cursor: "pointer" }}>
+                    <label
+                      key={idx}
+                      style={{
+                        display: "flex",
+                        gap: 12,
+                        alignItems: "flex-start",
+                        lineHeight: 1.75,
+                        cursor: "pointer",
+                      }}
+                    >
                       <input
                         type="checkbox"
                         checked={consents[idx]}
@@ -1032,35 +1411,80 @@ export default function App() {
                     </label>
                   ))}
                 </div>
+
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 26 }}>
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => setStage("entry")} disabled={!consents.every(Boolean)}>Rozumiem, wchodzę dalej</PrimaryButton>
+                  <PrimaryButton
+                    onClick={() => setStage("entry")}
+                    disabled={!consents.every(Boolean)}
+                  >
+                    Rozumiem, wchodzę dalej
+                  </PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
           )}
 
           {stage === "entry" && (
-            <motion.div key="entry" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "end", gap: 20, marginBottom: 18 }}>
+            <motion.div
+              key="entry"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "end",
+                  gap: 20,
+                  marginBottom: 18,
+                }}
+              >
                 <div>
-                  <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 5 }}>PUNKT WEJŚCIA</div>
+                  <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 5 }}>
+                    PUNKT WEJŚCIA
+                  </div>
                   <div className="section-title">Od czego ta historia boli najmocniej?</div>
-                  <div style={{ marginTop: 12, color: BRAND.muted, lineHeight: 1.7 }}>
-                    Zacznij od miejsca, które najbardziej ciągnie Cię w dół. System dopasuje dalszą rozmowę do Twojej sytuacji.
+                  <div style={{ marginTop: 12, color: BRAND.muted, lineHeight: 1.75 }}>
+                    Zacznij od miejsca, które najbardziej ciągnie Cię w dół. System dopasuje
+                    dalszą rozmowę do Twojej sytuacji.
                   </div>
                 </div>
                 <GhostButton onClick={goBack}>Wróć</GhostButton>
               </div>
+
               <div className="entry-grid">
                 {ENTRY_CONFIGS.map((entry) => (
                   <Glass key={entry.key} style={{ padding: 24 }}>
-                    <div style={{ color: BRAND.gold, fontSize: 11, letterSpacing: 4, marginBottom: 10 }}>ŚCIEŻKA ANALIZY</div>
-                    <div style={{ fontSize: 30, lineHeight: 1.02, fontWeight: 800, letterSpacing: -1.4 }}>{entry.title}</div>
-                    <div style={{ marginTop: 10, lineHeight: 1.6 }}>{entry.subtitle}</div>
-                    <div style={{ marginTop: 14, color: BRAND.muted, lineHeight: 1.7 }}>{entry.intro}</div>
+                    <div
+                      style={{
+                        color: BRAND.gold,
+                        fontSize: 11,
+                        letterSpacing: 4,
+                        marginBottom: 10,
+                      }}
+                    >
+                      ŚCIEŻKA ANALIZY
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 30,
+                        lineHeight: 1.05,
+                        fontWeight: 800,
+                        letterSpacing: -1.4,
+                      }}
+                    >
+                      {entry.title}
+                    </div>
+                    <div style={{ marginTop: 10, lineHeight: 1.65 }}>{entry.subtitle}</div>
+                    <div style={{ marginTop: 14, color: BRAND.muted, lineHeight: 1.75 }}>
+                      {entry.intro}
+                    </div>
                     <div style={{ marginTop: 20 }}>
-                      <PrimaryButton onClick={() => startPath(entry.key)}>{busy ? "Przygotowuję..." : "Wejdź tą ścieżką"}</PrimaryButton>
+                      <PrimaryButton onClick={() => startPath(entry.key)}>
+                        {busy ? "Przygotowuję..." : "Wejdź tą ścieżką"}
+                      </PrimaryButton>
                     </div>
                   </Glass>
                 ))}
@@ -1069,14 +1493,35 @@ export default function App() {
           )}
 
           {stage === "questions" && path && currentQuestion && (
-            <motion.div key={currentQuestion.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18, gap: 18 }}>
-                <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 5 }}>{path.title.toUpperCase()}</div>
-                <div style={{ color: BRAND.muted, fontSize: 14 }}>{questionIndex + 1}/{path.questions.length}</div>
+            <motion.div
+              key={currentQuestion.id}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 18,
+                  gap: 18,
+                  flexWrap: "wrap",
+                }}
+              >
+                <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 5 }}>
+                  {path.title.toUpperCase()}
+                </div>
+                <ProgressBar index={questionIndex} total={path.questions.length} />
               </div>
+
               <Glass style={{ padding: 34, maxWidth: 900 }}>
-                <div style={{ color: BRAND.muted, fontSize: 18, lineHeight: 1.6 }}>{currentQuestion.lead}</div>
+                <div style={{ color: BRAND.muted, fontSize: 18, lineHeight: 1.65 }}>
+                  {currentQuestion.lead}
+                </div>
+
                 <div className="question-title">{currentQuestion.text}</div>
+
                 <div style={{ marginTop: 28, display: "grid", gap: 12 }}>
                   {currentQuestion.options.map((opt) => (
                     <button
@@ -1097,6 +1542,7 @@ export default function App() {
                     </button>
                   ))}
                 </div>
+
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 22 }}>
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
                   <GhostButton onClick={resetAll}>Od początku</GhostButton>
@@ -1106,10 +1552,26 @@ export default function App() {
           )}
 
           {stage === "checkpoint" && path && (
-            <motion.div key={`${path.key}-checkpoint`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <motion.div
+              key={`${path.key}-checkpoint`}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
               <Glass style={{ padding: 34, maxWidth: 900, margin: "0 auto" }}>
-                <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 5, marginBottom: 16 }}>{path.checkpoint.title}</div>
+                <div
+                  style={{
+                    color: BRAND.gold,
+                    fontSize: 12,
+                    letterSpacing: 5,
+                    marginBottom: 16,
+                  }}
+                >
+                  {path.checkpoint.title}
+                </div>
+
                 <div className="section-title">{path.checkpoint.text}</div>
+
                 <div style={{ display: "grid", gap: 12, marginTop: 26 }}>
                   {path.checkpoint.options.map((opt) => (
                     <button
@@ -1130,6 +1592,7 @@ export default function App() {
                     </button>
                   ))}
                 </div>
+
                 <div style={{ marginTop: 22 }}>
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
                 </div>
@@ -1138,10 +1601,26 @@ export default function App() {
           )}
 
           {stage === "open_text" && path && (
-            <motion.div key={`${path.key}-open`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <motion.div
+              key={`${path.key}-open`}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
               <Glass style={{ padding: 34, maxWidth: 960, margin: "0 auto" }}>
-                <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 5, marginBottom: 16 }}>OSTATNIA WARSTWA</div>
+                <div
+                  style={{
+                    color: BRAND.gold,
+                    fontSize: 12,
+                    letterSpacing: 5,
+                    marginBottom: 16,
+                  }}
+                >
+                  OSTATNIA WARSTWA
+                </div>
+
                 <div className="section-title">{path.openPrompt}</div>
+
                 <textarea
                   value={openText}
                   onChange={(e) => setOpenText(e.target.value)}
@@ -1157,36 +1636,93 @@ export default function App() {
                     border: `1px solid ${BRAND.border}`,
                     color: BRAND.text,
                     fontSize: 17,
-                    lineHeight: 1.7,
+                    lineHeight: 1.75,
                     outline: "none",
                     resize: "vertical",
                   }}
                 />
-                <div style={{ marginTop: 10, color: BRAND.muted, display: "flex", justifyContent: "space-between" }}>
+
+                <div
+                  style={{
+                    marginTop: 10,
+                    color: BRAND.muted,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: 10,
+                    flexWrap: "wrap",
+                  }}
+                >
                   <div>Ta odpowiedź pogłębia lustro i ustawia ton raportu.</div>
                   <div>{openText.length}/3000</div>
                 </div>
+
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 22 }}>
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={buildPreviewAndGo} disabled={openText.trim().length < 40}>Pokaż darmowy preview</PrimaryButton>
+                  <PrimaryButton
+                    onClick={buildPreviewAndGo}
+                    disabled={openText.trim().length < 40}
+                  >
+                    Pokaż darmowy preview
+                  </PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
           )}
 
           {stage === "crisis" && (
-            <motion.div key="crisis" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <Glass style={{ padding: 34, maxWidth: 860, margin: "0 auto", borderColor: BRAND.danger }}>
-                <div style={{ color: BRAND.danger, fontSize: 12, letterSpacing: 5, marginBottom: 16 }}>TRYB KRYZYSOWY</div>
-                <div className="section-title">To nie jest właściwe narzędzie dla sytuacji bezpośredniego zagrożenia.</div>
-                <div style={{ marginTop: 18, color: BRAND.muted, lineHeight: 1.8, fontSize: 18 }}>
-                  Jeśli istnieje ryzyko przemocy, zagrożenia życia albo zrobienia sobie krzywdy, przerwij tę analizę i skorzystaj z natychmiastowej pomocy.
+            <motion.div
+              key="crisis"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
+              <Glass
+                style={{
+                  padding: 34,
+                  maxWidth: 860,
+                  margin: "0 auto",
+                  borderColor: BRAND.danger,
+                }}
+              >
+                <div
+                  style={{
+                    color: BRAND.danger,
+                    fontSize: 12,
+                    letterSpacing: 5,
+                    marginBottom: 16,
+                  }}
+                >
+                  TRYB KRYZYSOWY
                 </div>
+
+                <div className="section-title">
+                  To nie jest właściwe narzędzie dla sytuacji bezpośredniego zagrożenia.
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 18,
+                    color: BRAND.muted,
+                    lineHeight: 1.8,
+                    fontSize: 18,
+                  }}
+                >
+                  Jeśli istnieje ryzyko przemocy, zagrożenia życia albo zrobienia sobie
+                  krzywdy, przerwij tę analizę i skorzystaj z natychmiastowej pomocy.
+                </div>
+
                 <div style={{ display: "grid", gap: 14, marginTop: 24 }}>
-                  <Glass style={{ padding: 18, borderRadius: 20 }}><strong>112</strong> — numer alarmowy</Glass>
-                  <Glass style={{ padding: 18, borderRadius: 20 }}><strong>116 123</strong> — telefon zaufania dla osób dorosłych w kryzysie emocjonalnym</Glass>
-                  <Glass style={{ padding: 18, borderRadius: 20 }}><strong>116 111</strong> — telefon zaufania dla dzieci i młodzieży</Glass>
+                  <Glass style={{ padding: 18, borderRadius: 20 }}>
+                    <strong>112</strong> — numer alarmowy
+                  </Glass>
+                  <Glass style={{ padding: 18, borderRadius: 20 }}>
+                    <strong>116 123</strong> — telefon zaufania dla osób dorosłych w kryzysie emocjonalnym
+                  </Glass>
+                  <Glass style={{ padding: 18, borderRadius: 20 }}>
+                    <strong>116 111</strong> — telefon zaufania dla dzieci i młodzieży
+                  </Glass>
                 </div>
+
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 24 }}>
                   <GhostButton onClick={resetAll}>Zamknij analizę</GhostButton>
                 </div>
@@ -1195,13 +1731,58 @@ export default function App() {
           )}
 
           {stage === "preview" && preview && (
-            <motion.div key="preview" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <Glass style={{ padding: 34, maxWidth: 1020, margin: "0 auto" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 20, flexWrap: "wrap" }}>
+            <motion.div
+              key="preview"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
+              <Glass style={{ padding: 34, maxWidth: 1040, margin: "0 auto" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "start",
+                    gap: 20,
+                    flexWrap: "wrap",
+                  }}
+                >
                   <div>
-                    <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 5, marginBottom: 14 }}>DARMOWY PREVIEW</div>
-                    <div className="section-title" style={{ maxWidth: 740 }}>{preview.headline}</div>
-                    <div style={{ marginTop: 18, fontSize: 20, lineHeight: 1.7, color: BRAND.muted, maxWidth: 760 }}>{preview.mirror}</div>
+                    <div
+                      style={{
+                        color: BRAND.gold,
+                        fontSize: 12,
+                        letterSpacing: 5,
+                        marginBottom: 14,
+                      }}
+                    >
+                      DARMOWE LUSTRO SYTUACJI
+                    </div>
+                    <div className="section-title" style={{ maxWidth: 760 }}>
+                      {preview.headline}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 18,
+                        fontSize: 22,
+                        lineHeight: 1.65,
+                        color: BRAND.text,
+                        maxWidth: 800,
+                      }}
+                    >
+                      {preview.truthLine}
+                    </div>
+                    <div
+                      style={{
+                        marginTop: 12,
+                        fontSize: 19,
+                        lineHeight: 1.75,
+                        color: BRAND.muted,
+                        maxWidth: 780,
+                      }}
+                    >
+                      {preview.mirror}
+                    </div>
                   </div>
                 </div>
 
@@ -1216,20 +1797,57 @@ export default function App() {
                     [preview.change, "SZANSA ZMIANY"],
                   ].map(([value, label]) => (
                     <Glass key={label as string} style={{ padding: 22, textAlign: "center", borderRadius: 24 }}>
-                      <div style={{ fontSize: 54, lineHeight: 1, fontWeight: 900, color: BRAND.gold }}>{value}%</div>
-                      <div style={{ marginTop: 10, color: BRAND.muted, fontSize: 11, letterSpacing: 4 }}>{label}</div>
+                      <div
+                        style={{
+                          fontSize: 54,
+                          lineHeight: 1,
+                          fontWeight: 900,
+                          color: BRAND.gold,
+                        }}
+                      >
+                        {value}%
+                      </div>
+                      <div
+                        style={{
+                          marginTop: 10,
+                          color: BRAND.muted,
+                          fontSize: 11,
+                          letterSpacing: 4,
+                        }}
+                      >
+                        {label}
+                      </div>
                     </Glass>
                   ))}
                 </div>
 
                 <div className="teaser-grid">
                   <Glass style={{ padding: 24, borderRadius: 24 }}>
-                    <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 4, marginBottom: 10 }}>CO WIDAĆ JUŻ TERAZ</div>
-                    <div style={{ lineHeight: 1.8 }}>{preview.summary}</div>
+                    <div
+                      style={{
+                        color: BRAND.gold,
+                        fontSize: 12,
+                        letterSpacing: 4,
+                        marginBottom: 10,
+                      }}
+                    >
+                      CO WIDAĆ JUŻ TERAZ
+                    </div>
+                    <div style={{ lineHeight: 1.85 }}>{preview.summary}</div>
                   </Glass>
+
                   <Glass style={{ padding: 24, borderRadius: 24 }}>
-                    <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 4, marginBottom: 10 }}>NAJMOCNIEJSZY MECHANIZM</div>
-                    <div style={{ lineHeight: 1.8 }}>
+                    <div
+                      style={{
+                        color: BRAND.gold,
+                        fontSize: 12,
+                        letterSpacing: 4,
+                        marginBottom: 10,
+                      }}
+                    >
+                      NAJMOCNIEJSZY MECHANIZM
+                    </div>
+                    <div style={{ lineHeight: 1.85 }}>
                       {preview.tone === "green"
                         ? "Najmocniej działa tu jeszcze struktura i wzajemność, ale to nie zwalnia z patrzenia na słabsze miejsca."
                         : preview.tone === "yellow"
@@ -1237,18 +1855,47 @@ export default function App() {
                         : "Najmocniej pracuje tu układ ulgi po napięciu albo lęku przed stratą. To często sprawia, że ciężko odpuścić nawet wtedy, gdy relacja już kosztuje."}
                     </div>
                   </Glass>
+
                   <Glass style={{ padding: 24, borderRadius: 24 }}>
-                    <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 4, marginBottom: 10 }}>CZEGO PEŁNY RAPORT NIE OMINIE</div>
-                    <div style={{ lineHeight: 1.8 }}>{preview.paidTease}</div>
+                    <div
+                      style={{
+                        color: BRAND.gold,
+                        fontSize: 12,
+                        letterSpacing: 4,
+                        marginBottom: 10,
+                      }}
+                    >
+                      CZEGO PEŁNY RAPORT NIE OMINIE
+                    </div>
+                    <div style={{ lineHeight: 1.85 }}>{preview.paidTease}</div>
                   </Glass>
                 </div>
 
                 <Glass style={{ padding: 24, marginTop: 20, borderRadius: 24 }}>
-                  <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 4, marginBottom: 10 }}>PEŁNY RAPORT PREMIUM</div>
-                  <div style={{ fontSize: 46, lineHeight: 1, fontWeight: 900 }}>15 zł</div>
-                  <div style={{ marginTop: 12, color: BRAND.muted, lineHeight: 1.8 }}>
-                    Odblokujesz pełną analizę: mechanizmy, ryzyka, scenariusze, praktyczne wskazówki i jasny werdykt.
+                  <div
+                    style={{
+                      color: BRAND.gold,
+                      fontSize: 12,
+                      letterSpacing: 4,
+                      marginBottom: 10,
+                    }}
+                  >
+                    PEŁNY RAPORT PREMIUM
                   </div>
+
+                  <div
+                    style={{
+                      fontSize: 18,
+                      color: BRAND.text,
+                      lineHeight: 1.75,
+                      maxWidth: 840,
+                    }}
+                  >
+                    Odblokujesz pełną analizę: mechanizmy, ryzyka, scenariusze,
+                    praktyczne wskazówki i jasny werdykt. Dostajesz wersję, do której
+                    można wrócić później — nie jednorazowy ekran, który znika po odświeżeniu.
+                  </div>
+
                   <div style={{ marginTop: 16, display: "grid", gap: 12 }}>
                     <input
                       value={email}
@@ -1265,11 +1912,19 @@ export default function App() {
                         outline: "none",
                       }}
                     />
-                    <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Odblokuj pełny raport"}</PrimaryButton>
-                    <div style={{ color: BRAND.muted, fontSize: 14 }}>Najpierw zobacz jakość. Potem zdecyduj.</div>
+
+                    <PrimaryButton onClick={pay} disabled={busy}>
+                      {busy ? "Przetwarzanie..." : "Odblokuj pełny raport — 15 zł"}
+                    </PrimaryButton>
+
+                    <div style={{ color: BRAND.muted, fontSize: 14 }}>
+                      Najpierw widzisz lustro sytuacji. Potem decydujesz, czy chcesz zejść głębiej.
+                    </div>
                   </div>
                 </Glass>
+
                 {error && <div style={{ color: BRAND.danger, marginTop: 14 }}>{error}</div>}
+
                 <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginTop: 18 }}>
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
                   <GhostButton onClick={resetAll}>Od początku</GhostButton>
@@ -1279,24 +1934,70 @@ export default function App() {
           )}
 
           {stage === "processing" && (
-            <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <motion.div
+              key="processing"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
               <div style={{ minHeight: "72vh", display: "grid", placeItems: "center" }}>
                 <Glass style={{ padding: 34, textAlign: "center", minWidth: 280 }}>
-                  <div style={{ width: 72, height: 72, margin: "0 auto 18px", borderRadius: 999, border: `3px solid rgba(197,160,89,0.25)`, borderTopColor: BRAND.gold, animation: "spin 1.1s linear infinite" }} />
-                  <div style={{ fontSize: 24, fontWeight: 700 }}>Przetwarzanie płatności i raportu…</div>
-                  <div style={{ marginTop: 10, color: BRAND.muted }}>Jeśli to trwa chwilę, nie zamykaj karty. System sprawdza status płatności i raportu.</div>
+                  <div
+                    style={{
+                      width: 72,
+                      height: 72,
+                      margin: "0 auto 18px",
+                      borderRadius: 999,
+                      border: `3px solid rgba(197,160,89,0.25)`,
+                      borderTopColor: BRAND.gold,
+                      animation: "spin 1.1s linear infinite",
+                    }}
+                  />
+                  <div style={{ fontSize: 24, fontWeight: 700 }}>
+                    Przetwarzanie płatności i raportu…
+                  </div>
+                  <div style={{ marginTop: 10, color: BRAND.muted }}>
+                    Jeśli to trwa chwilę, nie zamykaj karty. System sprawdza status płatności i raportu.
+                  </div>
                 </Glass>
               </div>
             </motion.div>
           )}
 
           {stage === "paid" && fullReport && (
-            <motion.div key="paid" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <motion.div
+              key="paid"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
               <Glass style={{ padding: 34, maxWidth: 980, margin: "0 auto" }}>
-                <div style={{ color: BRAND.gold, fontSize: 12, letterSpacing: 5, marginBottom: 16 }}>RAPORT PREMIUM</div>
-                <div className="section-title">{fullReport.headline || "Ta relacja daje Ci kontakt, ale nie daje Ci oparcia."}</div>
-                <div style={{ marginTop: 14, fontSize: 20, color: BRAND.muted, lineHeight: 1.7 }}>
-                  {fullReport.subheadline || "Największy problem nie leży w jednym zdarzeniu. Leży w tym, że napięcie stało się normą, a jasność nadal nie przychodzi."}
+                <div
+                  style={{
+                    color: BRAND.gold,
+                    fontSize: 12,
+                    letterSpacing: 5,
+                    marginBottom: 16,
+                  }}
+                >
+                  RAPORT PREMIUM
+                </div>
+
+                <div className="section-title">
+                  {fullReport.headline ||
+                    "Ta relacja daje Ci kontakt, ale nie daje Ci oparcia."}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: 14,
+                    fontSize: 20,
+                    color: BRAND.muted,
+                    lineHeight: 1.75,
+                  }}
+                >
+                  {fullReport.subheadline ||
+                    "Największy problem nie leży w jednym zdarzeniu. Leży w tym, że napięcie stało się normą, a jasność nadal nie przychodzi."}
                 </div>
 
                 {typeof fullReport.rebuildPercent === "number" && (
@@ -1307,15 +2008,42 @@ export default function App() {
                       [fullReport.driftPercent || 0, "ASYMETRIA"],
                     ].map(([value, label]) => (
                       <Glass key={label as string} style={{ padding: 22, textAlign: "center", borderRadius: 24 }}>
-                        <div style={{ fontSize: 48, lineHeight: 1, fontWeight: 900, color: BRAND.gold }}>{value}%</div>
-                        <div style={{ marginTop: 10, color: BRAND.muted, fontSize: 11, letterSpacing: 4 }}>{label}</div>
+                        <div
+                          style={{
+                            fontSize: 48,
+                            lineHeight: 1,
+                            fontWeight: 900,
+                            color: BRAND.gold,
+                          }}
+                        >
+                          {value}%
+                        </div>
+                        <div
+                          style={{
+                            marginTop: 10,
+                            color: BRAND.muted,
+                            fontSize: 11,
+                            letterSpacing: 4,
+                          }}
+                        >
+                          {label}
+                        </div>
                       </Glass>
                     ))}
                   </div>
                 )}
 
                 {fullReport.previewLine && (
-                  <div style={{ marginTop: 22, borderLeft: `3px solid ${BRAND.gold}`, paddingLeft: 16, fontSize: 20, lineHeight: 1.7, color: BRAND.text }}>
+                  <div
+                    style={{
+                      marginTop: 22,
+                      borderLeft: `3px solid ${BRAND.gold}`,
+                      paddingLeft: 16,
+                      fontSize: 20,
+                      lineHeight: 1.75,
+                      color: BRAND.text,
+                    }}
+                  >
                     {fullReport.previewLine}
                   </div>
                 )}
@@ -1334,19 +2062,30 @@ export default function App() {
                       >
                         {section.title}
                       </div>
-                      <div style={{ fontSize: 18, lineHeight: 1.8, color: "#d1d5db" }}>{section.text}</div>
+                      <div style={{ fontSize: 18, lineHeight: 1.85, color: "#d1d5db" }}>
+                        {section.text}
+                      </div>
                     </Glass>
                   ))}
                 </div>
 
                 {fullReport.closing && (
-                  <div style={{ marginTop: 26, paddingTop: 20, borderTop: `1px solid ${BRAND.border}`, fontSize: 18, lineHeight: 1.8, color: BRAND.muted }}>
+                  <div
+                    style={{
+                      marginTop: 26,
+                      paddingTop: 20,
+                      borderTop: `1px solid ${BRAND.border}`,
+                      fontSize: 18,
+                      lineHeight: 1.85,
+                      color: BRAND.muted,
+                    }}
+                  >
                     {fullReport.closing}
                   </div>
                 )}
 
                 <Glass style={{ padding: 20, marginTop: 22, borderRadius: 24 }}>
-                  <div style={{ color: BRAND.muted, lineHeight: 1.7 }}>
+                  <div style={{ color: BRAND.muted, lineHeight: 1.75 }}>
                     Dostęp do raportu został zapisany. Możesz wrócić do niego później z bezpiecznego linku wysłanego na e-mail.
                   </div>
                 </Glass>
@@ -1359,13 +2098,36 @@ export default function App() {
           )}
 
           {stage === "error" && (
-            <motion.div key="error" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+            <motion.div
+              key="error"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+            >
               <Glass style={{ padding: 34, maxWidth: 860, margin: "0 auto" }}>
-                <div style={{ color: BRAND.danger, fontSize: 12, letterSpacing: 5, marginBottom: 16 }}>BŁĄD</div>
-                <div className="section-title">Coś się wywaliło po drodze, ale przynajmniej wiemy gdzie.</div>
-                <div style={{ marginTop: 16, color: BRAND.muted, lineHeight: 1.8 }}>{error}</div>
+                <div
+                  style={{
+                    color: BRAND.danger,
+                    fontSize: 12,
+                    letterSpacing: 5,
+                    marginBottom: 16,
+                  }}
+                >
+                  BŁĄD
+                </div>
+
+                <div className="section-title">
+                  Coś się wywaliło po drodze, ale przynajmniej wiemy gdzie.
+                </div>
+
+                <div style={{ marginTop: 16, color: BRAND.muted, lineHeight: 1.8 }}>
+                  {error}
+                </div>
+
                 <div style={{ marginTop: 22, display: "flex", gap: 12, flexWrap: "wrap" }}>
-                  <GhostButton onClick={() => setStage(preview ? "preview" : "landing")}>Wróć</GhostButton>
+                  <GhostButton onClick={() => setStage(preview ? "preview" : "landing")}>
+                    Wróć
+                  </GhostButton>
                   <GhostButton onClick={resetAll}>Od początku</GhostButton>
                 </div>
               </Glass>
@@ -1380,214 +2142,25 @@ export default function App() {
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .page-wrap { max-width: 1220px; margin: 0 auto; padding: 26px 22px 60px; }
         .topbar { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 26px; }
-        .hero-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 18px; }
+        .hero-grid { display: grid; grid-template-columns: 1.18fr 0.82fr; gap: 18px; }
         .feature-grid { margin-top: 34px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
         .entry-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
         .metrics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 18px; }
         .teaser-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 18px; }
-        .hero-title { font-size: 74px; line-height: 0.94; font-weight: 900; letter-spacing: -3px; max-width: 780px; }
-        .hero-copy { margin-top: 22px; font-size: 22px; line-height: 1.68; color: ${BRAND.muted}; max-width: 760px; }
-        .section-title { font-size: 54px; line-height: 0.98; font-weight: 900; letter-spacing: -2.2px; max-width: 760px; }
+        .hero-title { font-size: 78px; line-height: 0.93; font-weight: 900; letter-spacing: -3px; max-width: 780px; }
+        .hero-copy { margin-top: 22px; font-size: 22px; line-height: 1.7; color: ${BRAND.muted}; max-width: 760px; }
+        .section-title { font-size: 54px; line-height: 0.98; font-weight: 900; letter-spacing: -2.2px; max-width: 780px; }
         .question-title { margin-top: 24px; font-size: 62px; line-height: 0.98; font-weight: 900; letter-spacing: -2.6px; }
         @media (max-width: 980px) {
           .hero-grid, .entry-grid, .feature-grid, .metrics-grid, .teaser-grid { grid-template-columns: 1fr; }
-          .hero-title { font-size: 52px; line-height: 1.02; letter-spacing: -2px; }
-          .hero-copy { font-size: 18px; line-height: 1.72; }
+          .hero-title { font-size: 54px; line-height: 1.01; letter-spacing: -2px; }
+          .hero-copy { font-size: 18px; line-height: 1.75; }
           .section-title { font-size: 40px; line-height: 1.02; letter-spacing: -1.6px; }
           .question-title { font-size: 42px; line-height: 1.02; letter-spacing: -1.7px; }
           .topbar { align-items: flex-start; }
+          .page-wrap { padding: 20px 16px 48px; }
         }
       `}</style>
     </div>
   );
 }
-```
-
-## 2. `server/src/server.js`
-
-```js
-import express from "express";
-import cors from "cors";
-import Stripe from "stripe";
-import routes from "./api/routes.js";
-import { PrismaClient } from "@prisma/client";
-
-const app = express();
-const prisma = new PrismaClient();
-const stripe = new Stripe((process.env.STRIPE_SECRET_KEY || "").trim(), {
-  apiVersion: "2024-06-20",
-});
-
-app.set("trust proxy", 1);
-app.use(cors({ origin: true, credentials: true }));
-
-app.post(
-  "/api/webhook",
-  express.raw({ type: "application/json" }),
-  async (req, res) => {
-    const sig = req.headers["stripe-signature"];
-    const secret = process.env.STRIPE_WEBHOOK_SECRET;
-
-    if (!sig || !secret) {
-      return res.status(400).json({ ok: false, error: "Brak sygnatury webhooka." });
-    }
-
-    let event;
-    try {
-      event = stripe.webhooks.constructEvent(req.body, sig, secret);
-    } catch (err) {
-      console.error("[Webhook] Błąd weryfikacji:", err.message);
-      return res.status(400).json({ ok: false, error: "Nieprawidłowa sygnatura." });
-    }
-
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object;
-      const token = session.metadata?.token;
-      const email = session.metadata?.email || session.customer_email || null;
-
-      if (!token) {
-        console.error("[Webhook] Brak tokenu w metadata.");
-        return res.status(200).json({ ok: true });
-      }
-
-      try {
-        await prisma.session.upsert({
-          where: { id: token },
-          update: {
-            payment_status: "PAID",
-            report_status: "QUEUED",
-            email,
-            stripe_session_id: session.id,
-            paid_at: new Date(),
-          },
-          create: {
-            id: token,
-            payment_status: "PAID",
-            report_status: "QUEUED",
-            email,
-            stripe_session_id: session.id,
-            paid_at: new Date(),
-          },
-        });
-
-        const { enqueueReport } = await import("./jobs/queue.js");
-        await enqueueReport(token);
-        console.log(`[Webhook] Raport zakolejkowany dla tokenu: ${token}`);
-      } catch (err) {
-        console.error("[Webhook] Błąd zapisu/kolejkowania:", err.message);
-        return res.status(200).json({ ok: true });
-      }
-    }
-
-    return res.status(200).json({ ok: true });
-  }
-);
-
-app.use(express.json({ limit: "2mb" }));
-app.use(express.urlencoded({ extended: true }));
-app.use("/api", routes);
-
-app.get("/api/health", (req, res) => {
-  res.json({ ok: true, service: "CzyToMaSens API", model: process.env.OPENAI_MODEL || "gpt-4o" });
-});
-
-app.use((req, res) => {
-  res.status(404).json({ ok: false, error: "Route not found", path: req.originalUrl });
-});
-
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`CzyToMaSens API działa na porcie ${PORT}`);
-});
-```
-
-## 3. `index.html`
-
-W tym pliku zmień tylko cenę i domeny.
-
-```html
-<!doctype html>
-<html lang="pl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Czy To Ma Sens? | Inteligentna analiza Twojej relacji</title>
-    <meta
-      name="description"
-      content="Sprawdź, co naprawdę dzieje się w Twojej relacji. Wielowarstwowa analiza wzorców, pytań dopasowanych do problemu i raport premium."
-    />
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Czy To Ma Sens? | Sprawdź swoją relację" />
-    <meta
-      property="og:description"
-      content="Szczera analiza mechanizmów, dynamiki i sensu relacji. Bez pudrowania, bez banalnych rad."
-    />
-    <meta property="og:image" content="https://czytomasens.pl/social-preview.jpg" />
-    <meta property="og:url" content="https://czytomasens.pl" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Czy To Ma Sens? | Sprawdź swoją relację" />
-    <meta
-      name="twitter:description"
-      content="Wielowarstwowa analiza AI relacji z pełnym raportem premium."
-    />
-    <meta name="twitter:image" content="https://czytomasens.pl/social-preview.jpg" />
-    <link rel="canonical" href="https://czytomasens.pl" />
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "WebApplication",
-        "name": "Czy To Ma Sens?",
-        "url": "https://czytomasens.pl",
-        "description": "Interaktywne narzędzie do analizy wzorców relacyjnych i mechanizmów występujących w relacji.",
-        "applicationCategory": "LifestyleApplication",
-        "operatingSystem": "Web",
-        "offers": {
-          "@type": "Offer",
-          "price": "15.00",
-          "priceCurrency": "PLN"
-        }
-      }
-    </script>
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <script type="module" src="/src/main.tsx"></script>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
-</html>
-```
-
-## 4. Co ustawić w Railway
-
-Musisz mieć ustawione:
-
-```env
-CLIENT_URL=https://czytomasens.pl
-OPENAI_API_KEY=...
-OPENAI_MODEL=gpt-4o
-STRIPE_SECRET_KEY=...
-STRIPE_WEBHOOK_SECRET=...
-RESEND_API_KEY=...
-RESEND_FROM_EMAIL=CzyToMaSens <raporty@mail.czytomasens.pl>
-REDIS_URL=...
-DATABASE_URL=...
-PORT=8080
-```
-
-## 5. Co zrobić po podmianie
-
-1. Podmień `src/App.tsx`
-2. Podmień `server/src/server.js`
-3. Popraw `index.html`
-4. Wgraj zmiany
-5. Zrób deploy
-6. Sprawdź:
-
-   * landing
-   * zgody
-   * wejście w ścieżkę
-   * pytania
-   * preview
-   * checkout
-   * powrót po płatności
-   * raport premium
