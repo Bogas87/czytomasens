@@ -3,8 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 
 function readApiBase(): string {
   try {
-    const metaEnv =
-      typeof import.meta !== "undefined" ? (import.meta as any)?.env : undefined;
+    const metaEnv = typeof import.meta !== "undefined" ? (import.meta as any)?.env : undefined;
     const value = metaEnv?.VITE_API_BASE;
     return typeof value === "string" ? value.replace(/\/$/, "") : "";
   } catch {
@@ -15,14 +14,13 @@ function readApiBase(): string {
 const API_BASE = readApiBase();
 
 const BRAND = {
-  bg: "#050505",
-  panel: "rgba(255,255,255,0.03)",
-  panelStrong: "rgba(255,255,255,0.05)",
-  border: "rgba(255,255,255,0.08)",
-  text: "#F5F1EA",
-  muted: "#A8A099",
   gold: "#C5A059",
   goldSoft: "#D7B978",
+  text: "#F5F1EA",
+  muted: "#A8A099",
+  border: "rgba(255,255,255,0.08)",
+  panel: "rgba(255,255,255,0.03)",
+  panelStrong: "rgba(255,255,255,0.05)",
   danger: "#E2A5A5",
   success: "#B7D1B0",
 };
@@ -40,26 +38,12 @@ type Stage =
   | "crisis"
   | "error";
 
-type EntryKey =
-  | "betrayal"
-  | "uncertain"
-  | "stagnation"
-  | "returning"
-  | "triangle"
-  | "loop";
+type EntryKey = "betrayal" | "uncertain" | "stagnation" | "returning" | "triangle" | "loop";
 
-type Option = {
-  id: string;
-  label: string;
-  score: number;
-};
-
-type Question = {
-  id: string;
-  lead: string;
-  text: string;
-  options: Option[];
-};
+type Option = { id: string; label: string; score: number };
+type Question = { id: string; lead: string; text: string; options: Option[] };
+type AnswerMap = Record<string, string>;
+type LegalKey = "regulamin" | "prywatnosc" | "rodo" | "kontakt" | null;
 
 type EntryConfig = {
   key: EntryKey;
@@ -67,15 +51,9 @@ type EntryConfig = {
   subtitle: string;
   intro: string;
   questions: Question[];
-  checkpoint: {
-    title: string;
-    text: string;
-    options: Option[];
-  };
+  checkpoint: { title: string; text: string; options: Option[] };
   openPrompt: string;
 };
-
-type AnswerMap = Record<string, string>;
 
 type Preview = {
   chance: number;
@@ -91,12 +69,7 @@ type Preview = {
   tone: "red" | "yellow" | "green";
 };
 
-type FullReportSection = {
-  title: string;
-  text: string;
-  tone?: "normal" | "gold" | "danger";
-};
-
+type FullReportSection = { title: string; text: string; tone?: "normal" | "gold" | "danger" };
 type FullReport = {
   headline?: string;
   subheadline?: string;
@@ -108,13 +81,9 @@ type FullReport = {
   closing?: string;
 };
 
-type SessionCreateResponse = {
-  ok?: boolean;
-  token?: string;
-  sessionId?: string;
-};
+type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string };
 
-const STORAGE_KEY = "ctms_premium_front_v4";
+const STORAGE_KEY = "ctms_premium_front_v5";
 
 const CONSENTS = [
   "Rozumiem, że to narzędzie ma charakter analityczny i rozwojowy, a nie medyczny, psychoterapeutyczny ani prawny.",
@@ -122,14 +91,35 @@ const CONSENTS = [
   "Wyrażam zgodę na przetwarzanie podanych przeze mnie danych w celu wygenerowania raportu i realizacji usługi cyfrowej.",
 ];
 
+const LEGAL_CONTENT: Record<Exclude<LegalKey, null>, { title: string; body: string }> = {
+  regulamin: {
+    title: "Regulamin",
+    body:
+      "CzyToMaSens jest narzędziem cyfrowym o charakterze analitycznym. Produkt nie stanowi terapii, diagnozy medycznej ani porady prawnej. Zakup dotyczy treści cyfrowej dostarczanej bezpośrednio po płatności. Właściciel produktu odpowiada za dostarczenie usługi zgodnie z opisem, a użytkownik za prawdziwość wprowadzanych danych.",
+  },
+  prywatnosc: {
+    title: "Polityka prywatności",
+    body:
+      "Przetwarzane są wyłącznie dane potrzebne do utworzenia sesji, wygenerowania raportu i dostarczenia go użytkownikowi. Dane nie służą do treningu modelu. Wrażliwe treści nie powinny być wykorzystywane jako analityka marketingowa. Dostęp do raportów powinien być kontrolowany i ograniczony czasowo.",
+  },
+  rodo: {
+    title: "RODO",
+    body:
+      "Użytkownik ma prawo do informacji o przetwarzaniu danych, dostępu, sprostowania, ograniczenia przetwarzania oraz usunięcia danych, jeśli nie koliduje to z obowiązkami rozliczeniowymi i bezpieczeństwem usługi. Dane powinny być przechowywane możliwie krótko, zgodnie z celem realizacji usługi.",
+  },
+  kontakt: {
+    title: "Kontakt",
+    body:
+      "Kontakt w sprawach produktu, płatności i dostępu do raportu: kontakt@czytomasens.pl. Ten blok możesz później podmienić na finalne dane firmy, adres e-mail oraz dane formalne do stopki i dokumentów prawnych.",
+  },
+};
+
 const ENTRY_CONFIGS: EntryConfig[] = [
   {
     key: "betrayal",
     title: "Po zdradzie albo utracie zaufania",
-    subtitle:
-      "Nie chodzi już tylko o fakt. Chodzi o to, co ta historia zrobiła z poczuciem bezpieczeństwa.",
-    intro:
-      "Ta ścieżka sprawdza nie tylko ranę, ale też to, czy po niej pojawiła się odpowiedzialność, przejrzystość i realna odbudowa.",
+    subtitle: "Nie chodzi już tylko o fakt. Chodzi o to, co ta historia zrobiła z poczuciem bezpieczeństwa.",
+    intro: "Ta ścieżka sprawdza nie tylko ranę, ale też to, czy po niej pojawiła się odpowiedzialność, przejrzystość i realna odbudowa.",
     questions: [
       {
         id: "b1",
@@ -181,16 +171,13 @@ const ENTRY_CONFIGS: EntryConfig[] = [
         { id: "c", label: "Raczej bezpieczeństwo", score: 0 },
       ],
     },
-    openPrompt:
-      "Napisz bez wygładzania: co dokładnie pękło po utracie zaufania i po czym poznajesz, że do dziś nie wróciło w pełni?",
+    openPrompt: "Napisz bez wygładzania: co dokładnie pękło po utracie zaufania i po czym poznajesz, że do dziś nie wróciło w pełni?",
   },
   {
     key: "uncertain",
     title: "Nie wiem, na czym stoję",
-    subtitle:
-      "Nadzieja miesza się z niejasnością, a Ty ciągle próbujesz to jakoś sobie wytłumaczyć.",
-    intro:
-      "Ta ścieżka sprawdza, czy Twoja niepewność wynika z realnej złożoności, czy z długiego oswajania chaosu.",
+    subtitle: "Nadzieja miesza się z niejasnością, a Ty ciągle próbujesz to jakoś sobie wytłumaczyć.",
+    intro: "Ta ścieżka sprawdza, czy Twoja niepewność wynika z realnej złożoności, czy z długiego oswajania chaosu.",
     questions: [
       {
         id: "u1",
@@ -242,16 +229,13 @@ const ENTRY_CONFIGS: EntryConfig[] = [
         { id: "c", label: "Raczej z samej złożoności", score: 0 },
       ],
     },
-    openPrompt:
-      "Napisz bez upiększania: co dokładnie Ci tu nie pasuje, mimo że może jeszcze nie umiesz tego nazwać jednym zdaniem?",
+    openPrompt: "Napisz bez upiększania: co dokładnie Ci tu nie pasuje, mimo że może jeszcze nie umiesz tego nazwać jednym zdaniem?",
   },
   {
     key: "stagnation",
     title: "To trwa, ale coraz mniej tam życia",
-    subtitle:
-      "Brak wielkich awantur nie musi oznaczać spokoju. Czasem oznacza wygasanie.",
-    intro:
-      "Ta ścieżka bada, czy między Wami jest cisza stabilna, czy cisza obojętności.",
+    subtitle: "Brak wielkich awantur nie musi oznaczać spokoju. Czasem oznacza wygasanie.",
+    intro: "Ta ścieżka bada, czy między Wami jest cisza stabilna, czy cisza obojętności.",
     questions: [
       {
         id: "s1",
@@ -303,16 +287,13 @@ const ENTRY_CONFIGS: EntryConfig[] = [
         { id: "c", label: "Raczej realną chęć budowania", score: 0 },
       ],
     },
-    openPrompt:
-      "Napisz szczerze: co dokładnie zgasło między Wami i od kiedy coraz trudniej Ci udawać, że to tylko chwilowe?",
+    openPrompt: "Napisz szczerze: co dokładnie zgasło między Wami i od kiedy coraz trudniej Ci udawać, że to tylko chwilowe?",
   },
   {
     key: "returning",
     title: "Po rozstaniu nie wiem, czy wracać",
-    subtitle:
-      "Tęsknota potrafi udawać sens. System oddzieli brak domknięcia od realnej szansy.",
-    intro:
-      "Ta ścieżka odróżnia realny sens powrotu od głodu kontaktu, samotności i przywiązania.",
+    subtitle: "Tęsknota potrafi udawać sens. System oddzieli brak domknięcia od realnej szansy.",
+    intro: "Ta ścieżka odróżnia realny sens powrotu od głodu kontaktu, samotności i przywiązania.",
     questions: [
       {
         id: "r1",
@@ -364,16 +345,13 @@ const ENTRY_CONFIGS: EntryConfig[] = [
         { id: "c", label: "Tak, nadal mocno", score: 0 },
       ],
     },
-    openPrompt:
-      "Napisz uczciwie: za czym naprawdę tęsknisz po tym rozstaniu i co w Tobie najmocniej pcha Cię dziś w stronę powrotu?",
+    openPrompt: "Napisz uczciwie: za czym naprawdę tęsknisz po tym rozstaniu i co w Tobie najmocniej pcha Cię dziś w stronę powrotu?",
   },
   {
     key: "triangle",
     title: "Jest ktoś trzeci i wszystko się miesza",
-    subtitle:
-      "Pojawienie się innej osoby nie zawsze jest przyczyną. Czasem obnaża to, czego brakowało wcześniej.",
-    intro:
-      "Ta ścieżka sprawdza, czy nowa osoba jest impulsem, ucieczką, czy sygnałem głębszego rozpadu obecnej relacji.",
+    subtitle: "Pojawienie się innej osoby nie zawsze jest przyczyną. Czasem obnaża to, czego brakowało wcześniej.",
+    intro: "Ta ścieżka sprawdza, czy nowa osoba jest impulsem, ucieczką, czy sygnałem głębszego rozpadu obecnej relacji.",
     questions: [
       {
         id: "t1",
@@ -425,16 +403,13 @@ const ENTRY_CONFIGS: EntryConfig[] = [
         { id: "c", label: "Nie, wtedy wszystko byłoby prostsze", score: 0 },
       ],
     },
-    openPrompt:
-      "Napisz uczciwie: czego naprawdę szukasz w tej trzeciej osobie i co to mówi o tym, czego już nie znajdujesz w obecnej relacji?",
+    openPrompt: "Napisz uczciwie: czego naprawdę szukasz w tej trzeciej osobie i co to mówi o tym, czego już nie znajdujesz w obecnej relacji?",
   },
   {
     key: "loop",
     title: "Kręcimy się w kółko",
-    subtitle:
-      "Wracacie do siebie, odchodzicie, znowu wracacie — i nic realnie się nie zmienia.",
-    intro:
-      "Ta ścieżka rozbiera cykl napięcie–ulga–powrót–kolejny zjazd.",
+    subtitle: "Wracacie do siebie, odchodzicie, znowu wracacie — i nic realnie się nie zmienia.",
+    intro: "Ta ścieżka rozbiera cykl napięcie–ulga–powrót–kolejny zjazd.",
     questions: [
       {
         id: "l1",
@@ -486,8 +461,7 @@ const ENTRY_CONFIGS: EntryConfig[] = [
         { id: "c", label: "Raczej realna poprawa", score: 0 },
       ],
     },
-    openPrompt:
-      "Napisz bez filtra: co dokładnie wraca między Wami i dlaczego mimo tego nadal trudno Ci to odciąć?",
+    openPrompt: "Napisz bez filtra: co dokładnie wraca między Wami i dlaczego mimo tego nadal trudno Ci to odciąć?",
   },
 ];
 
@@ -496,38 +470,17 @@ function safeNumber(n: number, min: number, max: number): number {
 }
 
 function hasCrisisContent(text: string): boolean {
-  const patterns = [
-    /nie\s+chc[eę]\s+[zż]y[cć]/i,
-    /samob[oó]j/i,
-    /zabij(e|ę|esz|a)/i,
-    /boj[eę]\s+si[eę].*(zabije|uderzy|skrzywdzi)/i,
-    /pobi[łl]/i,
-    /przemoc/i,
-    /grozi/i,
-    /n[oó][zż]/i,
-    /krew/i,
-  ];
+  const patterns = [/nie\s+chc[eę]\s+[zż]y[cć]/i, /samob[oó]j/i, /zabij(e|ę|esz|a)/i, /boj[eę]\s+si[eę].*(zabije|uderzy|skrzywdzi)/i, /pobi[łl]/i, /przemoc/i, /grozi/i, /n[oó][zż]/i, /krew/i];
   return patterns.some((re) => re.test(text));
 }
 
 function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): Preview {
   const scoreMap = new Map<string, number>();
-
-  for (const q of path.questions) {
-    for (const opt of q.options) {
-      scoreMap.set(`${q.id}:${opt.id}`, opt.score);
-    }
-  }
-
-  for (const opt of path.checkpoint.options) {
-    scoreMap.set(`${path.key}_checkpoint:${opt.id}`, opt.score);
-  }
+  for (const q of path.questions) for (const opt of q.options) scoreMap.set(`${q.id}:${opt.id}`, opt.score);
+  for (const opt of path.checkpoint.options) scoreMap.set(`${path.key}_checkpoint:${opt.id}`, opt.score);
 
   let total = 0;
-
-  for (const [qid, oid] of Object.entries(answers)) {
-    total += scoreMap.get(`${qid}:${oid}`) ?? 0;
-  }
+  for (const [qid, oid] of Object.entries(answers)) total += scoreMap.get(`${qid}:${oid}`) ?? 0;
 
   const max = path.questions.length * 3 + 3;
   const intensity = max > 0 ? total / max : 0;
@@ -546,16 +499,11 @@ function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): 
       change,
       tone: "red",
       badge: "Wzorzec wysokiego ryzyka",
-      headline:
-        "To bardziej wygląda na relację kosztowną emocjonalnie niż na układ, który sam się naprostuje.",
-      truth:
-        "Na dziś więcej wskazuje tu na przeciążający mechanizm niż na stabilny grunt. Coś jeszcze Cię trzyma, ale coraz mniej przypomina to bezpieczeństwo.",
-      mirror:
-        "To nie wygląda jak zwykły kryzys do przeczekania. Bardziej jak układ, w którym napięcie i przywiązanie zaczęły już robić za spoiwo.",
-      summary:
-        "Ten wynik zwykle pojawia się wtedy, gdy w środku relacji działa już nie tylko uczucie, ale też chaos, nierówność, powracające rozjazdy albo chroniczny brak jasności.",
-      paidTease:
-        "Pełny raport rozpisze, co tu naprawdę trzyma Cię najmocniej: więź, lęk, przywiązanie, iluzja zmiany czy brak domknięcia.",
+      headline: "To bardziej wygląda na relację kosztowną emocjonalnie niż na układ, który sam się naprostuje.",
+      truth: "Na dziś więcej wskazuje tu na przeciążający mechanizm niż na stabilny grunt.",
+      mirror: "To nie wygląda jak zwykły kryzys do przeczekania. Bardziej jak układ, w którym napięcie i przywiązanie zaczęły już robić za spoiwo.",
+      summary: "Ten wynik zwykle pojawia się wtedy, gdy w środku relacji działa już nie tylko uczucie, ale też chaos, nierówność, powracające rozjazdy albo chroniczny brak jasności.",
+      paidTease: "Pełny raport rozpisze, co tu naprawdę trzyma Cię najmocniej: więź, lęk, przywiązanie, iluzja zmiany czy brak domknięcia.",
     };
   }
 
@@ -568,14 +516,10 @@ function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): 
       tone: "yellow",
       badge: "Układ chwiejny i niespójny",
       headline: "Tu bardziej widać chwiejność niż spójność.",
-      truth:
-        "Coś jeszcze tę relację trzyma, ale obok tego widać już rozjazdy, które nie są drobiazgiem.",
-      mirror:
-        "To nie wygląda jak spokojny grunt. Raczej jak układ, który potrafi trwać długo i jednocześnie powoli wyczerpywać.",
-      summary:
-        "Ten wynik zwykle pojawia się tam, gdzie obok przywiązania albo nadziei mocno pracują już też inne siły: niejasność, zmęczenie, nierówne zaangażowanie, trudność z odcięciem albo chroniczny brak stabilności.",
-      paidTease:
-        "Pełny raport rozłoży tę relację na warstwy: co jeszcze działa, co już się rozjechało i gdzie leży największe ryzyko dalszego trwania.",
+      truth: "Coś jeszcze tę relację trzyma, ale obok tego widać już rozjazdy, które nie są drobiazgiem.",
+      mirror: "To nie wygląda jak spokojny grunt. Raczej jak układ, który potrafi trwać długo i jednocześnie powoli wyczerpywać.",
+      summary: "Ten wynik zwykle pojawia się tam, gdzie obok przywiązania albo nadziei mocno pracują już też inne siły: niejasność, zmęczenie, nierówne zaangażowanie, trudność z odcięciem albo chroniczny brak stabilności.",
+      paidTease: "Pełny raport rozłoży tę relację na warstwy: co jeszcze działa, co już się rozjechało i gdzie leży największe ryzyko dalszego trwania.",
     };
   }
 
@@ -588,14 +532,10 @@ function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): 
       tone: "yellow",
       badge: "Jest potencjał, ale nie bez zastrzeżeń",
       headline: "Tu coś jeszcze ma sens, ale nie na autopilocie.",
-      truth:
-        "Nie wygląda to ani na historię całkowicie pustą, ani na relację oczywiście skazaną na powtarzanie tego samego.",
-      mirror:
-        "Widać jednak miejsca, które wymagają więcej niż samej dobrej woli i nadziei, że jakoś się ułoży.",
-      summary:
-        "Ten wynik zwykle oznacza relację, która ma jeszcze materiał, ale nie obroni się samym sentymentem albo przywiązaniem. Potrzebuje spójności działań, jasności i czegoś bardziej realnego niż tylko chęć, żeby nie stracić tego, co już było.",
-      paidTease:
-        "W pełnej wersji dostajesz rozkład: co daje nadzieję, co ją podcina i które mechanizmy najmocniej wpływają na ten wynik.",
+      truth: "Nie wygląda to ani na historię całkowicie pustą, ani na relację oczywiście skazaną na powtarzanie tego samego.",
+      mirror: "Widać jednak miejsca, które wymagają więcej niż samej dobrej woli i nadziei, że jakoś się ułoży.",
+      summary: "Ten wynik zwykle oznacza relację, która ma jeszcze materiał, ale nie obroni się samym sentymentem albo przywiązaniem.",
+      paidTease: "W pełnej wersji dostajesz rozkład: co daje nadzieję, co ją podcina i które mechanizmy najmocniej wpływają na ten wynik.",
     };
   }
 
@@ -607,14 +547,10 @@ function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): 
     tone: "green",
     badge: "Układ z realnym potencjałem",
     headline: "Tu jeszcze widać grunt, nie tylko emocje.",
-    truth:
-      "Na tym etapie w odpowiedziach jest więcej spójności niż chaosu.",
-    mirror:
-      "To nie znaczy, że nie ma słabszych punktów. Znaczy tyle, że ta relacja nie wygląda wyłącznie na historię napędzaną lękiem, niejasnością albo samym nawykiem wracania.",
-    summary:
-      "Ten wynik zwykle pojawia się tam, gdzie obok napięcia nadal istnieje też realna struktura: kontakt, wzajemność, zdolność do rozmowy albo szansa na zmianę oparta na czymś więcej niż impuls.",
-    paidTease:
-      "Pełna analiza pokaże, z czego dokładnie bierze się ten potencjał i gdzie mimo wszystko ukryte są jego słabsze miejsca.",
+    truth: "Na tym etapie w odpowiedziach jest więcej spójności niż chaosu.",
+    mirror: "To nie znaczy, że nie ma słabszych punktów. Znaczy tyle, że ta relacja nie wygląda wyłącznie na historię napędzaną lękiem, niejasnością albo samym nawykiem wracania.",
+    summary: "Ten wynik zwykle pojawia się tam, gdzie obok napięcia nadal istnieje też realna struktura: kontakt, wzajemność, zdolność do rozmowy albo szansa na zmianę.",
+    paidTease: "Pełna analiza pokaże, z czego dokładnie bierze się ten potencjał i gdzie mimo wszystko ukryte są jego słabsze miejsca.",
   };
 }
 
@@ -624,13 +560,8 @@ async function createSession(entryKey: EntryKey): Promise<SessionCreateResponse>
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ entryKey }),
   });
-
   const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    throw new Error(data?.error || "Nie udało się utworzyć sesji.");
-  }
-
+  if (!res.ok) throw new Error(data?.error || "Nie udało się utworzyć sesji.");
   return data;
 }
 
@@ -640,115 +571,56 @@ async function updateSession(payload: any): Promise<any> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-
   const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    throw new Error(data?.error || "Nie udało się zapisać sesji.");
-  }
-
+  if (!res.ok) throw new Error(data?.error || "Nie udało się zapisać sesji.");
   return data;
 }
 
-async function createCheckout(
-  token: string,
-  email: string,
-  consentAcceptedAt: string
-): Promise<{ url: string }> {
+async function createCheckout(token: string, email: string, consentAcceptedAt: string): Promise<{ url: string }> {
   const res = await fetch(`${API_BASE}/api/create-checkout`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token, email, consentAcceptedAt }),
   });
-
   const data = await res.json().catch(() => ({}));
-
-  if (!res.ok || !data?.url) {
-    throw new Error(data?.error || "Błąd inicjalizacji płatności.");
-  }
-
+  if (!res.ok || !data?.url) throw new Error(data?.error || "Błąd inicjalizacji płatności.");
   return { url: data.url };
 }
 
 async function fetchPaidReport(token: string): Promise<FullReport> {
   const MAX_ATTEMPTS = 20;
   const INTERVAL_MS = 3000;
-
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
     const res = await fetch(`${API_BASE}/api/report/${encodeURIComponent(token)}`);
-
     if (res.status === 202) {
       await new Promise((resolve) => setTimeout(resolve, INTERVAL_MS));
       continue;
     }
-
     const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      throw new Error(data?.error || "Błąd pobierania raportu.");
-    }
-
-    if (!data?.report) {
-      throw new Error("Serwer nie zwrócił raportu.");
-    }
-
+    if (!res.ok) throw new Error(data?.error || "Błąd pobierania raportu.");
+    if (!data?.report) throw new Error("Serwer nie zwrócił raportu.");
     return data.report as FullReport;
   }
-
-  throw new Error(
-    "Raport jest nadal przygotowywany. Sprawdź e-mail — wyślemy Ci bezpieczny link, gdy będzie gotowy."
-  );
+  throw new Error("Raport jest nadal przygotowywany. Sprawdź e-mail — wyślemy Ci bezpieczny link, gdy będzie gotowy.");
 }
 
 function LogoBlock() {
   return (
     <div className="ctms-logo-wrap">
-      <div className="ctms-logo">
-        <div className="ctms-logo-dot" />
-        <div className="ctms-logo-word">
-          CzyToMaSens<span className="ctms-logo-gold">.</span>
-        </div>
+      <div className="ctms-logo-mark" />
+      <div>
+        <div className="ctms-logo">CzyToMaSens<span>.</span></div>
+        <div className="ctms-logo-sub">PRYWATNA ANALIZA RELACJI</div>
       </div>
-      <div className="ctms-logo-sub">PRYWATNA ANALIZA RELACJI</div>
     </div>
   );
 }
 
-function Glass({
-  children,
-  className = "",
-  style = {},
-}: {
-  children: React.ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
-}) {
-  return (
-    <div
-      className={`ctms-glass ${className}`.trim()}
-      style={{
-        background: `linear-gradient(180deg, ${BRAND.panelStrong}, ${BRAND.panel})`,
-        border: `1px solid ${BRAND.border}`,
-        borderRadius: 30,
-        boxShadow: "0 24px 90px rgba(0,0,0,0.34)",
-        backdropFilter: "blur(18px)",
-        ...style,
-      }}
-    >
-      {children}
-    </div>
-  );
+function Glass({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <div className={`ctms-glass ${className}`.trim()}>{children}</div>;
 }
 
-function PrimaryButton({
-  children,
-  onClick,
-  disabled,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-  disabled?: boolean;
-}) {
+function PrimaryButton({ children, onClick, disabled }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) {
   return (
     <button className="ctms-btn ctms-btn-primary" onClick={onClick} disabled={disabled}>
       {children}
@@ -756,13 +628,7 @@ function PrimaryButton({
   );
 }
 
-function GhostButton({
-  children,
-  onClick,
-}: {
-  children: React.ReactNode;
-  onClick?: () => void;
-}) {
+function GhostButton({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
   return (
     <button className="ctms-btn ctms-btn-ghost" onClick={onClick}>
       {children}
@@ -771,19 +637,11 @@ function GhostButton({
 }
 
 function PremiumBadge({ preview }: { preview: Preview }) {
-  const color =
-    preview.tone === "red"
-      ? BRAND.danger
-      : preview.tone === "green"
-      ? BRAND.success
-      : BRAND.goldSoft;
-
+  const color = preview.tone === "red" ? BRAND.danger : preview.tone === "green" ? BRAND.success : BRAND.goldSoft;
   return (
-    <Glass className="ctms-preview-badge" style={{ borderColor: color }}>
+    <Glass className="ctms-preview-badge">
       <div className="ctms-kicker">NA ILE TO MA SENS</div>
-      <div className="ctms-preview-score" style={{ color }}>
-        {preview.chance}%
-      </div>
+      <div className="ctms-preview-score" style={{ color }}>{preview.chance}%</div>
       <div className="ctms-preview-label">{preview.badge}</div>
       <div className="ctms-preview-truth">{preview.truth}</div>
       <div className="ctms-preview-mirror">{preview.mirror}</div>
@@ -804,12 +662,9 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [consents, setConsents] = useState<boolean[]>([false, false, false]);
+  const [legalOpen, setLegalOpen] = useState<LegalKey>(null);
 
-  const path = useMemo(
-    () => ENTRY_CONFIGS.find((x) => x.key === selectedPath) || null,
-    [selectedPath]
-  );
-
+  const path = useMemo(() => ENTRY_CONFIGS.find((x) => x.key === selectedPath) || null, [selectedPath]);
   const currentQuestion = path?.questions[questionIndex] || null;
 
   useEffect(() => {
@@ -828,9 +683,7 @@ export default function App() {
         setSessionToken(parsed.sessionToken || null);
         setConsents(parsed.consents || [false, false, false]);
       }
-    } catch {
-      // ignore
-    }
+    } catch {}
 
     const params = new URLSearchParams(window.location.search);
     const success = params.get("success");
@@ -847,7 +700,6 @@ export default function App() {
     if (success === "1" && token) {
       setBusy(true);
       setStage("processing");
-
       fetchPaidReport(token)
         .then((report) => {
           setFullReport(report);
@@ -858,9 +710,7 @@ export default function App() {
         .catch((e: any) => {
           setBusy(false);
           setStage("error");
-          setError(
-            e?.message || "Płatność wróciła poprawnie, ale nie udało się pobrać raportu."
-          );
+          setError(e?.message || "Płatność wróciła poprawnie, ale nie udało się pobrać raportu.");
         })
         .finally(() => {
           window.history.replaceState({}, "", window.location.pathname);
@@ -869,30 +719,14 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({
-        stage,
-        selectedPath,
-        questionIndex,
-        answers,
-        openText,
-        email,
-        preview,
-        fullReport,
-        sessionToken,
-        consents,
-      })
-    );
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, consents }));
   }, [stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, consents]);
 
   const ensureSession = async (entryKey: EntryKey): Promise<string> => {
     if (sessionToken) return sessionToken;
     const data = await createSession(entryKey);
     const nextToken = data?.token || data?.sessionId || null;
-    if (!nextToken) {
-      throw new Error("Nie udało się uzyskać tokenu sesji.");
-    }
+    if (!nextToken) throw new Error("Nie udało się uzyskać tokenu sesji.");
     setSessionToken(nextToken);
     return nextToken;
   };
@@ -911,17 +745,16 @@ export default function App() {
     setBusy(false);
     setError(null);
     setConsents([false, false, false]);
+    setLegalOpen(null);
     window.history.replaceState({}, "", window.location.pathname);
   };
 
   const startPath = async (key: EntryKey) => {
     setBusy(true);
     setError(null);
-
     try {
       const data = await createSession(key);
       const token = data?.token || data?.sessionId || null;
-
       setSessionToken(token);
       setSelectedPath(key);
       setQuestionIndex(0);
@@ -941,14 +774,11 @@ export default function App() {
   const answerQuestion = (qid: string, optionId: string) => {
     const next = { ...answers, [qid]: optionId };
     setAnswers(next);
-
     if (!path) return;
-
     if (questionIndex >= path.questions.length - 1) {
       setStage("checkpoint");
       return;
     }
-
     setQuestionIndex((v) => v + 1);
   };
 
@@ -960,7 +790,6 @@ export default function App() {
 
   const goBack = () => {
     setError(null);
-
     if (stage === "questions") {
       if (questionIndex === 0) {
         setStage("entry");
@@ -969,57 +798,38 @@ export default function App() {
       setQuestionIndex((v) => Math.max(0, v - 1));
       return;
     }
-
     if (stage === "checkpoint") {
       setStage("questions");
       return;
     }
-
     if (stage === "open_text") {
       setStage("checkpoint");
       return;
     }
-
     if (stage === "preview") {
       setStage("open_text");
       return;
     }
-
     if (stage === "consent") {
       setStage("landing");
       return;
     }
-
-    if (stage === "entry") {
-      setStage("consent");
-    }
+    if (stage === "entry") setStage("consent");
   };
 
   const buildPreviewAndGo = async () => {
     if (!path) return;
-
     if (hasCrisisContent(openText)) {
       setStage("crisis");
       return;
     }
-
     setBusy(true);
     setError(null);
-
     try {
       const token = await ensureSession(path.key);
       const previewData = buildPreview(path, answers, openText);
       setPreview(previewData);
-
-      await updateSession({
-        token,
-        path: path.key,
-        answers,
-        openText,
-        preview: previewData,
-        stage: "preview",
-      });
-
+      await updateSession({ token, path: path.key, answers, openText, preview: previewData, stage: "preview" });
       setStage("preview");
     } catch (e: any) {
       setError(e?.message || "Nie udało się przygotować preview.");
@@ -1034,29 +844,15 @@ export default function App() {
       setError("Brak gotowego preview do zapisania.");
       return;
     }
-
     if (!email.includes("@")) {
       setError("Podaj prawidłowy e-mail.");
       return;
     }
-
     setBusy(true);
     setError(null);
-
     try {
       const token = await ensureSession(selectedPath);
-
-      await updateSession({
-        token,
-        path: selectedPath,
-        answers,
-        openText,
-        preview,
-        email,
-        consentAcceptedAt: new Date().toISOString(),
-        stage: "checkout_started",
-      });
-
+      await updateSession({ token, path: selectedPath, answers, openText, preview, email, consentAcceptedAt: new Date().toISOString(), stage: "checkout_started" });
       const checkout = await createCheckout(token, email, new Date().toISOString());
       window.location.href = checkout.url;
     } catch (e: any) {
@@ -1066,152 +862,96 @@ export default function App() {
   };
 
   return (
-    <div className="ctms-app-shell">
-      <div className="ctms-page">
-        <div className="ctms-topbar">
-          <LogoBlock />
-          {stage !== "landing" && <GhostButton onClick={resetAll}>Od początku</GhostButton>}
-        </div>
+    <div className="ctms-shell">
+      <div className="ctms-noise" />
+      <div className="ctms-topbar">
+        <LogoBlock />
+        {stage !== "landing" && <GhostButton onClick={resetAll}>Od początku</GhostButton>}
+      </div>
 
+      <main className={`ctms-main ${stage === "consent" || stage === "questions" || stage === "checkpoint" || stage === "open_text" || stage === "preview" || stage === "paid" || stage === "error" || stage === "crisis" ? "narrow" : ""}`}>
         <AnimatePresence mode="wait">
           {stage === "landing" && (
-  <motion.div
-    key="landing"
-    initial={{ opacity: 0, y: 16 }}
-    animate={{ opacity: 1, y: 0 }}
-    exit={{ opacity: 0 }}
-  >
-    <section className="ctms-landing-premium">
-      <div className="ctms-landing-left">
-        <div className="ctms-hero-line-wrap">
-          <span className="ctms-eyebrow">PRYWATNA ANALIZA RELACJI</span>
-          <span className="ctms-eyebrow-line" />
-        </div>
+            <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <section className="hero-grid">
+                <Glass className="glass-panel hero-panel hero-copy">
+                  <div className="eyebrow with-line">PRYWATNA ANALIZA RELACJI</div>
+                  <div className="hero-kicker">NIE TEST. NIE TERAPIA. NIE LUKIER.</div>
+                  <h1>
+                    Zobacz, co ta relacja
+                    <br />
+                    <span>naprawdę</span> z Tobą robi.
+                  </h1>
+                  <p>
+                    Nie pytamy o idealną historię. Pytamy o to, co wraca, męczy, miesza i nie daje spokoju.
+                    Potem pokazujemy, ile tu jeszcze sensu, a ile już tylko napięcia, przywiązania albo nadziei bez pokrycia.
+                  </p>
+                  <div className="ctms-landing-actions">
+                    <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij wgląd w relację</PrimaryButton>
+                    <GhostButton onClick={() => setStage("entry")}>Jak to działa</GhostButton>
+                  </div>
+                </Glass>
 
-        <div className="ctms-kicker-large">NIE TEST. NIE TERAPIA. NIE LUKIER.</div>
+                <div className="hero-side-stack">
+                  <Glass className="glass-panel story-panel visual-story">
+                    <div className="story-icon">◎</div>
+                    <div className="story-kicker">SYSTEM ANALIZUJE</div>
+                    <h3>
+                      wzorce, napięcia
+                      <br />
+                      i kierunek relacji
+                    </h3>
+                    <div className="story-points">
+                      <div><span>≋</span><p>Powtarzające się schematy co wraca i dlaczego</p></div>
+                      <div><span>◌</span><p>Napięcie i niespójność co rozjeżdża Was w środku</p></div>
+                      <div><span>↗</span><p>Kierunek i potencjał dokąd to zmierza naprawdę</p></div>
+                    </div>
+                    <div className="story-lock">
+                      <div className="story-lock-icon">🔒</div>
+                      <div>
+                        <strong>Pełny wgląd dostępny po podjęciu decyzji</strong>
+                        <span>Najpierw zrozum. Potem zdecyduj.</span>
+                      </div>
+                    </div>
+                  </Glass>
+                </div>
+              </section>
 
-        <h1 className="ctms-landing-title">
-          Zobacz, co ta relacja
-          <br />
-          <span className="ctms-landing-title-gold">naprawdę</span> z Tobą robi.
-        </h1>
-
-        <p className="ctms-landing-sub">
-          Nie pytamy o idealną historię. Pytamy o to, co wraca, męczy, miesza i
-          nie daje spokoju. Potem pokazujemy, ile tu jeszcze sensu, a ile już
-          tylko napięcia, przywiązania albo nadziei bez pokrycia.
-        </p>
-
-        <div className="ctms-landing-actions">
-          <PrimaryButton onClick={() => setStage("consent")}>
-            Rozpocznij wgląd w relację
-          </PrimaryButton>
-          <GhostButton onClick={() => setStage("entry")}>Jak to działa</GhostButton>
-        </div>
-      </div>
-
-      <div className="ctms-landing-right">
-        <Glass className="ctms-landing-visual-card">
-          <div className="ctms-landing-visual-overlay" />
-
-          <div className="ctms-landing-visual-content">
-            <div className="ctms-landing-visual-icon">◎</div>
-
-            <div className="ctms-kicker">SYSTEM ANALIZUJE</div>
-
-            <h3 className="ctms-landing-visual-title">
-              wzorce, napięcia
-              <br />
-              i kierunek relacji
-            </h3>
-
-            <div className="ctms-landing-visual-list">
-              <div>
-                <span>≋</span>
-                <p>Powtarzające się schematy co wraca i dlaczego</p>
-              </div>
-              <div>
-                <span>◌</span>
-                <p>Napięcie i niespójność co rozjeżdża Was w środku</p>
-              </div>
-              <div>
-                <span>↗</span>
-                <p>Kierunek i potencjał dokąd to zmierza naprawdę</p>
-              </div>
-            </div>
-
-            <div className="ctms-landing-lock-box">
-              <div className="ctms-landing-lock-icon">🔒</div>
-              <div>
-                <strong>Pełny wgląd dostępny po podjęciu decyzji</strong>
-                <span>Najpierw zrozum. Potem zdecyduj.</span>
-              </div>
-            </div>
-          </div>
-        </Glass>
-      </div>
-    </section>
-
-    <section className="ctms-landing-bottom-cards">
-      <Glass className="ctms-editorial-card">
-        <div className="ctms-editorial-card-top">
-          <div className="ctms-editorial-no">01</div>
-          <div className="ctms-editorial-icon">◌</div>
-        </div>
-        <h3 className="ctms-editorial-title">Rozmowa, nie quiz</h3>
-        <div className="ctms-editorial-line" />
-        <p className="ctms-editorial-text">
-          System prowadzi Cię warstwowo, zamiast wrzucać wszystkich w jedną listę pytań.
-        </p>
-      </Glass>
-
-      <Glass className="ctms-editorial-card">
-        <div className="ctms-editorial-card-top">
-          <div className="ctms-editorial-no">02</div>
-          <div className="ctms-editorial-icon">▤</div>
-        </div>
-        <h3 className="ctms-editorial-title">Wielowarstwowa analiza</h3>
-        <div className="ctms-editorial-line" />
-        <p className="ctms-editorial-text">
-          Wychwytuje napięcie, niespójność, unikanie, chaos i realny kierunek tej relacji.
-        </p>
-      </Glass>
-
-      <Glass className="ctms-editorial-card">
-        <div className="ctms-editorial-card-top">
-          <div className="ctms-editorial-no">03</div>
-          <div className="ctms-editorial-icon">◐</div>
-        </div>
-        <h3 className="ctms-editorial-title">Preview zanim zdecydujesz</h3>
-        <div className="ctms-editorial-line" />
-        <p className="ctms-editorial-text">
-          Najpierw widzisz lustro sytuacji. Potem decydujesz, czy chcesz zejść głębiej.
-        </p>
-      </Glass>
-    </section>
-  </motion.div>
-)}
-
+              <section className="ctms-feature-editorial-grid">
+                <Glass className="feature-card">
+                  <div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div>
+                  <h3>Rozmowa, nie quiz</h3>
+                  <div className="feature-line" />
+                  <p>System prowadzi Cię warstwowo, zamiast wrzucać wszystkich w jedną listę pytań.</p>
+                </Glass>
+                <Glass className="feature-card">
+                  <div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div>
+                  <h3>Wielowarstwowa analiza</h3>
+                  <div className="feature-line" />
+                  <p>Wychwytuje napięcie, niespójność, unikanie, chaos i realny kierunek tej relacji.</p>
+                </Glass>
+                <Glass className="feature-card">
+                  <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
+                  <h3>Wgląd przed decyzją</h3>
+                  <div className="feature-line" />
+                  <p>Najpierw widzisz lustro sytuacji. Potem decydujesz, czy chcesz zejść głębiej.</p>
+                </Glass>
+              </section>
+            </motion.div>
+          )}
 
           {stage === "consent" && (
-            <motion.div
-              key="consent"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <Glass className="ctms-panel-large">
-                <div className="ctms-kicker">ZANIM WEJDZIESZ GŁĘBIEJ</div>
-                <h2 className="ctms-panel-title">To ma być trafne, nie miłe.</h2>
-                <p className="ctms-panel-copy">
-                  Ten produkt analizuje wzorce i dynamikę relacji. Nie zastępuje terapii,
-                  diagnozy ani porady prawnej. Po płatności dostajesz treść cyfrową od razu.
-                  To wejście jest dla ludzi, którzy chcą widzieć jaśniej, nie ładniej.
+            <motion.div key="consent" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <Glass className="question-panel consent-panel">
+                <div className="eyebrow">ZANIM WEJDZIESZ GŁĘBIEJ</div>
+                <h2>To ma być trafne, nie miłe.</h2>
+                <p className="consent-copy">
+                  Ten produkt analizuje wzorce i dynamikę relacji. Nie zastępuje terapii, diagnozy ani porady prawnej.
+                  Po płatności dostajesz treść cyfrową od razu. To wejście jest dla ludzi, którzy chcą widzieć jaśniej, nie ładniej.
                 </p>
-
-                <div className="ctms-consent-list">
+                <div className="consent-list">
                   {CONSENTS.map((text, idx) => (
-                    <label key={idx} className="ctms-consent-row">
+                    <label key={idx} className="consent-item">
                       <input
                         type="checkbox"
                         checked={consents[idx]}
@@ -1225,48 +965,32 @@ export default function App() {
                     </label>
                   ))}
                 </div>
-
-                <div className="ctms-actions-row">
+                <div className="consent-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => setStage("entry")} disabled={!consents.every(Boolean)}>
-                    Rozumiem, wchodzę dalej
-                  </PrimaryButton>
+                  <PrimaryButton onClick={() => setStage("entry")} disabled={!consents.every(Boolean)}>Rozumiem, wchodzę dalej</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
           )}
 
           {stage === "entry" && (
-            <motion.div
-              key="entry"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="ctms-stage-head">
+            <motion.div key="entry" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="section-head">
                 <div>
-                  <div className="ctms-kicker">PUNKT WEJŚCIA</div>
-                  <h2 className="ctms-panel-title">Od czego ta historia boli najmocniej?</h2>
-                  <p className="ctms-panel-copy">
-                    Zacznij od miejsca, które najbardziej ciągnie Cię w dół. System dopasuje
-                    dalszą rozmowę do Twojej sytuacji.
-                  </p>
+                  <div className="eyebrow">PUNKT WEJŚCIA</div>
+                  <h2>Od czego ta historia boli najmocniej?</h2>
+                  <p>Zacznij od miejsca, które najbardziej ciągnie Cię w dół. System dopasuje dalszą rozmowę do Twojej sytuacji.</p>
                 </div>
                 <GhostButton onClick={goBack}>Wróć</GhostButton>
               </div>
-
-              <div className="ctms-entry-grid">
+              <div className="entry-grid">
                 {ENTRY_CONFIGS.map((entry) => (
-                  <Glass key={entry.key} className="ctms-entry-card">
-                    <div className="ctms-kicker">ŚCIEŻKA ANALIZY</div>
-                    <h3 className="ctms-entry-title">{entry.title}</h3>
-                    <div className="ctms-entry-subtitle">{entry.subtitle}</div>
-                    <div className="ctms-entry-intro">{entry.intro}</div>
-                    <div className="ctms-entry-action">
-                      <PrimaryButton onClick={() => startPath(entry.key)}>
-                        {busy ? "Przygotowuję..." : "Wejdź tą ścieżką"}
-                      </PrimaryButton>
-                    </div>
+                  <Glass key={entry.key} className="entry-card">
+                    <div className="eyebrow">ŚCIEŻKA ANALIZY</div>
+                    <h3>{entry.title}</h3>
+                    <div className="entry-subtitle">{entry.subtitle}</div>
+                    <div className="entry-intro">{entry.intro}</div>
+                    <div className="entry-action"><PrimaryButton onClick={() => startPath(entry.key)}>{busy ? "Przygotowuję..." : "Wejdź tą ścieżką"}</PrimaryButton></div>
                   </Glass>
                 ))}
               </div>
@@ -1274,349 +998,172 @@ export default function App() {
           )}
 
           {stage === "questions" && path && currentQuestion && (
-            <motion.div
-              key={currentQuestion.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="ctms-stage-head">
-                <div className="ctms-kicker">{path.title.toUpperCase()}</div>
-                <div className="ctms-progress">
-                  <span className="ctms-progress-label">
-                    {questionIndex + 1}/{path.questions.length}
-                  </span>
-                  <div className="ctms-progress-track">
-                    <div
-                      className="ctms-progress-fill"
-                      style={{
-                        width: `${((questionIndex + 1) / path.questions.length) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div>
+            <motion.div key={currentQuestion.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="section-head compact">
+                <div className="eyebrow">{path.title.toUpperCase()}</div>
+                <div className="progress-wrap"><span>{questionIndex + 1}/{path.questions.length}</span><div className="progress-track"><div className="progress-fill" style={{ width: `${((questionIndex + 1) / path.questions.length) * 100}%` }} /></div></div>
               </div>
-
-              <Glass className="ctms-question-panel">
-                <div className="ctms-question-lead">{currentQuestion.lead}</div>
-                <h2 className="ctms-question-title">{currentQuestion.text}</h2>
-
-                <div className="ctms-options-grid">
+              <Glass className="question-panel">
+                <div className="question-copy">
+                  <div className="question-lead">{currentQuestion.lead}</div>
+                  <h3>{currentQuestion.text}</h3>
+                </div>
+                <div className="answer-grid">
                   {currentQuestion.options.map((opt) => (
-                    <button
-                      key={opt.id}
-                      className="ctms-option-btn"
-                      onClick={() => answerQuestion(currentQuestion.id, opt.id)}
-                    >
-                      {opt.label}
-                    </button>
+                    <button key={opt.id} className="answer-card" onClick={() => answerQuestion(currentQuestion.id, opt.id)}>{opt.label}</button>
                   ))}
                 </div>
-
-                <div className="ctms-actions-row">
-                  <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <GhostButton onClick={resetAll}>Od początku</GhostButton>
-                </div>
+                <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton><GhostButton onClick={resetAll}>Od początku</GhostButton></div>
               </Glass>
             </motion.div>
           )}
 
           {stage === "checkpoint" && path && (
-            <motion.div
-              key={`${path.key}-checkpoint`}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <Glass className="ctms-panel-large">
-                <div className="ctms-kicker">{path.checkpoint.title}</div>
-                <h2 className="ctms-panel-title">{path.checkpoint.text}</h2>
-
-                <div className="ctms-options-grid">
+            <motion.div key={`${path.key}-checkpoint`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <Glass className="question-panel">
+                <div className="eyebrow">{path.checkpoint.title}</div>
+                <div className="question-copy"><h3>{path.checkpoint.text}</h3></div>
+                <div className="answer-grid">
                   {path.checkpoint.options.map((opt) => (
-                    <button
-                      key={opt.id}
-                      className="ctms-option-btn"
-                      onClick={() => answerCheckpoint(opt.id)}
-                    >
-                      {opt.label}
-                    </button>
+                    <button key={opt.id} className="answer-card" onClick={() => answerCheckpoint(opt.id)}>{opt.label}</button>
                   ))}
                 </div>
-
-                <div className="ctms-actions-row">
-                  <GhostButton onClick={goBack}>Wróć</GhostButton>
-                </div>
+                <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton></div>
               </Glass>
             </motion.div>
           )}
 
           {stage === "open_text" && path && (
-            <motion.div
-              key={`${path.key}-open`}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <Glass className="ctms-panel-large">
-                <div className="ctms-kicker">OSTATNIA WARSTWA</div>
-                <h2 className="ctms-panel-title">{path.openPrompt}</h2>
-
-                <textarea
-                  className="ctms-textarea"
-                  value={openText}
-                  onChange={(e) => setOpenText(e.target.value)}
-                  placeholder="Napisz bez filtra. Im uczciwiej, tym bardziej trafne będzie lustro i późniejszy raport."
-                  maxLength={3000}
-                />
-
-                <div className="ctms-text-meta">
-                  <div>Ta odpowiedź pogłębia lustro i ustawia ton raportu.</div>
-                  <div>{openText.length}/3000</div>
-                </div>
-
-                <div className="ctms-actions-row">
-                  <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={buildPreviewAndGo} disabled={openText.trim().length < 40}>
-                    Pokaż darmowy preview
-                  </PrimaryButton>
-                </div>
+            <motion.div key={`${path.key}-open`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <Glass className="question-panel">
+                <div className="eyebrow">OSTATNIA WARSTWA</div>
+                <div className="question-copy"><h3>{path.openPrompt}</h3></div>
+                <textarea className="ctms-textarea" value={openText} onChange={(e) => setOpenText(e.target.value)} placeholder="Napisz bez filtra. Im uczciwiej, tym bardziej trafne będzie lustro i późniejszy raport." maxLength={3000} />
+                <div className="text-meta"><div>Ta odpowiedź pogłębia lustro i ustawia ton raportu.</div><div>{openText.length}/3000</div></div>
+                <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton><PrimaryButton onClick={buildPreviewAndGo} disabled={openText.trim().length < 40}>Pokaż darmowy preview</PrimaryButton></div>
               </Glass>
             </motion.div>
           )}
 
           {stage === "crisis" && (
-            <motion.div
-              key="crisis"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <Glass className="ctms-panel-large" style={{ borderColor: BRAND.danger }}>
-                <div className="ctms-kicker" style={{ color: BRAND.danger }}>TRYB KRYZYSOWY</div>
-                <h2 className="ctms-panel-title">
-                  To nie jest właściwe narzędzie dla sytuacji bezpośredniego zagrożenia.
-                </h2>
-                <p className="ctms-panel-copy">
-                  Jeśli istnieje ryzyko przemocy, zagrożenia życia albo zrobienia sobie krzywdy,
-                  przerwij tę analizę i skorzystaj z natychmiastowej pomocy.
-                </p>
-
-                <div className="ctms-crisis-grid">
-                  <Glass className="ctms-crisis-box"><strong>112</strong> — numer alarmowy</Glass>
-                  <Glass className="ctms-crisis-box"><strong>116 123</strong> — telefon zaufania dla dorosłych w kryzysie emocjonalnym</Glass>
-                  <Glass className="ctms-crisis-box"><strong>116 111</strong> — telefon zaufania dla dzieci i młodzieży</Glass>
+            <motion.div key="crisis" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <Glass className="question-panel crisis-panel">
+                <div className="eyebrow danger">TRYB KRYZYSOWY</div>
+                <h2>To nie jest właściwe narzędzie dla sytuacji bezpośredniego zagrożenia.</h2>
+                <p className="consent-copy">Jeśli istnieje ryzyko przemocy, zagrożenia życia albo zrobienia sobie krzywdy, przerwij tę analizę i skorzystaj z natychmiastowej pomocy.</p>
+                <div className="crisis-grid">
+                  <Glass className="crisis-box"><strong>112</strong> — numer alarmowy</Glass>
+                  <Glass className="crisis-box"><strong>116 123</strong> — telefon zaufania dla dorosłych w kryzysie emocjonalnym</Glass>
+                  <Glass className="crisis-box"><strong>116 111</strong> — telefon zaufania dla dzieci i młodzieży</Glass>
                 </div>
-
-                <div className="ctms-actions-row">
-                  <GhostButton onClick={resetAll}>Zamknij analizę</GhostButton>
-                </div>
+                <div className="section-actions"><GhostButton onClick={resetAll}>Zamknij analizę</GhostButton></div>
               </Glass>
             </motion.div>
           )}
 
           {stage === "preview" && preview && (
-            <motion.div
-              key="preview"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <Glass className="ctms-preview-wrap">
-                <div className="ctms-kicker">DARMOWY PREVIEW</div>
-                <h2 className="ctms-panel-title ctms-preview-headline">{preview.headline}</h2>
-                <div className="ctms-preview-truth-top">{preview.truth}</div>
-                <div className="ctms-preview-mirror-top">{preview.mirror}</div>
-
+            <motion.div key="preview" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <Glass className="preview-card">
+                <div className="preview-hero">
+                  <div className="eyebrow">DARMOWE LUSTRO SYTUACJI</div>
+                  <h2>{preview.headline}</h2>
+                  <div className="preview-truth-top">{preview.truth}</div>
+                  <div className="preview-mirror-top">{preview.mirror}</div>
+                </div>
                 <PremiumBadge preview={preview} />
-
-                <div className="ctms-metrics-grid">
-                  {[
-                    [preview.tension, "POZIOM NAPIĘCIA"],
-                    [preview.asymmetry, "ASYMETRIA"],
-                    [preview.change, "SZANSA ZMIANY"],
-                  ].map(([value, label]) => (
-                    <Glass key={label as string} className="ctms-metric-card">
-                      <div className="ctms-metric-value">{value}%</div>
-                      <div className="ctms-metric-label">{label}</div>
-                    </Glass>
+                <div className="metrics-grid">
+                  {[ [preview.tension, "POZIOM NAPIĘCIA"], [preview.asymmetry, "ASYMETRIA"], [preview.change, "SZANSA ZMIANY"] ].map(([value, label]) => (
+                    <Glass key={label as string} className="metric-card"><div className="metric-value">{value}%</div><div className="metric-label">{label}</div></Glass>
                   ))}
                 </div>
-
-                <div className="ctms-teaser-grid">
-                  <Glass className="ctms-teaser-card">
-                    <div className="ctms-kicker">CO WIDAĆ JUŻ TERAZ</div>
-                    <p>{preview.summary}</p>
-                  </Glass>
-
-                  <Glass className="ctms-teaser-card">
-                    <div className="ctms-kicker">NAJMOCNIEJSZY MECHANIZM</div>
-                    <p>
-                      {preview.tone === "green"
-                        ? "Najmocniej działa tu jeszcze struktura i wzajemność, ale to nie zwalnia z patrzenia na słabsze miejsca."
-                        : preview.tone === "yellow"
-                        ? "Napięcie miesza się tu z nadzieją i przywiązaniem. To właśnie ta mieszanka najłatwiej utrzymuje ludzi w zawieszeniu."
-                        : "Najmocniej pracuje tu układ ulgi po napięciu albo lęku przed stratą. To często sprawia, że ciężko odpuścić nawet wtedy, gdy relacja już kosztuje."}
-                    </p>
-                  </Glass>
-
-                  <Glass className="ctms-teaser-card">
-                    <div className="ctms-kicker">CZEGO PEŁNY RAPORT NIE OMINIE</div>
-                    <p>{preview.paidTease}</p>
-                  </Glass>
+                <div className="preview-grid">
+                  <Glass className="report-section"><div className="eyebrow">CO WIDAĆ JUŻ TERAZ</div><p>{preview.summary}</p></Glass>
+                  <Glass className="report-section"><div className="eyebrow">NAJMOCNIEJSZY MECHANIZM</div><p>{preview.tone === "green" ? "Najmocniej działa tu jeszcze struktura i wzajemność, ale to nie zwalnia z patrzenia na słabsze miejsca." : preview.tone === "yellow" ? "Napięcie miesza się tu z nadzieją i przywiązaniem. To właśnie ta mieszanka najłatwiej utrzymuje ludzi w zawieszeniu." : "Najmocniej pracuje tu układ ulgi po napięciu albo lęku przed stratą. To często sprawia, że ciężko odpuścić nawet wtedy, gdy relacja już kosztuje."}</p></Glass>
+                  <Glass className="report-section"><div className="eyebrow">CZEGO PEŁNY RAPORT NIE OMINIE</div><p>{preview.paidTease}</p></Glass>
                 </div>
-
-                <Glass className="ctms-paywall-card">
-                  <div className="ctms-kicker">PEŁNY RAPORT PREMIUM</div>
-                  <p className="ctms-paywall-copy">
-                    Odblokujesz pełną analizę: mechanizmy, ryzyka, scenariusze,
-                    praktyczne wskazówki i jasny werdykt.
-                    Dostajesz wersję, do której można wrócić później — nie jednorazowy ekran, który znika po odświeżeniu.
-                  </p>
-
-                  <div className="ctms-paywall-form">
-                    <input
-                      className="ctms-input"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Adres e-mail do raportu premium"
-                    />
-                    <PrimaryButton onClick={pay} disabled={busy}>
-                      {busy ? "Przetwarzanie..." : "Odblokuj pełny raport — 15 zł"}
-                    </PrimaryButton>
-                    <div className="ctms-paywall-note">
-                      Najpierw widzisz lustro sytuacji. Potem decydujesz, czy chcesz zejść głębiej.
-                    </div>
+                <Glass className="unlock-panel">
+                  <div className="eyebrow">PEŁNY RAPORT PREMIUM</div>
+                  <p className="unlock-copy">Odblokujesz pełną analizę: mechanizmy, ryzyka, scenariusze, praktyczne wskazówki i jasny werdykt. Dostajesz wersję, do której można wrócić później.</p>
+                  <div className="unlock-form">
+                    <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Adres e-mail do raportu premium" />
+                    <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Odblokuj pełny raport — 15 zł"}</PrimaryButton>
+                    <div className="unlock-note">Najpierw widzisz lustro sytuacji. Potem decydujesz, czy chcesz zejść głębiej.</div>
                   </div>
                 </Glass>
-
-                {error && <div className="ctms-error-line">{error}</div>}
-
-                <div className="ctms-actions-row">
-                  <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <GhostButton onClick={resetAll}>Od początku</GhostButton>
-                </div>
+                {error && <div className="error-line">{error}</div>}
+                <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton><GhostButton onClick={resetAll}>Od początku</GhostButton></div>
               </Glass>
             </motion.div>
           )}
 
           {stage === "processing" && (
-            <motion.div
-              key="processing"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <div className="ctms-processing-screen">
-                <Glass className="ctms-processing-box">
-                  <div className="ctms-spinner" />
-                  <div className="ctms-processing-title">Przetwarzanie płatności i raportu…</div>
-                  <div className="ctms-processing-copy">
-                    Jeśli to trwa chwilę, nie zamykaj karty. System sprawdza status płatności i raportu.
-                  </div>
-                </Glass>
-              </div>
+            <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <div className="loading-wrap"><Glass className="loading-panel"><div className="spinner" /><h2>Przetwarzanie płatności i raportu…</h2><p>Jeśli to trwa chwilę, nie zamykaj karty. System sprawdza status płatności i raportu.</p></Glass></div>
             </motion.div>
           )}
 
           {stage === "paid" && fullReport && (
-            <motion.div
-              key="paid"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <Glass className="ctms-preview-wrap">
-                <div className="ctms-kicker">RAPORT PREMIUM</div>
-                <h2 className="ctms-panel-title">
-                  {fullReport.headline || "Ta relacja daje Ci kontakt, ale nie daje Ci oparcia."}
-                </h2>
-                <p className="ctms-panel-copy">
-                  {fullReport.subheadline ||
-                    "Największy problem nie leży w jednym zdarzeniu. Leży w tym, że napięcie stało się normą, a jasność nadal nie przychodzi."}
-                </p>
-
+            <motion.div key="paid" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <Glass className="preview-card">
+                <div className="eyebrow">RAPORT PREMIUM</div>
+                <div className="report-head">
+                  <h2>{fullReport.headline || "Ta relacja daje Ci kontakt, ale nie daje Ci oparcia."}</h2>
+                  <p>{fullReport.subheadline || "Największy problem nie leży w jednym zdarzeniu. Leży w tym, że napięcie stało się normą, a jasność nadal nie przychodzi."}</p>
+                </div>
                 {typeof fullReport.rebuildPercent === "number" && (
-                  <div className="ctms-metrics-grid">
-                    {[
-                      [fullReport.rebuildPercent, "NA ILE TO MA SENS"],
-                      [fullReport.tensionPercent || 0, "POZIOM NAPIĘCIA"],
-                      [fullReport.driftPercent || 0, "ASYMETRIA"],
-                    ].map(([value, label]) => (
-                      <Glass key={label as string} className="ctms-metric-card">
-                        <div className="ctms-metric-value">{value}%</div>
-                        <div className="ctms-metric-label">{label}</div>
-                      </Glass>
+                  <div className="metrics-grid">
+                    {[ [fullReport.rebuildPercent, "NA ILE TO MA SENS"], [fullReport.tensionPercent || 0, "POZIOM NAPIĘCIA"], [fullReport.driftPercent || 0, "ASYMETRIA"] ].map(([value, label]) => (
+                      <Glass key={label as string} className="metric-card"><div className="metric-value">{value}%</div><div className="metric-label">{label}</div></Glass>
                     ))}
                   </div>
                 )}
-
-                {fullReport.previewLine && (
-                  <div className="ctms-paid-preview-line">{fullReport.previewLine}</div>
-                )}
-
-                <div className="ctms-paid-sections">
+                {fullReport.previewLine && <div className="report-preview-line">{fullReport.previewLine}</div>}
+                <div className="report-sections">
                   {(fullReport.sections || []).map((section, i) => (
-                    <Glass key={i} className="ctms-paid-section">
-                      <div
-                        className="ctms-paid-section-title"
-                        style={{
-                          color:
-                            section.tone === "danger"
-                              ? BRAND.danger
-                              : section.tone === "gold"
-                              ? BRAND.goldSoft
-                              : BRAND.gold,
-                        }}
-                      >
-                        {section.title}
-                      </div>
-                      <div className="ctms-paid-section-text">{section.text}</div>
-                    </Glass>
+                    <Glass key={i} className="report-section"><div className={`report-section-title ${section.tone || "normal"}`}>{section.title}</div><div className="report-section-text">{section.text}</div></Glass>
                   ))}
                 </div>
-
-                {fullReport.closing && (
-                  <div className="ctms-paid-closing">{fullReport.closing}</div>
-                )}
-
-                <Glass className="ctms-mail-access-box">
-                  Dostęp do raportu został zapisany. Możesz wrócić do niego później z
-                  bezpiecznego linku wysłanego na e-mail.
-                </Glass>
-
-                <div className="ctms-actions-row">
-                  <GhostButton onClick={resetAll}>Nowa analiza</GhostButton>
-                </div>
+                {fullReport.closing && <div className="report-closing">{fullReport.closing}</div>}
+                <Glass className="mail-access-box">Dostęp do raportu został zapisany. Możesz wrócić do niego później z bezpiecznego linku wysłanego na e-mail.</Glass>
+                <div className="section-actions"><GhostButton onClick={resetAll}>Nowa analiza</GhostButton></div>
               </Glass>
             </motion.div>
           )}
 
           {stage === "error" && (
-            <motion.div
-              key="error"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-            >
-              <Glass className="ctms-panel-large">
-                <div className="ctms-kicker" style={{ color: BRAND.danger }}>BŁĄD</div>
-                <h2 className="ctms-panel-title">
-                  Coś się wywaliło po drodze, ale przynajmniej wiemy gdzie.
-                </h2>
-                <div className="ctms-panel-copy">{error}</div>
-
-                <div className="ctms-actions-row">
-                  <GhostButton onClick={() => setStage(preview ? "preview" : "landing")}>
-                    Wróć
-                  </GhostButton>
-                  <GhostButton onClick={resetAll}>Od początku</GhostButton>
-                </div>
+            <motion.div key="error" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <Glass className="question-panel">
+                <div className="eyebrow danger">BŁĄD</div>
+                <h2>Coś się wywaliło po drodze, ale przynajmniej wiemy gdzie.</h2>
+                <p className="consent-copy">{error}</p>
+                <div className="section-actions"><GhostButton onClick={() => setStage(preview ? "preview" : "landing")}>Wróć</GhostButton><GhostButton onClick={resetAll}>Od początku</GhostButton></div>
               </Glass>
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </main>
+
+      <footer className="ctms-footer">
+        <div className="ctms-footer-inner">
+          <button onClick={() => setLegalOpen("regulamin")}>Regulamin</button>
+          <button onClick={() => setLegalOpen("prywatnosc")}>Polityka prywatności</button>
+          <button onClick={() => setLegalOpen("rodo")}>RODO</button>
+          <button onClick={() => setLegalOpen("kontakt")}>Kontakt</button>
+        </div>
+      </footer>
+
+      {legalOpen && (
+        <div className="ctms-modal-backdrop" onClick={() => setLegalOpen(null)}>
+          <div className="ctms-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="ctms-modal-head">
+              <div className="eyebrow">INFORMACJE PRAWNE</div>
+              <button className="ctms-modal-close" onClick={() => setLegalOpen(null)}>×</button>
+            </div>
+            <h3>{LEGAL_CONTENT[legalOpen].title}</h3>
+            <p>{LEGAL_CONTENT[legalOpen].body}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
