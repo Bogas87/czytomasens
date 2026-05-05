@@ -1,4 +1,6 @@
-import Stripe from "stripe";
+"use strict";
+
+const Stripe = require("stripe");
 
 const stripe = new Stripe((process.env.STRIPE_SECRET_KEY || "").trim(), {
   apiVersion: "2024-06-20",
@@ -8,7 +10,7 @@ function normalizeText(value) {
   return String(value || "").trim();
 }
 
-export async function createCheckout(req, res) {
+exports.createCheckout = async (req, res) => {
   try {
     const token = normalizeText(req.body?.token || req.body?.sessionToken || "");
     const email = normalizeText(req.body?.email || "");
@@ -18,17 +20,11 @@ export async function createCheckout(req, res) {
     const payload = req.body?.payload || {};
 
     if (!token) {
-      return res.status(400).json({
-        ok: false,
-        error: "Brak tokenu sesji.",
-      });
+      return res.status(400).json({ ok: false, error: "Brak tokenu sesji." });
     }
 
     if (!email || !email.includes("@")) {
-      return res.status(400).json({
-        ok: false,
-        error: "Nieprawidłowy adres e-mail.",
-      });
+      return res.status(400).json({ ok: false, error: "Nieprawidłowy adres e-mail." });
     }
 
     const ipAddress =
@@ -79,11 +75,6 @@ export async function createCheckout(req, res) {
     });
   } catch (error) {
     console.error("POST /api/create-checkout error:", error);
-    return res.status(500).json({
-      ok: false,
-      error: "Błąd inicjalizacji płatności.",
-    });
+    return res.status(500).json({ ok: false, error: "Błąd inicjalizacji płatności." });
   }
-}
-
-export default { createCheckout };
+};

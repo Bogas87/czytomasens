@@ -1,6 +1,8 @@
+"use strict";
+
 const crypto = require("crypto");
-const prisma = require("../db/prisma");
-const openaiService = require("../services/openai.service");
+const prisma = require("../db/prisma.js");
+const openaiService = require("../services/openai.service.js");
 
 function normalizeText(value) {
   return String(value || "").trim();
@@ -101,7 +103,6 @@ function verifySignedSignature(token, exp, sig) {
   }
 
   const expected = createSignedSignature(token, String(exp));
-
   const a = Buffer.from(expected);
   const b = Buffer.from(String(sig));
 
@@ -110,10 +111,12 @@ function verifySignedSignature(token, exp, sig) {
   return crypto.timingSafeEqual(a, b);
 }
 
+// ─── SESJA ───────────────────────────────────────────────────────────────────
+
 exports.createSession = async (_req, res) => {
   try {
     const session = await prisma.session.create({ data: {} });
-    return res.json({ ok: true, token: session.id });
+    return res.json({ ok: true, token: session.id, sessionId: session.id });
   } catch (error) {
     console.error("[API] Session create error:", error.message);
     return res.status(500).json({ ok: false, message: "Błąd serwera przy tworzeniu sesji." });
@@ -122,8 +125,9 @@ exports.createSession = async (_req, res) => {
 
 exports.updateSession = async (req, res) => {
   try {
-    const token = normalizeText(req.body.token || "");
+    const token = normalizeText(req.body.token || req.body.sessionId || "");
     const payload = req.body.payload || {};
+    const email = normalizeText(req.body.email || "");
 
     if (!token || !isValidUUID(token)) {
       return res.status(400).json({ ok: false, message: "Nieprawidłowy token." });
@@ -134,12 +138,12 @@ exports.updateSession = async (req, res) => {
       return res.status(404).json({ ok: false, message: "Nie znaleziono sesji." });
     }
 
-    await prisma.session.update({
-      where: { id: token },
-      data: { payload },
-    });
+    const updateData = { payload };
+    if (email && isValidEmail(email)) updateData.email = email;
 
-    return res.json({ ok: true });
+    await prisma.session.update({ where: { id: token }, data: updateData });
+
+    return res.json({ ok: true, token });
   } catch (error) {
     console.error("[API] Session update error:", error.message);
     return res.status(500).json({ ok: false, message: "Błąd zapisu sesji." });
@@ -148,14 +152,14 @@ exports.updateSession = async (req, res) => {
 
 exports.captureEmail = async (req, res) => {
   try {
-    const token = normalizeText(req.body.token || "");
+    const token = normalizeText(req.body.token || req.body.sessionToken || "");
     const email = normalizeText(req.body.email || "");
 
     if (!token || !isValidUUID(token)) {
       return res.status(400).json({ ok: false, message: "Nieprawidłowy token." });
     }
 
-    if (!isValidEmail(email) || !email) {
+    if (!email || !isValidEmail(email)) {
       return res.status(400).json({ ok: false, message: "Nieprawidłowy adres e-mail." });
     }
 
@@ -164,10 +168,7 @@ exports.captureEmail = async (req, res) => {
       return res.status(404).json({ ok: false, message: "Nie znaleziono sesji." });
     }
 
-    await prisma.session.update({
-      where: { id: token },
-      data: { email },
-    });
+    await prisma.session.update({ where: { id: token }, data: { email } });
 
     return res.json({ ok: true });
   } catch (error) {
@@ -176,11 +177,17 @@ exports.captureEmail = async (req, res) => {
   }
 };
 
+// ─── ANALIZA ─────────────────────────────────────────────────────────────────
+
 exports.analyzeText = async (req, res) => {
   try {
     const token = normalizeText(req.body.token || "");
-    const input = normalizeText(req.body.input || req.body.customDescription || "");
-    const incomingPatterns = Array.isArray(req.body.patterns) ? req.body.patterns.slice(0, 20) : [];
+    const input = normalizeText(
+      req.body.input || req.body.customDescription || req.body.openText || ""
+    );
+    const incomingPatterns = Array.isArray(req.body.patterns)
+      ? req.body.patterns.slice(0, 20)
+      : [];
 
     if (token && !isValidUUID(token)) {
       return res.status(400).json({ ok: false, message: "Nieprawidłowy token." });
@@ -221,20 +228,11 @@ exports.analyzeText = async (req, res) => {
       if (existing) {
         await prisma.session.update({
           where: { id: token },
-          data: {
-            payload,
-            preview_report: preview,
-            patterns: allPatterns,
-          },
+          data: { payload, preview_report: preview, patterns: allPatterns },
         });
       } else {
         await prisma.session.create({
-          data: {
-            id: token,
-            payload,
-            preview_report: preview,
-            patterns: allPatterns,
-          },
+          data: { id: token, payload, preview_report: preview, patterns: allPatterns },
         });
       }
     }
@@ -246,13 +244,15 @@ exports.analyzeText = async (req, res) => {
   }
 };
 
+// ─── CHECKPOINT ──────────────────────────────────────────────────────────────
+
 exports.generateCheckpoint = async (req, res) => {
   try {
     const answers = Array.isArray(req.body.answers) ? req.body.answers.slice(0, 30) : [];
     const interviews = Array.isArray(req.body.interviews) ? req.body.interviews.slice(0, 10) : [];
 
     const rawText = [
-      ...answers.map((a) => normalizeText(a.text || a.answer || a.label)),
+      ...answers.map((a) => normalizeText(a.text || a.answer || a.label || "")),
       ...interviews.map((i) => normalizeText(i.userText || i.user || "")),
     ]
       .filter(Boolean)
@@ -281,6 +281,8 @@ exports.generateCheckpoint = async (req, res) => {
   }
 };
 
+// ─── RAPORT ──────────────────────────────────────────────────────────────────
+
 exports.getSessionData = async (req, res) => {
   try {
     const token = normalizeText(req.params.token || "");
@@ -308,10 +310,7 @@ exports.getSessionData = async (req, res) => {
 
     return res.json({
       ok: true,
-      session: {
-        ...session,
-        isPaid: session.payment_status === "PAID",
-      },
+      session: { ...session, isPaid: session.payment_status === "PAID" },
     });
   } catch (error) {
     console.error("[API] Get session error:", error.message);
@@ -343,11 +342,7 @@ exports.getReport = async (req, res) => {
     }
 
     if (session.report_status === "READY" && session.full_report) {
-      return res.json({
-        ok: true,
-        report: session.full_report,
-        patterns: session.patterns,
-      });
+      return res.json({ ok: true, report: session.full_report, patterns: session.patterns });
     }
 
     if (session.payment_status !== "PAID") {
@@ -388,7 +383,9 @@ exports.getSignedReport = async (req, res) => {
     }
 
     if (!verifySignedSignature(token, exp, sig)) {
-      return res.status(403).json({ ok: false, message: "Link dostępu wygasł albo jest nieprawidłowy." });
+      return res
+        .status(403)
+        .json({ ok: false, message: "Link dostępu wygasł albo jest nieprawidłowy." });
     }
 
     const session = await prisma.session.findUnique({
@@ -400,14 +397,16 @@ exports.getSignedReport = async (req, res) => {
       },
     });
 
-    if (!session || session.payment_status !== "PAID" || session.report_status !== "READY" || !session.full_report) {
+    if (
+      !session ||
+      session.payment_status !== "PAID" ||
+      session.report_status !== "READY" ||
+      !session.full_report
+    ) {
       return res.status(404).json({ ok: false, message: "Raport nie jest dostępny." });
     }
 
-    return res.json({
-      ok: true,
-      report: session.full_report,
-    });
+    return res.json({ ok: true, report: session.full_report });
   } catch (error) {
     console.error("[API] Signed report fetch error:", error.message);
     return res.status(500).json({ ok: false, message: "Błąd dostępu do raportu." });

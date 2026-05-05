@@ -1,3 +1,5 @@
+"use strict";
+
 const OpenAI = require("openai");
 const { z } = require("zod");
 
@@ -32,7 +34,8 @@ const CheckpointSchema = z.object({
 
 const previewFallback = {
   headline: "Coś tu pęka",
-  subheadline: "W tej formie relacja bardziej utrzymuje napięcie niż poczucie bezpieczeństwa.",
+  subheadline:
+    "W tej formie relacja bardziej utrzymuje napięcie niż poczucie bezpieczeństwa.",
   previewLine:
     "Największy problem nie wygląda tu na jedną sytuację. Raczej na wzorzec, który wraca pod różnymi nazwami.",
   tensionPercent: 50,
@@ -51,7 +54,8 @@ const previewFallback = {
 
 const checkpointFallback = {
   title: "Zatrzymaj się na chwilę",
-  insight: "W Twoich odpowiedziach zaczyna być widać wzorzec, a nie tylko pojedyncze zdarzenie.",
+  insight:
+    "W Twoich odpowiedziach zaczyna być widać wzorzec, a nie tylko pojedyncze zdarzenie.",
   question:
     "Która część tego układu najbardziej przeczy temu, co próbujesz sobie o nim opowiedzieć?",
 };
@@ -64,31 +68,12 @@ function parseJsonContent(content) {
   }
 }
 
-function validateReportOrFallback(rawData, fallback) {
-  const result = ReportSchema.safeParse(rawData);
-  if (result.success) {
-    return result.data;
-  }
-  return fallback;
-}
-
-function validateCheckpointOrFallback(rawData, fallback) {
-  const result = CheckpointSchema.safeParse(rawData);
-  if (result.success) {
-    return result.data;
-  }
-  return fallback;
-}
-
 async function callOpenAI(systemPrompt, payload) {
   const completion = await openai.chat.completions.create({
     model: MODEL,
     temperature: 0.4,
     messages: [
-      {
-        role: "system",
-        content: systemPrompt,
-      },
+      { role: "system", content: systemPrompt },
       {
         role: "user",
         content: `<<<DANE_UZYTKOWNIKA>>>\n${JSON.stringify(payload)}\n<<<DANE_UZYTKOWNIKA>>>`,
@@ -107,7 +92,8 @@ exports.generatePreview = async (payload) => {
       payload
     );
 
-    return validateReportOrFallback(rawData, previewFallback);
+    const result = ReportSchema.safeParse(rawData);
+    return result.success ? result.data : previewFallback;
   } catch (error) {
     console.error("[OpenAI Service] Preview error:", error.message);
     return previewFallback;
@@ -121,7 +107,8 @@ exports.generateCheckpoint = async (payload) => {
       payload
     );
 
-    return validateCheckpointOrFallback(rawData, checkpointFallback);
+    const result = CheckpointSchema.safeParse(rawData);
+    return result.success ? result.data : checkpointFallback;
   } catch (error) {
     console.error("[OpenAI Service] Checkpoint error:", error.message);
     return checkpointFallback;

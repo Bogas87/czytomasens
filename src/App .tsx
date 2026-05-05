@@ -690,6 +690,36 @@ export default function App() {
     const token = params.get("token");
     const cancel = params.get("cancel") || params.get("cancelled") || params.get("canceled");
 
+    // Signed URL z maila: ?access_token=...&exp=...&sig=...
+    const accessToken = params.get("access_token");
+    const accessExp = params.get("exp");
+    const accessSig = params.get("sig");
+
+    if (accessToken && accessExp && accessSig) {
+      setBusy(true);
+      setStage("processing");
+      fetch(
+        `${API_BASE}/api/report/signed?token=${encodeURIComponent(accessToken)}&exp=${encodeURIComponent(accessExp)}&sig=${encodeURIComponent(accessSig)}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (!data?.ok || !data?.report) throw new Error(data?.message || "Raport niedostępny.");
+          setFullReport(data.report);
+          setSessionToken(accessToken);
+          setStage("paid");
+          setBusy(false);
+        })
+        .catch((e: any) => {
+          setBusy(false);
+          setStage("error");
+          setError(e?.message || "Link wygasł lub raport nie jest dostępny.");
+        })
+        .finally(() => {
+          window.history.replaceState({}, "", window.location.pathname);
+        });
+      return;
+    }
+
     if (cancel === "1" || cancel === "true") {
       setBusy(false);
       setStage("preview");
