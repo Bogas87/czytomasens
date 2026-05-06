@@ -5,7 +5,7 @@ function readApiBase(): string {
   try {
     const metaEnv = typeof import.meta !== "undefined" ? (import.meta as any)?.env : undefined;
     const value = metaEnv?.VITE_API_BASE;
-    return typeof value === "string" ? value.replace(/\/$/, "") : "";
+    return typeof value === "string" && value ? value.replace(/\/$/, "") : "https://czytomasens-production-47e0.up.railway.app";
   } catch {
     return "";
   }
