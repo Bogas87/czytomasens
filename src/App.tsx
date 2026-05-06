@@ -5,7 +5,7 @@ function readApiBase(): string {
   try {
     const metaEnv = typeof import.meta !== "undefined" ? (import.meta as any)?.env : undefined;
     const value = metaEnv?.VITE_API_BASE;
-    return typeof value === "string" && value ? value.replace(/\/$/, "") : "https://czytomasens-production-47e0.up.railway.app";
+    return typeof value === "string" ? value.replace(/\/$/, "") : "";
   } catch {
     return "";
   }
@@ -604,6 +604,66 @@ async function fetchPaidReport(token: string): Promise<FullReport> {
   throw new Error("Raport jest nadal przygotowywany. Sprawdź e-mail — wyślemy Ci bezpieczny link, gdy będzie gotowy.");
 }
 
+async function fetchPreviewFromAPI(
+  token: string,
+  path: EntryConfig,
+  answers: AnswerMap,
+  openText: string
+): Promise<Preview> {
+  const answersArr = Object.entries(answers).map(([qid, oid]) => {
+    const q = path.questions.find((x) => x.id === qid);
+    const opt = q?.options.find((o) => o.id === oid);
+    return { q: q?.text || qid, a: opt?.label || oid };
+  });
+
+  try {
+    const res = await fetch(`${API_BASE}/api/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token,
+        path: path.key,
+        mode: "soft",
+        answers: answersArr,
+        openText,
+        customDescription: openText,
+      }),
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (data?.crisis) throw new Error("__CRISIS__");
+
+    if (data?.ok && data?.preview) {
+      const p = data.preview;
+      const tension = typeof p.tensionPercent === "number" ? p.tensionPercent : 50;
+      const asymmetry = typeof p.driftPercent === "number" ? p.driftPercent : 50;
+      const change = typeof p.rebuildPercent === "number" ? p.rebuildPercent : 50;
+      const chance = Math.round(100 - tension * 0.5 - asymmetry * 0.3 + change * 0.2);
+      const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+
+      return {
+        chance: clamp(chance, 5, 95),
+        tension: clamp(tension, 5, 97),
+        asymmetry: clamp(asymmetry, 5, 97),
+        change: clamp(change, 5, 90),
+        tone: chance <= 30 ? "red" : chance <= 60 ? "yellow" : "green",
+        badge: p.subheadline || "Analiza relacji",
+        headline: p.headline || "Wynik gotowy.",
+        truth: p.previewLine || "",
+        mirror: p.sections?.[0]?.text || "",
+        summary: p.sections?.[1]?.text || p.sections?.[0]?.text || "",
+        paidTease: p.closing || "Pełny raport idzie znacznie głębiej.",
+      } as Preview;
+    }
+  } catch (e: any) {
+    if (e?.message === "__CRISIS__") throw e;
+    // fallback na lokalny buildPreview
+  }
+
+  return buildPreview(path, answers, openText);
+}
+
 function LogoBlock() {
   return (
     <div className="ctms-logo-wrap">
@@ -857,7 +917,18 @@ export default function App() {
     setError(null);
     try {
       const token = await ensureSession(path.key);
-      const previewData = buildPreview(path, answers, openText);
+      let previewData: Preview;
+      try {
+        previewData = await fetchPreviewFromAPI(token, path, answers, openText);
+      } catch (e: any) {
+        if (e?.message === "__CRISIS__") {
+          setStage("crisis");
+          setBusy(false);
+          return;
+        }
+        // fallback lokalny jeśli API padnie
+        previewData = buildPreview(path, answers, openText);
+      }
       setPreview(previewData);
       await updateSession({ token, path: path.key, answers, openText, preview: previewData, stage: "preview" });
       setStage("preview");
