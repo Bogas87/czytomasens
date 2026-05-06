@@ -1,8 +1,10 @@
-import express from "express";
-import cors from "cors";
-import Stripe from "stripe";
-import routes from "./api/routes.js";
-import { PrismaClient } from "@prisma/client";
+"use strict";
+
+const express = require("express");
+const cors = require("cors");
+const Stripe = require("stripe");
+const routes = require("./api/routes.js");
+const { PrismaClient } = require("@prisma/client");
 
 const app = express();
 const prisma = new PrismaClient();
@@ -90,7 +92,7 @@ app.post(
           });
 
           try {
-            const queueModule = await import("./jobs/queue.js");
+            const queueModule = require("./jobs/queue.js");
             if (typeof queueModule.enqueueReport === "function") {
               await queueModule.enqueueReport(token);
               console.log(`[WEBHOOK] Raport zakolejkowany dla tokenu: ${token}`);

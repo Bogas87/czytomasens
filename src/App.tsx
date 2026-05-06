@@ -5,10 +5,9 @@ function readApiBase(): string {
   try {
     const metaEnv = typeof import.meta !== "undefined" ? (import.meta as any)?.env : undefined;
     const value = metaEnv?.VITE_API_BASE;
-    return typeof value === "string" ? value.replace(/\/$/, "") : "";
-  } catch {
-    return "";
-  }
+    if (typeof value === "string" && value.startsWith("http")) return value.replace(/\/$/, "");
+  } catch {}
+  return "https://czytomasens-production-47e0.up.railway.app";
 }
 
 const API_BASE = readApiBase();
