@@ -71,3 +71,4 @@ model ProcessedStripeEvent {
 
   @@index([session_id])
 }
+interview_state Json?

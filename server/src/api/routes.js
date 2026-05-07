@@ -61,3 +61,7 @@ router.use((req, res) => {
 });
 
 module.exports = router;
+const interviewController = require("./interview.controller.js");
+router.post("/interview/start", interviewController.startInterview);
+router.post("/interview/next", interviewController.nextQuestion);
+router.post("/interview/finish", interviewController.finishInterview);
