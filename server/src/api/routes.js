@@ -3,7 +3,7 @@
 const { Router } = require("express");
 const analyzeController = require("./analyze.controller.js");
 const stripeController = require("./stripe.controller.js");
-const interviewController = require("./interview.controller.js");
+const interviewController = require("./interview_controller.js");
 
 const router = Router();
 
