@@ -28,9 +28,9 @@ type Stage =
   | "landing"
   | "consent"
   | "entry"
-  | "interview"
   | "questions"
   | "checkpoint"
+  | "interview"
   | "open_text"
   | "preview"
   | "processing"
@@ -95,7 +95,7 @@ type InterviewState = {
 
 type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string };
 
-const STORAGE_KEY = "ctms_premium_front_v6";
+const STORAGE_KEY = "ctms_premium_front_v7";
 
 const CONSENTS = [
   "Rozumiem, że to narzędzie ma charakter analityczny i rozwojowy, a nie medyczny, psychoterapeutyczny ani prawny.",
@@ -118,7 +118,7 @@ const LEGAL_CONTENT: Record<Exclude<LegalKey, null>, { title: string; body: stri
   },
   kontakt: {
     title: "Kontakt",
-    body: "Kontakt w sprawach produktu, płatności i dostępu do raportu: kontakt@czytomasens.pl. Ten blok możesz później podmienić na finalne dane firmy, adres e-mail oraz dane formalne do stopki i dokumentów prawnych.",
+    body: "Kontakt w sprawach produktu, płatności i dostępu do raportu: kontakt@czytomasens.pl.",
   },
 };
 
@@ -414,25 +414,58 @@ export default function App() {
     window.history.replaceState({}, "", window.location.pathname);
   };
 
-  const startInterview = async (key: EntryKey) => {
+  // ─── STARY FLOW: zamknięte pytania ─────────────────────────────────────────
+
+  const startPath = async (key: EntryKey) => {
     setBusy(true); setError(null);
     try {
       const data = await createSession(key);
       const token = data?.token || data?.sessionId || null;
       if (!token) throw new Error("Brak tokenu sesji.");
-      setSessionToken(token); setSelectedPath(key); setAnswers({}); setOpenText(""); setPreview(null); setFullReport(null);
-      try {
-        const res = await fetch(`${API_BASE}/api/interview/start`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, path: key, initialContext: "" }) });
-        const d = await res.json().catch(() => ({}));
-        if (d.ok && d.question) {
-          setInterviewState({ path: key, currentQuestion: d.question, currentLead: d.lead || "", currentObservation: d.observation || "", history: [], depth: 1, finished: false, exchangeIndex: 0 });
-          setInterviewAnswer(""); setStage("interview"); return;
-        }
-      } catch {}
-      setQuestionIndex(0); setStage("questions");
+      setSessionToken(token); setSelectedPath(key); setQuestionIndex(0); setAnswers({}); setOpenText(""); setPreview(null); setFullReport(null); setInterviewState(null);
+      setStage("questions");
     } catch (e: any) { setError(e?.message || "Nie udało się rozpocząć analizy."); setStage("error"); }
     finally { setBusy(false); }
   };
+
+  const answerQuestion = (qid: string, optionId: string) => {
+    const next = { ...answers, [qid]: optionId };
+    setAnswers(next);
+    if (!path) return;
+    if (questionIndex >= path.questions.length - 1) { setStage("checkpoint"); return; }
+    setQuestionIndex((v) => v + 1);
+  };
+
+  const answerCheckpoint = async (optionId: string) => {
+    if (!path) return;
+    const newAnswers = { ...answers, [`${path.key}_checkpoint`]: optionId };
+    setAnswers(newAnswers);
+
+    // Po checkpoincie — spróbuj uruchomić AI interview
+    if (sessionToken) {
+      setBusy(true);
+      try {
+        const res = await fetch(`${API_BASE}/api/interview/start`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: sessionToken, path: path.key, initialContext: "" }),
+        });
+        const d = await res.json().catch(() => ({}));
+        if (d.ok && d.question) {
+          setInterviewState({ path: path.key, currentQuestion: d.question, currentLead: d.lead || "", currentObservation: d.observation || "", history: [], depth: 1, finished: false, exchangeIndex: 0 });
+          setInterviewAnswer("");
+          setStage("interview");
+          setBusy(false);
+          return;
+        }
+      } catch {}
+      setBusy(false);
+    }
+    // Fallback jeśli AI niedostępne
+    setStage("open_text");
+  };
+
+  // ─── AI INTERVIEW ────────────────────────────────────────────────────────────
 
   const sendInterviewAnswer = async () => {
     if (!interviewState || !sessionToken || !interviewAnswer.trim()) return;
@@ -447,7 +480,8 @@ export default function App() {
       if (d.finished) {
         const transcript = updatedHistory.map((e) => `Pytanie: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n");
         setInterviewState({ ...interviewState, history: updatedHistory, finished: true });
-        setOpenText(transcript); setStage("open_text");
+        setOpenText(transcript);
+        setStage("open_text");
       } else {
         setInterviewState({ ...interviewState, history: updatedHistory, currentQuestion: d.question, currentLead: d.lead || "", currentObservation: d.observation || "", depth: d.depth, exchangeIndex: d.exchangeIndex });
         setInterviewAnswer("");
@@ -456,26 +490,15 @@ export default function App() {
     finally { setInterviewBusy(false); }
   };
 
-  const answerQuestion = (qid: string, optionId: string) => {
-    const next = { ...answers, [qid]: optionId };
-    setAnswers(next);
-    if (!path) return;
-    if (questionIndex >= path.questions.length - 1) { setStage("checkpoint"); return; }
-    setQuestionIndex((v) => v + 1);
-  };
-
-  const answerCheckpoint = (optionId: string) => {
-    if (!path) return;
-    setAnswers((prev) => ({ ...prev, [`${path.key}_checkpoint`]: optionId }));
-    setStage("open_text");
-  };
-
   const goBack = () => {
     setError(null);
-    if (stage === "interview") { setStage("entry"); return; }
     if (stage === "questions") { if (questionIndex === 0) { setStage("entry"); return; } setQuestionIndex((v) => Math.max(0, v - 1)); return; }
     if (stage === "checkpoint") { setStage("questions"); return; }
-    if (stage === "open_text") { if (interviewState && interviewState.history.length > 0) { setStage("interview"); return; } setStage("checkpoint"); return; }
+    if (stage === "interview") { setStage("checkpoint"); return; }
+    if (stage === "open_text") {
+      if (interviewState && interviewState.history.length > 0) { setStage("interview"); return; }
+      setStage("checkpoint"); return;
+    }
     if (stage === "preview") { setStage("open_text"); return; }
     if (stage === "consent") { setStage("landing"); return; }
     if (stage === "entry") setStage("consent");
@@ -517,9 +540,10 @@ export default function App() {
         {stage !== "landing" && <GhostButton onClick={resetAll}>Od początku</GhostButton>}
       </div>
 
-      <main className={`ctms-main ${["consent","interview","questions","checkpoint","open_text","preview","paid","error","crisis"].includes(stage) ? "narrow" : ""}`}>
+      <main className={`ctms-main ${["consent","questions","checkpoint","interview","open_text","preview","paid","error","crisis"].includes(stage) ? "narrow" : ""}`}>
         <AnimatePresence mode="wait">
 
+          {/* LANDING */}
           {stage === "landing" && (
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <section className="hero-grid">
@@ -575,6 +599,7 @@ export default function App() {
             </motion.div>
           )}
 
+          {/* CONSENT */}
           {stage === "consent" && (
             <motion.div key="consent" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel consent-panel">
@@ -597,6 +622,7 @@ export default function App() {
             </motion.div>
           )}
 
+          {/* ENTRY */}
           {stage === "entry" && (
             <motion.div key="entry" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head">
@@ -615,7 +641,7 @@ export default function App() {
                     <div className="entry-subtitle">{entry.subtitle}</div>
                     <div className="entry-intro">{entry.intro}</div>
                     <div className="entry-action">
-                      <PrimaryButton onClick={() => startInterview(entry.key)}>{busy ? "Przygotowuję..." : "Wejdź głębiej"}</PrimaryButton>
+                      <PrimaryButton onClick={() => startPath(entry.key)}>{busy ? "Przygotowuję..." : "Wejdź głębiej"}</PrimaryButton>
                     </div>
                   </Glass>
                 ))}
@@ -623,39 +649,7 @@ export default function App() {
             </motion.div>
           )}
 
-          {stage === "interview" && interviewState && (
-            <motion.div key={`interview-${interviewState.exchangeIndex}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="section-head compact">
-                <div className="eyebrow">{(ENTRY_CONFIGS.find((x) => x.key === selectedPath)?.title || "").toUpperCase()}</div>
-                <div className="progress-wrap">
-                  <span>Głębokość {interviewState.depth}/5</span>
-                  <div className="progress-track"><div className="progress-fill" style={{ width: `${(interviewState.depth / 5) * 100}%` }} /></div>
-                </div>
-              </div>
-              <Glass className="question-panel">
-                <div className="question-copy">
-                  {interviewState.currentLead && <div className="question-lead">{interviewState.currentLead}</div>}
-                  <h3>{interviewState.currentQuestion}</h3>
-                  {interviewState.currentObservation && interviewState.history.length > 0 && (
-                    <div style={{ fontSize: "14px", color: BRAND.muted, marginTop: "12px", fontStyle: "italic", lineHeight: 1.6 }}>{interviewState.currentObservation}</div>
-                  )}
-                </div>
-                <textarea className="ctms-textarea" value={interviewAnswer} onChange={(e) => setInterviewAnswer(e.target.value)} placeholder="Odpowiedz konkretnie. System idzie głębiej na podstawie tego co napiszesz — nie ma tu oceniania." maxLength={2000} />
-                <div className="text-meta">
-                  <div>{interviewState.history.length > 0 ? `Wymiana ${interviewState.history.length + 1}` : "Pierwsze pytanie"}</div>
-                  <div>{interviewAnswer.length}/2000</div>
-                </div>
-                {error && <div className="error-line" style={{ marginTop: "12px" }}>{error}</div>}
-                <div className="section-actions">
-                  <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={sendInterviewAnswer} disabled={interviewBusy || interviewAnswer.trim().length < 10}>
-                    {interviewBusy ? "Analizuję..." : "Dalej →"}
-                  </PrimaryButton>
-                </div>
-              </Glass>
-            </motion.div>
-          )}
-
+          {/* QUESTIONS — zamknięte */}
           {stage === "questions" && path && currentQuestion && (
             <motion.div key={currentQuestion.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
@@ -680,6 +674,7 @@ export default function App() {
             </motion.div>
           )}
 
+          {/* CHECKPOINT */}
           {stage === "checkpoint" && path && (
             <motion.div key={`${path.key}-checkpoint`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel">
@@ -687,7 +682,7 @@ export default function App() {
                 <div className="question-copy"><h3>{path.checkpoint.text}</h3></div>
                 <div className="answer-grid">
                   {path.checkpoint.options.map((opt) => (
-                    <button key={opt.id} className="answer-card" onClick={() => answerCheckpoint(opt.id)}>{opt.label}</button>
+                    <button key={opt.id} className="answer-card" onClick={() => answerCheckpoint(opt.id)}>{busy ? "Ładuję..." : opt.label}</button>
                   ))}
                 </div>
                 <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton></div>
@@ -695,6 +690,41 @@ export default function App() {
             </motion.div>
           )}
 
+          {/* AI INTERVIEW — otwarte pytania dynamiczne */}
+          {stage === "interview" && interviewState && (
+            <motion.div key={`interview-${interviewState.exchangeIndex}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="section-head compact">
+                <div className="eyebrow">{(ENTRY_CONFIGS.find((x) => x.key === selectedPath)?.title || "").toUpperCase()}</div>
+                <div className="progress-wrap">
+                  <span>Głębokość {interviewState.depth}/5</span>
+                  <div className="progress-track"><div className="progress-fill" style={{ width: `${(interviewState.depth / 5) * 100}%` }} /></div>
+                </div>
+              </div>
+              <Glass className="question-panel">
+                <div className="question-copy">
+                  {interviewState.currentLead && <div className="question-lead">{interviewState.currentLead}</div>}
+                  <h3>{interviewState.currentQuestion}</h3>
+                  {interviewState.currentObservation && interviewState.history.length > 0 && (
+                    <div style={{ fontSize: "14px", color: BRAND.muted, marginTop: "12px", fontStyle: "italic", lineHeight: 1.6 }}>{interviewState.currentObservation}</div>
+                  )}
+                </div>
+                <textarea className="ctms-textarea" value={interviewAnswer} onChange={(e) => setInterviewAnswer(e.target.value)} placeholder="Odpowiedz konkretnie. System idzie głębiej na podstawie tego co napiszesz." maxLength={2000} />
+                <div className="text-meta">
+                  <div>{interviewState.history.length > 0 ? `Wymiana ${interviewState.history.length + 1}` : "Pierwsze pytanie"}</div>
+                  <div>{interviewAnswer.length}/2000</div>
+                </div>
+                {error && <div className="error-line" style={{ marginTop: "12px" }}>{error}</div>}
+                <div className="section-actions">
+                  <GhostButton onClick={goBack}>Wróć</GhostButton>
+                  <PrimaryButton onClick={sendInterviewAnswer} disabled={interviewBusy || interviewAnswer.trim().length < 10}>
+                    {interviewBusy ? "Analizuję..." : "Dalej →"}
+                  </PrimaryButton>
+                </div>
+              </Glass>
+            </motion.div>
+          )}
+
+          {/* OPEN TEXT */}
           {stage === "open_text" && path && (
             <motion.div key={`${path.key}-open`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel">
@@ -702,7 +732,7 @@ export default function App() {
                 <div className="question-copy">
                   <h3>{interviewState?.finished ? "Dodaj coś czego nie powiedziałeś/powiedziałaś — albo potwierdź że to jest wszystko." : path.openPrompt}</h3>
                 </div>
-                <textarea className="ctms-textarea" value={openText} onChange={(e) => setOpenText(e.target.value)} placeholder="Napisz tak jak byś mówił/mówiła do kogoś komu ufasz całkowicie. Im bardziej szczery/szczera — tym mocniejsza analiza. Nie ma tu oceniania." maxLength={3000} />
+                <textarea className="ctms-textarea" value={openText} onChange={(e) => setOpenText(e.target.value)} placeholder="Napisz tak jak byś mówił/mówiła do kogoś komu ufasz całkowicie. Im bardziej szczery/szczera — tym mocniejsza analiza." maxLength={3000} />
                 <div className="text-meta">
                   <div>To jest rdzeń analizy. Napisz co naprawdę czujesz, nie co powinieneś/powinnaś czuć.</div>
                   <div>{openText.length}/3000</div>
@@ -715,6 +745,7 @@ export default function App() {
             </motion.div>
           )}
 
+          {/* CRISIS */}
           {stage === "crisis" && (
             <motion.div key="crisis" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel crisis-panel">
@@ -731,6 +762,7 @@ export default function App() {
             </motion.div>
           )}
 
+          {/* PREVIEW */}
           {stage === "preview" && preview && (
             <motion.div key="preview" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="preview-card">
@@ -766,12 +798,14 @@ export default function App() {
             </motion.div>
           )}
 
+          {/* PROCESSING */}
           {stage === "processing" && (
             <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <div className="loading-wrap"><Glass className="loading-panel"><div className="spinner" /><h2>Przetwarzanie płatności i raportu…</h2><p>Jeśli to trwa chwilę, nie zamykaj karty. System sprawdza status płatności i raportu.</p></Glass></div>
             </motion.div>
           )}
 
+          {/* PAID */}
           {stage === "paid" && fullReport && (
             <motion.div key="paid" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="preview-card">
@@ -800,6 +834,7 @@ export default function App() {
             </motion.div>
           )}
 
+          {/* ERROR */}
           {stage === "error" && (
             <motion.div key="error" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel">
