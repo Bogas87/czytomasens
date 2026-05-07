@@ -36,6 +36,7 @@ model Session {
   patterns                 Json          @default("[]")
   preview_report           Json?
   full_report              Json?
+  interview_state          Json?
 
   payment_status           PaymentStatus @default(PENDING)
   report_status            ReportStatus  @default(NONE)
@@ -71,4 +72,3 @@ model ProcessedStripeEvent {
 
   @@index([session_id])
 }
-interview_state Json?
