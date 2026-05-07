@@ -3,7 +3,6 @@
 const { Router } = require("express");
 const analyzeController = require("./analyze.controller.js");
 const stripeController = require("./stripe.controller.js");
-const interviewController = require("./interview.controller.js");
 
 const router = Router();
 
@@ -30,10 +29,6 @@ router.post("/analyze/checkpoint", analyzeController.generateCheckpoint);
 
 router.post("/create-checkout", stripeController.createCheckout);
 router.post("/stripe/checkout", stripeController.createCheckout);
-
-router.post("/interview/start", interviewController.startInterview);
-router.post("/interview/next", interviewController.nextQuestion);
-router.post("/interview/finish", interviewController.finishInterview);
 
 router.get("/report/signed", analyzeController.getSignedReport);
 router.get("/report/:token", analyzeController.getReport);
