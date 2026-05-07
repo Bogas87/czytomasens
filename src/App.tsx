@@ -116,353 +116,353 @@ const LEGAL_CONTENT: Record<Exclude<LegalKey, null>, { title: string; body: stri
 const ENTRY_CONFIGS: EntryConfig[] = [
   {
     key: "betrayal",
-    title: "Po zdradzie albo utracie zaufania",
-    subtitle: "Nie chodzi już tylko o fakt. Chodzi o to, co ta historia zrobiła z poczuciem bezpieczeństwa.",
-    intro: "Ta ścieżka sprawdza nie tylko ranę, ale też to, czy po niej pojawiła się odpowiedzialność, przejrzystość i realna odbudowa.",
+    title: "Po zdradzie albo kłamstwie",
+    subtitle: "Nie chodzi już o to co się stało. Chodzi o to, co to zrobiło z Tobą i z tym co między Wami.",
+    intro: "System sprawdza czy to co wróciło to realna zmiana, czy tylko cisza po burzy.",
     questions: [
       {
         id: "b1",
-        lead: "Po pęknięciu liczą się nie słowa, tylko sposób dźwigania szkody.",
-        text: "Czy druga strona naprawdę wzięła odpowiedzialność, czy raczej próbowała rozmyć winę?",
+        lead: "Odpowiedzialność to nie przeprosiny. To zmiana zachowania.",
+        text: "Czy ta osoba naprawdę wzięła odpowiedzialność — nie tylko słownie, ale w tym co robi od tamtego czasu?",
         options: [
-          { id: "a", label: "Rozmywała winę i mieszała odpowiedzialność", score: 3 },
-          { id: "b", label: "Brała odpowiedzialność, ale niespójnie", score: 2 },
-          { id: "c", label: "Wzięła ją realnie i konkretnie", score: 0 },
+          { id: "a", label: "Głównie słowa, zachowanie się nie zmieniło", score: 3 },
+          { id: "b", label: "Coś się zmieniło, ale niekonsekwentnie", score: 2 },
+          { id: "c", label: "Tak, widać realną zmianę", score: 0 },
         ],
       },
       {
         id: "b2",
-        lead: "Zaufanie nie wraca od deklaracji. Wraca od przewidywalności.",
-        text: "Czy po tym wydarzeniu pojawiła się większa przejrzystość, czy nadal żyjesz w napięciu i domysłach?",
+        lead: "Nieufność, którą sam w sobie budujesz, kosztuje Cię więcej niż ją.",
+        text: "Czy dziś żyjesz w stałym trybie sprawdzania — telefon, słowa, godziny, spójność historii?",
         options: [
-          { id: "a", label: "Nadal żyję głównie w napięciu", score: 3 },
-          { id: "b", label: "Trochę się poprawiło, ale nie do końca", score: 2 },
-          { id: "c", label: "Tak, zrobiło się dużo jaśniej", score: 0 },
+          { id: "a", label: "Tak, to stało się moim normalem", score: 3 },
+          { id: "b", label: "Czasem wpadam w ten tryb", score: 2 },
+          { id: "c", label: "Nie, to już za mną", score: 0 },
         ],
       },
       {
         id: "b3",
-        lead: "Ciało zwykle wie szybciej niż głowa.",
-        text: "Czy mimo prób naprawy nadal łapiesz się na czujności, kontroli albo ciągłym sprawdzaniu?",
+        lead: "Kiedy wracasz do bólu, jego reakcja mówi wszystko.",
+        text: "Gdy wracasz do tego co się stało, ta osoba jest obecna i cierpliwa — czy daje Ci do zrozumienia, że już powinieneś/powinnaś przestać?",
         options: [
-          { id: "a", label: "Tak, bardzo mocno", score: 3 },
-          { id: "b", label: "Czasem tak", score: 2 },
-          { id: "c", label: "Nie, to prawie już nie wraca", score: 0 },
+          { id: "a", label: "Głównie ucina temat albo się irytuje", score: 3 },
+          { id: "b", label: "Bywa różnie, zależy od dnia", score: 2 },
+          { id: "c", label: "Jest cierpliwa i obecna", score: 0 },
         ],
       },
       {
         id: "b4",
-        lead: "Tu wychodzi prawda o naprawie.",
-        text: "Gdy wracasz do bólu, druga strona jest obecna i cierpliwa, czy bardziej zirytowana, że temat jeszcze żyje?",
+        lead: "To jest pytanie, którego się boisz zadać wprost.",
+        text: "Czy gdybyś zapytał/zapytała dzisiaj wprost: 'Czy mam się bać, że to się powtórzy?' — byłbyś/byłabyś w stanie uwierzyć w odpowiedź?",
         options: [
-          { id: "a", label: "Raczej zirytowana albo uciekająca", score: 3 },
-          { id: "b", label: "Bywa różnie", score: 2 },
-          { id: "c", label: "Jest obecna i cierpliwa", score: 0 },
+          { id: "a", label: "Nie, i to mówi wszystko", score: 3 },
+          { id: "b", label: "Chciałbym/chciałabym wierzyć, ale nie jestem pewna/pewny", score: 2 },
+          { id: "c", label: "Tak, byłbym/byłabym w stanie", score: 0 },
         ],
       },
     ],
     checkpoint: {
-      title: "Checkpoint",
-      text: "Co dziś bardziej trzyma tę relację: poczucie bezpieczeństwa czy lęk przed stratą i nadzieja, że jeszcze się ułoży?",
+      title: "Jedno pytanie bez ucieczki",
+      text: "Co dziś bardziej trzyma Cię przy tej osobie: poczucie że odbudowujecie coś realnego, czy strach że jak odejdziesz to ta historia nie będzie miała sensu?",
       options: [
-        { id: "a", label: "Bardziej lęk i nadzieja", score: 3 },
-        { id: "b", label: "Jedno i drugie", score: 2 },
-        { id: "c", label: "Raczej bezpieczeństwo", score: 0 },
+        { id: "a", label: "Bardziej strach przed stratą sensu", score: 3 },
+        { id: "b", label: "Jedno i drugie walczy w środku", score: 2 },
+        { id: "c", label: "Naprawdę odbudowujemy coś realnego", score: 0 },
       ],
     },
-    openPrompt: "Napisz bez wygładzania: co dokładnie pękło po utracie zaufania i po czym poznajesz, że do dziś nie wróciło w pełni?",
+    openPrompt: "Napisz bez cenzury: co dokładnie pękło po tym co się stało i po czym dziś poznajesz, że zaufanie albo nie wróciło — albo wróciło pozornie?",
   },
   {
     key: "uncertain",
-    title: "Nie wiem, na czym stoję",
-    subtitle: "Nadzieja miesza się z niejasnością, a Ty ciągle próbujesz to jakoś sobie wytłumaczyć.",
-    intro: "Ta ścieżka sprawdza, czy Twoja niepewność wynika z realnej złożoności, czy z długiego oswajania chaosu.",
+    title: "Nie wiem na czym stoję",
+    subtitle: "Nadzieja i niepewność wymieniają się co kilka dni. Nie wiesz czy to złożoność czy chaos.",
+    intro: "System sprawdza czy Twoja niepewność wynika z sytuacji czy z tego, że ktoś celowo nie daje Ci jasności.",
     questions: [
       {
         id: "u1",
-        lead: "Gdy coś jest ciągle niejasne, zwykle komuś to służy.",
-        text: "Czy często masz wrażenie, że nie do końca wiesz, co właściwie dla tej osoby znaczysz?",
+        lead: "Niejasność, która trwa miesiącami, rzadko jest przypadkowa.",
+        text: "Czy ta osoba konkretnie i wprost określiła czym dla niej jesteście — czy raczej temat jakoś zawsze się rozmywa?",
         options: [
-          { id: "a", label: "Tak, bardzo często", score: 3 },
-          { id: "b", label: "Czasem", score: 2 },
-          { id: "c", label: "Nie, to jest raczej jasne", score: 0 },
+          { id: "a", label: "Rozmywa się albo w ogóle nie poruszamy tego tematu", score: 3 },
+          { id: "b", label: "Coś mówi, ale nieprecyzyjnie", score: 2 },
+          { id: "c", label: "Tak, jest jasność co do tego co jest między nami", score: 0 },
         ],
       },
       {
         id: "u2",
-        lead: "Słowa i czyny rzadko rozjeżdżają się przez przypadek miesiącami.",
-        text: "Czy druga strona mówi rzeczy dające nadzieję, ale jej zachowanie nie idzie za tym?",
+        lead: "Ktoś kto chce — robi. Reszta to tłumaczenia.",
+        text: "Jak wygląda zaangażowanie tej osoby gdy NIE TY inicjujesz kontakt, plan, bliskość?",
         options: [
-          { id: "a", label: "Tak, dokładnie tak to działa", score: 3 },
-          { id: "b", label: "Bywa różnie", score: 2 },
-          { id: "c", label: "Nie, jest raczej spójność", score: 0 },
+          { id: "a", label: "Prawie nic się nie dzieje — to ja ciągnę", score: 3 },
+          { id: "b", label: "Coś się pojawia, ale rzadziej i słabiej", score: 2 },
+          { id: "c", label: "Jest aktywna z własnej inicjatywy", score: 0 },
         ],
       },
       {
         id: "u3",
-        lead: "Czyjaś uwaga pojawiająca się głównie przy Twoim wycofaniu też coś mówi.",
-        text: "Czy druga strona daje Ci uwagę głównie wtedy, gdy zaczynasz się wycofywać?",
+        lead: "Uwaga pojawiająca się głównie wtedy gdy zaczynasz się wycofywać to nie miłość. To refleks.",
+        text: "Czy ta osoba jest bardziej obecna i zaangażowana wtedy, gdy wyczuje że możesz odejść?",
         options: [
-          { id: "a", label: "Tak, dokładnie tak", score: 3 },
-          { id: "b", label: "Czasem tak", score: 2 },
-          { id: "c", label: "Nie, tego nie widzę", score: 0 },
+          { id: "a", label: "Tak, wtedy wszystko się ożywia na chwilę", score: 3 },
+          { id: "b", label: "Chyba tak, ale nie jestem pewna/pewny", score: 2 },
+          { id: "c", label: "Nie, poziom jest raczej stały", score: 0 },
         ],
       },
       {
         id: "u4",
-        lead: "Kto chce jasno, zwykle nie boi się jasności.",
-        text: "Gdy próbujesz doprecyzować, czym to właściwie jest, druga strona wchodzi w konkret czy rozmywa temat?",
+        lead: "Zrób ten eksperyment w głowie.",
+        text: "Gdybyś dziś przez dwa tygodnie przestał/przestała pisać pierwszy — co by się stało z kontaktem?",
         options: [
-          { id: "a", label: "Rozmywa temat", score: 3 },
-          { id: "b", label: "Trochę dopowiada, ale bez konkretu", score: 2 },
-          { id: "c", label: "Wchodzi w konkret", score: 0 },
+          { id: "a", label: "Prawdopodobnie zamarłby lub prawie zamarł", score: 3 },
+          { id: "b", label: "Ona/on by się odezwała/odezwał, ale nie wiem kiedy", score: 2 },
+          { id: "c", label: "Na pewno by się odezwała/odezwał szybko", score: 0 },
         ],
       },
     ],
     checkpoint: {
-      title: "Checkpoint",
-      text: "Czy Twoja niepewność wynika bardziej z realnej złożoności sytuacji, czy z tego, że druga strona daje Ci za mało jasności?",
+      title: "Jedno pytanie bez ucieczki",
+      text: "Gdybyś usunął/usunęła z równania tęsknotę, przyzwyczajenie i lęk przed samotnością — czy nadal chciałbyś/chciałabyś tej osoby?",
       options: [
-        { id: "a", label: "Raczej z za małej jasności", score: 3 },
-        { id: "b", label: "Jedno i drugie", score: 2 },
-        { id: "c", label: "Raczej z samej złożoności", score: 0 },
+        { id: "a", label: "Szczerze? Nie wiem. Może nie.", score: 3 },
+        { id: "b", label: "Myślę że tak, ale mam wątpliwości", score: 2 },
+        { id: "c", label: "Tak, niezależnie od tych rzeczy", score: 0 },
       ],
     },
-    openPrompt: "Napisz bez upiększania: co dokładnie Ci tu nie pasuje, mimo że może jeszcze nie umiesz tego nazwać jednym zdaniem?",
+    openPrompt: "Napisz bez upiększania: co konkretnie od miesięcy nie daje Ci jasności i dlaczego mimo tego wciąż jesteś w tym miejscu?",
   },
   {
     key: "stagnation",
-    title: "To trwa, ale coraz mniej tam życia",
-    subtitle: "Brak wielkich awantur nie musi oznaczać spokoju. Czasem oznacza wygasanie.",
-    intro: "Ta ścieżka bada, czy między Wami jest cisza stabilna, czy cisza obojętności.",
+    title: "To trwa ale czegoś już w tym nie ma",
+    subtitle: "Brak awantur nie jest dowodem spokoju. Czasem jest dowodem że już nic nie ma sensu kłócić.",
+    intro: "System sprawdza czy jesteście w spokojnej fazie czy po prostu w ciszy obojętności.",
     questions: [
       {
         id: "s1",
-        lead: "Relacja gaśnie najpierw w drobiazgach.",
-        text: "Czy coraz częściej czujesz, że jesteście obok siebie, ale nie naprawdę ze sobą?",
+        lead: "Relacja gaśnie zanim ktokolwiek to powie na głos.",
+        text: "Czy coraz częściej jesteście razem fizycznie, ale czujesz że naprawdę jesteś sam/sama?",
         options: [
-          { id: "a", label: "Tak, dokładnie tak", score: 3 },
-          { id: "b", label: "Czasem", score: 2 },
-          { id: "c", label: "Nie, nadal czuję połączenie", score: 0 },
+          { id: "a", label: "Tak, i to jest coraz bardziej normalne", score: 3 },
+          { id: "b", label: "Czasami to czuję", score: 2 },
+          { id: "c", label: "Nie, czuję obecność i kontakt", score: 0 },
         ],
       },
       {
         id: "s2",
-        lead: "Gdy jedna strona ciągnie całość, to już nie jest równowaga.",
-        text: "Czy masz poczucie, że to Ty częściej inicjujesz rozmowę, bliskość albo ratowanie atmosfery?",
+        lead: "Kiedy ostatnio ta osoba zrobiła coś dla Was z własnej inicjatywy?",
+        text: "Czy masz poczucie że to głównie Ty trzymasz tę relację przy życiu — emocjami, inicjatywą, ratowaniem atmosfery?",
         options: [
-          { id: "a", label: "Tak, głównie ja", score: 3 },
-          { id: "b", label: "Po części", score: 2 },
-          { id: "c", label: "Nie, to jest raczej obustronne", score: 0 },
+          { id: "a", label: "Tak, bez mojego wysiłku to by padło", score: 3 },
+          { id: "b", label: "Częściowo tak", score: 2 },
+          { id: "c", label: "Nie, jest obustronne", score: 0 },
         ],
       },
       {
         id: "s3",
-        lead: "Długie usprawiedliwianie bywa sposobem na niepatrzenie prawdzie w oczy.",
-        text: "Czy coraz częściej tłumaczysz brak zaangażowania drugiej strony stresem albo trudnym czasem?",
+        lead: "Ile razy w tym miesiącu pomyślałeś/pomyślałaś 'to chyba jest już koniec'?",
+        text: "Czy myśl o odejściu jest coraz mniej przerażająca, a coraz bardziej — ulżyłoby?",
         options: [
-          { id: "a", label: "Tak, często to robię", score: 3 },
-          { id: "b", label: "Czasem", score: 2 },
-          { id: "c", label: "Nie, widzę to dość jasno", score: 0 },
+          { id: "a", label: "Tak, coraz częściej myślę o uldze", score: 3 },
+          { id: "b", label: "Taka myśl się pojawia, ale nie dominuje", score: 2 },
+          { id: "c", label: "Nie, ta myśl mnie przeraża", score: 0 },
         ],
       },
       {
         id: "s4",
-        lead: "Prawda często wychodzi wtedy, gdy przestajesz ciągnąć wszystko sam.",
-        text: "Gdybyś dziś przestał inicjować kontakt i ratować atmosferę, ta relacja dalej miałaby własny napęd?",
+        lead: "Odpowiedz na to pytanie tak szybko jak się da.",
+        text: "Gdybyś jutro dowiedział/dowiedziała się że ta osoba odchodzi — pierwsza emocja to byłby ból czy ulga?",
         options: [
-          { id: "a", label: "Nie, raczej by siadła", score: 3 },
-          { id: "b", label: "Nie wiem, mam wątpliwości", score: 2 },
-          { id: "c", label: "Tak, myślę że by się utrzymała", score: 0 },
+          { id: "a", label: "Szczerość podpowiada: ulga, albo mieszanina", score: 3 },
+          { id: "b", label: "Nie wiem, może jedno i drugie", score: 2 },
+          { id: "c", label: "Ból. Zdecydowanie ból.", score: 0 },
         ],
       },
     ],
     checkpoint: {
-      title: "Checkpoint",
-      text: "Czy dziś bardziej czujesz zmęczenie tą relacją czy realną chęć budowania jej dalej?",
+      title: "Jedno pytanie bez ucieczki",
+      text: "Co konkretnie chciałbyś/chciałabyś żeby wróciło między Wami — i czy ta osoba wie o tym i robi cokolwiek żeby to zmienić?",
       options: [
-        { id: "a", label: "Bardziej zmęczenie", score: 3 },
-        { id: "b", label: "Jedno i drugie", score: 2 },
-        { id: "c", label: "Raczej realną chęć budowania", score: 0 },
+        { id: "a", label: "Wie albo powinna wiedzieć — i nic nie robi", score: 3 },
+        { id: "b", label: "Coś próbuje, ale za mało", score: 2 },
+        { id: "c", label: "Tak, naprawdę pracujemy nad tym razem", score: 0 },
       ],
     },
-    openPrompt: "Napisz szczerze: co dokładnie zgasło między Wami i od kiedy coraz trudniej Ci udawać, że to tylko chwilowe?",
+    openPrompt: "Napisz uczciwie: co dokładnie zniknęło między Wami i kiedy przestałeś/przestałaś wierzyć że samo wróci?",
   },
   {
     key: "returning",
-    title: "Po rozstaniu nie wiem, czy wracać",
-    subtitle: "Tęsknota potrafi udawać sens. System oddzieli brak domknięcia od realnej szansy.",
-    intro: "Ta ścieżka odróżnia realny sens powrotu od głodu kontaktu, samotności i przywiązania.",
+    title: "Rozstaliśmy się i nie wiem czy wracać",
+    subtitle: "Tęsknota potrafi udawać miłość. Lęk przed samotnością potrafi udawać sens.",
+    intro: "System odróżni czy chcesz tej osoby, czy chcesz żeby bało się skończyć.",
     questions: [
       {
         id: "r1",
-        lead: "Tęsknić można za człowiekiem, ale też za ulgą po jego powrocie.",
-        text: "Czy bardziej tęsknisz za tą osobą, czy za poczuciem, że nie jesteś sam i coś jeszcze może wrócić?",
+        lead: "Tęsknić można za człowiekiem. Tęsknić można za poczuciem że się jest potrzebnym.",
+        text: "Gdy wyobrażasz sobie powrót — co dokładnie widzisz? Bycie z tą osobą, czy koniec niepewności i samotności?",
         options: [
-          { id: "a", label: "Bardziej za ulgą i możliwością powrotu", score: 3 },
+          { id: "a", label: "Szczerość mówi: bardziej koniec samotności", score: 3 },
           { id: "b", label: "Trudno to oddzielić", score: 2 },
-          { id: "c", label: "Naprawdę bardziej za tą osobą", score: 0 },
+          { id: "c", label: "Naprawdę widzę tę osobę, nie ulgę", score: 0 },
         ],
       },
       {
         id: "r2",
-        lead: "To, dlaczego się skończyło, dalej ma znaczenie.",
-        text: "Czy powody rozstania były czymś głębokim i powtarzalnym, czy raczej wynikały z jednego kryzysu?",
+        lead: "Powody rozstania są prawdą o relacji. Nie znikają przez tęsknotę.",
+        text: "To przez co się rozstaliście — czy to były jednorazowe okoliczności, czy głębszy wzorzec który wracał?",
         options: [
-          { id: "a", label: "Były głębokie i powtarzalne", score: 3 },
-          { id: "b", label: "Po trochu jedno i drugie", score: 2 },
-          { id: "c", label: "Raczej pojedynczy kryzys", score: 0 },
+          { id: "a", label: "Głębszy wzorzec, wracał wielokrotnie", score: 3 },
+          { id: "b", label: "Trochę jednego i drugiego", score: 2 },
+          { id: "c", label: "Raczej jednorazowy kryzys lub okoliczności", score: 0 },
         ],
       },
       {
         id: "r3",
-        lead: "Rozłąka lubi wygładzać to, co wcześniej bolało.",
-        text: "Czy zauważasz, że po czasie pamiętasz głównie dobre momenty, a słabiej czujesz to, co Cię niszczyło?",
+        lead: "Odległość robi filtr — przepuszcza tylko to co przyjemne.",
+        text: "Gdy myślisz o tej osobie teraz — pamiętasz głównie dobre, czy widzisz też wyraźnie to co Cię niszczyło?",
         options: [
-          { id: "a", label: "Tak, mam tendencję do idealizowania", score: 3 },
-          { id: "b", label: "Trochę tak", score: 2 },
-          { id: "c", label: "Nie, widzę całość dość jasno", score: 0 },
+          { id: "a", label: "Głównie dobre — złe jest rozmyte albo usprawiedliwiane", score: 3 },
+          { id: "b", label: "Widzę trochę jedno i drugie", score: 2 },
+          { id: "c", label: "Widzę całość jasno, włącznie z tym co bolało", score: 0 },
         ],
       },
       {
         id: "r4",
-        lead: "Powrót bez nowych zasad zwykle kończy się starym układem.",
-        text: "Gdyby doszło do powrotu, czy wiesz jasno, czego już więcej nie chcesz powtórzyć?",
+        lead: "To jest kluczowe pytanie przed powrotem.",
+        text: "Czy wiesz co konkretnie musiałoby się zmienić żeby powrót miał sens — i czy ta osoba wie to samo i jest gotowa to zmienić?",
         options: [
-          { id: "a", label: "Nie, bardziej chcę wrócić niż mam jasność", score: 3 },
-          { id: "b", label: "Częściowo", score: 2 },
-          { id: "c", label: "Tak, mam to dość jasno", score: 0 },
+          { id: "a", label: "Nie wiem co by musiało się zmienić. Albo wiem, ale tamta osoba nie.", score: 3 },
+          { id: "b", label: "Coś wiem, ale nie jesteśmy zgodni/zgodne", score: 2 },
+          { id: "c", label: "Tak, oboje wiemy i oboje jesteśmy gotowi", score: 0 },
         ],
       },
     ],
     checkpoint: {
-      title: "Checkpoint",
-      text: "Gdybyś miał odjąć samotność, tęsknotę i lęk przed ostatecznością — czy nadal równie mocno chciałbyś wrócić?",
+      title: "Jedno pytanie bez ucieczki",
+      text: "Gdybyś wiedział/wiedziała że ta osoba już ułożyła sobie życie z kimś innym i nie wróci — jak długo zajęłoby Ci dojście do siebie?",
       options: [
-        { id: "a", label: "Nie, wtedy to byłoby słabsze", score: 3 },
-        { id: "b", label: "Nie wiem", score: 2 },
-        { id: "c", label: "Tak, nadal mocno", score: 0 },
+        { id: "a", label: "Długo. Bardzo długo. To by mnie złamało.", score: 3 },
+        { id: "b", label: "Byłoby ciężko, ale bym dał/dała radę", score: 2 },
+        { id: "c", label: "Byłoby smutno, ale bym to przyjął/przyjęła", score: 0 },
       ],
     },
-    openPrompt: "Napisz uczciwie: za czym naprawdę tęsknisz po tym rozstaniu i co w Tobie najmocniej pcha Cię dziś w stronę powrotu?",
+    openPrompt: "Napisz uczciwie: co naprawdę trzyma Cię przy myśleniu o powrocie i czego najbardziej się boisz jeśli nie wrócisz?",
   },
   {
     key: "triangle",
     title: "Jest ktoś trzeci i wszystko się miesza",
-    subtitle: "Pojawienie się innej osoby nie zawsze jest przyczyną. Czasem obnaża to, czego brakowało wcześniej.",
-    intro: "Ta ścieżka sprawdza, czy nowa osoba jest impulsem, ucieczką, czy sygnałem głębszego rozpadu obecnej relacji.",
+    subtitle: "Nowa osoba obnaża to czego nie było — albo daje pretekst do ucieczki. Jedno i drugie wygląda tak samo z zewnątrz.",
+    intro: "System sprawdza czy nowa osoba jest prawdziwą odpowiedzią czy tylko pytaniem które zadajesz sobie od dawna.",
     questions: [
       {
         id: "t1",
-        lead: "To rzadko bierze się znikąd.",
-        text: "Czy pojawienie się tej osoby uderzyło Cię dlatego, że w obecnej relacji czegoś od dawna brakowało?",
+        lead: "Gdyby w obecnej relacji było dobrze, ta osoba by się tak nie pojawiła.",
+        text: "Czy pojawienie się tej trzeciej osoby odsłoniło coś czego Ci w obecnej relacji brakowało od dawna?",
         options: [
-          { id: "a", label: "Tak, bardzo to odsłoniło", score: 3 },
-          { id: "b", label: "Po części", score: 2 },
-          { id: "c", label: "Nie, to raczej osobna historia", score: 1 },
+          { id: "a", label: "Tak i teraz trudno to niezauważyć", score: 3 },
+          { id: "b", label: "Trochę tak, ale nie wiem czy to jest związane", score: 2 },
+          { id: "c", label: "Nie, to jest osobna historia", score: 1 },
         ],
       },
       {
         id: "t2",
-        lead: "Fantazja działa inaczej niż relacja w codzienności.",
-        text: "Czy znasz tę nową osobę na tyle realnie, żeby oceniać ją poza emocjonalnym uniesieniem?",
+        lead: "Nowa osoba to nie człowiek. To jeszcze wyobrażenie.",
+        text: "Czy znasz tę osobę w realnych warunkach — konflikcie, zmęczeniu, codzienności — czy znasz ją głównie w najlepszym wydaniu?",
         options: [
-          { id: "a", label: "Nie, to bardziej napięcie i wyobrażenie", score: 2 },
-          { id: "b", label: "Trochę tak", score: 1 },
-          { id: "c", label: "Tak, znam ją dość realnie", score: 0 },
+          { id: "a", label: "W najlepszym wydaniu, bez codzienności", score: 2 },
+          { id: "b", label: "Trochę obu", score: 1 },
+          { id: "c", label: "Znam ją realnie, nie tylko od najlepszej strony", score: 0 },
         ],
       },
       {
         id: "t3",
-        lead: "Czasem nie szukamy kogoś, tylko wyjścia z własnego utknięcia.",
-        text: "Czy ta nowa osoba daje Ci bardziej ekscytację, czy poczucie zobaczenia czegoś, czego od dawna Ci brakowało?",
+        lead: "Odpowiedz na to szybko, pierwsza myśl.",
+        text: "Gdyby ta trzecia osoba zniknęła z Twojego życia — jak długo zajęłoby Ci poczucie ulgi zamiast straty?",
         options: [
-          { id: "a", label: "Bardziej poczucie zobaczenia", score: 3 },
-          { id: "b", label: "Jedno i drugie", score: 2 },
-          { id: "c", label: "Bardziej ekscytację i impuls", score: 1 },
+          { id: "a", label: "Długo. To by naprawdę bolało.", score: 3 },
+          { id: "b", label: "Byłoby ciężko ale bym dał/dała radę", score: 2 },
+          { id: "c", label: "Szybko. Wiem że to bardziej fascynacja.", score: 1 },
         ],
       },
       {
         id: "t4",
-        lead: "Najgorzej, gdy trwa się w zawieszeniu i konsumuje oba światy.",
-        text: "Czy dziś bardziej odkładasz decyzję, niż naprawdę próbujesz zobaczyć, co jest prawdą o obecnej relacji?",
+        lead: "Zawieszenie jest wygodne bo odraczają decyzję.",
+        text: "Czy dziś bardziej działasz — robisz coś z jedną lub drugą sytuacją — czy odkładasz decyzję i trwasz?",
         options: [
-          { id: "a", label: "Tak, jestem w zawieszeniu", score: 3 },
-          { id: "b", label: "Po części", score: 2 },
-          { id: "c", label: "Nie, próbuję patrzeć uczciwie", score: 0 },
+          { id: "a", label: "Trwam w zawieszeniu i odkładam", score: 3 },
+          { id: "b", label: "Próbuję coś zrozumieć, ale bez działania", score: 2 },
+          { id: "c", label: "Działam, nie tylko myślę", score: 0 },
         ],
       },
     ],
     checkpoint: {
-      title: "Checkpoint",
-      text: "Gdyby tej trzeciej osoby nagle nie było, czy problem w obecnej relacji i tak dalej byłby dla Ciebie poważny?",
+      title: "Jedno pytanie bez ucieczki",
+      text: "Gdyby tamta trzecia osoba nigdy nie pojawiła się w Twoim życiu — czy dziś byłbyś/byłabyś zadowolony/zadowolona z obecnej relacji?",
       options: [
-        { id: "a", label: "Tak, i tak byłby poważny", score: 3 },
-        { id: "b", label: "Nie wiem, ale chyba tak", score: 2 },
-        { id: "c", label: "Nie, wtedy wszystko byłoby prostsze", score: 0 },
+        { id: "a", label: "Nie. Problem by i tak istniał.", score: 3 },
+        { id: "b", label: "Nie wiem. Chyba byłoby ciężko.", score: 2 },
+        { id: "c", label: "Tak. Byłoby dobrze.", score: 0 },
       ],
     },
-    openPrompt: "Napisz uczciwie: czego naprawdę szukasz w tej trzeciej osobie i co to mówi o tym, czego już nie znajdujesz w obecnej relacji?",
+    openPrompt: "Napisz bez owijania w bawełnę: co ta trzecia osoba daje Ci lub obiecuje że da, czego nie dostajesz w obecnej relacji?",
   },
   {
     key: "loop",
-    title: "Kręcimy się w kółko",
-    subtitle: "Wracacie do siebie, odchodzicie, znowu wracacie — i nic realnie się nie zmienia.",
-    intro: "Ta ścieżka rozbiera cykl napięcie–ulga–powrót–kolejny zjazd.",
+    title: "Wracamy do siebie w kółko i nic się nie zmienia",
+    subtitle: "Odchodzicie. Wracacie. Znowu. I za każdym razem mówisz sobie że tym razem będzie inaczej.",
+    intro: "System sprawdza czy to jest miłość którą warto ratować, czy uzależnienie od cyklu napięcie-ulga.",
     questions: [
       {
         id: "l1",
-        lead: "Silne emocje często mylą się z głębią.",
-        text: "Czy najmocniej czujesz tę relację wtedy, gdy coś się sypie albo ktoś odchodzi?",
+        lead: "Kiedy czujesz tę relację najbardziej — w spokoju czy w dramacie?",
+        text: "Czy najsilniejsze uczucie do tej osoby pojawia się głównie wtedy gdy coś się sypie, ktoś odchodzi albo jest ryzyko utraty?",
         options: [
-          { id: "a", label: "Tak, wtedy wszystko robi się najmocniejsze", score: 3 },
-          { id: "b", label: "Czasem tak", score: 2 },
+          { id: "a", label: "Tak, wtedy jest najmocniej. W spokoju jest mdło.", score: 3 },
+          { id: "b", label: "Czasem tak, ale nie zawsze", score: 2 },
           { id: "c", label: "Nie, bliskość nie zależy od dramatu", score: 0 },
         ],
       },
       {
         id: "l2",
-        lead: "Ciągłe gaszenie pożaru też staje się rytmem.",
-        text: "Czy masz poczucie, że bardziej walczysz o utrzymanie kontaktu niż naprawdę w nim jesteś?",
+        lead: "Policz ile razy sobie obiecywałeś/obiecywałaś że tym razem będzie inaczej.",
+        text: "Po poprzednich powrotach — czy pojawiły się konkretne zmiany w zachowaniu, które się utrzymały dłużej niż miesiąc?",
         options: [
-          { id: "a", label: "Tak, to bardziej walka niż relacja", score: 3 },
-          { id: "b", label: "Bywa różnie", score: 2 },
-          { id: "c", label: "Nie, czuję obecność i spójność", score: 0 },
+          { id: "a", label: "Nie. Za każdym razem wracamy do tego samego.", score: 3 },
+          { id: "b", label: "Coś się zmieniało ale niestabilnie", score: 2 },
+          { id: "c", label: "Tak, były realne trwałe zmiany", score: 0 },
         ],
       },
       {
         id: "l3",
-        lead: "Obietnice bez nowego zachowania to tylko nowa wersja starego.",
-        text: "Czy po kolejnych kryzysach pojawiały się konkretne zmiany, które utrzymały się dłużej niż chwilę?",
+        lead: "To jest pytanie które boli.",
+        text: "Gdybyś wyjął/wyjęła z tej relacji napięcie, pojednania i intensywność emocjonalną — co by zostało?",
         options: [
-          { id: "a", label: "Nie, raczej słowa niż realna zmiana", score: 3 },
-          { id: "b", label: "Trochę tak, ale niestabilnie", score: 2 },
-          { id: "c", label: "Tak, były konkretne i trwałe zmiany", score: 0 },
+          { id: "a", label: "Szczerość mówi: niewiele albo pustka", score: 3 },
+          { id: "b", label: "Zostałoby coś, ale nie wiem czy wystarczająco dużo", score: 2 },
+          { id: "c", label: "Zostałoby dużo. Naprawdę lubimy ze sobą być.", score: 0 },
         ],
       },
       {
         id: "l4",
-        lead: "Prawdziwa relacja daje kierunek, nie tylko chwilę ulgi.",
-        text: "Czy kiedy myślisz o przyszłości, czujesz spokój czy raczej napięcie i niepewność?",
+        lead: "Powiedz to wprost, nikt nie słyszy.",
+        text: "Czy boisz się odejść nie dlatego że Ci jej/jego brakuje — ale dlatego że nie wiesz kim jesteś bez tego cyklu?",
         options: [
-          { id: "a", label: "Raczej napięcie i niepewność", score: 3 },
-          { id: "b", label: "Mieszankę jednego i drugiego", score: 2 },
-          { id: "c", label: "Raczej spokój", score: 0 },
+          { id: "a", label: "To uderza za mocno żeby zaprzeczyć", score: 3 },
+          { id: "b", label: "Może trochę tak, ale nie tylko", score: 2 },
+          { id: "c", label: "Nie, to nie jest powód dla mnie", score: 0 },
         ],
       },
     ],
     checkpoint: {
-      title: "Checkpoint",
-      text: "Kiedy wracasz do tej osoby, co jest silniejsze: realna poprawa czy ulga, że znowu nie tracisz kontaktu?",
+      title: "Jedno pytanie bez ucieczki",
+      text: "Jeśli nic się nie zmieni i za rok będziecie dokładnie w tym samym miejscu co teraz — czy to jest życie które akceptujesz?",
       options: [
-        { id: "a", label: "Bardziej ulga niż realna poprawa", score: 3 },
-        { id: "b", label: "Po trochu jedno i drugie", score: 2 },
-        { id: "c", label: "Raczej realna poprawa", score: 0 },
+        { id: "a", label: "Nie. Ale nie wiem jak z tego wyjść.", score: 3 },
+        { id: "b", label: "Nie chcę tego, ale nie jestem gotowa/gotowy na zmianę", score: 2 },
+        { id: "c", label: "Tak, bo wierzę że coś się zmieni", score: 0 },
       ],
     },
-    openPrompt: "Napisz bez filtra: co dokładnie wraca między Wami i dlaczego mimo tego nadal trudno Ci to odciąć?",
+    openPrompt: "Napisz bez filtra: co konkretnie trzyma Cię w tym cyklu i dlaczego mimo wszystko co wiesz — nadal wracasz?",
   },
-];
+]
 
 function safeNumber(n: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, n));
@@ -975,19 +975,20 @@ export default function App() {
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <section className="hero-grid">
                 <Glass className="glass-panel hero-panel hero-copy">
-                  <div className="eyebrow with-line">PRYWATNA ANALIZA RELACJI</div>
-                  <div className="hero-kicker">NIE TEST. NIE TERAPIA. NIE LUKIER.</div>
+                  <div className="eyebrow with-line">ANALIZA RELACJI · AI</div>
+                  <div className="hero-kicker">WIDZISZ TO, CZEGO NIE CHCESZ WIDZIEĆ.</div>
                   <h1>
-                    Zobacz, co ta relacja
+                    To nie jest test.
                     <br />
-                    <span>naprawdę</span> z Tobą robi.
+                    To jest <span>diagnoza</span>.
                   </h1>
                   <p>
-                    Nie pytamy o idealną historię. Pytamy o to, co wraca, męczy, miesza i nie daje spokoju.
-                    Potem pokazujemy, ile tu jeszcze sensu, a ile już tylko napięcia, przywiązania albo nadziei bez pokrycia.
+                    Zadajemy pytania, których nikt inny nie odważy się zadać. System idzie coraz głębiej —
+                    aż do mechanizmu, który napędza Twoją sytuację. Nie dostaniesz tu pocieszenia.
+                    Dostaniesz odpowiedź.
                   </p>
                   <div className="ctms-landing-actions">
-                    <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij wgląd w relację</PrimaryButton>
+                    <PrimaryButton onClick={() => setStage("consent")}>Chcę wiedzieć prawdę</PrimaryButton>
                     <GhostButton onClick={() => setStage("entry")}>Jak to działa</GhostButton>
                   </div>
                 </Glass>
@@ -995,22 +996,22 @@ export default function App() {
                 <div className="hero-side-stack">
                   <Glass className="glass-panel story-panel visual-story">
                     <div className="story-icon">◎</div>
-                    <div className="story-kicker">SYSTEM ANALIZUJE</div>
+                    <div className="story-kicker">CO SYSTEM WIDZI</div>
                     <h3>
-                      wzorce, napięcia
+                      Mechanizm za tym,
                       <br />
-                      i kierunek relacji
+                      co czujesz od miesięcy
                     </h3>
                     <div className="story-points">
-                      <div><span>≋</span><p>Powtarzające się schematy co wraca i dlaczego</p></div>
-                      <div><span>◌</span><p>Napięcie i niespójność co rozjeżdża Was w środku</p></div>
-                      <div><span>↗</span><p>Kierunek i potencjał dokąd to zmierza naprawdę</p></div>
+                      <div><span>▸</span><p>Dlaczego to kręci się w kółko i co tak naprawdę trzyma Cię w miejscu</p></div>
+                      <div><span>▸</span><p>Czy to jest do naprawy, czy tylko czekasz na coś, co nie przyjdzie</p></div>
+                      <div><span>▸</span><p>Co powinnaś/powinieneś usłyszeć, a czego nikt Ci nie mówi wprost</p></div>
                     </div>
                     <div className="story-lock">
                       <div className="story-lock-icon">🔒</div>
                       <div>
-                        <strong>Pełny wgląd dostępny po podjęciu decyzji</strong>
-                        <span>Najpierw zrozum. Potem zdecyduj.</span>
+                        <strong>Pełna analiza odblokowana po jednej decyzji</strong>
+                        <span>Najpierw zobaczysz. Potem zdecydujesz.</span>
                       </div>
                     </div>
                   </Glass>
@@ -1020,21 +1021,21 @@ export default function App() {
               <section className="ctms-feature-editorial-grid">
                 <Glass className="feature-card">
                   <div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div>
-                  <h3>Rozmowa, nie quiz</h3>
+                  <h3>Schodzi coraz głębiej</h3>
                   <div className="feature-line" />
-                  <p>System prowadzi Cię warstwowo, zamiast wrzucać wszystkich w jedną listę pytań.</p>
+                  <p>Każde pytanie idzie o piętro niżej. Nie ma tutaj pytań oczywistych ani odpowiedzi, które nic nie znaczą.</p>
                 </Glass>
                 <Glass className="feature-card">
                   <div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div>
-                  <h3>Wielowarstwowa analiza</h3>
+                  <h3>Bez lukrowania</h3>
                   <div className="feature-line" />
-                  <p>Wychwytuje napięcie, niespójność, unikanie, chaos i realny kierunek tej relacji.</p>
+                  <p>System nie pyta co czujesz. Pyta o fakty. Wzorce. Zachowania. I wyciąga z tego to, czego sam nie widzisz.</p>
                 </Glass>
                 <Glass className="feature-card">
                   <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
-                  <h3>Wgląd przed decyzją</h3>
+                  <h3>Raport, który boli</h3>
                   <div className="feature-line" />
-                  <p>Najpierw widzisz lustro sytuacji. Potem decydujesz, czy chcesz zejść głębiej.</p>
+                  <p>Nie dostaniesz ładnych słów. Dostaniesz ocenę. Mechanizm. Kierunek. I to, co powinieneś z tym zrobić.</p>
                 </Glass>
               </section>
             </motion.div>
@@ -1044,10 +1045,11 @@ export default function App() {
             <motion.div key="consent" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel consent-panel">
                 <div className="eyebrow">ZANIM WEJDZIESZ GŁĘBIEJ</div>
-                <h2>To ma być trafne, nie miłe.</h2>
+                <h2>Zanim wejdziesz — przeczytaj to.</h2>
                 <p className="consent-copy">
-                  Ten produkt analizuje wzorce i dynamikę relacji. Nie zastępuje terapii, diagnozy ani porady prawnej.
-                  Po płatności dostajesz treść cyfrową od razu. To wejście jest dla ludzi, którzy chcą widzieć jaśniej, nie ładniej.
+                  To narzędzie mówi Ci prawdę na podstawie Twoich odpowiedzi. Nie pocieszamy. Nie zaokrąglamy.
+                  Jeśli szukasz potwierdzenia że wszystko jest ok — to nie jest miejsce dla Ciebie.
+                  Jeśli chcesz wiedzieć co naprawdę się dzieje — jesteś w dobrym miejscu.
                 </p>
                 <div className="consent-list">
                   {CONSENTS.map((text, idx) => (
@@ -1077,9 +1079,9 @@ export default function App() {
             <motion.div key="entry" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head">
                 <div>
-                  <div className="eyebrow">PUNKT WEJŚCIA</div>
-                  <h2>Od czego ta historia boli najmocniej?</h2>
-                  <p>Zacznij od miejsca, które najbardziej ciągnie Cię w dół. System dopasuje dalszą rozmowę do Twojej sytuacji.</p>
+                  <div className="eyebrow">WYBIERZ ŚCIEŻKĘ</div>
+                  <h2>Co najbardziej nie daje Ci spokoju?</h2>
+                  <p>Wybierz miejsce, które ciągnie Cię w dół. System dopasuje pytania do Twojej sytuacji i będzie schodził coraz głębiej.</p>
                 </div>
                 <GhostButton onClick={goBack}>Wróć</GhostButton>
               </div>
@@ -1090,7 +1092,7 @@ export default function App() {
                     <h3>{entry.title}</h3>
                     <div className="entry-subtitle">{entry.subtitle}</div>
                     <div className="entry-intro">{entry.intro}</div>
-                    <div className="entry-action"><PrimaryButton onClick={() => startPath(entry.key)}>{busy ? "Przygotowuję..." : "Wejdź tą ścieżką"}</PrimaryButton></div>
+                    <div className="entry-action"><PrimaryButton onClick={() => startPath(entry.key)}>{busy ? "Przygotowuję..." : "Wejdź głębiej"}</PrimaryButton></div>
                   </Glass>
                 ))}
               </div>
@@ -1138,8 +1140,8 @@ export default function App() {
               <Glass className="question-panel">
                 <div className="eyebrow">OSTATNIA WARSTWA</div>
                 <div className="question-copy"><h3>{path.openPrompt}</h3></div>
-                <textarea className="ctms-textarea" value={openText} onChange={(e) => setOpenText(e.target.value)} placeholder="Napisz bez filtra. Im uczciwiej, tym bardziej trafne będzie lustro i późniejszy raport." maxLength={3000} />
-                <div className="text-meta"><div>Ta odpowiedź pogłębia lustro i ustawia ton raportu.</div><div>{openText.length}/3000</div></div>
+                <textarea className="ctms-textarea" value={openText} onChange={(e) => setOpenText(e.target.value)} placeholder="Napisz tak jak byś mówił/mówiła do kogoś komu ufasz całkowicie. Im bardziej szczery/szczera — tym mocniejsza analiza. Nie ma tu oceniania." maxLength={3000} />
+                <div className="text-meta"><div>To jest rdzeń analizy. Napisz co naprawdę czujesz, nie co powinieneś/powinnaś czuć.</div><div>{openText.length}/3000</div></div>
                 <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton><PrimaryButton onClick={buildPreviewAndGo} disabled={openText.trim().length < 40}>Pokaż darmowy preview</PrimaryButton></div>
               </Glass>
             </motion.div>
