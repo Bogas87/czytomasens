@@ -558,13 +558,12 @@ export default function App() {
                 </Glass>
                 <div className="hero-side-stack">
                   <Glass className="glass-panel story-panel visual-story">
-                    <div className="story-icon">◎</div>
                     <div className="story-kicker">CO SYSTEM WIDZI</div>
-                    <h3>Mechanizm za tym,<br />co czujesz od miesięcy</h3>
+                    <h3>Wzorzec, który napędza<br />tę sytuację od miesięcy</h3>
                     <div className="story-points">
-                      <div><span>▸</span><p>Dlaczego to kręci się w kółko i co tak naprawdę trzyma Cię w miejscu</p></div>
-                      <div><span>▸</span><p>Czy to jest do naprawy, czy tylko czekasz na coś, co nie przyjdzie</p></div>
-                      <div><span>▸</span><p>Co powinnaś/powinieneś usłyszeć, a czego nikt Ci nie mówi wprost</p></div>
+                      <div><span>▸</span><p>Dlaczego wracasz do tego samego miejsca — i co tak naprawdę Cię tam trzyma</p></div>
+                      <div><span>▸</span><p>Czy to jest do naprawy — czy czekasz na zmianę, która nie przyjdzie</p></div>
+                      <div><span>▸</span><p>To, czego nikt Ci nie powie wprost. System nie owijał w bawełnę.</p></div>
                     </div>
                     <div className="story-lock">
                       <div className="story-lock-icon">🔒</div>
@@ -851,10 +850,13 @@ export default function App() {
 
       <footer className="ctms-footer">
         <div className="ctms-footer-inner">
-          <button onClick={() => setLegalOpen("regulamin")}>Regulamin</button>
-          <button onClick={() => setLegalOpen("prywatnosc")}>Polityka prywatności</button>
-          <button onClick={() => setLegalOpen("rodo")}>RODO</button>
-          <button onClick={() => setLegalOpen("kontakt")}>Kontakt</button>
+          <div className="ctms-footer-brand">CzyToMaSens.</div>
+          <div className="ctms-footer-links">
+            <button onClick={() => setLegalOpen("regulamin")}>Regulamin</button>
+            <button onClick={() => setLegalOpen("prywatnosc")}>Polityka prywatności</button>
+            <button onClick={() => setLegalOpen("rodo")}>RODO</button>
+            <button onClick={() => setLegalOpen("kontakt")}>Kontakt</button>
+          </div>
         </div>
       </footer>
 
