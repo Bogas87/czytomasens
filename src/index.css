@@ -143,14 +143,17 @@ button { cursor: pointer; }
 }
 
 .hero-panel {
-  min-height: 560px;
+  min-height: 520px;
   padding: 36px;
+  display: flex;
+  flex-direction: column;
 }
 
 .hero-copy {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  flex: 1;
 }
 
 .eyebrow {
@@ -196,8 +199,8 @@ button { cursor: pointer; }
   line-height: 1.75;
 }
 .ctms-landing-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 40px; }
-.hero-side-stack { display: flex; flex: 1; }
-.story-panel { padding: 36px; min-height: 560px; display: flex; flex-direction: column; flex: 1; }
+.hero-side-stack { display: flex; align-items: stretch; }
+.story-panel { padding: 36px; min-height: 520px; display: flex; flex-direction: column; width: 100%; }
 .visual-story { position: relative; overflow: hidden; }
 .visual-story::before {
   content: "";
