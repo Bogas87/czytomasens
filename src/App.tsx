@@ -568,7 +568,7 @@ export default function App() {
                 <Glass className="glass-panel hero-panel hero-copy">
                   <div className="eyebrow with-line">PRYWATNA ANALIZA RELACJI</div>
                   <div className="hero-kicker">TWOJA RELACJA MA WZORZEC.</div>
-                  <h1>Już wiesz, że <span>coś nie gra.</span><br />Tu dowiesz się, co dokładnie.</h1>
+                  <h1>Już wiesz, że <span>coś nie gra.</span><br />Tu dowiesz się dlaczego.</h1>
                   <p>Każda trudna relacja ma swój mechanizm. System go widzi — nawet jeśli Ty go jeszcze nie nazwałeś/nazwałaś. To nie jest test. To lustro.</p>
                   <div className="ctms-landing-actions">
                     <PrimaryButton onClick={() => setStage("consent")}>Chcę wiedzieć prawdę</PrimaryButton>
@@ -577,11 +577,11 @@ export default function App() {
                 <div className="hero-side-stack">
                   <Glass className="glass-panel story-panel visual-story">
                     <div className="story-kicker">CO ZOBACZYSZ</div>
-                    <h3>To, czego jeszcze<br />nie nazwałeś/nazwałaś</h3>
+                    <h3>To, czego jeszcze nie nazwałeś/nazwałaś</h3>
                     <div className="story-points">
-                      <div><span>▸</span><p>Mechanizm który napędza tę sytuację — i dlaczego wracasz do tego samego miejsca</p></div>
-                      <div><span>▸</span><p>Twój wzorzec w relacjach — nie ocena, tylko precyzyjny obraz tego kim jesteś w bliskości</p></div>
-                      <div><span>▸</span><p>To, czego nie chcesz widzieć — ale co jest kluczem do zrozumienia całości</p></div>
+                      <div><span>▸</span><p>Dlaczego wracasz do tego samego miejsca — i co tak naprawdę trzyma Cię tam, gdzie nie chcesz być</p></div>
+                      <div><span>▸</span><p>Twój wzorzec w relacjach — jak reagujesz na bliskość, odrzucenie i niepewność, zanim zdążysz to przemyśleć</p></div>
+                      <div><span>▸</span><p>To, czego nie chcesz widzieć — ale co jest jedynym kluczem do tego, żeby coś naprawdę się zmieniło</p></div>
                     </div>
                     <div className="story-lock">
                       <div className="story-lock-icon">🔒</div>
