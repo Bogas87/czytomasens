@@ -7,7 +7,10 @@ function readApiBase(): string {
     const value = metaEnv?.VITE_API_BASE;
     if (typeof value === "string" && value.startsWith("http")) return value.replace(/\/$/, "");
   } catch {}
-  return "https://czytomasens-production-47e0.up.railway.app";
+  if (typeof window !== "undefined" && window.location.hostname !== "localhost") {
+    return "https://api.czytomasens.pl";
+  }
+  return "http://localhost:8080";
 }
 
 const API_BASE = readApiBase();
@@ -98,27 +101,28 @@ type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string 
 const STORAGE_KEY = "ctms_premium_front_v7";
 
 const CONSENTS = [
-  "Rozumiem, że to narzędzie ma charakter analityczny i rozwojowy, a nie medyczny, psychoterapeutyczny ani prawny.",
-  "Rozumiem, że wynik raportu jest interpretacją opartą na moich odpowiedziach i nie stanowi nieomylnego werdyktu o drugiej osobie.",
-  "Wyrażam zgodę na przetwarzanie podanych przeze mnie danych w celu wygenerowania raportu i realizacji usługi cyfrowej.",
+  "Rozumiem, że CzyToMaSens jest narzędziem analitycznym i rozwojowym, a nie poradą medyczną, psychologiczną, terapeutyczną ani prawną.",
+  "Rozumiem, że wynik analizy jest interpretacją opartą na moich odpowiedziach i nie stanowi diagnozy klinicznej ani werdyktu o drugiej osobie.",
+  "Wyrażam zgodę na przetwarzanie podanych przeze mnie danych osobowych w celu wygenerowania raportu i realizacji usługi cyfrowej, zgodnie z Polityką prywatności.",
+  "Rozumiem, że usługa cyfrowa zostaje zrealizowana bezpośrednio po opłaceniu dostępu i tym samym tracę prawo do odstąpienia od umowy po rozpoczęciu generowania raportu.",
 ];
 
 const LEGAL_CONTENT: Record<Exclude<LegalKey, null>, { title: string; body: string }> = {
   regulamin: {
     title: "Regulamin",
-    body: "CzyToMaSens jest narzędziem cyfrowym o charakterze analitycznym. Produkt nie stanowi terapii, diagnozy medycznej ani porady prawnej. Zakup dotyczy treści cyfrowej dostarczanej bezpośrednio po płatności. Właściciel produktu odpowiada za dostarczenie usługi zgodnie z opisem, a użytkownik za prawdziwość wprowadzanych danych.",
+    body: `CzyToMaSens jest narzędziem analitycznym i refleksyjnym — nie zastępuje psychoterapii, doradztwa psychologicznego ani prawnego. Raporty generowane przez system mają charakter informacyjny i opierają się wyłącznie na odpowiedziach użytkownika.\n\nPłatność: dostęp do pełnego raportu jest odpłatny. Płatność realizowana jest przez Stripe. Po skutecznej płatności system generuje indywidualny raport.\n\nTreść cyfrowa: raport stanowi treść cyfrową dostarczaną bezpośrednio po zakupie. Zgodnie z art. 38 pkt 13 ustawy o prawach konsumenta, prawo do odstąpienia nie przysługuje po rozpoczęciu realizacji treści cyfrowej, na co użytkownik wyraża zgodę przed zakupem.\n\nReklamacje: kontakt@czytomasens.pl — rozpatrywane w 14 dni roboczych. W przypadku problemów technicznych uniemożliwiających dostarczenie raportu przysługuje ponowne wygenerowanie lub zwrot płatności.\n\nOdpowiedzialność: usługodawca nie ponosi odpowiedzialności za decyzje podjęte na podstawie treści raportu.`,
   },
   prywatnosc: {
     title: "Polityka prywatności",
-    body: "Przetwarzane są wyłącznie dane potrzebne do utworzenia sesji, wygenerowania raportu i dostarczenia go użytkownikowi. Dane nie służą do treningu modelu. Wrażliwe treści nie powinny być wykorzystywane jako analityka marketingowa. Dostęp do raportów powinien być kontrolowany i ograniczony czasowo.",
+    body: `Administrator: właściciel serwisu CzyToMaSens, kontakt@czytomasens.pl.\n\nZakres danych: adres e-mail, treści odpowiedzi analitycznych, dane transakcyjne (Stripe), dane techniczne (IP, user-agent).\n\nCele: realizacja usługi cyfrowej, obsługa płatności, kontakt, bezpieczeństwo systemu.\n\nOdbiorcy: Stripe Inc. (płatności), dostawca hostingu, Resend (e-mail). Dane nie są sprzedawane.\n\nOkres przechowywania: dane analityczne — 90 dni, dokumentacja transakcyjna — 5 lat.\n\nPrawa użytkownika: dostęp, sprostowanie, usunięcie, ograniczenie, przenoszenie, sprzeciw, cofnięcie zgody, skarga do UODO. Kontakt: kontakt@czytomasens.pl.`,
   },
   rodo: {
-    title: "RODO",
-    body: "Użytkownik ma prawo do informacji o przetwarzaniu danych, dostępu, sprostowania, ograniczenia przetwarzania oraz usunięcia danych, jeśli nie koliduje to z obowiązkami rozliczeniowymi i bezpieczeństwem usługi. Dane powinny być przechowywane możliwie krótko, zgodnie z celem realizacji usługi.",
+    title: "Informacja RODO",
+    body: `Administrator: właściciel serwisu CzyToMaSens, kontakt@czytomasens.pl.\n\nCel: realizacja usługi cyfrowej, obsługa płatności, wypełnienie obowiązków prawnych.\n\nPodstawa prawna: art. 6 ust. 1 lit. b RODO (wykonanie umowy), lit. c (obowiązek prawny), lit. f (uzasadniony interes).\n\nOdbiorcy: Stripe Inc., dostawca hostingu, Resend.\n\nOkres: 90 dni dla danych analitycznych, 5 lat dla dokumentacji transakcyjnej.\n\nPrawa: dostęp, sprostowanie, usunięcie, ograniczenie, przenoszenie, sprzeciw, cofnięcie zgody, skarga do UODO.\n\nPodanie danych jest dobrowolne, lecz niezbędne do realizacji usługi.`,
   },
   kontakt: {
     title: "Kontakt",
-    body: "Kontakt w sprawach produktu, płatności i dostępu do raportu: kontakt@czytomasens.pl.",
+    body: `E-mail: kontakt@czytomasens.pl\n\nW sprawach: zamówień i dostępu do raportu, płatności, reklamacji, danych osobowych i RODO, kwestii technicznych.\n\nCzas odpowiedzi: do 2 dni roboczych.`,
   },
 };
 
@@ -317,6 +321,7 @@ function GhostButton({ children, onClick }: { children: React.ReactNode; onClick
 
 function PremiumBadge({ preview }: { preview: Preview }) {
   const color = preview.tone === "red" ? BRAND.danger : preview.tone === "green" ? BRAND.success : BRAND.goldSoft;
+  const scoreExplanation = `Wynik powstał z trzech osi: poziomu napięcia w relacji (${preview.tension}%), asymetrii zaangażowania (${preview.asymmetry}%) oraz realności zmiany (${preview.change}%). Im wyższe napięcie i asymetria, tym niższy wynik końcowy.`;
   return (
     <Glass className="ctms-preview-badge">
       <div className="ctms-kicker">NA ILE TO MA SENS</div>
@@ -324,6 +329,7 @@ function PremiumBadge({ preview }: { preview: Preview }) {
       <div className="ctms-preview-label">{preview.badge}</div>
       <div className="ctms-preview-truth">{preview.truth}</div>
       <div className="ctms-preview-mirror">{preview.mirror}</div>
+      <div className="ctms-score-explanation">{scoreExplanation}</div>
     </Glass>
   );
 }
@@ -783,12 +789,12 @@ export default function App() {
                   <Glass className="report-section"><div className="eyebrow">CZEGO PEŁNY RAPORT NIE OMINIE</div><p>{preview.paidTease}</p></Glass>
                 </div>
                 <Glass className="unlock-panel">
-                  <div className="eyebrow">PEŁNY RAPORT PREMIUM</div>
-                  <p className="unlock-copy">Odblokujesz pełną analizę: mechanizmy, ryzyka, scenariusze, praktyczne wskazówki i jasny werdykt. Dostajesz wersję, do której można wrócić później.</p>
+                  <div className="eyebrow">TO TYLKO FRAGMENT</div>
+                  <p className="unlock-copy">Pełny raport pokaże Ci to, czego ten widok nie zawiera: twój wzorzec w relacjach, mechanizmy obronne które stosujesz, to gdzie najprawdopodobniej się oszukujesz — i trzy realne scenariusze tego, co się wydarzy dalej. Raport jest generowany indywidualnie na podstawie twoich odpowiedzi. Nikt inny nie dostanie takiego samego.</p>
                   <div className="unlock-form">
-                    <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Adres e-mail do raportu premium" />
-                    <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Odblokuj pełny raport — 15 zł"}</PrimaryButton>
-                    <div className="unlock-note">Najpierw widzisz lustro sytuacji. Potem decydujesz, czy chcesz zejść głębiej.</div>
+                    <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Adres e-mail — wyślemy Ci link do raportu" />
+                    <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Odblokuj pełny raport — 29 zł"}</PrimaryButton>
+                    <div className="unlock-note">Widzisz teraz podgląd. Pełna analiza psychologiczna dostępna po jednorazowej płatności. Możesz wrócić do raportu w dowolnym momencie z linku w e-mailu.</div>
                   </div>
                 </Glass>
                 {error && <div className="error-line">{error}</div>}

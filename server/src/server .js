@@ -18,9 +18,21 @@ const stripe = stripeSecret
 
 app.set("trust proxy", 1);
 
+const ALLOWED_ORIGINS = [
+  "https://czytomasens.pl",
+  "https://www.czytomasens.pl",
+  process.env.CLIENT_URL,
+  process.env.DEV_ORIGIN,
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: true,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+      if (process.env.NODE_ENV !== "production") return callback(null, true);
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
     credentials: true,
   })
 );
@@ -32,33 +44,20 @@ app.post(
   async (req, res) => {
     try {
       if (!stripe || !webhookSecret) {
-        return res.status(400).json({
-          ok: false,
-          error: "Brak konfiguracji Stripe webhook.",
-        });
+        return res.status(400).json({ ok: false, error: "Brak konfiguracji Stripe webhook." });
       }
 
       const signature = req.headers["stripe-signature"];
       if (!signature) {
-        return res.status(400).json({
-          ok: false,
-          error: "Brak stripe-signature.",
-        });
+        return res.status(400).json({ ok: false, error: "Brak stripe-signature." });
       }
 
       let event;
       try {
-        event = stripe.webhooks.constructEvent(
-          req.body,
-          signature,
-          webhookSecret
-        );
+        event = stripe.webhooks.constructEvent(req.body, signature, webhookSecret);
       } catch (err) {
         console.error("[WEBHOOK] Błąd weryfikacji podpisu:", err.message);
-        return res.status(400).json({
-          ok: false,
-          error: "Nieprawidłowa sygnatura webhooka.",
-        });
+        return res.status(400).json({ ok: false, error: "Nieprawidłowa sygnatura webhooka." });
       }
 
       if (event.type === "checkout.session.completed") {
@@ -95,9 +94,7 @@ app.post(
             const queueModule = require("./jobs/queue.js");
             if (typeof queueModule.enqueueReport === "function") {
               await queueModule.enqueueReport(token);
-              console.log(`[WEBHOOK] Raport zakolejkowany dla tokenu: ${token}`);
-            } else {
-              console.warn("[WEBHOOK] enqueueReport nie znaleziony w ./jobs/queue.js");
+              console.log(`[WEBHOOK] Raport zakolejkowany: ${token}`);
             }
           } catch (queueErr) {
             console.error("[WEBHOOK] Błąd kolejki:", queueErr.message);
@@ -125,15 +122,12 @@ app.get("/api/health", (req, res) => {
     ok: true,
     service: "CzyToMaSens API",
     model: process.env.OPENAI_MODEL || "gpt-4o",
+    price: process.env.PRICE_AMOUNT_GR || "2900",
   });
 });
 
 app.use((req, res) => {
-  res.status(404).json({
-    ok: false,
-    error: "Route not found",
-    path: req.originalUrl,
-  });
+  res.status(404).json({ ok: false, error: "Route not found", path: req.originalUrl });
 });
 
 const PORT = process.env.PORT || 8080;

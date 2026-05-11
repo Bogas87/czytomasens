@@ -14,25 +14,22 @@ exports.createCheckout = async (req, res) => {
   try {
     const token = normalizeText(req.body?.token || req.body?.sessionToken || "");
     const email = normalizeText(req.body?.email || "");
-    const consentAcceptedAt = normalizeText(
-      req.body?.consentAcceptedAt || new Date().toISOString()
-    );
+    const consentAcceptedAt = normalizeText(req.body?.consentAcceptedAt || new Date().toISOString());
     const payload = req.body?.payload || {};
 
     if (!token) {
       return res.status(400).json({ ok: false, error: "Brak tokenu sesji." });
     }
-
     if (!email || !email.includes("@")) {
       return res.status(400).json({ ok: false, error: "Nieprawidłowy adres e-mail." });
     }
 
-    const ipAddress =
-      normalizeText(req.headers["x-forwarded-for"] || "")
-        .split(",")[0]
-        ?.trim() || normalizeText(req.ip || "");
-
+    const ipAddress = normalizeText(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim()
+      || normalizeText(req.ip || "");
     const userAgent = normalizeText(req.headers["user-agent"] || "");
+
+    // Cena z env — łatwa zmiana bez dotykania kodu
+    const priceAmountGr = parseInt(process.env.PRICE_AMOUNT_GR || "2900", 10);
 
     const successUrl = `${process.env.CLIENT_URL}?success=1&token=${encodeURIComponent(token)}`;
     const cancelUrl = `${process.env.CLIENT_URL}?cancel=1`;
@@ -40,16 +37,17 @@ exports.createCheckout = async (req, res) => {
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       customer_email: email,
-      payment_method_types: ["card"],
+      // BLIK i Przelewy24 dla Polski + karta
+      payment_method_types: ["card", "blik", "p24"],
       line_items: [
         {
           quantity: 1,
           price_data: {
             currency: "pln",
-            unit_amount: 1500,
+            unit_amount: priceAmountGr,
             product_data: {
               name: "CzyToMaSens — pełny raport premium",
-              description: "Dogłębna analiza relacji i pełny raport premium",
+              description: "Dogłębna analiza psychologiczna relacji. Raport generowany indywidualnie na podstawie Twoich odpowiedzi.",
             },
           },
         },
