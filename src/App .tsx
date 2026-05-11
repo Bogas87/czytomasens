@@ -98,7 +98,7 @@ type InterviewState = {
 
 type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string };
 
-const STORAGE_KEY = "ctms_premium_front_v7";
+const STORAGE_KEY = "ctms_premium_front_v8";
 
 const CONSENTS = [
   "Rozumiem, że CzyToMaSens jest narzędziem analitycznym i rozwojowym, a nie poradą medyczną, psychologiczną, terapeutyczną ani prawną.",
@@ -476,6 +476,18 @@ export default function App() {
   const sendInterviewAnswer = async () => {
     if (!interviewState || !sessionToken || !interviewAnswer.trim()) return;
     if (hasCrisisContent(interviewAnswer)) { setStage("crisis"); return; }
+
+    // FRONTEND LIMIT — nigdy nie przekraczamy 5 wymian niezależnie od backendu
+    const currentExchangeCount = interviewState.history.length + 1;
+    if (currentExchangeCount > 5) {
+      const transcript = [...interviewState.history, { ai: interviewState.currentQuestion, user: interviewAnswer.trim() }]
+        .map((e) => `Pytanie: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n");
+      setInterviewState({ ...interviewState, finished: true });
+      setOpenText(transcript);
+      setStage("open_text");
+      return;
+    }
+
     setInterviewBusy(true); setError(null);
     try {
       const res = await fetch(`${API_BASE}/api/interview/next`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: sessionToken, userAnswer: interviewAnswer.trim() }) });
@@ -483,13 +495,13 @@ export default function App() {
       if (d.crisis) { setStage("crisis"); return; }
       if (!d.ok) throw new Error(d.message || "Błąd wywiadu.");
       const updatedHistory: InterviewExchange[] = [...interviewState.history, { ai: interviewState.currentQuestion, user: interviewAnswer.trim(), lead: interviewState.currentLead, observation: interviewState.currentObservation }];
-      if (d.finished) {
+      if (d.finished || updatedHistory.length >= 5) {
         const transcript = updatedHistory.map((e) => `Pytanie: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n");
         setInterviewState({ ...interviewState, history: updatedHistory, finished: true });
         setOpenText(transcript);
         setStage("open_text");
       } else {
-        setInterviewState({ ...interviewState, history: updatedHistory, currentQuestion: d.question, currentLead: d.lead || "", currentObservation: d.observation || "", depth: d.depth, exchangeIndex: d.exchangeIndex });
+        setInterviewState({ ...interviewState, history: updatedHistory, currentQuestion: d.question, currentLead: d.lead || "", currentObservation: d.observation || "", depth: Math.min(d.depth, 5), exchangeIndex: d.exchangeIndex });
         setInterviewAnswer("");
       }
     } catch (e: any) { setError(e?.message || "Błąd podczas wywiadu."); }
@@ -793,7 +805,7 @@ export default function App() {
                   <p className="unlock-copy">Pełny raport pokaże Ci to, czego ten widok nie zawiera: twój wzorzec w relacjach, mechanizmy obronne które stosujesz, to gdzie najprawdopodobniej się oszukujesz — i trzy realne scenariusze tego, co się wydarzy dalej. Raport jest generowany indywidualnie na podstawie twoich odpowiedzi. Nikt inny nie dostanie takiego samego.</p>
                   <div className="unlock-form">
                     <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Adres e-mail — wyślemy Ci link do raportu" />
-                    <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Odblokuj pełny raport — 29 zł"}</PrimaryButton>
+                    <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Odblokuj pełny raport — 19 zł"}</PrimaryButton>
                     <div className="unlock-note">Widzisz teraz podgląd. Pełna analiza psychologiczna dostępna po jednorazowej płatności. Możesz wrócić do raportu w dowolnym momencie z linku w e-mailu.</div>
                   </div>
                 </Glass>

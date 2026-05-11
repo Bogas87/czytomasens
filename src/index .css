@@ -137,14 +137,14 @@ button { cursor: pointer; }
 
 .hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(340px, .68fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 22px;
   align-items: stretch;
 }
 
 .hero-panel {
-  min-height: 620px;
-  padding: 34px;
+  min-height: 560px;
+  padding: 36px;
 }
 
 .hero-copy {
@@ -196,8 +196,8 @@ button { cursor: pointer; }
   line-height: 1.75;
 }
 .ctms-landing-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 40px; }
-.hero-side-stack { display: flex; }
-.story-panel { padding: 30px 28px; min-height: 620px; display: flex; flex-direction: column; }
+.hero-side-stack { display: flex; flex: 1; }
+.story-panel { padding: 36px; min-height: 560px; display: flex; flex-direction: column; flex: 1; }
 .visual-story { position: relative; overflow: hidden; }
 .visual-story::before {
   content: "";
