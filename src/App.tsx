@@ -7,6 +7,9 @@ function readApiBase(): string {
     const value = metaEnv?.VITE_API_BASE;
     if (typeof value === "string" && value.startsWith("http")) return value.replace(/\/$/, "");
   } catch {}
+  if (typeof window !== "undefined" && window.location.hostname !== "localhost") {
+    return "https://czytomasens-production-47e0.up.railway.app";
+  }
   return "http://localhost:8080";
 }
 
