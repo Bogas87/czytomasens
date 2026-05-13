@@ -346,7 +346,7 @@ export default function App() {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [consents, setConsents] = useState<boolean[]>([false, false, false]);
+  const [consents, setConsents] = useState<boolean[]>([false, false, false, false]);
   const [legalOpen, setLegalOpen] = useState<LegalKey>(null);
   const [interviewState, setInterviewState] = useState<InterviewState | null>(null);
   const [interviewAnswer, setInterviewAnswer] = useState("");
@@ -369,7 +369,7 @@ export default function App() {
         setPreview(parsed.preview || null);
         setFullReport(parsed.fullReport || null);
         setSessionToken(parsed.sessionToken || null);
-        setConsents(parsed.consents || [false, false, false]);
+        setConsents(parsed.consents || [false, false, false, false]);
         setInterviewState(parsed.interviewState || null);
       }
     } catch {}
@@ -416,11 +416,9 @@ export default function App() {
 
   const resetAll = () => {
     localStorage.removeItem(STORAGE_KEY);
-    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setConsents([false, false, false]); setLegalOpen(null); setInterviewState(null); setInterviewAnswer("");
+    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setConsents([false, false, false, false]); setLegalOpen(null); setInterviewState(null); setInterviewAnswer("");
     window.history.replaceState({}, "", window.location.pathname);
   };
-
-  // ─── STARY FLOW: zamknięte pytania ─────────────────────────────────────────
 
   const startPath = async (key: EntryKey) => {
     setBusy(true); setError(null);
@@ -447,7 +445,6 @@ export default function App() {
     const newAnswers = { ...answers, [`${path.key}_checkpoint`]: optionId };
     setAnswers(newAnswers);
 
-    // Po checkpoincie — spróbuj uruchomić AI interview
     if (sessionToken) {
       setBusy(true);
       try {
@@ -467,17 +464,13 @@ export default function App() {
       } catch {}
       setBusy(false);
     }
-    // Fallback jeśli AI niedostępne
     setStage("open_text");
   };
-
-  // ─── AI INTERVIEW ────────────────────────────────────────────────────────────
 
   const sendInterviewAnswer = async () => {
     if (!interviewState || !sessionToken || !interviewAnswer.trim()) return;
     if (hasCrisisContent(interviewAnswer)) { setStage("crisis"); return; }
 
-    // FRONTEND LIMIT — nigdy nie przekraczamy 5 wymian niezależnie od backendu
     const currentExchangeCount = interviewState.history.length + 1;
     if (currentExchangeCount > 5) {
       const transcript = [...interviewState.history, { ai: interviewState.currentQuestion, user: interviewAnswer.trim() }]
@@ -586,7 +579,7 @@ export default function App() {
                     <div className="story-lock">
                       <div className="story-lock-icon">🔒</div>
                       <div>
-                        <strong>Pełny raport — 15 zł</strong>
+                        <strong>Pełny raport — 19 zł</strong>
                         <span>Najpierw podgląd. Płacisz tylko jeśli chcesz wiedzieć więcej.</span>
                       </div>
                     </div>
@@ -666,7 +659,7 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* QUESTIONS — zamknięte */}
+          {/* QUESTIONS */}
           {stage === "questions" && path && currentQuestion && (
             <motion.div key={currentQuestion.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
@@ -707,7 +700,7 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* AI INTERVIEW — otwarte pytania dynamiczne */}
+          {/* AI INTERVIEW */}
           {stage === "interview" && interviewState && (
             <motion.div key={`interview-${interviewState.exchangeIndex}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
