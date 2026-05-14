@@ -42,7 +42,6 @@ type Stage =
   | "error";
 
 type EntryKey = "betrayal" | "uncertain" | "stagnation" | "returning" | "triangle" | "loop";
-
 type Option = { id: string; label: string; score: number };
 type Question = { id: string; lead: string; text: string; options: Option[] };
 type AnswerMap = Record<string, string>;
@@ -52,48 +51,32 @@ type EntryConfig = {
   key: EntryKey;
   title: string;
   subtitle: string;
+  quote: string;
   intro: string;
+  duration: string;
   questions: Question[];
   checkpoint: { title: string; text: string; options: Option[] };
   openPrompt: string;
 };
 
 type Preview = {
-  chance: number;
-  tension: number;
-  asymmetry: number;
-  change: number;
-  badge: string;
-  headline: string;
-  truth: string;
-  mirror: string;
-  summary: string;
-  paidTease: string;
-  tone: "red" | "yellow" | "green";
+  chance: number; tension: number; asymmetry: number; change: number;
+  badge: string; headline: string; truth: string; mirror: string;
+  summary: string; paidTease: string; tone: "red" | "yellow" | "green";
 };
 
 type FullReportSection = { title: string; text: string; tone?: "normal" | "gold" | "danger" };
 type FullReport = {
-  headline?: string;
-  subheadline?: string;
-  previewLine?: string;
-  tensionPercent?: number;
-  driftPercent?: number;
-  rebuildPercent?: number;
-  sections?: FullReportSection[];
-  closing?: string;
+  headline?: string; subheadline?: string; previewLine?: string;
+  tensionPercent?: number; driftPercent?: number; rebuildPercent?: number;
+  sections?: FullReportSection[]; closing?: string;
 };
 
 type InterviewExchange = { ai: string; user: string; lead?: string; observation?: string };
 type InterviewState = {
-  path: EntryKey;
-  currentQuestion: string;
-  currentLead: string;
-  currentObservation: string;
-  history: InterviewExchange[];
-  depth: number;
-  finished: boolean;
-  exchangeIndex: number;
+  path: EntryKey; currentQuestion: string; currentLead: string;
+  currentObservation: string; history: InterviewExchange[];
+  depth: number; finished: boolean; exchangeIndex: number;
 };
 
 type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string };
@@ -101,20 +84,20 @@ type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string 
 const STORAGE_KEY = "ctms_premium_front_v8";
 
 const CONSENTS = [
-  "Rozumiem, że CzyToMaSens jest narzędziem analitycznym i rozwojowym, a nie poradą medyczną, psychologiczną, terapeutyczną ani prawną.",
-  "Rozumiem, że wynik analizy jest interpretacją opartą na moich odpowiedziach i nie stanowi diagnozy klinicznej ani werdyktu o drugiej osobie.",
-  "Wyrażam zgodę na przetwarzanie podanych przeze mnie danych osobowych w celu wygenerowania raportu i realizacji usługi cyfrowej, zgodnie z Polityką prywatności.",
-  "Rozumiem, że usługa cyfrowa zostaje zrealizowana bezpośrednio po opłaceniu dostępu i tym samym tracę prawo do odstąpienia od umowy po rozpoczęciu generowania raportu.",
+  "Rozumiem, że CzyToMaSens jest narzędziem analitycznym, a nie poradą psychologiczną, terapeutyczną ani medyczną.",
+  "Rozumiem, że wynik analizy opiera się wyłącznie na moich odpowiedziach i nie stanowi diagnozy ani oceny drugiej osoby.",
+  "Wyrażam zgodę na przetwarzanie moich danych w celu wygenerowania raportu, zgodnie z Polityką prywatności.",
+  "Rozumiem, że raport jest generowany bezpośrednio po płatności i tracę prawo do odstąpienia od umowy w momencie jego uruchomienia.",
 ];
 
 const LEGAL_CONTENT: Record<Exclude<LegalKey, null>, { title: string; body: string }> = {
   regulamin: {
     title: "Regulamin",
-    body: `CzyToMaSens jest narzędziem analitycznym i refleksyjnym — nie zastępuje psychoterapii, doradztwa psychologicznego ani prawnego. Raporty generowane przez system mają charakter informacyjny i opierają się wyłącznie na odpowiedziach użytkownika.\n\nPłatność: dostęp do pełnego raportu jest odpłatny. Płatność realizowana jest przez Stripe. Po skutecznej płatności system generuje indywidualny raport.\n\nTreść cyfrowa: raport stanowi treść cyfrową dostarczaną bezpośrednio po zakupie. Zgodnie z art. 38 pkt 13 ustawy o prawach konsumenta, prawo do odstąpienia nie przysługuje po rozpoczęciu realizacji treści cyfrowej, na co użytkownik wyraża zgodę przed zakupem.\n\nReklamacje: kontakt@czytomasens.pl — rozpatrywane w 14 dni roboczych. W przypadku problemów technicznych uniemożliwiających dostarczenie raportu przysługuje ponowne wygenerowanie lub zwrot płatności.\n\nOdpowiedzialność: usługodawca nie ponosi odpowiedzialności za decyzje podjęte na podstawie treści raportu.`,
+    body: `CzyToMaSens jest narzędziem analitycznym i refleksyjnym — nie zastępuje psychoterapii, doradztwa psychologicznego ani prawnego. Raporty generowane przez system mają charakter informacyjny i opierają się wyłącznie na odpowiedziach użytkownika.\n\nPłatność: dostęp do pełnego raportu jest odpłatny. Płatność realizowana jest przez Stripe. Po skutecznej płatności system generuje indywidualny raport.\n\nTreść cyfrowa: raport stanowi treść cyfrową dostarczaną bezpośrednio po zakupie. Zgodnie z art. 38 pkt 13 ustawy o prawach konsumenta, prawo do odstąpienia nie przysługuje po rozpoczęciu realizacji treści cyfrowej, na co użytkownik wyraża zgodę przed zakupem.\n\nReklamacje: kontakt@czytomasens.pl — rozpatrywane w 14 dni roboczych.\n\nOdpowiedzialność: usługodawca nie ponosi odpowiedzialności za decyzje podjęte na podstawie treści raportu.`,
   },
   prywatnosc: {
     title: "Polityka prywatności",
-    body: `Administrator: właściciel serwisu CzyToMaSens, kontakt@czytomasens.pl.\n\nZakres danych: adres e-mail, treści odpowiedzi analitycznych, dane transakcyjne (Stripe), dane techniczne (IP, user-agent).\n\nCele: realizacja usługi cyfrowej, obsługa płatności, kontakt, bezpieczeństwo systemu.\n\nOdbiorcy: Stripe Inc. (płatności), dostawca hostingu, Resend (e-mail). Dane nie są sprzedawane.\n\nOkres przechowywania: dane analityczne — 90 dni, dokumentacja transakcyjna — 5 lat.\n\nPrawa użytkownika: dostęp, sprostowanie, usunięcie, ograniczenie, przenoszenie, sprzeciw, cofnięcie zgody, skarga do UODO. Kontakt: kontakt@czytomasens.pl.`,
+    body: `Administrator: właściciel serwisu CzyToMaSens, kontakt@czytomasens.pl.\n\nZakres danych: adres e-mail, treści odpowiedzi analitycznych, dane transakcyjne (Stripe), dane techniczne (IP, user-agent).\n\nCele: realizacja usługi, obsługa płatności, kontakt, bezpieczeństwo systemu.\n\nOdbiorcy: Stripe Inc. (płatności), dostawca hostingu, Resend (e-mail). Dane nie są sprzedawane.\n\nOkres przechowywania: dane analityczne — 90 dni, dokumentacja transakcyjna — 5 lat.\n\nPrawa: dostęp, sprostowanie, usunięcie, ograniczenie, przenoszenie, sprzeciw, cofnięcie zgody, skarga do UODO. Kontakt: kontakt@czytomasens.pl.`,
   },
   rodo: {
     title: "Informacja RODO",
@@ -130,86 +113,98 @@ const ENTRY_CONFIGS: EntryConfig[] = [
   {
     key: "betrayal",
     title: "Po zdradzie albo kłamstwie",
-    subtitle: "Nie chodzi już o to co się stało. Chodzi o to, co to zrobiło z Tobą i z tym co między Wami.",
-    intro: "System sprawdza czy to co wróciło to realna zmiana, czy tylko cisza po burzy.",
+    subtitle: "Zaufanie można odbudować. Ale nie na udawaniu że wszystko jest okej.",
+    quote: "„Mówi że to już za nim. Ale ja nadal sprawdzam telefon."",
+    intro: "Dowiesz się czy to co wróciło to realna zmiana, czy tylko cisza po burzy. I czy zaufanie które masz teraz — to zaufanie, czy strach przed kolejną prawdą.",
+    duration: "ok. 7 minut",
     questions: [
-      { id: "b1", lead: "Odpowiedzialność to nie przeprosiny. To zmiana zachowania.", text: "Czy ta osoba naprawdę wzięła odpowiedzialność — nie tylko słownie, ale w tym co robi od tamtego czasu?", options: [{ id: "a", label: "Głównie słowa, zachowanie się nie zmieniło", score: 3 }, { id: "b", label: "Coś się zmieniło, ale niekonsekwentnie", score: 2 }, { id: "c", label: "Tak, widać realną zmianę", score: 0 }] },
-      { id: "b2", lead: "Nieufność, którą sam w sobie budujesz, kosztuje Cię więcej niż ją.", text: "Czy dziś żyjesz w stałym trybie sprawdzania — telefon, słowa, godziny, spójność historii?", options: [{ id: "a", label: "Tak, to stało się moim normalem", score: 3 }, { id: "b", label: "Czasem wpadam w ten tryb", score: 2 }, { id: "c", label: "Nie, to już za mną", score: 0 }] },
-      { id: "b3", lead: "Kiedy wracasz do bólu, jego reakcja mówi wszystko.", text: "Gdy wracasz do tego co się stało, ta osoba jest obecna i cierpliwa — czy daje Ci do zrozumienia, że już powinieneś/powinnaś przestać?", options: [{ id: "a", label: "Głównie ucina temat albo się irytuje", score: 3 }, { id: "b", label: "Bywa różnie, zależy od dnia", score: 2 }, { id: "c", label: "Jest cierpliwa i obecna", score: 0 }] },
-      { id: "b4", lead: "To jest pytanie, którego się boisz zadać wprost.", text: "Czy gdybyś zapytał/zapytała dzisiaj wprost: 'Czy mam się bać, że to się powtórzy?' — byłbyś/byłabyś w stanie uwierzyć w odpowiedź?", options: [{ id: "a", label: "Nie, i to mówi wszystko", score: 3 }, { id: "b", label: "Chciałbym/chciałabym wierzyć, ale nie jestem pewna/pewny", score: 2 }, { id: "c", label: "Tak, byłbym/byłabym w stanie", score: 0 }] },
+      { id: "b1", lead: "Przeprosiny to słowa. Odpowiedzialność to zachowanie.", text: "Czy ta osoba wzięła realną odpowiedzialność — nie tylko przeprosiła, ale zmieniła coś konkretnego w tym co robi na co dzień?", options: [{ id: "a", label: "Głównie słowa. W zachowaniu niewiele się zmieniło.", score: 3 }, { id: "b", label: "Zmieniła się — ale tylko gdy patrzę.", score: 2 }, { id: "c", label: "Tak. Widać to bez szukania.", score: 0 }] },
+      { id: "b2", lead: "Żyć w ciągłym trybie sprawdzania to nie ostrożność. To wyrok.", text: "Czy dziś masz w głowie stały monitoring — telefon, godziny, spójność historii — i to stało się Twoim normalem?", options: [{ id: "a", label: "Tak. Nie umiem już inaczej.", score: 3 }, { id: "b", label: "Wpadam w to, ale próbuję hamować.", score: 2 }, { id: "c", label: "Nie. Nie czuję już tej potrzeby.", score: 0 }] },
+      { id: "b3", lead: "To jak ktoś reaguje gdy wracasz do bólu — mówi wszystko o tym czy naprawdę zrozumiał.", text: "Kiedy wracasz do tego co się stało — ta osoba jest cierpliwa i obecna, czy daje Ci do zrozumienia że już za długo to ciągniesz?", options: [{ id: "a", label: "Ucina temat albo się irytuje.", score: 3 }, { id: "b", label: "Słucha, ale czuję że ma tego dość.", score: 2 }, { id: "c", label: "Jest przy mnie. Nie spieszy się.", score: 0 }] },
+      { id: "b4", lead: "Jest jedno pytanie którego się boisz zadać wprost.", text: "Gdybyś zapytał dziś tej osoby: „Czy mam się bać że to się powtórzy?" — byłbyś w stanie uwierzyć w odpowiedź?", options: [{ id: "a", label: "Nie. I to mówi mi więcej niż cokolwiek.", score: 3 }, { id: "b", label: "Chciałbym wierzyć. Ale coś we mnie nie ufa.", score: 2 }, { id: "c", label: "Tak. Uwierzyłbym.", score: 0 }] },
     ],
-    checkpoint: { title: "Jedno pytanie bez ucieczki", text: "Co dziś bardziej trzyma Cię przy tej osobie: poczucie że odbudowujecie coś realnego, czy strach że jak odejdziesz to ta historia nie będzie miała sensu?", options: [{ id: "a", label: "Bardziej strach przed stratą sensu", score: 3 }, { id: "b", label: "Jedno i drugie walczy w środku", score: 2 }, { id: "c", label: "Naprawdę odbudowujemy coś realnego", score: 0 }] },
-    openPrompt: "Napisz bez cenzury: co dokładnie pękło po tym co się stało i po czym dziś poznajesz, że zaufanie albo nie wróciło — albo wróciło pozornie?",
+    checkpoint: { title: "Jedno pytanie. Bez ucieczki.", text: "Co dziś bardziej trzyma Cię przy tej osobie — poczucie że naprawdę odbudowujecie coś realnego, czy strach że jak odejdziesz, ta historia nie będzie miała sensu?", options: [{ id: "a", label: "Bardziej strach że historia nie miałaby sensu.", score: 3 }, { id: "b", label: "Obie rzeczy. Jedno z drugim się miesza.", score: 2 }, { id: "c", label: "Odbudowujemy coś realnego. To czuję.", score: 0 }] },
+    openPrompt: "Co dokładnie pękło — i po czym dziś poznajesz, że zaufanie wróciło albo wróciło tylko pozornie?",
   },
   {
     key: "uncertain",
     title: "Nie wiem na czym stoję",
-    subtitle: "Nadzieja i niepewność wymieniają się co kilka dni. Nie wiesz czy to złożoność czy chaos.",
-    intro: "System sprawdza czy Twoja niepewność wynika z sytuacji czy z tego, że ktoś celowo nie daje Ci jasności.",
+    subtitle: "Niepewność która trwa miesiącami rzadko jest przypadkowa.",
+    quote: "„Nie wiem czy jesteśmy razem. Nie wiem czy nie jesteśmy. On też chyba nie wie."",
+    intro: "Dowiesz się czy ta niepewność wynika z sytuacji — czy z tego, że ktoś świadomie nie daje Ci jasności, bo mu to odpowiada.",
+    duration: "ok. 7 minut",
     questions: [
-      { id: "u1", lead: "Niejasność, która trwa miesiącami, rzadko jest przypadkowa.", text: "Czy ta osoba konkretnie i wprost określiła czym dla niej jesteście — czy raczej temat jakoś zawsze się rozmywa?", options: [{ id: "a", label: "Rozmywa się albo w ogóle nie poruszamy tego tematu", score: 3 }, { id: "b", label: "Coś mówi, ale nieprecyzyjnie", score: 2 }, { id: "c", label: "Tak, jest jasność co do tego co jest między nami", score: 0 }] },
-      { id: "u2", lead: "Ktoś kto chce — robi. Reszta to tłumaczenia.", text: "Jak wygląda zaangażowanie tej osoby gdy NIE TY inicjujesz kontakt, plan, bliskość?", options: [{ id: "a", label: "Prawie nic się nie dzieje — to ja ciągnę", score: 3 }, { id: "b", label: "Coś się pojawia, ale rzadziej i słabiej", score: 2 }, { id: "c", label: "Jest aktywna z własnej inicjatywy", score: 0 }] },
-      { id: "u3", lead: "Uwaga pojawiająca się głównie wtedy gdy zaczynasz się wycofywać to nie miłość. To refleks.", text: "Czy ta osoba jest bardziej obecna i zaangażowana wtedy, gdy wyczuje że możesz odejść?", options: [{ id: "a", label: "Tak, wtedy wszystko się ożywia na chwilę", score: 3 }, { id: "b", label: "Chyba tak, ale nie jestem pewna/pewny", score: 2 }, { id: "c", label: "Nie, poziom jest raczej stały", score: 0 }] },
-      { id: "u4", lead: "Zrób ten eksperyment w głowie.", text: "Gdybyś dziś przez dwa tygodnie przestał/przestała pisać pierwszy — co by się stało z kontaktem?", options: [{ id: "a", label: "Prawdopodobnie zamarłby lub prawie zamarł", score: 3 }, { id: "b", label: "Ona/on by się odezwała/odezwał, ale nie wiem kiedy", score: 2 }, { id: "c", label: "Na pewno by się odezwała/odezwał szybko", score: 0 }] },
+      { id: "u1", lead: "Kiedy ktoś chce — mówi wprost. Reszta to wymówki.", text: "Czy ta osoba kiedykolwiek powiedziała Ci wprost czym dla niej jesteście — czy temat zawsze jakoś się rozmywa lub odkłada?", options: [{ id: "a", label: "Temat się rozmywa. Albo w ogóle go nie ma.", score: 3 }, { id: "b", label: "Coś mówi — ale tak, że mogę to rozumieć jak chcę.", score: 2 }, { id: "c", label: "Tak. Powiedziała wprost.", score: 0 }] },
+      { id: "u2", lead: "Zaangażowanie widać wtedy gdy Ty nic nie robisz.", text: "Jak wygląda kontakt gdy to nie Ty piszesz pierwszy, nie Ty proponujesz, nie Ty inicjujesz?", options: [{ id: "a", label: "Prawie nic się nie dzieje. To ja napędzam.", score: 3 }, { id: "b", label: "Coś się pojawia — ale rzadziej i jakby z obowiązku.", score: 2 }, { id: "c", label: "Ona sama inicjuje. Regularnie.", score: 0 }] },
+      { id: "u3", lead: "Uwaga która pojawia się gdy zaczynasz się wycofywać — to nie uczucie. To refleks.", text: "Czy ta osoba staje się bardziej obecna i zaangażowana dokładnie wtedy, gdy wyczuje że możesz odejść?", options: [{ id: "a", label: "Tak. Wtedy wszystko wraca na chwilę.", score: 3 }, { id: "b", label: "Chyba tak — choć nie chcę w to wierzyć.", score: 2 }, { id: "c", label: "Nie. Poziom jest mniej więcej stały.", score: 0 }] },
+      { id: "u4", lead: "Zrób ten eksperyment w głowie — odpowiedz szybko.", text: "Gdybyś przez dwa tygodnie przestał pisać pierwszy i nie odzywał się wcale — co by się stało z kontaktem?", options: [{ id: "a", label: "Prawdopodobnie zamarłby całkowicie.", score: 3 }, { id: "b", label: "Odezwałaby się — ale nie wiem kiedy ani po co.", score: 2 }, { id: "c", label: "Odezwałaby się szybko. Jestem pewien.", score: 0 }] },
     ],
-    checkpoint: { title: "Jedno pytanie bez ucieczki", text: "Gdybyś usunął/usunęła z równania tęsknotę, przyzwyczajenie i lęk przed samotnością — czy nadal chciałbyś/chciałabyś tej osoby?", options: [{ id: "a", label: "Szczerze? Nie wiem. Może nie.", score: 3 }, { id: "b", label: "Myślę że tak, ale mam wątpliwości", score: 2 }, { id: "c", label: "Tak, niezależnie od tych rzeczy", score: 0 }] },
-    openPrompt: "Napisz bez upiększania: co konkretnie od miesięcy nie daje Ci jasności i dlaczego mimo tego wciąż jesteś w tym miejscu?",
+    checkpoint: { title: "Jedno pytanie. Bez ucieczki.", text: "Gdybyś wyjął z równania tęsknotę, przyzwyczajenie i lęk przed samotnością — czy nadal chciałbyś tej konkretnej osoby?", options: [{ id: "a", label: "Szczerze? Chyba nie.", score: 3 }, { id: "b", label: "Myślę że tak — ale nie jestem pewien.", score: 2 }, { id: "c", label: "Tak. Niezależnie od tych wszystkich rzeczy.", score: 0 }] },
+    openPrompt: "Co konkretnie od miesięcy nie daje Ci jasności — i dlaczego mimo tego wciąż jesteś w tym miejscu?",
   },
   {
     key: "stagnation",
-    title: "To trwa ale czegoś już w tym nie ma",
-    subtitle: "Brak awantur nie jest dowodem spokoju. Czasem jest dowodem że już nic nie ma sensu kłócić.",
-    intro: "System sprawdza czy jesteście w spokojnej fazie czy po prostu w ciszy obojętności.",
+    title: "To trwa, ale czegoś już w tym nie ma",
+    subtitle: "Brak awantur to nie dowód spokoju. Czasem dowód że już nic nie ma sensu kłócić.",
+    quote: "„Wszystko jest okej. I właśnie to mnie przeraża."",
+    intro: "Dowiesz się czy jesteście w spokojnej fazie po trudnym czasie — czy po prostu oboje przestaliście już czegokolwiek oczekiwać.",
+    duration: "ok. 7 minut",
     questions: [
-      { id: "s1", lead: "Relacja gaśnie zanim ktokolwiek to powie na głos.", text: "Czy coraz częściej jesteście razem fizycznie, ale czujesz że naprawdę jesteś sam/sama?", options: [{ id: "a", label: "Tak, i to jest coraz bardziej normalne", score: 3 }, { id: "b", label: "Czasami to czuję", score: 2 }, { id: "c", label: "Nie, czuję obecność i kontakt", score: 0 }] },
-      { id: "s2", lead: "Kiedy ostatnio ta osoba zrobiła coś dla Was z własnej inicjatywy?", text: "Czy masz poczucie że to głównie Ty trzymasz tę relację przy życiu — emocjami, inicjatywą, ratowaniem atmosfery?", options: [{ id: "a", label: "Tak, bez mojego wysiłku to by padło", score: 3 }, { id: "b", label: "Częściowo tak", score: 2 }, { id: "c", label: "Nie, jest obustronne", score: 0 }] },
-      { id: "s3", lead: "Ile razy w tym miesiącu pomyślałeś/pomyślałaś 'to chyba jest już koniec'?", text: "Czy myśl o odejściu jest coraz mniej przerażająca, a coraz bardziej — ulżyłoby?", options: [{ id: "a", label: "Tak, coraz częściej myślę o uldze", score: 3 }, { id: "b", label: "Taka myśl się pojawia, ale nie dominuje", score: 2 }, { id: "c", label: "Nie, ta myśl mnie przeraża", score: 0 }] },
-      { id: "s4", lead: "Odpowiedz na to pytanie tak szybko jak się da.", text: "Gdybyś jutro dowiedział/dowiedziała się że ta osoba odchodzi — pierwsza emocja to byłby ból czy ulga?", options: [{ id: "a", label: "Szczerość podpowiada: ulga, albo mieszanina", score: 3 }, { id: "b", label: "Nie wiem, może jedno i drugie", score: 2 }, { id: "c", label: "Ból. Zdecydowanie ból.", score: 0 }] },
+      { id: "s1", lead: "Samotność w związku boli inaczej niż samotność po rozstaniu.", text: "Czy coraz częściej jesteście razem fizycznie, ale czujesz że naprawdę jesteś sam?", options: [{ id: "a", label: "Tak. I to stało się normalne.", score: 3 }, { id: "b", label: "Czasem. Nie zawsze.", score: 2 }, { id: "c", label: "Nie. Czuję jej obecność i kontakt.", score: 0 }] },
+      { id: "s2", lead: "Kiedy ostatnio ta osoba zrobiła coś dla Was — z własnej inicjatywy, bez podpowiedzi?", text: "Czy masz poczucie że to głównie Ty trzymasz tę relację przy życiu — emocjami, inicjatywą, podtrzymywaniem atmosfery?", options: [{ id: "a", label: "Tak. Bez mojego wysiłku to by już padło.", score: 3 }, { id: "b", label: "Częściowo. Ja więcej, ale nie wszystko.", score: 2 }, { id: "c", label: "Nie. Jest obustronne.", score: 0 }] },
+      { id: "s3", lead: "Kiedy myśl o odejściu przestaje przerażać — to jest sygnał.", text: "Czy myśl o zakończeniu tej relacji jest coraz mniej przerażająca, a coraz bardziej — ulżyłoby?", options: [{ id: "a", label: "Tak. Coraz częściej myślę o uldze.", score: 3 }, { id: "b", label: "Pojawia się — ale nie dominuje.", score: 2 }, { id: "c", label: "Nie. Ta myśl nadal mnie przeraża.", score: 0 }] },
+      { id: "s4", lead: "Odpowiedz zanim zdążysz to przemyśleć.", text: "Gdybyś jutro dowiedział się że ta osoba odchodzi — pierwsza emocja to byłby ból czy ulga?", options: [{ id: "a", label: "Ulga. Albo mieszanina — i to mówi wszystko.", score: 3 }, { id: "b", label: "Nie wiem. Pewnie jedno i drugie naraz.", score: 2 }, { id: "c", label: "Ból. Zdecydowanie ból.", score: 0 }] },
     ],
-    checkpoint: { title: "Jedno pytanie bez ucieczki", text: "Co konkretnie chciałbyś/chciałabyś żeby wróciło między Wami — i czy ta osoba wie o tym i robi cokolwiek żeby to zmienić?", options: [{ id: "a", label: "Wie albo powinna wiedzieć — i nic nie robi", score: 3 }, { id: "b", label: "Coś próbuje, ale za mało", score: 2 }, { id: "c", label: "Tak, naprawdę pracujemy nad tym razem", score: 0 }] },
-    openPrompt: "Napisz uczciwie: co dokładnie zniknęło między Wami i kiedy przestałeś/przestałaś wierzyć że samo wróci?",
+    checkpoint: { title: "Jedno pytanie. Bez ucieczki.", text: "Co konkretnie chciałbyś żeby wróciło między Wami — i czy ta osoba w ogóle wie o tym i robi cokolwiek żeby to zmienić?", options: [{ id: "a", label: "Wie albo powinna wiedzieć. I nic nie robi.", score: 3 }, { id: "b", label: "Coś próbuje — ale za mało i za rzadko.", score: 2 }, { id: "c", label: "Tak. Naprawdę razem nad tym pracujemy.", score: 0 }] },
+    openPrompt: "Co dokładnie zniknęło między Wami — i kiedy przestałeś wierzyć że samo wróci?",
   },
   {
     key: "returning",
     title: "Rozstaliśmy się i nie wiem czy wracać",
     subtitle: "Tęsknota potrafi udawać miłość. Lęk przed samotnością potrafi udawać sens.",
-    intro: "System odróżni czy chcesz tej osoby, czy chcesz żeby bało się skończyć.",
+    quote: "„Wiem że nie powinnam. Ale cały czas o nim myślę."",
+    intro: "Dowiesz się czy chcesz tej konkretnej osoby — czy chcesz żeby pewien rozdział w końcu miał dobre zakończenie.",
+    duration: "ok. 7 minut",
     questions: [
-      { id: "r1", lead: "Tęsknić można za człowiekiem. Tęsknić można za poczuciem że się jest potrzebnym.", text: "Gdy wyobrażasz sobie powrót — co dokładnie widzisz? Bycie z tą osobą, czy koniec niepewności i samotności?", options: [{ id: "a", label: "Szczerość mówi: bardziej koniec samotności", score: 3 }, { id: "b", label: "Trudno to oddzielić", score: 2 }, { id: "c", label: "Naprawdę widzę tę osobę, nie ulgę", score: 0 }] },
-      { id: "r2", lead: "Powody rozstania są prawdą o relacji. Nie znikają przez tęsknotę.", text: "To przez co się rozstaliście — czy to były jednorazowe okoliczności, czy głębszy wzorzec który wracał?", options: [{ id: "a", label: "Głębszy wzorzec, wracał wielokrotnie", score: 3 }, { id: "b", label: "Trochę jednego i drugiego", score: 2 }, { id: "c", label: "Raczej jednorazowy kryzys lub okoliczności", score: 0 }] },
-      { id: "r3", lead: "Odległość robi filtr — przepuszcza tylko to co przyjemne.", text: "Gdy myślisz o tej osobie teraz — pamiętasz głównie dobre, czy widzisz też wyraźnie to co Cię niszczyło?", options: [{ id: "a", label: "Głównie dobre — złe jest rozmyte albo usprawiedliwiane", score: 3 }, { id: "b", label: "Widzę trochę jedno i drugie", score: 2 }, { id: "c", label: "Widzę całość jasno, włącznie z tym co bolało", score: 0 }] },
-      { id: "r4", lead: "To jest kluczowe pytanie przed powrotem.", text: "Czy wiesz co konkretnie musiałoby się zmienić żeby powrót miał sens — i czy ta osoba wie to samo i jest gotowa to zmienić?", options: [{ id: "a", label: "Nie wiem co by musiało się zmienić. Albo wiem, ale tamta osoba nie.", score: 3 }, { id: "b", label: "Coś wiem, ale nie jesteśmy zgodni/zgodne", score: 2 }, { id: "c", label: "Tak, oboje wiemy i oboje jesteśmy gotowi", score: 0 }] },
+      { id: "r1", lead: "Tęsknić można za człowiekiem. Tęsknić można za poczuciem że się jest potrzebnym.", text: "Gdy wyobrażasz sobie powrót — co konkretnie widzisz? Tę osobę, czy koniec zawieszenia i samotności?", options: [{ id: "a", label: "Szczerość mówi: bardziej koniec tego stanu.", score: 3 }, { id: "b", label: "Trudno to rozdzielić. Jedno z drugim.", score: 2 }, { id: "c", label: "Widzę tę osobę. Nie ulgę.", score: 0 }] },
+      { id: "r2", lead: "Powód rozstania to prawda o relacji. Tęsknota go nie usuwa.", text: "To przez co się rozstaliście — czy to był jednorazowy kryzys, czy wzorzec który wracał od dawna?", options: [{ id: "a", label: "Wzorzec. Wracał. Wielokrotnie.", score: 3 }, { id: "b", label: "Trochę jednego i drugiego.", score: 2 }, { id: "c", label: "Raczej jednorazowy kryzys albo okoliczności.", score: 0 }] },
+      { id: "r3", lead: "Odległość filtruje wspomnienia. Przepuszcza to co przyjemne.", text: "Gdy myślisz o tej osobie teraz — widzisz całość jasno, czy złe jest rozmyte a dobre wyostrzone?", options: [{ id: "a", label: "Głównie dobre. Złe jakoś się usprawiedliwia.", score: 3 }, { id: "b", label: "Widzę jedno i drugie — ale nierówno.", score: 2 }, { id: "c", label: "Widzę całość. Włącznie z tym co bolało.", score: 0 }] },
+      { id: "r4", lead: "Przed powrotem jest jedno kluczowe pytanie.", text: "Czy wiesz co konkretnie musiałoby się zmienić żeby powrót miał sens — i czy ta osoba wie to samo i jest gotowa?", options: [{ id: "a", label: "Nie wiem. Albo wiem — ale tamta osoba nie.", score: 3 }, { id: "b", label: "Mam jakiś obraz — ale nie jesteśmy zgodni.", score: 2 }, { id: "c", label: "Tak. Oboje wiemy i oboje jesteśmy gotowi.", score: 0 }] },
     ],
-    checkpoint: { title: "Jedno pytanie bez ucieczki", text: "Gdybyś wiedział/wiedziała że ta osoba już ułożyła sobie życie z kimś innym i nie wróci — jak długo zajęłoby Ci dojście do siebie?", options: [{ id: "a", label: "Długo. Bardzo długo. To by mnie złamało.", score: 3 }, { id: "b", label: "Byłoby ciężko, ale bym dał/dała radę", score: 2 }, { id: "c", label: "Byłoby smutno, ale bym to przyjął/przyjęła", score: 0 }] },
-    openPrompt: "Napisz uczciwie: co naprawdę trzyma Cię przy myśleniu o powrocie i czego najbardziej się boisz jeśli nie wrócisz?",
+    checkpoint: { title: "Jedno pytanie. Bez ucieczki.", text: "Gdybyś wiedział że ta osoba już ułożyła sobie życie z kimś innym i nie wróci — jak długo zajęłoby Ci dojście do siebie?", options: [{ id: "a", label: "Długo. Bardzo długo. To by mnie złamało.", score: 3 }, { id: "b", label: "Byłoby ciężko — ale bym przez to przeszedł.", score: 2 }, { id: "c", label: "Byłoby smutno. Ale bym to przyjął.", score: 0 }] },
+    openPrompt: "Co naprawdę trzyma Cię przy myśleniu o powrocie — i czego się boisz jeśli nie wrócisz?",
   },
   {
     key: "triangle",
-    title: "Jest ktoś trzeci i wszystko się miesza",
-    subtitle: "Nowa osoba obnaża to czego nie było — albo daje pretekst do ucieczki. Jedno i drugie wygląda tak samo z zewnątrz.",
-    intro: "System sprawdza czy nowa osoba jest prawdziwą odpowiedzią czy tylko pytaniem które zadajesz sobie od dawna.",
+    title: "Jest ktoś trzeci",
+    subtitle: "Nowa osoba obnaża to czego nie było — albo daje pretekst do ucieczki. Z zewnątrz wygląda tak samo.",
+    quote: "„Nie wiem czy ją kocham czy tylko uciekam. I nie wiem od czego."",
+    intro: "Dowiesz się czy ta trzecia osoba jest odpowiedzią na coś realnego — czy pytaniem które zadajesz sobie od dawna i szukasz dla niego gotowej nazwy.",
+    duration: "ok. 7 minut",
     questions: [
-      { id: "t1", lead: "Gdyby w obecnej relacji było dobrze, ta osoba by się tak nie pojawiła.", text: "Czy pojawienie się tej trzeciej osoby odsłoniło coś czego Ci w obecnej relacji brakowało od dawna?", options: [{ id: "a", label: "Tak i teraz trudno to niezauważyć", score: 3 }, { id: "b", label: "Trochę tak, ale nie wiem czy to jest związane", score: 2 }, { id: "c", label: "Nie, to jest osobna historia", score: 1 }] },
-      { id: "t2", lead: "Nowa osoba to nie człowiek. To jeszcze wyobrażenie.", text: "Czy znasz tę osobę w realnych warunkach — konflikcie, zmęczeniu, codzienności — czy znasz ją głównie w najlepszym wydaniu?", options: [{ id: "a", label: "W najlepszym wydaniu, bez codzienności", score: 2 }, { id: "b", label: "Trochę obu", score: 1 }, { id: "c", label: "Znam ją realnie, nie tylko od najlepszej strony", score: 0 }] },
-      { id: "t3", lead: "Odpowiedz na to szybko, pierwsza myśl.", text: "Gdyby ta trzecia osoba zniknęła z Twojego życia — jak długo zajęłoby Ci poczucie ulgi zamiast straty?", options: [{ id: "a", label: "Długo. To by naprawdę bolało.", score: 3 }, { id: "b", label: "Byłoby ciężko ale bym dał/dała radę", score: 2 }, { id: "c", label: "Szybko. Wiem że to bardziej fascynacja.", score: 1 }] },
-      { id: "t4", lead: "Zawieszenie jest wygodne bo odraczają decyzję.", text: "Czy dziś bardziej działasz — robisz coś z jedną lub drugą sytuacją — czy odkładasz decyzję i trwasz?", options: [{ id: "a", label: "Trwam w zawieszeniu i odkładam", score: 3 }, { id: "b", label: "Próbuję coś zrozumieć, ale bez działania", score: 2 }, { id: "c", label: "Działam, nie tylko myślę", score: 0 }] },
+      { id: "t1", lead: "Gdyby w obecnej relacji było naprawdę dobrze — ta osoba by się tak nie pojawiła.", text: "Czy pojawienie się kogoś trzeciego odsłoniło coś czego Ci w obecnej relacji brakowało od dawna?", options: [{ id: "a", label: "Tak. I teraz trudno to niezauważyć.", score: 3 }, { id: "b", label: "Chyba tak — ale nie wiem czy to związane.", score: 2 }, { id: "c", label: "Nie. To osobna historia.", score: 1 }] },
+      { id: "t2", lead: "Nowa osoba to jeszcze nie człowiek. To wyobrażenie.", text: "Czy znasz tę osobę w realu — w konflikcie, zmęczeniu, codzienności — czy tylko w jej najlepszym wydaniu?", options: [{ id: "a", label: "Wyłącznie w najlepszym. Bez codzienności.", score: 2 }, { id: "b", label: "Trochę jedno i drugie.", score: 1 }, { id: "c", label: "Znam ją realnie. Nie tylko od dobrej strony.", score: 0 }] },
+      { id: "t3", lead: "Pierwsza myśl. Zanim zdążysz ją poprawić.", text: "Gdyby ta osoba zniknęła z Twojego życia — jak długo zajęłoby Ci poczucie ulgi zamiast straty?", options: [{ id: "a", label: "Długo. To by naprawdę bolało.", score: 3 }, { id: "b", label: "Byłoby ciężko — ale dałbym radę.", score: 2 }, { id: "c", label: "Szybko. Wiem że to bardziej fascynacja.", score: 1 }] },
+      { id: "t4", lead: "Zawieszenie jest wygodne — odraczasz decyzję nie podejmując jej.", text: "Czy dziś bardziej działasz — robisz coś z którąś z tych sytuacji — czy trwasz i odkładasz?", options: [{ id: "a", label: "Trwam. Odkładam. Czekam aż coś się rozstrzygnie.", score: 3 }, { id: "b", label: "Próbuję coś rozumieć — ale bez działania.", score: 2 }, { id: "c", label: "Działam. Nie tylko myślę.", score: 0 }] },
     ],
-    checkpoint: { title: "Jedno pytanie bez ucieczki", text: "Gdyby tamta trzecia osoba nigdy nie pojawiła się w Twoim życiu — czy dziś byłbyś/byłabyś zadowolony/zadowolona z obecnej relacji?", options: [{ id: "a", label: "Nie. Problem by i tak istniał.", score: 3 }, { id: "b", label: "Nie wiem. Chyba byłoby ciężko.", score: 2 }, { id: "c", label: "Tak. Byłoby dobrze.", score: 0 }] },
-    openPrompt: "Napisz bez owijania w bawełnę: co ta trzecia osoba daje Ci lub obiecuje że da, czego nie dostajesz w obecnej relacji?",
+    checkpoint: { title: "Jedno pytanie. Bez ucieczki.", text: "Gdyby tamta trzecia osoba nigdy nie pojawiła się w Twoim życiu — czy dziś byłbyś zadowolony z obecnej relacji?", options: [{ id: "a", label: "Nie. Problem by i tak istniał.", score: 3 }, { id: "b", label: "Nie wiem. Chyba byłoby ciężko.", score: 2 }, { id: "c", label: "Tak. Byłoby dobrze.", score: 0 }] },
+    openPrompt: "Co ta trzecia osoba daje Ci — albo obiecuje że da — czego nie masz w obecnej relacji?",
   },
   {
     key: "loop",
-    title: "Wracamy do siebie w kółko i nic się nie zmienia",
-    subtitle: "Odchodzicie. Wracacie. Znowu. I za każdym razem mówisz sobie że tym razem będzie inaczej.",
-    intro: "System sprawdza czy to jest miłość którą warto ratować, czy uzależnienie od cyklu napięcie-ulga.",
+    title: "Wracamy do siebie w kółko",
+    subtitle: "Odchodzicie. Wracacie. I za każdym razem mówisz sobie że tym razem będzie inaczej.",
+    quote: "„Rozstajemy się od trzech lat. Nigdy nie wychodzi nam to na stałe."",
+    intro: "Dowiesz się czy to co Was trzyma razem to miłość — czy mechanizm napięcie-ulga, który wygląda jak miłość ale nią nie jest.",
+    duration: "ok. 7 minut",
     questions: [
-      { id: "l1", lead: "Kiedy czujesz tę relację najbardziej — w spokoju czy w dramacie?", text: "Czy najsilniejsze uczucie do tej osoby pojawia się głównie wtedy gdy coś się sypie, ktoś odchodzi albo jest ryzyko utraty?", options: [{ id: "a", label: "Tak, wtedy jest najmocniej. W spokoju jest mdło.", score: 3 }, { id: "b", label: "Czasem tak, ale nie zawsze", score: 2 }, { id: "c", label: "Nie, bliskość nie zależy od dramatu", score: 0 }] },
-      { id: "l2", lead: "Policz ile razy sobie obiecywałeś/obiecywałaś że tym razem będzie inaczej.", text: "Po poprzednich powrotach — czy pojawiły się konkretne zmiany w zachowaniu, które się utrzymały dłużej niż miesiąc?", options: [{ id: "a", label: "Nie. Za każdym razem wracamy do tego samego.", score: 3 }, { id: "b", label: "Coś się zmieniało ale niestabilnie", score: 2 }, { id: "c", label: "Tak, były realne trwałe zmiany", score: 0 }] },
-      { id: "l3", lead: "To jest pytanie które boli.", text: "Gdybyś wyjął/wyjęła z tej relacji napięcie, pojednania i intensywność emocjonalną — co by zostało?", options: [{ id: "a", label: "Szczerość mówi: niewiele albo pustka", score: 3 }, { id: "b", label: "Zostałoby coś, ale nie wiem czy wystarczająco dużo", score: 2 }, { id: "c", label: "Zostałoby dużo. Naprawdę lubimy ze sobą być.", score: 0 }] },
-      { id: "l4", lead: "Powiedz to wprost, nikt nie słyszy.", text: "Czy boisz się odejść nie dlatego że Ci jej/jego brakuje — ale dlatego że nie wiesz kim jesteś bez tego cyklu?", options: [{ id: "a", label: "To uderza za mocno żeby zaprzeczyć", score: 3 }, { id: "b", label: "Może trochę tak, ale nie tylko", score: 2 }, { id: "c", label: "Nie, to nie jest powód dla mnie", score: 0 }] },
+      { id: "l1", lead: "Jest pytanie które warto zadać sobie uczciwie.", text: "Czy najsilniejsze uczucie do tej osoby pojawia się głównie wtedy gdy coś się sypie, ktoś odchodzi albo jest ryzyko utraty?", options: [{ id: "a", label: "Tak. Wtedy jest najmocniej. W spokoju jakoś mdło.", score: 3 }, { id: "b", label: "Czasem tak — nie zawsze.", score: 2 }, { id: "c", label: "Nie. Bliskość nie zależy u nas od dramatu.", score: 0 }] },
+      { id: "l2", lead: "Policz ile razy obiecywałeś sobie że tym razem będzie inaczej.", text: "Po poprzednich powrotach — czy pojawiły się konkretne zmiany w zachowaniu które utrzymały się dłużej niż miesiąc?", options: [{ id: "a", label: "Nie. Za każdym razem wracamy do tego samego.", score: 3 }, { id: "b", label: "Coś się zmieniało — ale niestabilnie.", score: 2 }, { id: "c", label: "Tak. Były realne trwałe zmiany.", score: 0 }] },
+      { id: "l3", lead: "To jest pytanie które boli — bo odpowiedź już znasz.", text: "Gdybyś wyjął z tej relacji napięcie, pojednania i intensywność emocjonalną — co by zostało?", options: [{ id: "a", label: "Niewiele. Albo pustka.", score: 3 }, { id: "b", label: "Coś by zostało — ale nie jestem pewien ile.", score: 2 }, { id: "c", label: "Dużo. Naprawdę lubimy ze sobą być.", score: 0 }] },
+      { id: "l4", lead: "Nikt nie słyszy. Powiedz to wprost.", text: "Czy boisz się odejść nie dlatego że Ci jej brakuje — ale dlatego że nie wiesz kim jesteś bez tego cyklu?", options: [{ id: "a", label: "To uderza za mocno żeby zaprzeczyć.", score: 3 }, { id: "b", label: "Może trochę — ale nie tylko.", score: 2 }, { id: "c", label: "Nie. To nie jest mój powód.", score: 0 }] },
     ],
-    checkpoint: { title: "Jedno pytanie bez ucieczki", text: "Jeśli nic się nie zmieni i za rok będziecie dokładnie w tym samym miejscu co teraz — czy to jest życie które akceptujesz?", options: [{ id: "a", label: "Nie. Ale nie wiem jak z tego wyjść.", score: 3 }, { id: "b", label: "Nie chcę tego, ale nie jestem gotowa/gotowy na zmianę", score: 2 }, { id: "c", label: "Tak, bo wierzę że coś się zmieni", score: 0 }] },
-    openPrompt: "Napisz bez filtra: co konkretnie trzyma Cię w tym cyklu i dlaczego mimo wszystko co wiesz — nadal wracasz?",
+    checkpoint: { title: "Jedno pytanie. Bez ucieczki.", text: "Jeśli nic się nie zmieni i za rok będziecie dokładnie w tym samym miejscu co teraz — czy to jest życie które akceptujesz?", options: [{ id: "a", label: "Nie. Ale nie wiem jak z tego wyjść.", score: 3 }, { id: "b", label: "Nie chcę tego — ale nie jestem gotowy na zmianę.", score: 2 }, { id: "c", label: "Tak. Wierzę że coś się zmieni.", score: 0 }] },
+    openPrompt: "Co konkretnie trzyma Cię w tym cyklu — i dlaczego mimo wszystkiego co wiesz, wracasz?",
   },
 ];
 
@@ -235,10 +230,10 @@ function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): 
   const tension = safeNumber(Math.round(28 + intensity * 59), 14, 96);
   const asymmetry = safeNumber(Math.round(24 + intensity * 62), 12, 97);
   const change = safeNumber(Math.round(74 - intensity * 48), 8, 84);
-  if (chance <= 24) return { chance, tension, asymmetry, change, tone: "red", badge: "Wzorzec wysokiego ryzyka", headline: "To bardziej wygląda na relację kosztowną emocjonalnie niż na układ, który sam się naprostuje.", truth: "Na dziś więcej wskazuje tu na przeciążający mechanizm niż na stabilny grunt.", mirror: "To nie wygląda jak zwykły kryzys do przeczekania. Bardziej jak układ, w którym napięcie i przywiązanie zaczęły już robić za spoiwo.", summary: "Ten wynik zwykle pojawia się wtedy, gdy w środku relacji działa już nie tylko uczucie, ale też chaos, nierówność, powracające rozjazdy albo chroniczny brak jasności.", paidTease: "Pełny raport rozpisze, co tu naprawdę trzyma Cię najmocniej: więź, lęk, przywiązanie, iluzja zmiany czy brak domknięcia." };
-  if (chance <= 49) return { chance, tension, asymmetry, change, tone: "yellow", badge: "Układ chwiejny i niespójny", headline: "Tu bardziej widać chwiejność niż spójność.", truth: "Coś jeszcze tę relację trzyma, ale obok tego widać już rozjazdy, które nie są drobiazgiem.", mirror: "To nie wygląda jak spokojny grunt. Raczej jak układ, który potrafi trwać długo i jednocześnie powoli wyczerpywać.", summary: "Ten wynik zwykle pojawia się tam, gdzie obok przywiązania albo nadziei mocno pracują już też inne siły: niejasność, zmęczenie, nierówne zaangażowanie, trudność z odcięciem albo chroniczny brak stabilności.", paidTease: "Pełny raport rozłoży tę relację na warstwy: co jeszcze działa, co już się rozjechało i gdzie leży największe ryzyko dalszego trwania." };
-  if (chance <= 69) return { chance, tension, asymmetry, change, tone: "yellow", badge: "Jest potencjał, ale nie bez zastrzeżeń", headline: "Tu coś jeszcze ma sens, ale nie na autopilocie.", truth: "Nie wygląda to ani na historię całkowicie pustą, ani na relację oczywiście skazaną na powtarzanie tego samego.", mirror: "Widać jednak miejsca, które wymagają więcej niż samej dobrej woli i nadziei, że jakoś się ułoży.", summary: "Ten wynik zwykle oznacza relację, która ma jeszcze materiał, ale nie obroni się samym sentymentem albo przywiązaniem.", paidTease: "W pełnej wersji dostajesz rozkład: co daje nadzieję, co ją podcina i które mechanizmy najmocniej wpływają na ten wynik." };
-  return { chance, tension, asymmetry, change, tone: "green", badge: "Układ z realnym potencjałem", headline: "Tu jeszcze widać grunt, nie tylko emocje.", truth: "Na tym etapie w odpowiedziach jest więcej spójności niż chaosu.", mirror: "To nie znaczy, że nie ma słabszych punktów. Znaczy tyle, że ta relacja nie wygląda wyłącznie na historię napędzaną lękiem, niejasnością albo samym nawykiem wracania.", summary: "Ten wynik zwykle pojawia się tam, gdzie obok napięcia nadal istnieje też realna struktura: kontakt, wzajemność, zdolność do rozmowy albo szansa na zmianę.", paidTease: "Pełna analiza pokaże, z czego dokładnie bierze się ten potencjał i gdzie mimo wszystko ukryte są jego słabsze miejsca." };
+  if (chance <= 24) return { chance, tension, asymmetry, change, tone: "red", badge: "Wzorzec wysokiego ryzyka", headline: "To nie wygląda jak kryzys do przeczekania.", truth: "W tym co opisujesz widać coś więcej niż trudny moment. Widać mechanizm który się powtarza.", mirror: "Napięcie i przywiązanie zaczęły tu robić za spoiwo. To nie jest spokojny grunt — to balansowanie na krawędzi która stała się normą.", summary: "Taki wynik pojawia się gdy w relacji obok uczucia działa już coś innego — chaos, nierówność, chroniczny brak jasności albo cykl który się nie kończy.", paidTease: "Pełny raport pokaże co konkretnie trzyma Cię w tym układzie — i dlaczego samo uczucie tego nie wyjaśnia." };
+  if (chance <= 49) return { chance, tension, asymmetry, change, tone: "yellow", badge: "Układ chwiejny", headline: "Coś tu jeszcze trzyma. Ale obok tego jest coś co ciągnie w dół.", truth: "To nie jest relacja która jest po prostu trudna. To relacja która mogłaby być stabilna — ale nie jest.", mirror: "Widać tu przywiązanie. Ale widać też nierówność, zmęczenie albo niepewność która trwa za długo żeby była przypadkowa.", summary: "Taki wynik pojawia się gdy obok realnego uczucia mocno pracują już też inne siły — niejasność, różne poziomy zaangażowania, trudność z podjęciem decyzji.", paidTease: "Pełny raport rozłoży to na warstwy — co jeszcze działa, co się już rozjechało i gdzie leży największe ryzyko." };
+  if (chance <= 69) return { chance, tension, asymmetry, change, tone: "yellow", badge: "Jest potencjał — ale nie bez zastrzeżeń", headline: "Tu coś jeszcze ma sens. Ale nie na autopilocie.", truth: "To nie jest relacja skazana na powtarzanie tego samego. Ale sama dobra wola i nadzieja to za mało.", mirror: "Widać miejsca które wymagają pracy — nie dlatego że coś jest nie do naprawienia, ale dlatego że zostawione same sobie się pogłębią.", summary: "Taki wynik pojawia się gdy relacja ma realny materiał, ale nie obroni się samym sentymentem ani przyzwyczajeniem.", paidTease: "Pełna analiza pokaże co daje nadzieję, co ją podcina i które wzorce są tu kluczowe." };
+  return { chance, tension, asymmetry, change, tone: "green", badge: "Układ z realnym potencjałem", headline: "Tu widać grunt. Nie tylko emocje.", truth: "W odpowiedziach jest więcej spójności niż chaosu. To nie jest relacja napędzana wyłącznie lękiem ani nawykiem.", mirror: "To nie znaczy że nie ma słabszych punktów. Znaczy tyle że jest na czym budować — jeśli będziesz to widział.", summary: "Taki wynik pojawia się gdy obok napięcia nadal istnieje realna struktura — kontakt, wzajemność, zdolność do rozmowy.", paidTease: "Pełna analiza pokaże z czego dokładnie bierze się ten potencjał i gdzie mimo wszystko są jego słabsze miejsca." };
 }
 
 async function createSession(entryKey: EntryKey): Promise<SessionCreateResponse> {
@@ -273,7 +268,7 @@ async function fetchPaidReport(token: string): Promise<FullReport> {
     if (!data?.report) throw new Error("Serwer nie zwrócił raportu.");
     return data.report as FullReport;
   }
-  throw new Error("Raport jest nadal przygotowywany. Sprawdź e-mail — wyślemy Ci bezpieczny link, gdy będzie gotowy.");
+  throw new Error("Raport jest w trakcie generowania. Sprawdź skrzynkę — wyślemy Ci link gdy będzie gotowy.");
 }
 
 async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: AnswerMap, openText: string): Promise<Preview> {
@@ -307,8 +302,8 @@ function LogoBlock() {
   );
 }
 
-function Glass({ children, className = "" }: { children: React.ReactNode; className?: string }) {
-  return <div className={`ctms-glass ${className}`.trim()}>{children}</div>;
+function Glass({ children, className = "", style }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
+  return <div className={`ctms-glass ${className}`.trim()} style={style}>{children}</div>;
 }
 
 function PrimaryButton({ children, onClick, disabled }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) {
@@ -321,7 +316,7 @@ function GhostButton({ children, onClick }: { children: React.ReactNode; onClick
 
 function PremiumBadge({ preview }: { preview: Preview }) {
   const color = preview.tone === "red" ? BRAND.danger : preview.tone === "green" ? BRAND.success : BRAND.goldSoft;
-  const scoreExplanation = `Wynik powstał z trzech osi: poziomu napięcia w relacji (${preview.tension}%), asymetrii zaangażowania (${preview.asymmetry}%) oraz realności zmiany (${preview.change}%). Im wyższe napięcie i asymetria, tym niższy wynik końcowy.`;
+  const scoreExplanation = `Wynik pochodzi z trzech osi: napięcie w relacji (${preview.tension}%), asymetria zaangażowania (${preview.asymmetry}%), realność zmiany (${preview.change}%). Im wyższe napięcie i asymetria — tym niższy wynik końcowy.`;
   return (
     <Glass className="ctms-preview-badge">
       <div className="ctms-kicker">NA ILE TO MA SENS</div>
@@ -334,41 +329,22 @@ function PremiumBadge({ preview }: { preview: Preview }) {
   );
 }
 
-// ─── BANER COOKIES ────────────────────────────────────────────────────────────
 function CookieBanner() {
   const [visible, setVisible] = useState(false);
-
   useEffect(() => {
-    try {
-      const accepted = localStorage.getItem("ctms_cookies_accepted");
-      if (!accepted) setVisible(true);
-    } catch {}
+    try { if (!localStorage.getItem("ctms_cookies_accepted")) setVisible(true); } catch {}
   }, []);
-
   const accept = () => {
     try { localStorage.setItem("ctms_cookies_accepted", "1"); } catch {}
     setVisible(false);
   };
-
   if (!visible) return null;
-
   return (
-    <div style={{
-      position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9999,
-      background: "rgba(10,10,10,0.97)", borderTop: "1px solid rgba(255,255,255,0.08)",
-      padding: "16px clamp(18px,3vw,36px)", display: "flex", alignItems: "center",
-      justifyContent: "space-between", gap: "16px", flexWrap: "wrap",
-    }}>
+    <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9999, background: "rgba(10,10,10,0.97)", borderTop: "1px solid rgba(255,255,255,0.08)", padding: "16px clamp(18px,3vw,36px)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", flexWrap: "wrap" }}>
       <p style={{ margin: 0, fontSize: "13px", color: "#A8A099", maxWidth: "700px", lineHeight: 1.6 }}>
-        Ta strona używa plików cookies wyłącznie do utrzymania sesji i poprawnego działania aplikacji. Nie stosujemy cookies reklamowych ani śledzących.
+        Ta strona używa plików cookies wyłącznie do utrzymania sesji i poprawnego działania. Nie stosujemy cookies reklamowych ani śledzących.
       </p>
-      <button
-        onClick={accept}
-        style={{
-          background: "#C5A059", color: "#050505", border: "none", borderRadius: "6px",
-          padding: "10px 20px", fontWeight: 600, fontSize: "13px", cursor: "pointer", whiteSpace: "nowrap",
-        }}
-      >
+      <button onClick={accept} style={{ background: "#C5A059", color: "#050505", border: "none", borderRadius: "6px", padding: "10px 20px", fontWeight: 600, fontSize: "13px", cursor: "pointer", whiteSpace: "nowrap" }}>
         Rozumiem
       </button>
     </div>
@@ -401,11 +377,7 @@ export default function App() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-
-        // POPRAWKA: jeśli zapisany stan to "processing", wróć do preview
-        // żeby nie pokazywać wiecznego spinnera po odświeżeniu strony
         const restoredStage: Stage = parsed.stage === "processing" ? (parsed.preview ? "preview" : "landing") : (parsed.stage || "landing");
-
         setStage(restoredStage);
         setSelectedPath(parsed.selectedPath || null);
         setQuestionIndex(parsed.questionIndex || 0);
@@ -490,22 +462,14 @@ export default function App() {
     if (!path) return;
     const newAnswers = { ...answers, [`${path.key}_checkpoint`]: optionId };
     setAnswers(newAnswers);
-
     if (sessionToken) {
       setBusy(true);
       try {
-        const res = await fetch(`${API_BASE}/api/interview/start`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: sessionToken, path: path.key, initialContext: "" }),
-        });
+        const res = await fetch(`${API_BASE}/api/interview/start`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: sessionToken, path: path.key, initialContext: "" }) });
         const d = await res.json().catch(() => ({}));
         if (d.ok && d.question) {
           setInterviewState({ path: path.key, currentQuestion: d.question, currentLead: d.lead || "", currentObservation: d.observation || "", history: [], depth: 1, finished: false, exchangeIndex: 0 });
-          setInterviewAnswer("");
-          setStage("interview");
-          setBusy(false);
-          return;
+          setInterviewAnswer(""); setStage("interview"); setBusy(false); return;
         }
       } catch {}
       setBusy(false);
@@ -513,68 +477,31 @@ export default function App() {
     setStage("open_text");
   };
 
-  // POPRAWKA: wywiad AI teraz wysyła dane do /interview/finish
-  // żeby wzorce z rozmowy trafiły do pełnego raportu
   const sendInterviewAnswer = async () => {
     if (!interviewState || !sessionToken || !interviewAnswer.trim()) return;
     if (hasCrisisContent(interviewAnswer)) { setStage("crisis"); return; }
-
     const currentExchangeCount = interviewState.history.length + 1;
-
-    // Lokalna kopia historii z nową odpowiedzią
-    const updatedHistory: InterviewExchange[] = [
-      ...interviewState.history,
-      { ai: interviewState.currentQuestion, user: interviewAnswer.trim(), lead: interviewState.currentLead, observation: interviewState.currentObservation },
-    ];
-
-    // Jeśli przekroczono limit lub wywiad ma się skończyć — zakończ przez API
+    const updatedHistory: InterviewExchange[] = [...interviewState.history, { ai: interviewState.currentQuestion, user: interviewAnswer.trim(), lead: interviewState.currentLead, observation: interviewState.currentObservation }];
     if (currentExchangeCount > 5) {
       setInterviewBusy(true);
       try {
-        // Zapisz ostatnią odpowiedź przez /interview/next
-        await fetch(`${API_BASE}/api/interview/next`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: sessionToken, userAnswer: interviewAnswer.trim() }),
-        }).catch(() => {});
-
-        // Pobierz podsumowanie wzorców z wywiadu
-        await fetch(`${API_BASE}/api/interview/finish`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token: sessionToken }),
-        }).catch(() => {});
+        await fetch(`${API_BASE}/api/interview/next`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: sessionToken, userAnswer: interviewAnswer.trim() }) }).catch(() => {});
+        await fetch(`${API_BASE}/api/interview/finish`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: sessionToken }) }).catch(() => {});
       } catch {}
       finally { setInterviewBusy(false); }
-
       const transcript = updatedHistory.map((e) => `Pytanie: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n");
-      setInterviewState({ ...interviewState, history: updatedHistory, finished: true });
-      setOpenText(transcript);
-      setStage("open_text");
-      return;
+      setInterviewState({ ...interviewState, history: updatedHistory, finished: true }); setOpenText(transcript); setStage("open_text"); return;
     }
-
     setInterviewBusy(true); setError(null);
     try {
       const res = await fetch(`${API_BASE}/api/interview/next`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: sessionToken, userAnswer: interviewAnswer.trim() }) });
       const d = await res.json().catch(() => ({}));
       if (d.crisis) { setStage("crisis"); return; }
       if (!d.ok) throw new Error(d.message || "Błąd wywiadu.");
-
       if (d.finished || updatedHistory.length >= 5) {
-        // Wywiad skończony — pobierz podsumowanie wzorców
-        try {
-          await fetch(`${API_BASE}/api/interview/finish`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token: sessionToken }),
-          });
-        } catch {}
-
+        try { await fetch(`${API_BASE}/api/interview/finish`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: sessionToken }) }); } catch {}
         const transcript = updatedHistory.map((e) => `Pytanie: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n");
-        setInterviewState({ ...interviewState, history: updatedHistory, finished: true });
-        setOpenText(transcript);
-        setStage("open_text");
+        setInterviewState({ ...interviewState, history: updatedHistory, finished: true }); setOpenText(transcript); setStage("open_text");
       } else {
         setInterviewState({ ...interviewState, history: updatedHistory, currentQuestion: d.question, currentLead: d.lead || "", currentObservation: d.observation || "", depth: Math.min(d.depth, 5), exchangeIndex: d.exchangeIndex });
         setInterviewAnswer("");
@@ -588,10 +515,7 @@ export default function App() {
     if (stage === "questions") { if (questionIndex === 0) { setStage("entry"); return; } setQuestionIndex((v) => Math.max(0, v - 1)); return; }
     if (stage === "checkpoint") { setStage("questions"); return; }
     if (stage === "interview") { setStage("checkpoint"); return; }
-    if (stage === "open_text") {
-      if (interviewState && interviewState.history.length > 0) { setStage("interview"); return; }
-      setStage("checkpoint"); return;
-    }
+    if (stage === "open_text") { if (interviewState && interviewState.history.length > 0) { setStage("interview"); return; } setStage("checkpoint"); return; }
     if (stage === "preview") { setStage("open_text"); return; }
     if (stage === "consent") { setStage("landing"); return; }
     if (stage === "entry") setStage("consent");
@@ -609,13 +533,13 @@ export default function App() {
       setPreview(previewData);
       await updateSession({ token, path: path.key, answers, openText, preview: previewData, stage: "preview" });
       setStage("preview");
-    } catch (e: any) { setError(e?.message || "Nie udało się przygotować preview."); setStage("error"); }
+    } catch (e: any) { setError(e?.message || "Nie udało się przygotować podglądu."); setStage("error"); }
     finally { setBusy(false); }
   };
 
   const pay = async () => {
-    if (!selectedPath || !preview) { setError("Brak gotowego preview do zapisania."); return; }
-    if (!email.includes("@")) { setError("Podaj prawidłowy e-mail."); return; }
+    if (!selectedPath || !preview) { setError("Brak gotowego podglądu."); return; }
+    if (!email.includes("@")) { setError("Podaj prawidłowy adres e-mail."); return; }
     setBusy(true); setError(null);
     try {
       const token = await ensureSession(selectedPath);
@@ -643,49 +567,76 @@ export default function App() {
                 <Glass className="glass-panel hero-panel hero-copy">
                   <div className="eyebrow with-line">PRYWATNA ANALIZA RELACJI</div>
                   <div className="hero-kicker">TWOJA RELACJA MA WZORZEC.</div>
-                  <h1>Już wiesz, że <span>coś nie gra.</span><br />Tu dowiesz się dlaczego.</h1>
-                  <p>Każda trudna relacja ma swój mechanizm. System go widzi — nawet jeśli Ty go jeszcze nie nazwałeś/nazwałaś. To nie jest test. To lustro.</p>
+                  <h1>Już wiesz że <span>coś nie gra.</span><br />Tu dowiesz się — co i dlaczego.</h1>
+                  <p style={{ lineHeight: 1.75, color: BRAND.muted, marginBottom: "28px" }}>
+                    Nie jesteś tu po potwierdzenie że wszystko jest okej. Jesteś tu bo coś Ci nie daje spokoju — i chcesz wiedzieć co to naprawdę jest, nie co chciałbyś żeby to było.
+                  </p>
                   <div className="ctms-landing-actions">
-                    <PrimaryButton onClick={() => setStage("consent")}>Chcę wiedzieć prawdę</PrimaryButton>
+                    <PrimaryButton onClick={() => setStage("consent")}>Chcę to wiedzieć</PrimaryButton>
+                    <div style={{ fontSize: "12px", color: BRAND.muted, marginTop: "10px" }}>Najpierw bezpłatny podgląd. Płacisz tylko za pełny raport.</div>
                   </div>
                 </Glass>
                 <div className="hero-side-stack">
                   <Glass className="glass-panel story-panel visual-story">
                     <div className="story-kicker">CO ZOBACZYSZ</div>
-                    <h3>To, czego jeszcze nie nazwałeś/nazwałaś</h3>
+                    <h3>To, czego jeszcze nie nazwałeś</h3>
                     <div className="story-points">
-                      <div><span>▸</span><p>Dlaczego wracasz do tego samego miejsca — i co tak naprawdę trzyma Cię tam, gdzie nie chcesz być</p></div>
-                      <div><span>▸</span><p>Twój wzorzec w relacjach — jak reagujesz na bliskość, odrzucenie i niepewność, zanim zdążysz to przemyśleć</p></div>
-                      <div><span>▸</span><p>To, czego nie chcesz widzieć — ale co jest jedynym kluczem do tego, żeby coś naprawdę się zmieniło</p></div>
+                      <div><span>▸</span><p>Twój wzorzec w relacjach — jak reagujesz na bliskość i odrzucenie, zanim zdążysz to przemyśleć</p></div>
+                      <div><span>▸</span><p>Dlaczego wracasz do tego samego miejsca — i co naprawdę trzyma Cię tam gdzie nie chcesz być</p></div>
+                      <div><span>▸</span><p>To, czego nie chcesz widzieć — bo tylko to może coś realnie zmienić</p></div>
                     </div>
                     <div className="story-lock">
                       <div className="story-lock-icon">🔒</div>
                       <div>
                         <strong>Pełny raport — 19 zł</strong>
-                        <span>Najpierw podgląd. Płacisz tylko jeśli chcesz wiedzieć więcej.</span>
+                        <span>Jednorazowo. Raport generowany indywidualnie na podstawie Twoich odpowiedzi.</span>
                       </div>
                     </div>
                   </Glass>
                 </div>
               </section>
-              <section className="ctms-feature-editorial-grid">
+
+              {/* CZYM TO NIE JEST */}
+              <section style={{ maxWidth: "720px", margin: "48px auto 0", padding: "0 4px" }}>
+                <Glass style={{ padding: "32px 36px" }}>
+                  <div className="eyebrow" style={{ marginBottom: "20px" }}>CZYM TO NIE JEST</div>
+                  <div style={{ display: "grid", gap: "16px" }}>
+                    {[
+                      ["Nie jest testem osobowości.", "Nie dostaniesz swojego „typu". Dostaniesz obraz konkretnej sytuacji w której teraz jesteś."],
+                      ["Nie powie Ci co robić.", "Nie ma tu zaleceń, kroków ani rad. Jest analiza — i pytanie które z niej wynika."],
+                      ["Nie oceni Twojego partnera.", "Opisuje mechanizmy, nie wydaje wyroków. Na podstawie Twoich słów, nie cudzych założeń."],
+                      ["Nie jest rozmową z chatbotem.", "Pytania mają strukturę wywiadu klinicznego — schodzą głębiej z każdą odpowiedzią. To nie jest ankieta."],
+                    ].map(([title, desc]) => (
+                      <div key={title as string} style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
+                        <span style={{ color: BRAND.gold, fontSize: "18px", lineHeight: 1, marginTop: "2px", flexShrink: 0 }}>—</span>
+                        <div>
+                          <strong style={{ color: BRAND.text, fontSize: "14px" }}>{title}</strong>
+                          <span style={{ color: BRAND.muted, fontSize: "14px", marginLeft: "6px" }}>{desc}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Glass>
+              </section>
+
+              <section className="ctms-feature-editorial-grid" style={{ marginTop: "48px" }}>
                 <Glass className="feature-card">
                   <div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div>
                   <h3>Schodzi głębiej niż myślisz</h3>
                   <div className="feature-line" />
-                  <p>Pytania nie są przypadkowe. Każde kolejne wchodzi w miejsce, którego nie spodziewasz się dotknąć. To tam jest odpowiedź.</p>
+                  <p>Każde pytanie wchodzi w miejsce którego się nie spodziewasz dotknąć. To tam jest odpowiedź — nie w tym co powiesz pierwsze.</p>
                 </Glass>
                 <Glass className="feature-card">
                   <div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div>
-                  <h3>Mówi to, czego inni nie powiedzą</h3>
+                  <h3>Mówi to czego inni nie powiedzą</h3>
                   <div className="feature-line" />
-                  <p>Nie dostaniesz pocieszenia ani oceny. Dostaniesz to, co naprawdę widać z zewnątrz — nazwane wprost, bez owijania w bawełnę.</p>
+                  <p>Nie dostaniesz pocieszenia ani oceny. Dostaniesz to co naprawdę widać z zewnątrz — nazwane wprost i bez owijania w bawełnę.</p>
                 </Glass>
                 <Glass className="feature-card">
                   <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
-                  <h3>Zostajesz z czymś realnym</h3>
+                  <h3>Zostajesz z czymś konkretnym</h3>
                   <div className="feature-line" />
-                  <p>Nie z listą kroków ani z motywacją. Z precyzyjnym obrazem tego, co się naprawdę dzieje — i co to oznacza dla Ciebie.</p>
+                  <p>Nie z listą kroków ani motywacją. Z precyzyjnym obrazem tego co się naprawdę dzieje — i jednym pytaniem które z tego wynika.</p>
                 </Glass>
               </section>
             </motion.div>
@@ -695,9 +646,9 @@ export default function App() {
           {stage === "consent" && (
             <motion.div key="consent" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel consent-panel">
-                <div className="eyebrow">ZANIM WEJDZIESZ GŁĘBIEJ</div>
-                <h2>Zanim wejdziesz — przeczytaj to.</h2>
-                <p className="consent-copy">To narzędzie mówi Ci prawdę na podstawie Twoich odpowiedzi. Nie pocieszamy. Nie zaokrąglamy. Jeśli szukasz potwierdzenia że wszystko jest ok — to nie jest miejsce dla Ciebie. Jeśli chcesz wiedzieć co naprawdę się dzieje — jesteś w dobrym miejscu.</p>
+                <div className="eyebrow">ZANIM WEJDZIESZ</div>
+                <h2>Przeczytaj to. Serio.</h2>
+                <p className="consent-copy">To narzędzie nie pociesza. Nie zaokrągla. Nie daje Ci tego co chcesz usłyszeć — daje Ci to co wynika z Twoich odpowiedzi. Jeśli szukasz potwierdzenia że wszystko jest okej — to nie jest właściwe miejsce. Jeśli chcesz wiedzieć co naprawdę się dzieje — jesteś dokładnie tam gdzie trzeba.</p>
                 <div className="consent-list">
                   {CONSENTS.map((text, idx) => (
                     <label key={idx} className="consent-item">
@@ -720,8 +671,8 @@ export default function App() {
               <div className="section-head">
                 <div>
                   <div className="eyebrow">WYBIERZ ŚCIEŻKĘ</div>
-                  <h2>Co najbardziej nie daje Ci spokoju?</h2>
-                  <p>Wybierz miejsce, które ciągnie Cię w dół. System dopasuje pytania do Twojej sytuacji i będzie schodził coraz głębiej.</p>
+                  <h2>Co Cię tu przyprowadziło?</h2>
+                  <p>Wybierz to co najbardziej nie daje Ci spokoju. Pytania i analiza będą dopasowane do Twojej sytuacji.</p>
                 </div>
                 <GhostButton onClick={goBack}>Wróć</GhostButton>
               </div>
@@ -731,9 +682,13 @@ export default function App() {
                     <div className="eyebrow">ŚCIEŻKA ANALIZY</div>
                     <h3>{entry.title}</h3>
                     <div className="entry-subtitle">{entry.subtitle}</div>
+                    <div style={{ margin: "14px 0", padding: "12px 16px", borderLeft: `2px solid ${BRAND.gold}`, background: "rgba(197,160,89,0.05)", fontSize: "13px", color: BRAND.muted, lineHeight: 1.6, fontStyle: "italic" }}>
+                      {entry.quote}
+                    </div>
                     <div className="entry-intro">{entry.intro}</div>
+                    <div style={{ fontSize: "12px", color: BRAND.muted, margin: "8px 0 16px" }}>⏱ {entry.duration}</div>
                     <div className="entry-action">
-                      <PrimaryButton onClick={() => startPath(entry.key)}>{busy ? "Przygotowuję..." : "Wejdź głębiej"}</PrimaryButton>
+                      <PrimaryButton onClick={() => startPath(entry.key)}>{busy ? "Przygotowuję..." : "Zacznij analizę"}</PrimaryButton>
                     </div>
                   </Glass>
                 ))}
@@ -747,7 +702,7 @@ export default function App() {
               <div className="section-head compact">
                 <div className="eyebrow">{path.title.toUpperCase()}</div>
                 <div className="progress-wrap">
-                  <span>{questionIndex + 1}/{path.questions.length}</span>
+                  <span>Pytanie {questionIndex + 1} z {path.questions.length}</span>
                   <div className="progress-track"><div className="progress-fill" style={{ width: `${((questionIndex + 1) / path.questions.length) * 100}%` }} /></div>
                 </div>
               </div>
@@ -788,7 +743,7 @@ export default function App() {
               <div className="section-head compact">
                 <div className="eyebrow">{(ENTRY_CONFIGS.find((x) => x.key === selectedPath)?.title || "").toUpperCase()}</div>
                 <div className="progress-wrap">
-                  <span>Głębokość {interviewState.depth}/5</span>
+                  <span>Głębokość {interviewState.depth} z 5</span>
                   <div className="progress-track"><div className="progress-fill" style={{ width: `${(interviewState.depth / 5) * 100}%` }} /></div>
                 </div>
               </div>
@@ -800,7 +755,7 @@ export default function App() {
                     <div style={{ fontSize: "14px", color: BRAND.muted, marginTop: "12px", fontStyle: "italic", lineHeight: 1.6 }}>{interviewState.currentObservation}</div>
                   )}
                 </div>
-                <textarea className="ctms-textarea" value={interviewAnswer} onChange={(e) => setInterviewAnswer(e.target.value)} placeholder="Odpowiedz konkretnie. System idzie głębiej na podstawie tego co napiszesz." maxLength={2000} />
+                <textarea className="ctms-textarea" value={interviewAnswer} onChange={(e) => setInterviewAnswer(e.target.value)} placeholder="Odpowiedz konkretnie — co się dzieje, nie jak to interpretujesz. Im bardziej precyzyjnie, tym głębiej idzie analiza." maxLength={2000} />
                 <div className="text-meta">
                   <div>{interviewState.history.length > 0 ? `Wymiana ${interviewState.history.length + 1}` : "Pierwsze pytanie"}</div>
                   <div>{interviewAnswer.length}/2000</div>
@@ -808,9 +763,7 @@ export default function App() {
                 {error && <div className="error-line" style={{ marginTop: "12px" }}>{error}</div>}
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={sendInterviewAnswer} disabled={interviewBusy || interviewAnswer.trim().length < 10}>
-                    {interviewBusy ? "Analizuję..." : "Dalej →"}
-                  </PrimaryButton>
+                  <PrimaryButton onClick={sendInterviewAnswer} disabled={interviewBusy || interviewAnswer.trim().length < 10}>{interviewBusy ? "Analizuję..." : "Dalej →"}</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
@@ -822,16 +775,17 @@ export default function App() {
               <Glass className="question-panel">
                 <div className="eyebrow">OSTATNIA WARSTWA</div>
                 <div className="question-copy">
-                  <h3>{interviewState?.finished ? "Dodaj coś czego nie powiedziałeś/powiedziałaś — albo potwierdź że to jest wszystko." : path.openPrompt}</h3>
+                  <h3>{interviewState?.finished ? "Jest coś czego jeszcze nie powiedziałeś — a co może tu być kluczowe?" : path.openPrompt}</h3>
+                  <p style={{ color: BRAND.muted, fontSize: "14px", marginTop: "10px", lineHeight: 1.65 }}>Napisz jak do kogoś komu ufasz — nie jak do formularza. Im bardziej szczery, tym precyzyjniejsza analiza.</p>
                 </div>
-                <textarea className="ctms-textarea" value={openText} onChange={(e) => setOpenText(e.target.value)} placeholder="Napisz tak jak byś mówił/mówiła do kogoś komu ufasz całkowicie. Im bardziej szczery/szczera — tym mocniejsza analiza." maxLength={3000} />
+                <textarea className="ctms-textarea" value={openText} onChange={(e) => setOpenText(e.target.value)} placeholder="Co się naprawdę dzieje — nie jak to interpretujesz, ale co konkretnie robisz i co ta osoba robi." maxLength={3000} />
                 <div className="text-meta">
-                  <div>To jest rdzeń analizy. Napisz co naprawdę czujesz, nie co powinieneś/powinnaś czuć.</div>
+                  <div>To jest rdzeń analizy.</div>
                   <div>{openText.length}/3000</div>
                 </div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={buildPreviewAndGo} disabled={busy || openText.trim().length < 10}>{busy ? "Analizuję..." : "Pokaż darmowy preview"}</PrimaryButton>
+                  <PrimaryButton onClick={buildPreviewAndGo} disabled={busy || openText.trim().length < 10}>{busy ? "Analizuję..." : "Pokaż bezpłatny podgląd"}</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
@@ -841,15 +795,15 @@ export default function App() {
           {stage === "crisis" && (
             <motion.div key="crisis" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel crisis-panel">
-                <div className="eyebrow danger">TRYB KRYZYSOWY</div>
-                <h2>To nie jest właściwe narzędzie dla sytuacji bezpośredniego zagrożenia.</h2>
-                <p className="consent-copy">Jeśli istnieje ryzyko przemocy, zagrożenia życia albo zrobienia sobie krzywdy, przerwij tę analizę i skorzystaj z natychmiastowej pomocy.</p>
+                <div className="eyebrow danger">ZATRZYMAJ SIĘ</div>
+                <h2>To nie jest właściwe narzędzie dla sytuacji zagrożenia.</h2>
+                <p className="consent-copy">Jeśli jest ryzyko przemocy, zagrożenia życia albo skrzywdzenia siebie — przerwij tę analizę i skorzystaj z natychmiastowej pomocy.</p>
                 <div className="crisis-grid">
                   <Glass className="crisis-box"><strong>112</strong> — numer alarmowy</Glass>
-                  <Glass className="crisis-box"><strong>116 123</strong> — telefon zaufania dla dorosłych w kryzysie emocjonalnym</Glass>
+                  <Glass className="crisis-box"><strong>116 123</strong> — telefon zaufania dla dorosłych</Glass>
                   <Glass className="crisis-box"><strong>116 111</strong> — telefon zaufania dla dzieci i młodzieży</Glass>
                 </div>
-                <div className="section-actions"><GhostButton onClick={resetAll}>Zamknij analizę</GhostButton></div>
+                <div className="section-actions"><GhostButton onClick={resetAll}>Zamknij</GhostButton></div>
               </Glass>
             </motion.div>
           )}
@@ -859,29 +813,29 @@ export default function App() {
             <motion.div key="preview" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="preview-card">
                 <div className="preview-hero">
-                  <div className="eyebrow">DARMOWE LUSTRO SYTUACJI</div>
+                  <div className="eyebrow">BEZPŁATNY PODGLĄD</div>
                   <h2>{preview.headline}</h2>
                   <div className="preview-truth-top">{preview.truth}</div>
                   <div className="preview-mirror-top">{preview.mirror}</div>
                 </div>
                 <PremiumBadge preview={preview} />
                 <div className="metrics-grid">
-                  {([[preview.tension, "POZIOM NAPIĘCIA"], [preview.asymmetry, "ASYMETRIA"], [preview.change, "SZANSA ZMIANY"]] as [number, string][]).map(([value, label]) => (
+                  {([[preview.tension, "NAPIĘCIE"], [preview.asymmetry, "ASYMETRIA"], [preview.change, "SZANSA ZMIANY"]] as [number, string][]).map(([value, label]) => (
                     <Glass key={label} className="metric-card"><div className="metric-value">{value}%</div><div className="metric-label">{label}</div></Glass>
                   ))}
                 </div>
                 <div className="preview-grid">
-                  <Glass className="report-section"><div className="eyebrow">CO WIDAĆ JUŻ TERAZ</div><p>{preview.summary}</p></Glass>
-                  <Glass className="report-section"><div className="eyebrow">NAJMOCNIEJSZY MECHANIZM</div><p>{preview.tone === "green" ? "Najmocniej działa tu jeszcze struktura i wzajemność, ale to nie zwalnia z patrzenia na słabsze miejsca." : preview.tone === "yellow" ? "Napięcie miesza się tu z nadzieją i przywiązaniem. To właśnie ta mieszanka najłatwiej utrzymuje ludzi w zawieszeniu." : "Najmocniej pracuje tu układ ulgi po napięciu albo lęku przed stratą. To często sprawia, że ciężko odpuścić nawet wtedy, gdy relacja już kosztuje."}</p></Glass>
-                  <Glass className="report-section"><div className="eyebrow">CZEGO PEŁNY RAPORT NIE OMINIE</div><p>{preview.paidTease}</p></Glass>
+                  <Glass className="report-section"><div className="eyebrow">CO JUŻ WIDAĆ</div><p>{preview.summary}</p></Glass>
+                  <Glass className="report-section"><div className="eyebrow">MECHANIZM</div><p>{preview.tone === "green" ? "Najmocniej działa tu jeszcze wzajemność i struktura. To nie zwalnia z patrzenia na słabsze miejsca." : preview.tone === "yellow" ? "Napięcie miesza się tu z nadzieją i przywiązaniem. Ta mieszanka jest tym co utrzymuje ludzi w zawieszeniu najdłużej." : "Najmocniej pracuje tu mechanizm ulgi po napięciu i lęk przed stratą. To sprawia że ciężko odpuścić nawet gdy relacja już kosztuje więcej niż daje."}</p></Glass>
+                  <Glass className="report-section"><div className="eyebrow">CZEGO PODGLĄD NIE ZAWIERA</div><p>{preview.paidTease}</p></Glass>
                 </div>
                 <Glass className="unlock-panel">
                   <div className="eyebrow">TO TYLKO FRAGMENT</div>
-                  <p className="unlock-copy">Pełny raport pokaże Ci to, czego ten widok nie zawiera: twój wzorzec w relacjach, mechanizmy obronne które stosujesz, to gdzie najprawdopodobniej się oszukujesz — i trzy realne scenariusze tego, co się wydarzy dalej. Raport jest generowany indywidualnie na podstawie twoich odpowiedzi. Nikt inny nie dostanie takiego samego.</p>
+                  <p className="unlock-copy">Pełny raport to 15 sekcji generowanych wyłącznie na podstawie Twoich odpowiedzi. Nikt inny nie dostanie takiego samego. Zobaczysz w nim swój wzorzec w relacjach, mechanizmy obronne które stosujesz, gdzie najprawdopodobniej się oszukujesz — i dwa realne scenariusze tego co się wydarzy dalej.</p>
                   <div className="unlock-form">
-                    <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Adres e-mail — wyślemy Ci link do raportu" />
+                    <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Twój adres e-mail — wyślemy Ci link do raportu" />
                     <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Odblokuj pełny raport — 19 zł"}</PrimaryButton>
-                    <div className="unlock-note">Widzisz teraz podgląd. Pełna analiza psychologiczna dostępna po jednorazowej płatności. Możesz wrócić do raportu w dowolnym momencie z linku w e-mailu.</div>
+                    <div className="unlock-note">Jednorazowa płatność. Dostęp na zawsze przez link w e-mailu. Raport gotowy zwykle w ciągu 1-2 minut.</div>
                   </div>
                 </Glass>
                 {error && <div className="error-line">{error}</div>}
@@ -893,7 +847,13 @@ export default function App() {
           {/* PROCESSING */}
           {stage === "processing" && (
             <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div className="loading-wrap"><Glass className="loading-panel"><div className="spinner" /><h2>Przetwarzanie płatności i raportu…</h2><p>Jeśli to trwa chwilę, nie zamykaj karty. System sprawdza status płatności i raportu.</p></Glass></div>
+              <div className="loading-wrap">
+                <Glass className="loading-panel">
+                  <div className="spinner" />
+                  <h2>Raport jest generowany.</h2>
+                  <p>Każde zdanie dotyczy tylko Ciebie — na podstawie Twoich odpowiedzi. Nie zamykaj karty.</p>
+                </Glass>
+              </div>
             </motion.div>
           )}
 
@@ -904,11 +864,11 @@ export default function App() {
                 <div className="eyebrow">RAPORT PREMIUM</div>
                 <div className="report-head">
                   <h2>{fullReport.headline || "Ta relacja daje Ci kontakt, ale nie daje Ci oparcia."}</h2>
-                  <p>{fullReport.subheadline || "Największy problem nie leży w jednym zdarzeniu. Leży w tym, że napięcie stało się normą, a jasność nadal nie przychodzi."}</p>
+                  <p>{fullReport.subheadline || "Największy problem nie leży w jednym zdarzeniu. Leży w tym, że napięcie stało się normą a jasność nadal nie przychodzi."}</p>
                 </div>
                 {typeof fullReport.rebuildPercent === "number" && (
                   <div className="metrics-grid">
-                    {([[fullReport.rebuildPercent, "NA ILE TO MA SENS"], [fullReport.tensionPercent || 0, "POZIOM NAPIĘCIA"], [fullReport.driftPercent || 0, "ASYMETRIA"]] as [number, string][]).map(([value, label]) => (
+                    {([[fullReport.rebuildPercent, "NA ILE TO MA SENS"], [fullReport.tensionPercent || 0, "NAPIĘCIE"], [fullReport.driftPercent || 0, "ASYMETRIA"]] as [number, string][]).map(([value, label]) => (
                       <Glass key={label} className="metric-card"><div className="metric-value">{value}%</div><div className="metric-label">{label}</div></Glass>
                     ))}
                   </div>
@@ -920,7 +880,7 @@ export default function App() {
                   ))}
                 </div>
                 {fullReport.closing && <div className="report-closing">{fullReport.closing}</div>}
-                <Glass className="mail-access-box">Dostęp do raportu został zapisany. Możesz wrócić do niego później z bezpiecznego linku wysłanego na e-mail.</Glass>
+                <Glass className="mail-access-box">Link do tego raportu został wysłany na Twój adres e-mail. Możesz do niego wrócić w dowolnym momencie.</Glass>
                 <div className="section-actions"><GhostButton onClick={resetAll}>Nowa analiza</GhostButton></div>
               </Glass>
             </motion.div>
@@ -930,8 +890,8 @@ export default function App() {
           {stage === "error" && (
             <motion.div key="error" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel">
-                <div className="eyebrow danger">BŁĄD</div>
-                <h2>Coś się wywaliło po drodze, ale przynajmniej wiemy gdzie.</h2>
+                <div className="eyebrow danger">COŚ POSZŁO NIE TAK</div>
+                <h2>Coś się wywaliło. Wiemy gdzie.</h2>
                 <p className="consent-copy">{error}</p>
                 <div className="section-actions"><GhostButton onClick={() => setStage(preview ? "preview" : "landing")}>Wróć</GhostButton><GhostButton onClick={resetAll}>Od początku</GhostButton></div>
               </Glass>
@@ -966,7 +926,6 @@ export default function App() {
         </div>
       )}
 
-      {/* BANER COOKIES — wymagany prawnie */}
       <CookieBanner />
     </div>
   );
