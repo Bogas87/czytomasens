@@ -334,6 +334,47 @@ function PremiumBadge({ preview }: { preview: Preview }) {
   );
 }
 
+// ─── BANER COOKIES ────────────────────────────────────────────────────────────
+function CookieBanner() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    try {
+      const accepted = localStorage.getItem("ctms_cookies_accepted");
+      if (!accepted) setVisible(true);
+    } catch {}
+  }, []);
+
+  const accept = () => {
+    try { localStorage.setItem("ctms_cookies_accepted", "1"); } catch {}
+    setVisible(false);
+  };
+
+  if (!visible) return null;
+
+  return (
+    <div style={{
+      position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 9999,
+      background: "rgba(10,10,10,0.97)", borderTop: "1px solid rgba(255,255,255,0.08)",
+      padding: "16px clamp(18px,3vw,36px)", display: "flex", alignItems: "center",
+      justifyContent: "space-between", gap: "16px", flexWrap: "wrap",
+    }}>
+      <p style={{ margin: 0, fontSize: "13px", color: "#A8A099", maxWidth: "700px", lineHeight: 1.6 }}>
+        Ta strona używa plików cookies wyłącznie do utrzymania sesji i poprawnego działania aplikacji. Nie stosujemy cookies reklamowych ani śledzących.
+      </p>
+      <button
+        onClick={accept}
+        style={{
+          background: "#C5A059", color: "#050505", border: "none", borderRadius: "6px",
+          padding: "10px 20px", fontWeight: 600, fontSize: "13px", cursor: "pointer", whiteSpace: "nowrap",
+        }}
+      >
+        Rozumiem
+      </button>
+    </div>
+  );
+}
+
 export default function App() {
   const [stage, setStage] = useState<Stage>("landing");
   const [selectedPath, setSelectedPath] = useState<EntryKey | null>(null);
@@ -360,7 +401,12 @@ export default function App() {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
-        setStage(parsed.stage || "landing");
+
+        // POPRAWKA: jeśli zapisany stan to "processing", wróć do preview
+        // żeby nie pokazywać wiecznego spinnera po odświeżeniu strony
+        const restoredStage: Stage = parsed.stage === "processing" ? (parsed.preview ? "preview" : "landing") : (parsed.stage || "landing");
+
+        setStage(restoredStage);
         setSelectedPath(parsed.selectedPath || null);
         setQuestionIndex(parsed.questionIndex || 0);
         setAnswers(parsed.answers || {});
@@ -467,15 +513,42 @@ export default function App() {
     setStage("open_text");
   };
 
+  // POPRAWKA: wywiad AI teraz wysyła dane do /interview/finish
+  // żeby wzorce z rozmowy trafiły do pełnego raportu
   const sendInterviewAnswer = async () => {
     if (!interviewState || !sessionToken || !interviewAnswer.trim()) return;
     if (hasCrisisContent(interviewAnswer)) { setStage("crisis"); return; }
 
     const currentExchangeCount = interviewState.history.length + 1;
+
+    // Lokalna kopia historii z nową odpowiedzią
+    const updatedHistory: InterviewExchange[] = [
+      ...interviewState.history,
+      { ai: interviewState.currentQuestion, user: interviewAnswer.trim(), lead: interviewState.currentLead, observation: interviewState.currentObservation },
+    ];
+
+    // Jeśli przekroczono limit lub wywiad ma się skończyć — zakończ przez API
     if (currentExchangeCount > 5) {
-      const transcript = [...interviewState.history, { ai: interviewState.currentQuestion, user: interviewAnswer.trim() }]
-        .map((e) => `Pytanie: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n");
-      setInterviewState({ ...interviewState, finished: true });
+      setInterviewBusy(true);
+      try {
+        // Zapisz ostatnią odpowiedź przez /interview/next
+        await fetch(`${API_BASE}/api/interview/next`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: sessionToken, userAnswer: interviewAnswer.trim() }),
+        }).catch(() => {});
+
+        // Pobierz podsumowanie wzorców z wywiadu
+        await fetch(`${API_BASE}/api/interview/finish`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: sessionToken }),
+        }).catch(() => {});
+      } catch {}
+      finally { setInterviewBusy(false); }
+
+      const transcript = updatedHistory.map((e) => `Pytanie: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n");
+      setInterviewState({ ...interviewState, history: updatedHistory, finished: true });
       setOpenText(transcript);
       setStage("open_text");
       return;
@@ -487,8 +560,17 @@ export default function App() {
       const d = await res.json().catch(() => ({}));
       if (d.crisis) { setStage("crisis"); return; }
       if (!d.ok) throw new Error(d.message || "Błąd wywiadu.");
-      const updatedHistory: InterviewExchange[] = [...interviewState.history, { ai: interviewState.currentQuestion, user: interviewAnswer.trim(), lead: interviewState.currentLead, observation: interviewState.currentObservation }];
+
       if (d.finished || updatedHistory.length >= 5) {
+        // Wywiad skończony — pobierz podsumowanie wzorców
+        try {
+          await fetch(`${API_BASE}/api/interview/finish`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: sessionToken }),
+          });
+        } catch {}
+
         const transcript = updatedHistory.map((e) => `Pytanie: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n");
         setInterviewState({ ...interviewState, history: updatedHistory, finished: true });
         setOpenText(transcript);
@@ -883,6 +965,9 @@ export default function App() {
           </div>
         </div>
       )}
+
+      {/* BANER COOKIES — wymagany prawnie */}
+      <CookieBanner />
     </div>
   );
 }

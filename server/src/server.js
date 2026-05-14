@@ -65,6 +65,34 @@ app.post(
         const token = session?.metadata?.token || null;
         const email = session?.metadata?.email || session?.customer_email || null;
 
+        // POPRAWKA: sprawdź czy ten event Stripe był już przetworzony
+        // Stripe może wysłać ten sam event kilka razy — bez tego
+        // użytkownik mógłby dostać dwa raporty i dwa maile
+        try {
+          const alreadyProcessed = await prisma.processedStripeEvent.findUnique({
+            where: { event_id: event.id },
+          });
+
+          if (alreadyProcessed) {
+            console.log(`[WEBHOOK] Event ${event.id} już przetworzony. Pomijam.`);
+            return res.status(200).json({ ok: true });
+          }
+
+          // Zapisz event jako przetworzony
+          await prisma.processedStripeEvent.create({
+            data: {
+              event_id: event.id,
+              event_type: event.type,
+              session_id: token || null,
+            },
+          });
+        } catch (dedupErr) {
+          // Jeśli zapis się nie powiódł (np. race condition — dwa requesty jednocześnie),
+          // bezpieczniej jest zignorować ten event niż przetworzyć go podwójnie
+          console.error("[WEBHOOK] Błąd deduplicacji eventu:", dedupErr.message);
+          return res.status(200).json({ ok: true });
+        }
+
         if (!token) {
           console.error("[WEBHOOK] Brak tokenu w metadata.");
           return res.status(200).json({ ok: true });
