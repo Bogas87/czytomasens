@@ -8,7 +8,7 @@ function readApiBase(): string {
     if (typeof value === "string" && value.startsWith("http")) return value.replace(/\/$/, "");
   } catch {}
   if (typeof window !== "undefined" && window.location.hostname !== "localhost") {
-    return "https://czytomasens-production-47e0.up.railway.app";
+    return "https://czytomasens-production-47e0.up.railway.app"; // fallback - ustaw VITE_API_BASE w Railway
   }
   return "http://localhost:8080";
 }
@@ -347,6 +347,56 @@ function CookieBanner() {
       <button onClick={accept} style={{ background: "#C5A059", color: "#050505", border: "none", borderRadius: "6px", padding: "10px 20px", fontWeight: 600, fontSize: "13px", cursor: "pointer", whiteSpace: "nowrap" }}>
         Rozumiem
       </button>
+    </div>
+  );
+}
+
+
+const PROCESSING_MESSAGES = [
+  "Analizuję wzorzec relacyjny...",
+  "Identyfikuję mechanizmy obronne...",
+  "Mapuję dynamikę zaangażowania...",
+  "Szukam sprzeczności w odpowiedziach...",
+  "Buduję profil przywiązania...",
+  "Przygotowuję sekcję lustrzaną...",
+  "Finalizuję raport...",
+];
+
+function ProcessingScreen() {
+  const [msgIndex, setMsgIndex] = React.useState(0);
+  const [dots, setDots] = React.useState(0);
+
+  React.useEffect(() => {
+    const msgTimer = setInterval(() => {
+      setMsgIndex((v) => (v + 1) % PROCESSING_MESSAGES.length);
+    }, 3500);
+    const dotTimer = setInterval(() => {
+      setDots((v) => (v + 1) % 4);
+    }, 500);
+    return () => { clearInterval(msgTimer); clearInterval(dotTimer); };
+  }, []);
+
+  return (
+    <div className="loading-wrap">
+      <Glass className="loading-panel">
+        <div className="processing-orb">
+          <div className="processing-ring" />
+          <div className="processing-ring processing-ring--2" />
+          <div className="processing-dot" />
+        </div>
+        <h2 style={{ marginBottom: "12px", fontSize: "clamp(20px,4vw,26px)" }}>
+          Raport jest generowany
+        </h2>
+        <div className="processing-message">
+          {PROCESSING_MESSAGES[msgIndex]}{".".repeat(dots)}
+        </div>
+        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>
+          Każde zdanie dotyczy tylko Ciebie.<br />Nie zamykaj karty — to zajmie 1–2 minuty.
+        </p>
+        <div className="processing-bar">
+          <div className="processing-bar-fill" />
+        </div>
+      </Glass>
     </div>
   );
 }
@@ -831,7 +881,7 @@ export default function App() {
                 </div>
                 <Glass className="unlock-panel">
                   <div className="eyebrow">TO TYLKO FRAGMENT</div>
-                  <p className="unlock-copy">Pełny raport to 15 sekcji generowanych wyłącznie na podstawie Twoich odpowiedzi. Nikt inny nie dostanie takiego samego. Zobaczysz w nim swój wzorzec w relacjach, mechanizmy obronne które stosujesz, gdzie najprawdopodobniej się oszukujesz — i dwa realne scenariusze tego co się wydarzy dalej.</p>
+                  <p className="unlock-copy">Pełny raport to 17 sekcji generowanych wyłącznie na podstawie Twoich odpowiedzi. Nikt inny nie dostanie takiego samego. Zobaczysz w nim swój wzorzec w relacjach, mechanizmy obronne które stosujesz, gdzie najprawdopodobniej się oszukujesz — i dwa realne scenariusze tego co się wydarzy dalej.</p>
                   <div className="unlock-form">
                     <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Twój adres e-mail — wyślemy Ci link do raportu" />
                     <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Odblokuj pełny raport — 29 zł"}</PrimaryButton>
@@ -847,13 +897,7 @@ export default function App() {
           {/* PROCESSING */}
           {stage === "processing" && (
             <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div className="loading-wrap">
-                <Glass className="loading-panel">
-                  <div className="spinner" />
-                  <h2>Raport jest generowany.</h2>
-                  <p>Każde zdanie dotyczy tylko Ciebie — na podstawie Twoich odpowiedzi. Nie zamykaj karty.</p>
-                </Glass>
-              </div>
+              <ProcessingScreen />
             </motion.div>
           )}
 
@@ -876,11 +920,18 @@ export default function App() {
                 {fullReport.previewLine && <div className="report-preview-line">{fullReport.previewLine}</div>}
                 <div className="report-sections">
                   {(fullReport.sections || []).map((section, i) => (
-                    <Glass key={i} className="report-section"><div className={`report-section-title ${section.tone || "normal"}`}>{section.title}</div><div className="report-section-text">{section.text}</div></Glass>
+                    <Glass key={i} className={`report-section report-section--${section.tone || "normal"}`}>
+                      <div className={`report-section-title ${section.tone || "normal"}`}>{section.title}</div>
+                      <div className="report-section-text">
+                        {section.text.split("\n").filter(Boolean).map((para, pi) => (
+                          <p key={pi} style={{ margin: "0 0 12px 0", lineHeight: 1.75 }}>{para}</p>
+                        ))}
+                      </div>
+                    </Glass>
                   ))}
                 </div>
                 {fullReport.closing && <div className="report-closing">{fullReport.closing}</div>}
-                <Glass className="mail-access-box">Link do tego raportu został wysłany na Twój adres e-mail. Możesz do niego wrócić w dowolnym momencie.</Glass>
+                <Glass className="mail-access-box">Link do raportu został wysłany na Twój adres e-mail. Jest ważny 48 godzin — możesz otworzyć go na dowolnym urządzeniu.</Glass>
                 <div className="section-actions"><GhostButton onClick={resetAll}>Nowa analiza</GhostButton></div>
               </Glass>
             </motion.div>
