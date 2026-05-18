@@ -38,7 +38,7 @@ exports.createCheckout = async (req, res) => {
       mode: "payment",
       customer_email: email,
       // BLIK i Przelewy24 dla Polski + karta
-      payment_method_types: ["card", "blik", "p24"],
+      payment_method_types: ["card", "blik"],
       line_items: [
         {
           quantity: 1,
