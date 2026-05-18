@@ -29,7 +29,7 @@ exports.createCheckout = async (req, res) => {
     const userAgent = normalizeText(req.headers["user-agent"] || "");
 
     // Cena z env — łatwa zmiana bez dotykania kodu
-    const priceAmountGr = parseInt(process.env.PRICE_AMOUNT_GR || "2900", 10);
+    const priceAmountGr = parseInt(process.env.PRICE_AMOUNT_GR || "2900", 10); // domyślnie 29 zł
 
     const successUrl = `${process.env.CLIENT_URL}?success=1&token=${encodeURIComponent(token)}`;
     const cancelUrl = `${process.env.CLIENT_URL}?cancel=1`;
