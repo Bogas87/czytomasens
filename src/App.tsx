@@ -114,7 +114,7 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     key: "betrayal",
     title: "Po zdradzie albo kłamstwie",
     subtitle: "Zaufanie można odbudować. Ale nie na udawaniu że wszystko jest okej.",
-    quote: "„Mówi że to już za nim. Ale ja nadal sprawdzam telefon."",
+    quote: `„Mówi że to już za nim. Ale ja nadal sprawdzam telefon."`,
     intro: "Dowiesz się czy to co wróciło to realna zmiana, czy tylko cisza po burzy. I czy zaufanie które masz teraz — to zaufanie, czy strach przed kolejną prawdą.",
     duration: "ok. 7 minut",
     questions: [
@@ -130,7 +130,7 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     key: "uncertain",
     title: "Nie wiem na czym stoję",
     subtitle: "Niepewność która trwa miesiącami rzadko jest przypadkowa.",
-    quote: "„Nie wiem czy jesteśmy razem. Nie wiem czy nie jesteśmy. On też chyba nie wie."",
+    quote: `„Nie wiem czy jesteśmy razem. Nie wiem czy nie jesteśmy. On też chyba nie wie."`,
     intro: "Dowiesz się czy ta niepewność wynika z sytuacji — czy z tego, że ktoś świadomie nie daje Ci jasności, bo mu to odpowiada.",
     duration: "ok. 7 minut",
     questions: [
@@ -146,7 +146,7 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     key: "stagnation",
     title: "To trwa, ale czegoś już w tym nie ma",
     subtitle: "Brak awantur to nie dowód spokoju. Czasem dowód że już nic nie ma sensu kłócić.",
-    quote: "„Wszystko jest okej. I właśnie to mnie przeraża."",
+    quote: `„Wszystko jest okej. I właśnie to mnie przeraża."`,
     intro: "Dowiesz się czy jesteście w spokojnej fazie po trudnym czasie — czy po prostu oboje przestaliście już czegokolwiek oczekiwać.",
     duration: "ok. 7 minut",
     questions: [
@@ -162,7 +162,7 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     key: "returning",
     title: "Rozstaliśmy się i nie wiem czy wracać",
     subtitle: "Tęsknota potrafi udawać miłość. Lęk przed samotnością potrafi udawać sens.",
-    quote: "„Wiem że nie powinnam. Ale cały czas o nim myślę."",
+    quote: `„Wiem że nie powinnam. Ale cały czas o nim myślę."`,
     intro: "Dowiesz się czy chcesz tej konkretnej osoby — czy chcesz żeby pewien rozdział w końcu miał dobre zakończenie.",
     duration: "ok. 7 minut",
     questions: [
@@ -178,7 +178,7 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     key: "triangle",
     title: "Jest ktoś trzeci",
     subtitle: "Nowa osoba obnaża to czego nie było — albo daje pretekst do ucieczki. Z zewnątrz wygląda tak samo.",
-    quote: "„Nie wiem czy ją kocham czy tylko uciekam. I nie wiem od czego."",
+    quote: `„Nie wiem czy ją kocham czy tylko uciekam. I nie wiem od czego."`,
     intro: "Dowiesz się czy ta trzecia osoba jest odpowiedzią na coś realnego — czy pytaniem które zadajesz sobie od dawna i szukasz dla niego gotowej nazwy.",
     duration: "ok. 7 minut",
     questions: [
@@ -194,7 +194,7 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     key: "loop",
     title: "Wracamy do siebie w kółko",
     subtitle: "Odchodzicie. Wracacie. I za każdym razem mówisz sobie że tym razem będzie inaczej.",
-    quote: "„Rozstajemy się od trzech lat. Nigdy nie wychodzi nam to na stałe."",
+    quote: `„Rozstajemy się od trzech lat. Nigdy nie wychodzi nam to na stałe."`,
     intro: "Dowiesz się czy to co Was trzyma razem to miłość — czy mechanizm napięcie-ulga, który wygląda jak miłość ale nią nie jest.",
     duration: "ok. 7 minut",
     questions: [
