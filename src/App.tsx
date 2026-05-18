@@ -588,7 +588,7 @@ export default function App() {
                     <div className="story-lock">
                       <div className="story-lock-icon">🔒</div>
                       <div>
-                        <strong>Pełny raport — 19 zł</strong>
+                        <strong>Pełny raport — 29 zł</strong>
                         <span>Jednorazowo. Raport generowany indywidualnie na podstawie Twoich odpowiedzi.</span>
                       </div>
                     </div>
@@ -834,7 +834,7 @@ export default function App() {
                   <p className="unlock-copy">Pełny raport to 15 sekcji generowanych wyłącznie na podstawie Twoich odpowiedzi. Nikt inny nie dostanie takiego samego. Zobaczysz w nim swój wzorzec w relacjach, mechanizmy obronne które stosujesz, gdzie najprawdopodobniej się oszukujesz — i dwa realne scenariusze tego co się wydarzy dalej.</p>
                   <div className="unlock-form">
                     <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Twój adres e-mail — wyślemy Ci link do raportu" />
-                    <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Odblokuj pełny raport — 19 zł"}</PrimaryButton>
+                    <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Odblokuj pełny raport — 29 zł"}</PrimaryButton>
                     <div className="unlock-note">Jednorazowa płatność. Dostęp na zawsze przez link w e-mailu. Raport gotowy zwykle w ciągu 1-2 minut.</div>
                   </div>
                 </Glass>
