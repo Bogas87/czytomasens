@@ -81,7 +81,7 @@ type InterviewState = {
 
 type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string };
 
-const STORAGE_KEY = "ctms_premium_front_v8";
+const STORAGE_KEY = "ctms_premium_front_v9";
 
 const CONSENTS = [
   "Rozumiem, że CzyToMaSens jest narzędziem analitycznym, a nie poradą psychologiczną, terapeutyczną ani medyczną.",
@@ -138,7 +138,7 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     intro: "Dowiesz się czy ta niepewność wynika z sytuacji — czy z tego, że ktoś świadomie nie daje Ci jasności, bo mu to odpowiada.",
     duration: "ok. 7 minut",
     questions: [
-      { id: "u1", lead: "Kiedy ktoś chce — mówi wprost. Reszta to wymówki.", text: "Czy ta osoba kiedykolwiek powiedziała Ci wprost czym dla niej jesteście — czy temat zawsze jakoś się rozmywa lub odkłada?", options: [{ id: "a", label: "Temat się rozmywa albo w ogóle go nie ma.", score: 3 }, { id: "b", label: "Coś mówi — ale tak mgliście że mogę to rozumieć jak chcę.", score: 2 }, { id: "c", label: "Mówiła — ale słowa nie zgadzają się z zachowaniem.", score: 1 }, { id: "d", label: "Tak. Powiedziała wprost i trzyma się tego.", score: 0 }] },
+      { id: "u1", lead: "Kiedy ktoś chce — mówi wprost. Reszta to wymówki.", text: "Czy ta osoba konkretnie i wprost określiła czym dla niej jesteście — czy raczej temat jakoś zawsze się rozmywa?", options: [{ id: "a", label: "Rozmywa się albo w ogóle nie poruszamy tego tematu.", score: 3 }, { id: "b", label: "Coś mówi, ale nieprecyzyjnie.", score: 2 }, { id: "c", label: "Mówiła — ale słowa nie zgadzają się z zachowaniem.", score: 1 }, { id: "d", label: "Tak, jest jasność co do tego co jest między nami.", score: 0 }] },
       { id: "u2", lead: "Zaangażowanie widać wtedy gdy Ty nic nie robisz.", text: "Jak wygląda kontakt gdy to nie Ty piszesz pierwszy, nie Ty proponujesz, nie Ty inicjujesz?", options: [{ id: "a", label: "Prawie nic się nie dzieje. To ja napędzam wszystko.", score: 3 }, { id: "b", label: "Coś się pojawia — ale rzadziej i jakby z obowiązku.", score: 2 }, { id: "c", label: "Inicjuje — choć nieregularnie.", score: 1 }, { id: "d", label: "Sama inicjuje. Regularnie i naturalnie.", score: 0 }] },
       { id: "u3", lead: "Uwaga która pojawia się gdy zaczynasz się wycofywać — to nie uczucie. To refleks.", text: "Czy ta osoba staje się bardziej obecna i zaangażowana dokładnie wtedy, gdy wyczuje że możesz odejść?", options: [{ id: "a", label: "Tak. Wtedy wszystko wraca — a potem znowu znika.", score: 3 }, { id: "b", label: "Chyba tak — choć nie chcę w to wierzyć.", score: 2 }, { id: "c", label: "Może trochę — ale nie widzę wyraźnego wzorca.", score: 1 }, { id: "d", label: "Nie. Poziom zaangażowania jest mniej więcej stały.", score: 0 }] },
       { id: "u4", lead: "Zrób ten eksperyment w głowie — odpowiedz szybko.", text: "Gdybyś przez dwa tygodnie przestał pisać pierwszy i nie odzywał się wcale — co by się stało z kontaktem?", options: [{ id: "a", label: "Prawdopodobnie zamarłby całkowicie.", score: 3 }, { id: "b", label: "Odezwałaby się — ale nie wiem kiedy ani po co.", score: 2 }, { id: "c", label: "Odezwałaby się — choć pewnie nie od razu.", score: 1 }, { id: "d", label: "Odezwałaby się szybko. Jestem pewien.", score: 0 }] },
@@ -375,7 +375,6 @@ function CookieBanner() {
   );
 }
 
-
 const PROCESSING_MESSAGES = [
   "Analizuję wzorzec relacyjny...",
   "Identyfikuję mechanizmy obronne...",
@@ -389,17 +388,11 @@ const PROCESSING_MESSAGES = [
 function ProcessingScreen() {
   const [msgIndex, setMsgIndex] = React.useState(0);
   const [dots, setDots] = React.useState(0);
-
   React.useEffect(() => {
-    const msgTimer = setInterval(() => {
-      setMsgIndex((v) => (v + 1) % PROCESSING_MESSAGES.length);
-    }, 3500);
-    const dotTimer = setInterval(() => {
-      setDots((v) => (v + 1) % 4);
-    }, 500);
+    const msgTimer = setInterval(() => { setMsgIndex((v) => (v + 1) % PROCESSING_MESSAGES.length); }, 3500);
+    const dotTimer = setInterval(() => { setDots((v) => (v + 1) % 4); }, 500);
     return () => { clearInterval(msgTimer); clearInterval(dotTimer); };
   }, []);
-
   return (
     <div className="loading-wrap">
       <Glass className="loading-panel">
@@ -408,18 +401,10 @@ function ProcessingScreen() {
           <div className="processing-ring processing-ring--2" />
           <div className="processing-dot" />
         </div>
-        <h2 style={{ marginBottom: "12px", fontSize: "clamp(20px,4vw,26px)" }}>
-          Raport jest generowany
-        </h2>
-        <div className="processing-message">
-          {PROCESSING_MESSAGES[msgIndex]}{".".repeat(dots)}
-        </div>
-        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>
-          Każde zdanie dotyczy tylko Ciebie.<br />Nie zamykaj karty — to zajmie 1–2 minuty.
-        </p>
-        <div className="processing-bar">
-          <div className="processing-bar-fill" />
-        </div>
+        <h2 style={{ marginBottom: "12px", fontSize: "clamp(20px,4vw,26px)" }}>Raport jest generowany</h2>
+        <div className="processing-message">{PROCESSING_MESSAGES[msgIndex]}{".".repeat(dots)}</div>
+        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>Każde zdanie dotyczy tylko Ciebie.<br />Nie zamykaj karty — to zajmie 1–2 minuty.</p>
+        <div className="processing-bar"><div className="processing-bar-fill" /></div>
       </Glass>
     </div>
   );
@@ -452,28 +437,16 @@ export default function App() {
       if (raw) {
         const parsed = JSON.parse(raw);
         const restoredStage: Stage = parsed.stage === "processing" ? (parsed.preview ? "preview" : "landing") : (parsed.stage || "landing");
-        setStage(restoredStage);
-        setSelectedPath(parsed.selectedPath || null);
-        setQuestionIndex(parsed.questionIndex || 0);
-        setAnswers(parsed.answers || {});
-        setOpenText(parsed.openText || "");
-        setEmail(parsed.email || "");
-        setPreview(parsed.preview || null);
-        setFullReport(parsed.fullReport || null);
-        setSessionToken(parsed.sessionToken || null);
-        setConsents(parsed.consents || [false, false, false, false]);
-        setInterviewState(parsed.interviewState || null);
+        setStage(restoredStage); setSelectedPath(parsed.selectedPath || null); setQuestionIndex(parsed.questionIndex || 0);
+        setAnswers(parsed.answers || {}); setOpenText(parsed.openText || ""); setEmail(parsed.email || "");
+        setPreview(parsed.preview || null); setFullReport(parsed.fullReport || null); setSessionToken(parsed.sessionToken || null);
+        setConsents(parsed.consents || [false, false, false, false]); setInterviewState(parsed.interviewState || null);
       }
     } catch {}
-
     const params = new URLSearchParams(window.location.search);
-    const success = params.get("success");
-    const token = params.get("token");
+    const success = params.get("success"); const token = params.get("token");
     const cancel = params.get("cancel") || params.get("cancelled") || params.get("canceled");
-    const accessToken = params.get("access_token");
-    const accessExp = params.get("exp");
-    const accessSig = params.get("sig");
-
+    const accessToken = params.get("access_token"); const accessExp = params.get("exp"); const accessSig = params.get("sig");
     if (accessToken && accessExp && accessSig) {
       setBusy(true); setStage("processing");
       fetch(`${API_BASE}/api/report/signed?token=${encodeURIComponent(accessToken)}&exp=${encodeURIComponent(accessExp)}&sig=${encodeURIComponent(accessSig)}`)
@@ -502,8 +475,7 @@ export default function App() {
     const data = await createSession(entryKey);
     const nextToken = data?.token || data?.sessionId || null;
     if (!nextToken) throw new Error("Nie udało się uzyskać tokenu sesji.");
-    setSessionToken(nextToken);
-    return nextToken;
+    setSessionToken(nextToken); return nextToken;
   };
 
   const resetAll = () => {
@@ -634,7 +606,6 @@ export default function App() {
       <main className={`ctms-main ${["consent","questions","checkpoint","interview","open_text","preview","paid","error","crisis"].includes(stage) ? "narrow" : ""}`}>
         <AnimatePresence mode="wait">
 
-          {/* LANDING */}
           {stage === "landing" && (
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <section className="hero-grid">
@@ -642,9 +613,7 @@ export default function App() {
                   <div className="eyebrow with-line">PRYWATNA ANALIZA RELACJI</div>
                   <div className="hero-kicker">TWOJA RELACJA MA WZORZEC.</div>
                   <h1>Już wiesz że <span>coś nie gra.</span><br />Tu dowiesz się — co i dlaczego.</h1>
-                  <p style={{ lineHeight: 1.75, color: BRAND.muted, marginBottom: "28px" }}>
-                    Nie jesteś tu po potwierdzenie że wszystko jest okej. Jesteś tu bo coś Ci nie daje spokoju — i chcesz wiedzieć co to naprawdę jest, nie co chciałbyś żeby to było.
-                  </p>
+                  <p style={{ lineHeight: 1.75, color: BRAND.muted, marginBottom: "28px" }}>Nie jesteś tu po potwierdzenie że wszystko jest okej. Jesteś tu bo coś Ci nie daje spokoju — i chcesz wiedzieć co to naprawdę jest, nie co chciałbyś żeby to było.</p>
                   <div className="ctms-landing-actions">
                     <PrimaryButton onClick={() => setStage("consent")}>Chcę to wiedzieć</PrimaryButton>
                     <div style={{ fontSize: "12px", color: BRAND.muted, marginTop: "10px" }}>Najpierw bezpłatny podgląd. Płacisz tylko za pełny raport.</div>
@@ -661,62 +630,32 @@ export default function App() {
                     </div>
                     <div className="story-lock">
                       <div className="story-lock-icon">🔒</div>
-                      <div>
-                        <strong>Pełny raport — 29 zł</strong>
-                        <span>Jednorazowo. Raport generowany indywidualnie na podstawie Twoich odpowiedzi.</span>
-                      </div>
+                      <div><strong>Pełny raport — 29 zł</strong><span>Jednorazowo. Raport generowany indywidualnie na podstawie Twoich odpowiedzi.</span></div>
                     </div>
                   </Glass>
                 </div>
               </section>
-
-              {/* CZYM TO NIE JEST */}
               <section style={{ maxWidth: "720px", margin: "48px auto 0", padding: "0 4px" }}>
                 <Glass style={{ padding: "32px 36px" }}>
                   <div className="eyebrow" style={{ marginBottom: "20px" }}>CZYM TO NIE JEST</div>
                   <div style={{ display: "grid", gap: "16px" }}>
-                    {[
-                      ["Nie jest testem osobowości.", "Nie dostaniesz swojego „typu". Dostaniesz obraz konkretnej sytuacji w której teraz jesteś."],
-                      ["Nie powie Ci co robić.", "Nie ma tu zaleceń, kroków ani rad. Jest analiza — i pytanie które z niej wynika."],
-                      ["Nie oceni Twojego partnera.", "Opisuje mechanizmy, nie wydaje wyroków. Na podstawie Twoich słów, nie cudzych założeń."],
-                      ["Nie jest rozmową z chatbotem.", "Pytania mają strukturę wywiadu klinicznego — schodzą głębiej z każdą odpowiedzią. To nie jest ankieta."],
-                    ].map(([title, desc]) => (
+                    {[["Nie jest testem osobowości.", "Nie dostaniesz swojego „typu". Dostaniesz obraz konkretnej sytuacji w której teraz jesteś."], ["Nie powie Ci co robić.", "Nie ma tu zaleceń, kroków ani rad. Jest analiza — i pytanie które z niej wynika."], ["Nie oceni Twojego partnera.", "Opisuje mechanizmy, nie wydaje wyroków. Na podstawie Twoich słów, nie cudzych założeń."], ["Nie jest rozmową z chatbotem.", "Pytania mają strukturę wywiadu klinicznego — schodzą głębiej z każdą odpowiedzią. To nie jest ankieta."]].map(([title, desc]) => (
                       <div key={title as string} style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
                         <span style={{ color: BRAND.gold, fontSize: "18px", lineHeight: 1, marginTop: "2px", flexShrink: 0 }}>—</span>
-                        <div>
-                          <strong style={{ color: BRAND.text, fontSize: "14px" }}>{title}</strong>
-                          <span style={{ color: BRAND.muted, fontSize: "14px", marginLeft: "6px" }}>{desc}</span>
-                        </div>
+                        <div><strong style={{ color: BRAND.text, fontSize: "14px" }}>{title}</strong><span style={{ color: BRAND.muted, fontSize: "14px", marginLeft: "6px" }}>{desc}</span></div>
                       </div>
                     ))}
                   </div>
                 </Glass>
               </section>
-
               <section className="ctms-feature-editorial-grid" style={{ marginTop: "48px" }}>
-                <Glass className="feature-card">
-                  <div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div>
-                  <h3>Schodzi głębiej niż myślisz</h3>
-                  <div className="feature-line" />
-                  <p>Każde pytanie wchodzi w miejsce którego się nie spodziewasz dotknąć. To tam jest odpowiedź — nie w tym co powiesz pierwsze.</p>
-                </Glass>
-                <Glass className="feature-card">
-                  <div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div>
-                  <h3>Mówi to czego inni nie powiedzą</h3>
-                  <div className="feature-line" />
-                  <p>Nie dostaniesz pocieszenia ani oceny. Dostaniesz to co naprawdę widać z zewnątrz — nazwane wprost i bez owijania w bawełnę.</p>
-                </Glass>
-                <Glass className="feature-card">
-                  <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
-                  <h3>Zostajesz z czymś konkretnym</h3>
-                  <div className="feature-line" />
-                  <p>Nie z listą kroków ani motywacją. Z precyzyjnym obrazem tego co się naprawdę dzieje — i jednym pytaniem które z tego wynika.</p>
-                </Glass>
+                <Glass className="feature-card"><div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div><h3>Schodzi głębiej niż myślisz</h3><div className="feature-line" /><p>Każde pytanie wchodzi w miejsce którego się nie spodziewasz dotknąć. To tam jest odpowiedź — nie w tym co powiesz pierwsze.</p></Glass>
+                <Glass className="feature-card"><div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div><h3>Mówi to czego inni nie powiedzą</h3><div className="feature-line" /><p>Nie dostaniesz pocieszenia ani oceny. Dostaniesz to co naprawdę widać z zewnątrz — nazwane wprost i bez owijania w bawełnę.</p></Glass>
+                <Glass className="feature-card"><div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div><h3>Zostajesz z czymś konkretnym</h3><div className="feature-line" /><p>Nie z listą kroków ani motywacją. Z precyzyjnym obrazem tego co się naprawdę dzieje — i jednym pytaniem które z tego wynika.</p></Glass>
               </section>
             </motion.div>
           )}
 
-          {/* CONSENT */}
           {stage === "consent" && (
             <motion.div key="consent" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel consent-panel">
@@ -739,15 +678,10 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* ENTRY */}
           {stage === "entry" && (
             <motion.div key="entry" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head">
-                <div>
-                  <div className="eyebrow">WYBIERZ ŚCIEŻKĘ</div>
-                  <h2>Co Cię tu przyprowadziło?</h2>
-                  <p>Wybierz to co najbardziej nie daje Ci spokoju. Pytania i analiza będą dopasowane do Twojej sytuacji.</p>
-                </div>
+                <div><div className="eyebrow">WYBIERZ ŚCIEŻKĘ</div><h2>Co Cię tu przyprowadziło?</h2><p>Wybierz to co najbardziej nie daje Ci spokoju. Pytania i analiza będą dopasowane do Twojej sytuacji.</p></div>
                 <GhostButton onClick={goBack}>Wróć</GhostButton>
               </div>
               <div className="entry-grid">
@@ -756,21 +690,16 @@ export default function App() {
                     <div className="eyebrow">ŚCIEŻKA ANALIZY</div>
                     <h3>{entry.title}</h3>
                     <div className="entry-subtitle">{entry.subtitle}</div>
-                    <div style={{ margin: "14px 0", padding: "12px 16px", borderLeft: `2px solid ${BRAND.gold}`, background: "rgba(197,160,89,0.05)", fontSize: "13px", color: BRAND.muted, lineHeight: 1.6, fontStyle: "italic" }}>
-                      {entry.quote}
-                    </div>
+                    <div style={{ margin: "14px 0", padding: "12px 16px", borderLeft: `2px solid ${BRAND.gold}`, background: "rgba(197,160,89,0.05)", fontSize: "13px", color: BRAND.muted, lineHeight: 1.6, fontStyle: "italic" }}>{entry.quote}</div>
                     <div className="entry-intro">{entry.intro}</div>
                     <div style={{ fontSize: "12px", color: BRAND.muted, margin: "8px 0 16px" }}>⏱ {entry.duration}</div>
-                    <div className="entry-action">
-                      <PrimaryButton onClick={() => startPath(entry.key)}>{busy ? "Przygotowuję..." : "Zacznij analizę"}</PrimaryButton>
-                    </div>
+                    <div className="entry-action"><PrimaryButton onClick={() => startPath(entry.key)}>{busy ? "Przygotowuję..." : "Zacznij analizę"}</PrimaryButton></div>
                   </Glass>
                 ))}
               </div>
             </motion.div>
           )}
 
-          {/* QUESTIONS */}
           {stage === "questions" && path && currentQuestion && (
             <motion.div key={currentQuestion.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
@@ -795,7 +724,6 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* CHECKPOINT */}
           {stage === "checkpoint" && path && (
             <motion.div key={`${path.key}-checkpoint`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel">
@@ -811,7 +739,6 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* AI INTERVIEW */}
           {stage === "interview" && interviewState && (
             <motion.div key={`interview-${interviewState.exchangeIndex}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
@@ -825,15 +752,10 @@ export default function App() {
                 <div className="question-copy">
                   {interviewState.currentLead && <div className="question-lead">{interviewState.currentLead}</div>}
                   <h3>{interviewState.currentQuestion}</h3>
-                  {interviewState.currentObservation && interviewState.history.length > 0 && (
-                    <div style={{ fontSize: "14px", color: BRAND.muted, marginTop: "12px", fontStyle: "italic", lineHeight: 1.6 }}>{interviewState.currentObservation}</div>
-                  )}
+                  {interviewState.currentObservation && interviewState.history.length > 0 && (<div style={{ fontSize: "14px", color: BRAND.muted, marginTop: "12px", fontStyle: "italic", lineHeight: 1.6 }}>{interviewState.currentObservation}</div>)}
                 </div>
                 <textarea className="ctms-textarea" value={interviewAnswer} onChange={(e) => setInterviewAnswer(e.target.value)} placeholder="Odpowiedz konkretnie — co się dzieje, nie jak to interpretujesz. Im bardziej precyzyjnie, tym głębiej idzie analiza." maxLength={2000} />
-                <div className="text-meta">
-                  <div>{interviewState.history.length > 0 ? `Wymiana ${interviewState.history.length + 1}` : "Pierwsze pytanie"}</div>
-                  <div>{interviewAnswer.length}/2000</div>
-                </div>
+                <div className="text-meta"><div>{interviewState.history.length > 0 ? `Wymiana ${interviewState.history.length + 1}` : "Pierwsze pytanie"}</div><div>{interviewAnswer.length}/2000</div></div>
                 {error && <div className="error-line" style={{ marginTop: "12px" }}>{error}</div>}
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
@@ -843,7 +765,6 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* OPEN TEXT */}
           {stage === "open_text" && path && (
             <motion.div key={`${path.key}-open`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel">
@@ -853,10 +774,7 @@ export default function App() {
                   <p style={{ color: BRAND.muted, fontSize: "14px", marginTop: "10px", lineHeight: 1.65 }}>Napisz jak do kogoś komu ufasz — nie jak do formularza. Im bardziej szczery, tym precyzyjniejsza analiza.</p>
                 </div>
                 <textarea className="ctms-textarea" value={openText} onChange={(e) => setOpenText(e.target.value)} placeholder="Co się naprawdę dzieje — nie jak to interpretujesz, ale co konkretnie robisz i co ta osoba robi." maxLength={3000} />
-                <div className="text-meta">
-                  <div>To jest rdzeń analizy.</div>
-                  <div>{openText.length}/3000</div>
-                </div>
+                <div className="text-meta"><div>To jest rdzeń analizy.</div><div>{openText.length}/3000</div></div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
                   <PrimaryButton onClick={buildPreviewAndGo} disabled={busy || openText.trim().length < 10}>{busy ? "Analizuję..." : "Pokaż bezpłatny podgląd"}</PrimaryButton>
@@ -865,7 +783,6 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* CRISIS */}
           {stage === "crisis" && (
             <motion.div key="crisis" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel crisis-panel">
@@ -882,7 +799,6 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* PREVIEW */}
           {stage === "preview" && preview && (
             <motion.div key="preview" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="preview-card">
@@ -918,14 +834,12 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* PROCESSING */}
           {stage === "processing" && (
             <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <ProcessingScreen />
             </motion.div>
           )}
 
-          {/* PAID */}
           {stage === "paid" && fullReport && (
             <motion.div key="paid" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="preview-card">
@@ -961,7 +875,6 @@ export default function App() {
             </motion.div>
           )}
 
-          {/* ERROR */}
           {stage === "error" && (
             <motion.div key="error" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel">
