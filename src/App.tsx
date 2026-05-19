@@ -635,23 +635,46 @@ export default function App() {
                   </Glass>
                 </div>
               </section>
-              <section style={{ maxWidth: "720px", margin: "48px auto 0", padding: "0 4px" }}>
-                <Glass style={{ padding: "32px 36px" }}>
-                  <div className="eyebrow" style={{ marginBottom: "20px" }}>CZYM TO NIE JEST</div>
-                  <div style={{ display: "grid", gap: "16px" }}>
-                    {[["Nie jest testem osobowości.", "Nie dostaniesz swojego „typu”. Dostaniesz obraz konkretnej sytuacji w której teraz jesteś."], ["Nie powie Ci co robić.", "Nie ma tu zaleceń, kroków ani rad. Jest analiza — i pytanie które z niej wynika."], ["Nie oceni Twojego partnera.", "Opisuje mechanizmy, nie wydaje wyroków. Na podstawie Twoich słów, nie cudzych założeń."], ["Nie jest rozmową z chatbotem.", "Pytania mają strukturę wywiadu klinicznego — schodzą głębiej z każdą odpowiedzią. To nie jest ankieta."]].map(([title, desc]) => (
+              <section style={{ margin: "32px 0 0" }}>
+                <Glass style={{ padding: "36px 40px" }}>
+                  <div className="eyebrow" style={{ marginBottom: "24px" }}>CZYM TO NIE JEST</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px 40px" }}>
+                    {[
+                      ["Nie jest testem osobowości.", "Nie dostaniesz swojego „typu”. Dostaniesz obraz konkretnej sytuacji w której teraz jesteś."],
+                      ["Nie powie Ci co robić.", "Nie ma tu zaleceń, kroków ani rad. Jest analiza — i pytanie które z niej wynika."],
+                      ["Nie oceni Twojego partnera.", "Opisuje mechanizmy, nie wydaje wyroków. Na podstawie Twoich słów, nie cudzych założeń."],
+                      ["Nie jest rozmową z chatbotem.", "Pytania schodzą głębiej z każdą odpowiedzią — budują się na tym co mówisz. To nie jest ankieta."]
+                    ].map(([title, desc]) => (
                       <div key={title as string} style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
-                        <span style={{ color: BRAND.gold, fontSize: "18px", lineHeight: 1, marginTop: "2px", flexShrink: 0 }}>—</span>
-                        <div><strong style={{ color: BRAND.text, fontSize: "14px" }}>{title}</strong><span style={{ color: BRAND.muted, fontSize: "14px", marginLeft: "6px" }}>{desc}</span></div>
+                        <span style={{ color: BRAND.gold, fontSize: "20px", lineHeight: 1, marginTop: "1px", flexShrink: 0 }}>—</span>
+                        <div>
+                          <strong style={{ color: BRAND.text, fontSize: "15px", display: "block", marginBottom: "4px" }}>{title}</strong>
+                          <span style={{ color: BRAND.muted, fontSize: "15px", lineHeight: "1.65" }}>{desc}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </Glass>
               </section>
-              <section className="ctms-feature-editorial-grid" style={{ marginTop: "48px" }}>
-                <Glass className="feature-card"><div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div><h3>Schodzi głębiej niż myślisz</h3><div className="feature-line" /><p>Każde pytanie wchodzi w miejsce którego się nie spodziewasz dotknąć. To tam jest odpowiedź — nie w tym co powiesz pierwsze.</p></Glass>
-                <Glass className="feature-card"><div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div><h3>Mówi to czego inni nie powiedzą</h3><div className="feature-line" /><p>Nie dostaniesz pocieszenia ani oceny. Dostaniesz to co naprawdę widać z zewnątrz — nazwane wprost i bez owijania w bawełnę.</p></Glass>
-                <Glass className="feature-card"><div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div><h3>Zostajesz z czymś konkretnym</h3><div className="feature-line" /><p>Nie z listą kroków ani motywacją. Z precyzyjnym obrazem tego co się naprawdę dzieje — i jednym pytaniem które z tego wynika.</p></Glass>
+              <section className="ctms-feature-editorial-grid" style={{ marginTop: "24px" }}>
+                <Glass className="feature-card">
+                  <div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div>
+                  <h3>Schodzi głębiej niż myślisz</h3>
+                  <div className="feature-line" />
+                  <p>Każde pytanie wynika z poprzedniej odpowiedzi — idzie w kierunku który sam wskazujesz. To nie lista pytań do odhaczenia.</p>
+                </Glass>
+                <Glass className="feature-card">
+                  <div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div>
+                  <h3>Mówi to czego inni nie powiedzą</h3>
+                  <div className="feature-line" />
+                  <p>Nie pocieszenie. Nie ocena. Precyzyjny obraz tego co widać z zewnątrz — bez zakładania z góry kto ma rację.</p>
+                </Glass>
+                <Glass className="feature-card">
+                  <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
+                  <h3>Zostajesz z czymś konkretnym</h3>
+                  <div className="feature-line" />
+                  <p>Nie z listą kroków ani motywacją na dziś. Z obrazem mechanizmu — i jednym pytaniem które z tego wynika.</p>
+                </Glass>
               </section>
             </motion.div>
           )}
