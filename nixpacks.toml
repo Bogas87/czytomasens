@@ -1,5 +1,5 @@
 ﻿[phases.setup]
-nixPkgs = ["nodejs_22", "npm-10_x"]
+nixPkgs = ["nodejs_24", "npm-11_x"]
 
 [phases.install]
 cmds = ["npm install --include=dev"]
