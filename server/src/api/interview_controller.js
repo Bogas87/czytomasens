@@ -2,8 +2,8 @@
 
 /**
  * INTERVIEW CONTROLLER
- * Obsługuje dynamiczny wywiad AI — zastępuje statyczne pytania
- * konwersacją w której AI schodzi głębiej na podstawie odpowiedzi.
+ * Obsługuje dynamiczny wywiad — zastępuje statyczne pytania
+ * konwersacją w której narzędzie schodzi głębiej na podstawie odpowiedzi.
  *
  * Nowe endpointy:
  *   POST /api/interview/start      — pierwsze pytanie otwierające
@@ -22,6 +22,22 @@ function isValidUUID(uuid) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uuid || "");
 }
 
+function hasLowQualityContent(text) {
+  const value = normalizeText(text).toLowerCase();
+  if (value.length < 18) return true;
+  const letters = (value.match(/[a-ząćęłńóśźż]/gi) || []).length;
+  const spaces = (value.match(/\s/g) || []).length;
+  const uniqueChars = new Set(value.replace(/\s/g, "").split("")).size;
+  const jokePatterns = [
+    /\b(test|testing|pr[oó]ba|haha|hehe|lol|xd|żart|jaja|beka|dupa|g[łl]upoty|asdf|qwerty)\b/i,
+    /(.)\1{5,}/,
+    /^[a-ząćęłńóśźż]{1,3}(\s+[a-ząćęłńóśźż]{1,3}){3,}$/i,
+  ];
+  if (jokePatterns.some((pattern) => pattern.test(value))) return true;
+  if (letters < 14 || spaces < 2 || uniqueChars < 8) return true;
+  return false;
+}
+
 const VALID_PATHS = ["betrayal", "uncertain", "stagnation", "returning", "triangle", "loop"];
 
 // ─── START WYWIADU ────────────────────────────────────────────────────────────
@@ -29,7 +45,7 @@ const VALID_PATHS = ["betrayal", "uncertain", "stagnation", "returning", "triang
 /**
  * POST /api/interview/start
  * Body: { token, path, initialContext }
- * Zwraca pierwsze pytanie AI.
+ * Zwraca pierwsze pytanie.
  */
 exports.startInterview = async (req, res) => {
   try {
@@ -81,7 +97,7 @@ exports.startInterview = async (req, res) => {
 /**
  * POST /api/interview/next
  * Body: { token, userAnswer }
- * Zwraca następne pytanie AI lub sygnał zakończenia.
+ * Zwraca następne pytanie lub sygnał zakończenia.
  */
 exports.nextQuestion = async (req, res) => {
   try {
@@ -94,6 +110,10 @@ exports.nextQuestion = async (req, res) => {
 
     if (!userAnswer || userAnswer.length < 5) {
       return res.status(400).json({ ok: false, message: "Za krótka odpowiedź." });
+    }
+
+    if (hasLowQualityContent(userAnswer)) {
+      return res.status(422).json({ ok: false, code: "LOW_QUALITY_INPUT", message: "Odpowiedź wygląda na testową albo zbyt przypadkową. Napisz konkretnie, co się wydarzyło lub co realnie czujesz." });
     }
 
     if (userAnswer.length > 5000) {
@@ -120,7 +140,7 @@ exports.nextQuestion = async (req, res) => {
       { ai: state.currentQuestion, user: userAnswer },
     ];
 
-    // Zapytaj AI o następne pytanie
+    // Pobierz następne pytanie
     const next = await interviewService.getNextQuestion({
       path: state.path,
       history: updatedHistory,
@@ -179,7 +199,7 @@ exports.nextQuestion = async (req, res) => {
     });
   } catch (error) {
     console.error("[Interview] Next question error:", error.message);
-    return res.status(500).json({ ok: false, message: "Błąd generowania pytania." });
+    return res.status(500).json({ ok: false, message: "Błąd przygotowania pytania." });
   }
 };
 

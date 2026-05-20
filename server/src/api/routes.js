@@ -9,7 +9,7 @@ const interviewController = require("./interview_controller.js");
 const router = Router();
 
 // ─── RATE LIMITY ─────────────────────────────────────────────────────────────
-// Ograniczenie dla endpointów AI — każde wywołanie kosztuje pieniądze (OpenAI)
+// Ograniczenie dla endpointów analitycznych — każde wywołanie kosztuje pieniądze (modelu)
 // Limit: 30 zapytań na 10 minut z jednego adresu IP
 const aiLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minut
@@ -48,8 +48,8 @@ router.post("/session/save", generalLimiter, analyzeController.updateSession);
 
 router.post("/capture-email", generalLimiter, analyzeController.captureEmail);
 
-// ─── ANALIZA AI ───────────────────────────────────────────────────────────────
-// Wszystkie endpointy wywołujące OpenAI mają aiLimiter
+// ─── ANALIZA ───────────────────────────────────────────────────────────────
+// Wszystkie endpointy uruchamiające analizę mają aiLimiter
 router.post("/analyze", aiLimiter, analyzeController.analyzeText);
 router.post("/analyze/preview", aiLimiter, analyzeController.analyzeText);
 
@@ -60,7 +60,7 @@ router.post("/analyze/checkpoint", aiLimiter, analyzeController.generateCheckpoi
 router.post("/create-checkout", generalLimiter, stripeController.createCheckout);
 router.post("/stripe/checkout", generalLimiter, stripeController.createCheckout);
 
-// ─── WYWIAD AI ────────────────────────────────────────────────────────────────
+// ─── WYWIAD DYNAMICZNY ────────────────────────────────────────────────────────────────
 router.post("/interview/start", aiLimiter, interviewController.startInterview);
 router.post("/interview/next", aiLimiter, interviewController.nextQuestion);
 router.post("/interview/finish", aiLimiter, interviewController.finishInterview);

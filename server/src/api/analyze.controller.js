@@ -40,6 +40,25 @@ function hasCrisisContent(text) {
   return CRISIS_PATTERNS.some((pattern) => pattern.test(value));
 }
 
+function hasLowQualityContent(text) {
+  const value = normalizeText(text).toLowerCase();
+  if (!value || value.length < 18) return true;
+
+  const letters = (value.match(/[a-ząćęłńóśźż]/gi) || []).length;
+  const spaces = (value.match(/\s/g) || []).length;
+  const uniqueChars = new Set(value.replace(/\s/g, "").split("")).size;
+  const jokePatterns = [
+    /\b(test|testing|pr[oó]ba|haha|hehe|lol|xd|żart|jaja|beka|dupa|g[łl]upoty|asdf|qwerty)\b/i,
+    /(.)\1{5,}/,
+    /^[a-ząćęłńóśźż]{1,3}(\s+[a-ząćęłńóśźż]{1,3}){3,}$/i,
+  ];
+
+  if (jokePatterns.some((pattern) => pattern.test(value))) return true;
+  if (letters < 14 || spaces < 2 || uniqueChars < 8) return true;
+
+  return false;
+}
+
 function extractPatterns(text) {
   const lower = normalizeText(text).toLowerCase();
   const patterns = [];
@@ -209,6 +228,14 @@ exports.analyzeText = async (req, res) => {
       );
     }
 
+    if (hasLowQualityContent(input)) {
+      return res.status(422).json({
+        ok: false,
+        code: "LOW_QUALITY_INPUT",
+        message: "Opis wygląda na testowy, przypadkowy albo zbyt krótki. Podaj konkretne zdarzenia i fakty, żeby wynik miał sens.",
+      });
+    }
+
     const detectedPatterns = extractPatterns(input);
     const allPatterns = [...new Set([...incomingPatterns, ...detectedPatterns])];
 
@@ -360,7 +387,7 @@ exports.getReport = async (req, res) => {
     if (session.report_status === "FAILED") {
       return res.status(500).json({
         ok: false,
-        message: "Wystąpił błąd podczas generowania raportu.",
+        message: "Wystąpił błąd podczas przygotowania raportu.",
         error: session.last_error || null,
       });
     }

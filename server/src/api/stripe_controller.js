@@ -47,7 +47,7 @@ exports.createCheckout = async (req, res) => {
             unit_amount: priceAmountGr,
             product_data: {
               name: "CzyToMaSens — pełny raport premium",
-              description: "Dogłębna analiza psychologiczna relacji. Raport generowany indywidualnie na podstawie Twoich odpowiedzi.",
+              description: "Dogłębna analiza psychologiczna relacji. Raport przygotowany indywidualnie na podstawie Twoich odpowiedzi.",
             },
           },
         },

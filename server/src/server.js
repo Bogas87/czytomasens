@@ -18,6 +18,29 @@ const stripe = stripeSecret
 
 app.set("trust proxy", 1);
 
+app.use((req, res, next) => {
+  const host = String(req.headers.host || "").toLowerCase();
+  const proto = String(req.headers["x-forwarded-proto"] || req.protocol || "").toLowerCase();
+
+  if (process.env.NODE_ENV === "production") {
+    if (host === "czytomasens.pl") {
+      return res.redirect(301, `https://www.czytomasens.pl${req.originalUrl || "/"}`);
+    }
+    if (proto === "http" && host) {
+      return res.redirect(301, `https://${host}${req.originalUrl || "/"}`);
+    }
+  }
+
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  if (process.env.NODE_ENV === "production") {
+    res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+  }
+  next();
+});
+
 const ALLOWED_ORIGINS = [
   "https://czytomasens.pl",
   "https://www.czytomasens.pl",
