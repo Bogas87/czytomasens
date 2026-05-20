@@ -1136,3 +1136,35 @@ button { cursor: pointer; }
     font-size: 30px !important;
   }
 }
+
+/* HOTFIX: usuniêcie sztucznego boxu premium z k³ódk¹ na landing page */
+.story-lock {
+  display: none !important;
+}
+
+.story-lock-icon {
+  display: none !important;
+}
+
+/* Delikatniejsze listy bez taniego efektu checklisty */
+.story-points div {
+  grid-template-columns: 1fr !important;
+}
+
+.story-points span {
+  display: none !important;
+}
+
+.story-points p {
+  color: rgba(245, 241, 234, 0.88) !important;
+}
+
+/* Wyrównanie mikrotypografii na landing page */
+.hero-copy p,
+.story-points p,
+.entry-intro,
+.entry-subtitle,
+.feature-card p {
+  text-wrap: pretty;
+}
+
