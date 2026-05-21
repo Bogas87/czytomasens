@@ -1600,4 +1600,117 @@ button { cursor: pointer; }
     hyphens: none !important;
   }
 }
+/* =========================================================
+   MOBILE FIX: header / logo / przycisk "Od początku"
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .ctms-topbar {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    align-items: start !important;
+    justify-content: start !important;
+    gap: 14px !important;
+    margin: 0 auto 24px !important;
+    padding-top: 4px !important;
+    width: 100% !important;
+  }
+
+  .ctms-logo-wrap {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .ctms-logo {
+    font-size: clamp(34px, 12vw, 44px) !important;
+    line-height: 0.92 !important;
+    letter-spacing: -0.055em !important;
+    white-space: nowrap !important;
+  }
+
+  .ctms-logo-sub {
+    margin-top: 7px !important;
+    font-size: 8px !important;
+    letter-spacing: 0.22em !important;
+    white-space: nowrap !important;
+  }
+
+  .ctms-logo-mark {
+    width: 8px !important;
+    height: 8px !important;
+    margin-top: 7px !important;
+  }
+
+  .ctms-topbar > .ctms-btn,
+  .ctms-topbar button {
+    position: static !important;
+    justify-self: stretch !important;
+    width: 100% !important;
+    min-height: 46px !important;
+    padding: 0 16px !important;
+    margin: 0 !important;
+    font-size: 14px !important;
+    border-radius: 999px !important;
+  }
+
+  .ctms-main {
+    padding-top: 0 !important;
+  }
+
+  .section-head {
+    margin-top: 0 !important;
+    margin-bottom: 22px !important;
+  }
+
+  .section-head h2 {
+    font-size: clamp(31px, 9.6vw, 40px) !important;
+    line-height: 1.02 !important;
+    margin-top: 0 !important;
+  }
+
+  .section-head p {
+    font-size: 15px !important;
+    line-height: 1.65 !important;
+    margin-top: 14px !important;
+  }
+
+  .section-head .eyebrow,
+  .ctms-kicker,
+  .eyebrow {
+    font-size: 9px !important;
+    letter-spacing: 0.24em !important;
+    line-height: 1.4 !important;
+  }
+}
+
+/* Bardzo wąskie telefony */
+@media (max-width: 390px) {
+  .ctms-logo {
+    font-size: 32px !important;
+  }
+
+  .ctms-logo-sub {
+    font-size: 7.5px !important;
+    letter-spacing: 0.18em !important;
+  }
+
+  .ctms-topbar {
+    gap: 12px !important;
+    margin-bottom: 22px !important;
+  }
+}
+/* MOBILE FIX: przycisk Wróć w wyborze ścieżki */
+@media (max-width: 760px) {
+  .section-head + .ctms-btn,
+  .section-head .ctms-btn,
+  .ctms-main > .ctms-btn,
+  .ctms-main button.ctms-btn-ghost {
+    width: 100% !important;
+    min-height: 46px !important;
+    margin-bottom: 18px !important;
+  }
+}
 
