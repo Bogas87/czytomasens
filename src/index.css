@@ -1469,4 +1469,135 @@ button { cursor: pointer; }
     line-height: 1.75 !important;
   }
 }
+/* =========================================================
+   MOBILE FIX: sekcja "Czym to nie jest" i karty na telefonie
+   ========================================================= */
+
+@media (max-width: 760px) {
+  .ctms-feature-editorial-grid,
+  .features-grid,
+  .feature-grid,
+  .why-grid,
+  .landing-feature-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+
+  .ctms-feature-editorial-grid > *,
+  .features-grid > *,
+  .feature-grid > *,
+  .why-grid > *,
+  .landing-feature-grid > * {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .feature-card,
+  .glass-panel,
+  .ctms-glass {
+    padding: 22px 18px !important;
+  }
+
+  .feature-card h3,
+  .glass-panel h3,
+  .ctms-glass h3 {
+    font-size: 25px !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.035em !important;
+  }
+
+  .feature-card p,
+  .glass-panel p,
+  .ctms-glass p {
+    font-size: 15px !important;
+    line-height: 1.72 !important;
+    max-width: none !important;
+  }
+
+  .ctms-feature-editorial-grid p,
+  .features-grid p,
+  .feature-grid p,
+  .why-grid p,
+  .landing-feature-grid p {
+    max-width: none !important;
+    width: 100% !important;
+    text-wrap: pretty !important;
+  }
+}
+
+/* konkretnie blok "Czym to nie jest" */
+@media (max-width: 760px) {
+  .ctms-what-not,
+  .what-not,
+  .not-section,
+  .ctms-disclaimer-grid {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+
+  .ctms-what-not li,
+  .what-not li,
+  .not-section li,
+  .ctms-disclaimer-grid li {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-bottom: 18px !important;
+  }
+
+  .ctms-what-not strong,
+  .what-not strong,
+  .not-section strong,
+  .ctms-disclaimer-grid strong {
+    display: block !important;
+    font-size: 16px !important;
+    line-height: 1.35 !important;
+    margin-bottom: 6px !important;
+  }
+
+  .ctms-what-not p,
+  .what-not p,
+  .not-section p,
+  .ctms-disclaimer-grid p {
+    font-size: 15px !important;
+    line-height: 1.7 !important;
+  }
+}
+
+/* jeśli sekcja jest zrobiona zwykłym gridem bez klasy */
+@media (max-width: 760px) {
+  .hero-grid + .ctms-glass,
+  .hero-grid + .glass-panel {
+    padding: 22px 18px !important;
+  }
+
+  .hero-grid + .ctms-glass > div,
+  .hero-grid + .glass-panel > div {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+
+  .hero-grid + .ctms-glass li,
+  .hero-grid + .glass-panel li {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
+
+/* ogólna poprawka: żadnych wąskich kolumn tekstu na mobile */
+@media (max-width: 760px) {
+  .ctms-main * {
+    max-width: 100%;
+  }
+
+  .ctms-main p,
+  .ctms-main li,
+  .ctms-main span {
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    hyphens: none !important;
+  }
+}
 
