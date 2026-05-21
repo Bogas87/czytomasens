@@ -1137,7 +1137,7 @@ button { cursor: pointer; }
   }
 }
 
-/* HOTFIX: usuniêcie sztucznego boxu premium z k³ódk¹ na landing page */
+/* HOTFIX: usuni cie sztucznego boxu premium z k  dk  na landing page */
 .story-lock {
   display: none !important;
 }
@@ -1159,12 +1159,109 @@ button { cursor: pointer; }
   color: rgba(245, 241, 234, 0.88) !important;
 }
 
-/* Wyrównanie mikrotypografii na landing page */
+/* Wyr wnanie mikrotypografii na landing page */
 .hero-copy p,
 .story-points p,
 .entry-intro,
 .entry-subtitle,
 .feature-card p {
   text-wrap: pretty;
+}
+/* FIX: przewijanie regulaminu / RODO / polityki prywatnoÅ›ci */
+
+.legal-modal,
+.ctms-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(10px);
+  overflow-y: auto;
+}
+
+.legal-panel,
+.ctms-modal-panel {
+  width: min(820px, 100%);
+  max-height: calc(100vh - 36px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 30px;
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.014)),
+    #101011;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.55);
+}
+
+.legal-panel h2,
+.ctms-modal-panel h2 {
+  position: sticky;
+  top: -30px;
+  z-index: 2;
+  margin: -30px -30px 20px;
+  padding: 28px 30px 18px;
+  background: linear-gradient(180deg, #101011 0%, rgba(16, 16, 17, 0.96) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.legal-panel p,
+.ctms-modal-panel p {
+  white-space: pre-line;
+  color: #c4bab0;
+  line-height: 1.75;
+  font-size: 15px;
+}
+
+.legal-panel .ctms-btn,
+.ctms-modal-panel .ctms-btn {
+  position: sticky;
+  bottom: -30px;
+  margin: 22px -30px -30px;
+  width: calc(100% + 60px);
+  border-radius: 0 0 28px 28px;
+  min-height: 58px;
+}
+
+@media (max-width: 640px) {
+  .legal-modal,
+  .ctms-modal {
+    align-items: stretch;
+    padding: 10px;
+  }
+
+  .legal-panel,
+  .ctms-modal-panel {
+    max-height: calc(100vh - 20px);
+    padding: 22px 18px;
+    border-radius: 22px;
+  }
+
+  .legal-panel h2,
+  .ctms-modal-panel h2 {
+    top: -22px;
+    margin: -22px -18px 18px;
+    padding: 22px 18px 16px;
+    font-size: 28px;
+  }
+
+  .legal-panel p,
+  .ctms-modal-panel p {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  .legal-panel .ctms-btn,
+  .ctms-modal-panel .ctms-btn {
+    bottom: -22px;
+    margin: 20px -18px -22px;
+    width: calc(100% + 36px);
+    border-radius: 0 0 22px 22px;
+  }
 }
 
