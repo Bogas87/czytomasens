@@ -5,11 +5,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: "0.0.0.0",
-    allowedHosts: ["czytomasens-production-dc53.up.railway.app"],
+    allowedHosts: ["czytomasens-production-47e0.up.railway.app", "czytomasens.pl", "www.czytomasens.pl"],
   },
   preview: {
     host: "0.0.0.0",
     port: Number(process.env.PORT) || 8080,
-    allowedHosts: ["czytomasens-production-dc53.up.railway.app"],
+    allowedHosts: ["czytomasens-production-47e0.up.railway.app", "czytomasens.pl", "www.czytomasens.pl"],
   },
 });

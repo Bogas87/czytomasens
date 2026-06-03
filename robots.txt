@@ -1,4 +1,4 @@
-﻿User-agent: *
+User-agent: *
 Allow: /
 
-Sitemap: https://www.czytomasens.pl/mapa-witryny.xml
+Sitemap: https://www.czytomasens.pl/sitemap.xml
