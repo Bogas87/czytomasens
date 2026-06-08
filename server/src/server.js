@@ -5,7 +5,6 @@ const cors = require("cors");
 const Stripe = require("stripe");
 const routes = require("./api/routes.js");
 const { PrismaClient } = require("@prisma/client");
-const path = require("path");
 
 const app = express();
 const prisma = new PrismaClient();
@@ -138,6 +137,25 @@ app.post(
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+// SEO — sitemap i robots
+app.get("/sitemap.xml", (req, res) => {
+  res.header("Content-Type", "application/xml");
+  res.send(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.czytomasens.pl/</loc>
+    <lastmod>2026-06-03</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>`);
+});
+
+app.get("/robots.txt", (req, res) => {
+  res.header("Content-Type", "text/plain");
+  res.send(`User-agent: *\nAllow: /\n\nSitemap: https://www.czytomasens.pl/sitemap.xml`);
+});
+
 app.use("/api", routes);
 
 app.get("/api/health", (req, res) => {
@@ -148,9 +166,6 @@ app.get("/api/health", (req, res) => {
     price: process.env.PRICE_AMOUNT_GR || "2900",
   });
 });
-
-// Serwuj pliki statyczne z folderu public (sitemap.xml, robots.txt)
-app.use(express.static(path.join(__dirname, "../../public")));
 
 app.use((req, res) => {
   res.status(404).json({ ok: false, error: "Route not found", path: req.originalUrl });
