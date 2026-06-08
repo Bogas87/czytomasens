@@ -5,6 +5,7 @@ const cors = require("cors");
 const Stripe = require("stripe");
 const routes = require("./api/routes.js");
 const { PrismaClient } = require("@prisma/client");
+const path = require("path");
 
 const app = express();
 const prisma = new PrismaClient();
@@ -65,9 +66,6 @@ app.post(
         const token = session?.metadata?.token || null;
         const email = session?.metadata?.email || session?.customer_email || null;
 
-        // POPRAWKA: sprawdź czy ten event Stripe był już przetworzony
-        // Stripe może wysłać ten sam event kilka razy — bez tego
-        // użytkownik mógłby dostać dwa raporty i dwa maile
         try {
           const alreadyProcessed = await prisma.processedStripeEvent.findUnique({
             where: { event_id: event.id },
@@ -78,7 +76,6 @@ app.post(
             return res.status(200).json({ ok: true });
           }
 
-          // Zapisz event jako przetworzony
           await prisma.processedStripeEvent.create({
             data: {
               event_id: event.id,
@@ -87,8 +84,6 @@ app.post(
             },
           });
         } catch (dedupErr) {
-          // Jeśli zapis się nie powiódł (np. race condition — dwa requesty jednocześnie),
-          // bezpieczniej jest zignorować ten event niż przetworzyć go podwójnie
           console.error("[WEBHOOK] Błąd deduplicacji eventu:", dedupErr.message);
           return res.status(200).json({ ok: true });
         }
@@ -153,6 +148,9 @@ app.get("/api/health", (req, res) => {
     price: process.env.PRICE_AMOUNT_GR || "2900",
   });
 });
+
+// Serwuj pliki statyczne z folderu public (sitemap.xml, robots.txt)
+app.use(express.static(path.join(__dirname, "../../public")));
 
 app.use((req, res) => {
   res.status(404).json({ ok: false, error: "Route not found", path: req.originalUrl });
