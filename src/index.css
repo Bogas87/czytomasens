@@ -654,7 +654,7 @@ button { cursor: pointer; }
 /* ── MOBILE IMPROVEMENTS ───────────────────────────────────── */
 @media (max-width: 640px) {
   .ctms-shell { padding: 16px 14px 80px; }
-  
+
   .ctms-topbar {
     margin-bottom: 20px;
     gap: 12px;
@@ -667,14 +667,14 @@ button { cursor: pointer; }
   .hero-panel, .story-panel { padding: 22px 18px; }
   .hero-copy h1 { font-size: clamp(26px, 8vw, 38px); line-height: 1.1; }
   .hero-copy p { font-size: 16px; line-height: 1.7; }
-  
+
   .ctms-landing-actions { gap: 10px; }
   .ctms-btn { min-height: 52px; font-size: 15px; padding: 0 20px; }
 
   .entry-grid { grid-template-columns: 1fr; gap: 10px; }
   .entry-card { padding: 18px 16px; }
   .entry-card-quote { font-size: 14px; }
-  
+
   .question-panel { padding: 20px 16px; }
   .question-copy h3 { font-size: clamp(17px, 5vw, 22px); line-height: 1.4; }
   .question-lead { font-size: 13px; }
@@ -705,8 +705,8 @@ button { cursor: pointer; }
   .processing-ring--2 { inset: 8px; }
   .processing-dot { inset: 22px; }
 
-  .ctms-modal { 
-    margin: 16px; 
+  .ctms-modal {
+    margin: 16px;
     max-height: calc(100dvh - 32px);
     border-radius: 16px;
   }
@@ -715,17 +715,17 @@ button { cursor: pointer; }
   .crisis-grid { grid-template-columns: 1fr; gap: 10px; }
   .crisis-box { padding: 16px; font-size: 15px; }
 
-  .section-actions { 
-    flex-direction: column; 
-    gap: 10px; 
+  .section-actions {
+    flex-direction: column;
+    gap: 10px;
   }
   .section-actions .ctms-btn { width: 100%; }
 
   .consent-list { gap: 14px; }
   .consent-item { gap: 12px; font-size: 14px; line-height: 1.6; }
-  .consent-item input[type="checkbox"] { 
-    width: 20px; 
-    height: 20px; 
+  .consent-item input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
     flex-shrink: 0;
     margin-top: 2px;
   }
@@ -1780,5 +1780,293 @@ body,
 
   .articles-section button {
     width: 100%;
+  }
+}
+
+/* =========================================================
+   FINAL ARTICLES SEO SECTION FIX
+   Desktop: większe karty i większa typografia.
+   Mobile: jedna kolumna, pełna szerokość, bez ucinania z prawej.
+   ========================================================= */
+
+.articles-section,
+.ctms-main .articles-section {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+
+.articles-section *,
+.ctms-main a[href^="/artykuly/"],
+.ctms-main a[href*="/artykuly/"] {
+  box-sizing: border-box !important;
+  min-width: 0 !important;
+}
+
+.articles-section [style*="grid-template-columns"],
+.ctms-main div[style*="grid-template-columns"]:has(> a[href^="/artykuly/"]),
+.ctms-main div[style*="grid-template-columns"]:has(> a[href*="/artykuly/"]),
+.ctms-main div:has(> a[href^="/artykuly/"]),
+.ctms-main div:has(> a[href*="/artykuly/"]) {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 20px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: visible !important;
+}
+
+.articles-section a,
+.articles-section button,
+.ctms-main a[href^="/artykuly/"],
+.ctms-main a[href*="/artykuly/"] {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  min-height: 175px !important;
+  padding: 34px !important;
+  white-space: normal !important;
+  overflow: hidden !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+  text-align: left !important;
+  text-decoration: none !important;
+}
+
+.articles-section h3,
+.ctms-main a[href^="/artykuly/"] h3,
+.ctms-main a[href*="/artykuly/"] h3 {
+  font-size: 23px !important;
+  line-height: 1.18 !important;
+  letter-spacing: -0.035em !important;
+  margin: 0 !important;
+  max-width: 100% !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+  text-wrap: balance !important;
+}
+
+.articles-section p,
+.ctms-main a[href^="/artykuly/"] p,
+.ctms-main a[href*="/artykuly/"] p {
+  font-size: 15.5px !important;
+  line-height: 1.62 !important;
+  max-width: 100% !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+}
+
+.articles-section span,
+.ctms-main a[href^="/artykuly/"] span,
+.ctms-main a[href*="/artykuly/"] span {
+  max-width: 100% !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+}
+
+.articles-section [style*="font-size: 17px"],
+.articles-section [style*="fontSize: 17px"] {
+  font-size: 23px !important;
+}
+
+.articles-section [style*="font-size: 13px"],
+.articles-section [style*="fontSize: 13px"] {
+  font-size: 15.5px !important;
+}
+
+.articles-section [style*="padding: 28px"] {
+  padding: 34px !important;
+}
+
+/* Artykuł po wejściu w podstronę */
+.articles-section article,
+.articles-section [style*="max-width: 720px"],
+.ctms-main [style*="max-width: 720px"] {
+  width: min(820px, 100%) !important;
+  max-width: 820px !important;
+  padding: 44px !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+}
+
+.articles-section article h1,
+.articles-section article h2,
+.articles-section [style*="max-width: 720px"] h1,
+.articles-section [style*="max-width: 720px"] h2,
+.ctms-main [style*="max-width: 720px"] h1,
+.ctms-main [style*="max-width: 720px"] h2 {
+  font-size: clamp(34px, 3.2vw, 46px) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.045em !important;
+  text-wrap: balance !important;
+}
+
+.articles-section article p,
+.articles-section [style*="max-width: 720px"] p,
+.ctms-main [style*="max-width: 720px"] p {
+  font-size: 17px !important;
+  line-height: 1.82 !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+}
+
+/* Tablet */
+@media (max-width: 980px) {
+  .articles-section [style*="grid-template-columns"],
+  .ctms-main div[style*="grid-template-columns"]:has(> a[href^="/artykuly/"]),
+  .ctms-main div[style*="grid-template-columns"]:has(> a[href*="/artykuly/"]),
+  .ctms-main div:has(> a[href^="/artykuly/"]),
+  .ctms-main div:has(> a[href*="/artykuly/"]) {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+}
+
+/* Telefon */
+@media (max-width: 760px) {
+  html,
+  body,
+  #root {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  .ctms-shell,
+  .ctms-main,
+  .ctms-main.narrow {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: hidden !important;
+  }
+
+  .articles-section {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 42px !important;
+    padding-bottom: 44px !important;
+    overflow-x: hidden !important;
+  }
+
+  .articles-section [style*="display: flex"],
+  .articles-section [style*="align-items: baseline"],
+  .articles-section [style*="alignItems: baseline"] {
+    display: block !important;
+  }
+
+  .articles-section [style*="grid-template-columns"],
+  .ctms-main div[style*="grid-template-columns"]:has(> a[href^="/artykuly/"]),
+  .ctms-main div[style*="grid-template-columns"]:has(> a[href*="/artykuly/"]),
+  .ctms-main div:has(> a[href^="/artykuly/"]),
+  .ctms-main div:has(> a[href*="/artykuly/"]) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 14px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+  }
+
+  .articles-section a,
+  .articles-section button,
+  .ctms-main a[href^="/artykuly/"],
+  .ctms-main a[href*="/artykuly/"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    min-height: auto !important;
+    padding: 22px 20px !important;
+    overflow: hidden !important;
+  }
+
+  .articles-section h3,
+  .ctms-main a[href^="/artykuly/"] h3,
+  .ctms-main a[href*="/artykuly/"] h3 {
+    font-size: 21px !important;
+    line-height: 1.22 !important;
+    letter-spacing: -0.03em !important;
+    white-space: normal !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    hyphens: none !important;
+  }
+
+  .articles-section p,
+  .ctms-main a[href^="/artykuly/"] p,
+  .ctms-main a[href*="/artykuly/"] p {
+    font-size: 15px !important;
+    line-height: 1.62 !important;
+    white-space: normal !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    hyphens: none !important;
+  }
+
+  .articles-section span,
+  .ctms-main a[href^="/artykuly/"] span,
+  .ctms-main a[href*="/artykuly/"] span {
+    white-space: normal !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
+    hyphens: none !important;
+  }
+
+  .articles-section article,
+  .articles-section [style*="max-width: 720px"],
+  .ctms-main [style*="max-width: 720px"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 18px 0 0 !important;
+    padding: 24px 20px !important;
+    border-radius: 20px !important;
+  }
+
+  .articles-section article h1,
+  .articles-section article h2,
+  .articles-section [style*="max-width: 720px"] h1,
+  .articles-section [style*="max-width: 720px"] h2,
+  .ctms-main [style*="max-width: 720px"] h1,
+  .ctms-main [style*="max-width: 720px"] h2 {
+    font-size: 28px !important;
+    line-height: 1.12 !important;
+  }
+
+  .articles-section article p,
+  .articles-section [style*="max-width: 720px"] p,
+  .ctms-main [style*="max-width: 720px"] p {
+    font-size: 15.5px !important;
+    line-height: 1.78 !important;
+  }
+}
+
+/* Bardzo wąskie telefony */
+@media (max-width: 390px) {
+  .articles-section a,
+  .articles-section button,
+  .ctms-main a[href^="/artykuly/"],
+  .ctms-main a[href*="/artykuly/"] {
+    padding: 20px 18px !important;
+  }
+
+  .articles-section h3,
+  .ctms-main a[href^="/artykuly/"] h3,
+  .ctms-main a[href*="/artykuly/"] h3 {
+    font-size: 20px !important;
+  }
+
+  .articles-section p,
+  .ctms-main a[href^="/artykuly/"] p,
+  .ctms-main a[href*="/artykuly/"] p {
+    font-size: 14.5px !important;
   }
 }
