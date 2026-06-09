@@ -113,17 +113,17 @@ const styles: Record<string, React.CSSProperties> = {
   headerLeft: {
     display: "flex",
     alignItems: "baseline",
-    gap: "16px",
+    gap: "22px",
   },
   eyebrow: {
-    fontSize: "10px",
+    fontSize: "11px",
     letterSpacing: "0.14em",
     color: BRAND.gold,
     fontWeight: 600,
     textTransform: "uppercase" as const,
   },
   headerTitle: {
-    fontSize: "13px",
+    fontSize: "16px",
     color: BRAND.muted,
     fontWeight: 400,
     margin: 0,
@@ -180,7 +180,7 @@ const styles: Record<string, React.CSSProperties> = {
   articleWrap: {
     background: BRAND.panel,
     border: `1px solid ${BRAND.border}`,
-    borderRadius: "12px",
+    borderRadius: "16px",
     padding: "clamp(28px, 4vw, 52px)",
     maxWidth: "680px",
     margin: "0 auto",
