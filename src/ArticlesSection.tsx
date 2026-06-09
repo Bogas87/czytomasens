@@ -160,11 +160,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "15px",
     fontWeight: 600,
     color: BRAND.text,
-    lineHeight: 1.4,
+    lineHeight: 1.28,
     margin: 0,
   },
   cardLead: {
-    fontSize: "13px",
+    fontSize: "15px",
     color: BRAND.muted,
     lineHeight: 1.65,
     margin: 0,
@@ -238,7 +238,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: "12px",
   },
   articleCtaText: {
-    fontSize: "14px",
+    fontSize: "16px",
     color: BRAND.muted,
     lineHeight: 1.6,
     margin: 0,
