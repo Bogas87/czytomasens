@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArticlesSection } from "./ArticlesSection";
+import { ArticlesSection, ARTICLES } from "./ArticlesSection";
 
 function readApiBase(): string {
   try {
@@ -102,7 +102,7 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       { id: "b7", lead: "Wybaczenie to nie amnezja. Wybaczenie to decyzja co z tym zrobić.", text: "Jak dziś naprawdę czujesz się wobec tego co się stało – wybaczasz, tolerujesz, czy jeszcze nie wiesz?", options: [{ id: "a", label: "Nie wybaczyłem/am. I nie wiem czy potrafię.", score: 3 }, { id: "b", label: "Staram się, ale złość i ból wracają.", score: 2 }, { id: "c", label: "W dużej miary wybaczyłem/am, ale nie zapomniałem/am.", score: 1 }, { id: "d", label: "Wybaczyłem/am. Naprawdę.", score: 0 }] },
       { id: "b8", lead: "Co byś odpowiedział szczerze, nie co powinieneś odpowiedzieć.", text: "Gdybyś miał ocenić szanse tej relacji, co pierwsze przyszłoby Ci do głowy, zanim zaczniesz to racjonalizować?", options: [{ id: "a", label: "Głęboko w sobie nie wierzę że to ma szansę.", score: 3 }, { id: "b", label: "Połowa na połowę. Naprawdę nie wiem.", score: 2 }, { id: "c", label: "Trudne, ale wierzę że możliwe.", score: 1 }, { id: "d", label: "Naprawdę wierzę że damy radę.", score: 0 }] },
     ],
-    checkpoint: { title: "Jedno pytanie. Bez ucieczki.", text: "Co dziś bardziej trzyma Cię przy tej osobie – poczucie że naprawdę odbudowujecie compressibility coś realnego, czy strach że jak odejdziesz, ta historia nie będzie miała sensu?", options: [{ id: "a", label: "Bardziej strach że historia nie miałaby sensu.", score: 3 }, { id: "b", label: "Obie rzeczy, trudno to rozdzielić.", score: 2 }, { id: "c", label: "Uczucie jest realne, choć sytuacja trudna.", score: 1 }, { id: "d", label: "Odbudowujemy coś realnego. To czuję.", score: 0 }] },
+    checkpoint: { title: "Jedno pytanie. Bez ucieczki.", text: "Co dziś bardziej trzyma Cię przy tej osobie – poczucie że naprawdę odbudowujecie coś realnego, czy strach że jak odejdziesz, ta historia nie będzie miała sensu?", options: [{ id: "a", label: "Bardziej strach że historia nie miałaby sensu.", score: 3 }, { id: "b", label: "Obie rzeczy, trudno to rozdzielić.", score: 2 }, { id: "c", label: "Uczucie jest realne, choć sytuacja trudna.", score: 1 }, { id: "d", label: "Odbudowujemy coś realnego. To czuję.", score: 0 }] },
     openPrompt: "Co dokładnie pękło i po czym dziś poznajesz, że zaufanie wróciło albo wróciło tylko pozornie?",
   },
   {
@@ -156,7 +156,7 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       { id: "r1", lead: "Tęsknić można za człowiekiem. Tęsknić można za poczuciem że się jest potrzebnym.", text: "Gdy wyobrażasz sobie powrót, co konkretnie widzisz? Tę osobę, czy koniec zawieszenia i samotności?", options: [{ id: "a", label: "Szczerość mówi: bardziej koniec tego stanu niż tę osobę.", score: 3 }, { id: "b", label: "Trudno to rozdzielić. Jedno z drugim.", score: 2 }, { id: "c", label: "Widzę tę osobę, choć tęsknota za normalnością też jest.", score: 1 }, { id: "d", label: "Widzę tę konkretną osobę. Nie ulgę.", score: 0 }] },
       { id: "r2", lead: "Powód rozstania to prawda o relacji. Tęsknota go nie usuwa.", text: "To przez co się rozstaliście – czy to był jednorazowy kryzys, czy wzorzec który wracał od dawna?", options: [{ id: "a", label: "Wzorzec. Wracał wielokrotnie pod różnymi nazwami.", score: 3 }, { id: "b", label: "Trochę jednego i drugiego, nie wiem jak to nazwać.", score: 2 }, { id: "c", label: "Był wzorzec, ale myślę że rozumiemy już dlaczego.", score: 1 }, { id: "d", label: "Jednorazowy kryzys albo okoliczności zewnętrzne.", score: 0 }] },
       { id: "r3", lead: "Odległość filtruje wspomnienia. Przepuszcza to co przyjemne.", text: "Gdy myślisz o tej osobie teraz, widzisz całość jasno, czy złe jest rozmyte a dobre wyostrzone?", options: [{ id: "a", label: "Głównie dobre. Złe jakoś samo się tłumaczy.", score: 3 }, { id: "b", label: "Widzę jedno i drugie, ale nierówno.", score: 2 }, { id: "c", label: "Staram się widzieć całość, choć to trudne.", score: 1 }, { id: "d", label: "Widzę całość. Włącznie z tym co bolało.", score: 0 }] },
-      { id: "r4", lead: "Przed powrotem jest jedno kluczowe pytanie.", text: "Czy wiesz co konkretnie musiałoby się zmienić żeby powrót miał sens i czy ta osoba wie to samo i jest gotowa?", options: [{ id: "a", label: "Nie know. Albo wiem, ale ta osoba nie.", score: 3 }, { id: "b", label: "Mam jakiś obraz, ale nie rozmawialiśmy o tym wprost.", score: 2 }, { id: "c", label: "Rozmawialiśmy, ale nie wiem czy jesteśmy zgodni.", score: 1 }, { id: "d", label: "Oboje wiemy co i oboje jesteśmy gotowi na zmianę.", score: 0 }] },
+      { id: "r4", lead: "Przed powrotem jest jedno kluczowe pytanie.", text: "Czy wiesz co konkretnie musiałoby się zmienić żeby powrót miał sens i czy ta osoba wie to samo i jest gotowa?", options: [{ id: "a", label: "Nie wiem. Albo wiem, ale ta osoba nie.", score: 3 }, { id: "b", label: "Mam jakiś obraz, ale nie rozmawialiśmy o tym wprost.", score: 2 }, { id: "c", label: "Rozmawialiśmy, ale nie wiem czy jesteśmy zgodni.", score: 1 }, { id: "d", label: "Oboje wiemy co i oboje jesteśmy gotowi na zmianę.", score: 0 }] },
       { id: "r5", lead: "Uczucia nie kłamią. Interpretacja, owszem.", text: "Czy tęsknota którą czujesz jest stała i spokojna, czy intensywna szczególnie gdy jesteś sam, w nocy, albo gdy coś boli?", options: [{ id: "a", label: "Intensywna szczególnie gdy jestem sam i jest źle.", score: 3 }, { id: "b", label: "Różna. Bywa spokojna i bywa intensywna.", score: 2 }, { id: "c", label: "Raczej stała, nie tylko w trudnych momentach.", score: 1 }, { id: "d", label: "Spokojna i stała. Nie napędzana bólem.", score: 0 }] },
       { id: "r6", lead: "Co mówisz sobie o tej osobie kiedy nikt nie słyszy.", text: "Gdybyś miał opisać tę osobę komuś bliskiemu, powiedziałbyś o niej dobrze, uczciwie, czy ostrożnie?", options: [{ id: "a", label: "Ostrożnie. Wiem że bliscy mają wątpliwości.", score: 3 }, { id: "b", label: "Mieszanie, bo sam mam mieszane uczucia.", score: 2 }, { id: "c", label: "Uczciwie, z dobrymi i złymi stronami.", score: 1 }, { id: "d", label: "Dobrze i bez zastrzeżeń.", score: 0 }] },
       { id: "r7", lead: "Wyobraź sobie że za rok nic się nie zmieni.", text: "Gdybyś za rok był dokładnie w tym samym miejscu – tęskniący, niepewny, bez odpowiedzi – czy to jest wersja życia którą akceptujesz?", options: [{ id: "a", label: "Nie. Ale nie wiem jak z tego wyjść.", score: 3 }, { id: "b", label: "Nie chcę tego, ale nie jestem gotowy się zatrzymać.", score: 2 }, { id: "c", label: "Nie. Dlatego chcę to rozwiązać – w jedną lub drugą stronę.", score: 1 }, { id: "d", label: "Nie. I dlatego działam.", score: 0 }] },
@@ -196,9 +196,9 @@ const ENTRY_CONFIGS: EntryConfig[] = [
       { id: "l1", lead: "Jest pytanie które warto zadać sobie uczciwie.", text: "Czy najsilniejsze uczucie do tej osoby pojawia się głównie wtedy gdy coś się sypie, ktoś odchodzi albo jest ryzyko utraty?", options: [{ id: "a", label: "Tak. Wtedy jest najmocniej. W spokoju jakoś mdło.", score: 3 }, { id: "b", label: "Częściej tak niż nie, choć nie zawsze.", score: 2 }, { id: "c", label: "Zdarza się, ale intensywność jest też w spokojnych momentach.", score: 1 }, { id: "d", label: "Nie. Bliskość nie zależy u nas od napięcia.", score: 0 }] },
       { id: "l2", lead: "Policz ile razy obiecywałeś sobie że tym razem będzie inaczej.", text: "Po poprzednich powrotach, czy pojawiły się konkretne zmiany w zachowaniu które utrzymały się dłużej niż miesiąc?", options: [{ id: "a", label: "Nie. Za każdym razem wracamy do dokładnie tego samego.", score: 3 }, { id: "b", label: "Coś się zmieniało, ale nie na długo.", score: 2 }, { id: "c", label: "Są zmiany, choć nie wiem czy trwałe.", score: 1 }, { id: "d", label: "Tak. Były realne i trwałe zmiany.", score: 0 }] },
       { id: "l3", lead: "To jest pytanie które boli, bo odpowiedź już znasz.", text: "Gdybyś wyjął z tej relacji napięcie, pojednania i intensywność emocjonalną, co by zostało?", options: [{ id: "a", label: "Niewiele. Albo pustka.", score: 3 }, { id: "b", label: "Coś by zostało, ale nie wiem ile i czy wystarczy.", score: 2 }, { id: "c", label: "Zostałoby sporo, napięcie to nie wszystko.", score: 1 }, { id: "d", label: "Dużo. Naprawdę lubimy ze sobą być.", score: 0 }] },
-      { id: "l4", lead: "Niemiecki nie słyszy. Powiedz to wprost.", text: "Czy boisz się odejść nie dlatego że Ci jej brakuje, ale dlatego że nie wiesz kim jesteś bez tego cyklu?", options: [{ id: "a", label: "To uderza za mocno żeby zaprzeczyć.", score: 3 }, { id: "b", label: "Może trochę, ale to nie jedyny powód.", score: 2 }, { id: "c", label: "Trochę, ale głównie mi jej brakuje.", score: 1 }, { id: "d", label: "Nie. Boję się bo mi jej brakuje, nie dlatego.", score: 0 }] },
+      { id: "l4", lead: "Nikt tego za Ciebie nie nazwie. Powiedz to wprost.", text: "Czy boisz się odejść nie dlatego że Ci jej brakuje, ale dlatego że nie wiesz kim jesteś bez tego cyklu?", options: [{ id: "a", label: "To uderza za mocno żeby zaprzeczyć.", score: 3 }, { id: "b", label: "Może trochę, ale to nie jedyny powód.", score: 2 }, { id: "c", label: "Trochę, ale głównie mi jej brakuje.", score: 1 }, { id: "d", label: "Nie. Boję się bo mi jej brakuje, nie dlatego.", score: 0 }] },
       { id: "l5", lead: "Schemat ma swój rytm. Opisz go.", text: "Jak wygląda typowy cykl między Wami – od kryzysu do pojednania do kolejnego kryzysu?", options: [{ id: "a", label: "Bardzo regularny. Wiem już kiedy zacznie się kolejny.", score: 3 }, { id: "b", label: "Jest wzorzec, choć nie zawsze taki sam.", score: 2 }, { id: "c", label: "Trudno to opisać. Bywa różnie.", score: 1 }, { id: "d", label: "Nie widzę wyraźnego cyklu. To nie jest schemat.", score: 0 }] },
-      { id: "l6", lead: "Co czujesz między cyklami, w tych spokojniejszych momentach.", text: "Gdy wszystko jest między Wami w porządku, czy czujesz spokój i bliskość, czy raczej czekasz na następny problem?", options: [{ id: "a", label: "Czekam. Spokój mnie niepokoi, wiem że nie potrwa.", score: 3 }, { id: "b", label: "Staram się cieszyć, ale czujność gdzieś jest.", score: 2 }, { id: "c", label: "Głównie spokój, choć nie zawsze.", score: 1 }, { id: "d", label: "Spokoj i bliskość. Cieszę się tym.", score: 0 }] },
+      { id: "l6", lead: "Co czujesz między cyklami, w tych spokojniejszych momentach.", text: "Gdy wszystko jest między Wami w porządku, czy czujesz spokój i bliskość, czy raczej czekasz na następny problem?", options: [{ id: "a", label: "Czekam. Spokój mnie niepokoi, wiem że nie potrwa.", score: 3 }, { id: "b", label: "Staram się cieszyć, ale czujność gdzieś jest.", score: 2 }, { id: "c", label: "Głównie spokój, choć nie zawsze.", score: 1 }, { id: "d", label: "Spokój i bliskość. Cieszę się tym.", score: 0 }] },
       { id: "l7", lead: "Twoje otoczenie też coś widzi.", text: "Co mówią Ci bliscy o tej relacji i jak na to reagujesz?", options: [{ id: "a", label: "Mówią żebym odszedł/a. Denerwuje mnie to bo wiem że mają rację.", score: 3 }, { id: "b", label: "Mają wątpliwości. Unikam tego tematu.", score: 2 }, { id: "c", label: "Są mieszane opinie. Nie wiem kogo słuchać.", score: 1 }, { id: "d", label: "Są wspierający albo widzą to podobnie do mnie.", score: 0 }] },
       { id: "l8", lead: "Ostatnie pytanie, i najtrudniejsze.", text: "Czy wyobrażasz sobie swoje życie bez tej osoby – nie jako katastrofę, ale jako coś możliwego?", options: [{ id: "a", label: "Nie umiem tego sobie wyobrazić. To mnie przeraża.", score: 3 }, { id: "b", label: "Mogę to sobie wyobrazić, ale chcę żeby było inaczej.", score: 2 }, { id: "c", label: "Tak, choć byłoby bardzo trudno.", score: 1 }, { id: "d", label: "Tak. Wiem że dałbym/dałabym radę.", score: 0 }] },
     ],
@@ -413,6 +413,69 @@ function ProcessingScreen() {
   );
 }
 
+const SITE_URL = "https://czytomasens.pl";
+
+const LEGAL_ROUTES: Record<string, LegalKey> = {
+  "/regulamin": "regulamin",
+  "/polityka-prywatnosci": "prywatnosc",
+  "/rodo": "rodo",
+  "/kontakt": "kontakt",
+};
+
+function normalizePath(value: string): string {
+  const path = value.split("?")[0].split("#")[0];
+  if (!path || path === "/") return "/";
+  return path.replace(/\/+$/, "") || "/";
+}
+
+function ensureMeta(selector: string, create: () => HTMLMetaElement): HTMLMetaElement {
+  let tag = document.head.querySelector(selector) as HTMLMetaElement | null;
+  if (!tag) {
+    tag = create();
+    document.head.appendChild(tag);
+  }
+  return tag;
+}
+
+function setMetaName(name: string, content: string) {
+  const tag = ensureMeta(`meta[name="${name}"]`, () => {
+    const element = document.createElement("meta");
+    element.setAttribute("name", name);
+    return element;
+  });
+  tag.setAttribute("content", content);
+}
+
+function setMetaProperty(property: string, content: string) {
+  const tag = ensureMeta(`meta[property="${property}"]`, () => {
+    const element = document.createElement("meta");
+    element.setAttribute("property", property);
+    return element;
+  });
+  tag.setAttribute("content", content);
+}
+
+function setCanonical(path: string) {
+  let link = document.head.querySelector('link[rel="canonical"]') as HTMLLinkElement | null;
+  if (!link) {
+    link = document.createElement("link");
+    link.setAttribute("rel", "canonical");
+    document.head.appendChild(link);
+  }
+  link.setAttribute("href", `${SITE_URL}${path === "/" ? "" : path}`);
+}
+
+function setStructuredData(id: string, data: Record<string, unknown>) {
+  let script = document.getElementById(id) as HTMLScriptElement | null;
+  if (!script) {
+    script = document.createElement("script");
+    script.id = id;
+    script.type = "application/ld+json";
+    document.head.appendChild(script);
+  }
+  script.textContent = JSON.stringify(data);
+}
+
 export default function App() {
   const [stage, setStage] = useState<Stage>("landing");
   const [selectedPath, setSelectedPath] = useState<EntryKey | null>(null);
@@ -430,13 +493,86 @@ export default function App() {
   const [interviewState, setInterviewState] = useState<InterviewState | null>(null);
   const [interviewAnswer, setInterviewAnswer] = useState("");
   const [interviewBusy, setInterviewBusy] = useState(false);
+  const [routePath, setRoutePath] = useState(() => normalizePath(typeof window !== "undefined" ? window.location.pathname : "/"));
+
+  const articleSlugFromRoute = routePath.startsWith("/artykuly/") ? decodeURIComponent(routePath.replace("/artykuly/", "")) : null;
+  const routeArticle = articleSlugFromRoute ? ARTICLES.find((article) => article.slug === articleSlugFromRoute) : null;
+  const routeLegalKey = LEGAL_ROUTES[routePath] || null;
+  const isPublicContentRoute = routePath === "/artykuly" || Boolean(routeArticle) || Boolean(routeLegalKey);
+
+  const navigateTo = (nextPath: string) => {
+    const cleanPath = normalizePath(nextPath);
+    if (typeof window !== "undefined") {
+      window.history.pushState({}, "", cleanPath);
+      setRoutePath(cleanPath);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   const path = useMemo(() => ENTRY_CONFIGS.find((x) => x.key === selectedPath) || null, [selectedPath]);
   const currentQuestion = path?.questions[questionIndex] || null;
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+    const handlePopState = () => setRoutePath(normalizePath(window.location.pathname));
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  useEffect(() => {
+    const articleTitle = routeArticle?.seoTitle || (routeArticle ? `${routeArticle.title} | CzyToMaSens` : "");
+    const articleDescription = routeArticle?.seoDescription || routeArticle?.lead || "";
+    const legalTitle = routeLegalKey ? `${LEGAL_CONTENT[routeLegalKey].title} | CzyToMaSens` : "";
+    const legalDescription = routeLegalKey ? `Dokument: ${LEGAL_CONTENT[routeLegalKey].title} serwisu CzyToMaSens.` : "";
+
+    const title = routeArticle
+      ? articleTitle
+      : routePath === "/artykuly"
+        ? "Artykuły o relacjach, związkach i schematach | CzyToMaSens"
+        : routeLegalKey
+          ? legalTitle
+          : "CzyToMaSens | Prywatna analiza relacji";
+
+    const description = routeArticle
+      ? articleDescription
+      : routePath === "/artykuly"
+        ? "Artykuły o relacjach, powrotach, niezdrowych związkach, napięciu, bliskości i mechanizmach, których często nie widać od środka."
+        : routeLegalKey
+          ? legalDescription
+          : "Prywatna analiza relacji. Zobacz wzorce, napięcia, asymetrię i mechanizmy, które mogą decydować o tym, czy Twoja relacja ma sens.";
+
+    document.title = title;
+    setMetaName("description", description);
+    setMetaProperty("og:title", title);
+    setMetaProperty("og:description", description);
+    setMetaProperty("og:type", routeArticle ? "article" : "website");
+    setMetaProperty("og:url", `${SITE_URL}${routePath === "/" ? "" : routePath}`);
+    setMetaName("robots", "index,follow");
+    setCanonical(routePath);
+
+    if (routeArticle) {
+      setStructuredData("ctms-jsonld", {
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline: routeArticle.title,
+        description,
+        url: `${SITE_URL}/artykuly/${routeArticle.slug}`,
+        mainEntityOfPage: `${SITE_URL}/artykuly/${routeArticle.slug}`,
+        publisher: { "@type": "Organization", name: "CzyToMaSens" },
+      });
+    } else {
+      setStructuredData("ctms-jsonld", {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name: "CzyToMaSens",
+        url: SITE_URL,
+      });
+    }
+  }, [routePath, routeArticle, routeLegalKey]);
+
+  useEffect(() => {
+    if (!isPublicContentRoute) {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
         const restoredStage: Stage = parsed.stage === "processing" ? (parsed.preview ? "preview" : "landing") : (parsed.stage || "landing");
@@ -445,7 +581,8 @@ export default function App() {
         setPreview(parsed.preview || null); setFullReport(parsed.fullReport || null); setSessionToken(parsed.sessionToken || null);
         setConsents(parsed.consents || [false, false, false, false]); setInterviewState(parsed.interviewState || null);
       }
-    } catch {}
+      } catch {}
+    }
     
     const params = new URLSearchParams(window.location.search);
     const success = params.get("success"); const token = params.get("token");
@@ -486,7 +623,8 @@ export default function App() {
   const resetAll = () => {
     localStorage.removeItem(STORAGE_KEY);
     setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setConsents([false, false, false, false]); setLegalOpen(null); setInterviewState(null); setInterviewAnswer("");
-    window.history.replaceState({}, "", window.location.pathname);
+    window.history.replaceState({}, "", "/");
+    setRoutePath("/");
   };
 
   const startPath = async (key: EntryKey) => {
@@ -603,18 +741,53 @@ export default function App() {
     } catch (e: any) { setError(friendlyError(e, "Nie udało się rozpocząć płatności.")); setBusy(false); }
   };
 
+  const renderPublicContentRoute = () => {
+    if (routeLegalKey) {
+      const legal = LEGAL_CONTENT[routeLegalKey];
+      return (
+        <motion.div key={`legal-${routeLegalKey}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+          <Glass className="question-panel legal-page">
+            <div className="eyebrow">DOKUMENTY</div>
+            <h1 style={{ marginTop: 0 }}>{legal.title}</h1>
+            <div style={{ whiteSpace: "pre-line", color: BRAND.muted, lineHeight: 1.75, fontSize: "15px" }}>{legal.body}</div>
+            <div className="section-actions">
+              <GhostButton onClick={() => navigateTo("/")}>Wróć na stronę główną</GhostButton>
+            </div>
+          </Glass>
+        </motion.div>
+      );
+    }
+
+    return (
+      <motion.div key={`articles-${routeArticle?.slug || "index"}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+        <ArticlesSection
+          initialSlug={routeArticle?.slug || null}
+          onNavigateHome={() => navigateTo("/artykuly")}
+          onNavigateArticle={(slug) => navigateTo(`/artykuly/${slug}`)}
+          onStartAnalysis={() => {
+            navigateTo("/");
+            setStage("consent");
+          }}
+        />
+      </motion.div>
+    );
+  };
+
+
   return (
     <div className="ctms-shell">
       <div className="ctms-noise" />
       <div className="ctms-topbar">
         <LogoBlock />
-        {stage !== "landing" && <GhostButton onClick={resetAll}>Od początku</GhostButton>}
+        {stage !== "landing" && !isPublicContentRoute && <GhostButton onClick={resetAll}>Od początku</GhostButton>}
       </div>
 
-      <main className={`ctms-main ${["consent","questions","checkpoint","interview","open_text","preview","paid","error","crisis"].includes(stage) ? "narrow" : ""}`}>
+      <main className={`ctms-main ${(["consent","questions","checkpoint","interview","open_text","preview","paid","error","crisis"].includes(stage) || Boolean(routeLegalKey)) ? "narrow" : ""}`}>
         <AnimatePresence mode="wait">
 
-          {stage === "landing" && (
+          {stage === "landing" && isPublicContentRoute && renderPublicContentRoute()}
+
+          {stage === "landing" && !isPublicContentRoute && (
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <section className="hero-grid">
                 <Glass className="glass-panel hero-panel hero-copy">
@@ -686,7 +859,7 @@ export default function App() {
                 </Glass>
               </section>
 
-              <ArticlesSection onStartAnalysis={() => setStage("consent")} />
+              <ArticlesSection onNavigateHome={() => navigateTo("/artykuly")} onNavigateArticle={(slug) => navigateTo(`/artykuly/${slug}`)} onStartAnalysis={() => setStage("consent")} />
             </motion.div>
           )}
 
@@ -839,7 +1012,7 @@ export default function App() {
                 </div>
                 <PremiumBadge preview={preview} />
                 <div className="metrics-grid">
-                  {(([preview.tension, "NAPIĘCIE"], [preview.asymmetry, "ASYMETRIA"], [preview.change, "SZANSA ZMIANY"]] as [number, string][]).map(([value, label]) => (
+                  {([[preview.tension, "NAPIĘCIE"], [preview.asymmetry, "ASYMETRIA"], [preview.change, "SZANSA ZMIANY"]] as [number, string][]).map(([value, label]) => (
                     <Glass key={label} className="metric-card"><div className="metric-value">{value}%</div><div className="metric-label">{label}</div></Glass>
                   ))}
                 </div>
@@ -878,7 +1051,7 @@ export default function App() {
                 </div>
                 {typeof fullReport.rebuildPercent === "number" && (
                   <div className="metrics-grid">
-                    {(([fullReport.rebuildPercent, "NA ILE TO MA SENS"], [fullReport.tensionPercent || 0, "NAPIĘCIE"], [fullReport.driftPercent || 0, "ASYMETRIA"]] as [number, string][]).map(([value, label]) => (
+                    {([[fullReport.rebuildPercent, "NA ILE TO MA SENS"], [fullReport.tensionPercent || 0, "NAPIĘCIE"], [fullReport.driftPercent || 0, "ASYMETRIA"]] as [number, string][]).map(([value, label]) => (
                       <Glass key={label} className="metric-card"><div className="metric-value">{value}%</div><div className="metric-label">{label}</div></Glass>
                     ))}
                   </div>
@@ -901,5 +1074,63 @@ export default function App() {
             </motion.div>
           )}
 
+
           {stage === "error" && (
-            <motion.div key="error"
+            <motion.div key="error" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <Glass className="question-panel error-panel">
+                <div className="eyebrow danger">BŁĄD</div>
+                <h2>Coś poszło nie tak.</h2>
+                <p className="consent-copy">{error || "Nie udało się wykonać tej operacji. Spróbuj ponownie za chwilę."}</p>
+                <div className="section-actions">
+                  <GhostButton onClick={resetAll}>Wróć na początek</GhostButton>
+                </div>
+              </Glass>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+
+      <footer className="ctms-footer" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "20px", flexWrap: "wrap", padding: "28px 0", color: BRAND.muted, fontSize: "13px" }}>
+        <div style={{ color: BRAND.gold, fontWeight: 700 }}>CzyToMaSens.</div>
+        <nav style={{ display: "flex", gap: "18px", flexWrap: "wrap" }}>
+          {([
+            ["/regulamin", "Regulamin"],
+            ["/polityka-prywatnosci", "Polityka prywatności"],
+            ["/rodo", "RODO"],
+            ["/kontakt", "Kontakt"],
+          ] as [string, string][]).map(([href, label]) => (
+            <a
+              key={href}
+              href={href}
+              style={{ color: BRAND.muted, textDecoration: "none" }}
+              onClick={(event) => {
+                event.preventDefault();
+                setStage("landing");
+                navigateTo(href);
+              }}
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
+      </footer>
+
+      {legalOpen && (
+        <div className="ctms-modal-backdrop" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.76)", zIndex: 9998, display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+          <Glass className="ctms-modal" style={{ width: "min(900px, 100%)", maxHeight: "82vh", overflow: "auto", padding: "30px" }}>
+            <div className="section-head compact">
+              <div>
+                <div className="eyebrow">DOKUMENTY</div>
+                <h2>{LEGAL_CONTENT[legalOpen].title}</h2>
+              </div>
+              <GhostButton onClick={() => setLegalOpen(null)}>Zamknij</GhostButton>
+            </div>
+            <div style={{ whiteSpace: "pre-line", color: BRAND.muted, lineHeight: 1.75, fontSize: "14px" }}>{LEGAL_CONTENT[legalOpen].body}</div>
+          </Glass>
+        </div>
+      )}
+
+      <CookieBanner />
+    </div>
+  );
+}
