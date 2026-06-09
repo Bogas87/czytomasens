@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-
-Sitemap: https://www.czytomasens.pl/sitemap.xml
+Sitemap: https://czytomasens.pl/sitemap.xml
