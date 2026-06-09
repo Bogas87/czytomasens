@@ -1713,8 +1713,6 @@ button { cursor: pointer; }
     margin-bottom: 18px !important;
   }
 }
-@'
-
 /* FIX MOBILE ARTICLES WRAP */
 *, *::before, *::after {
   box-sizing: border-box;
@@ -1784,5 +1782,3 @@ body,
     width: 100%;
   }
 }
-'@ | Add-Content .\src\index.css -Encoding UTF8
-
