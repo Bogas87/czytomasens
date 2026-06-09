@@ -1713,4 +1713,76 @@ button { cursor: pointer; }
     margin-bottom: 18px !important;
   }
 }
+@'
+
+/* FIX MOBILE ARTICLES WRAP */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.articles-section,
+.articles-section * {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.articles-section button {
+  white-space: normal;
+}
+
+.articles-section p,
+.articles-section h2,
+.articles-section h3,
+.articles-section div,
+.articles-section span {
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+@media (max-width: 700px) {
+  .articles-section {
+    width: 100%;
+    margin-top: 44px !important;
+  }
+
+  .articles-section [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .articles-section [style*="padding: 40px"],
+  .articles-section [style*="padding: 38px"],
+  .articles-section [style*="padding: 34px"],
+  .articles-section [style*="padding: 28px"] {
+    padding: 22px !important;
+  }
+
+  .articles-section h2 {
+    font-size: 25px !important;
+    line-height: 1.22 !important;
+  }
+
+  .articles-section h3 {
+    font-size: 20px !important;
+    line-height: 1.25 !important;
+  }
+
+  .articles-section p {
+    font-size: 15px !important;
+    line-height: 1.65 !important;
+  }
+
+  .articles-section button {
+    width: 100%;
+  }
+}
+'@ | Add-Content .\src\index.css -Encoding UTF8
 
