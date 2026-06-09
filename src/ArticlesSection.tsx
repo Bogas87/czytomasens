@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const BRAND = {
@@ -16,86 +16,86 @@ export const ARTICLES = [
     slug: "dlaczego-wracasz",
     kicker: "WZORZEC",
     title: "Dlaczego wracasz do tego samego partnera",
-    lead: "Nie chodzi o miĹ‚oĹ›Ä‡. Albo przynajmniej nie tylko o niÄ….",
+    lead: "Nie chodzi o miłość. Albo przynajmniej nie tylko o nią.",
     body: [
-      "WiÄ™kszoĹ›Ä‡ ludzi, ktĂłrzy wracajÄ… do tych samych relacji albo wchodzÄ… wciÄ…ĹĽ w ten sam typ zwiÄ…zku z innymi ludĹşmi, nie robi tego dlatego, ĹĽe nie rozumie, co siÄ™ dzieje. CzÄ™sto rozumiejÄ… doskonale. WidzÄ… wzorzec, potrafiÄ… go nazwaÄ‡, potrafiÄ… nawet powiedzieÄ‡, skÄ…d pochodzi. I wracajÄ… mimo to. To jest wĹ‚aĹ›nie ten moment, ktĂłry wymaga wyjaĹ›nienia.",
+      "Większość ludzi, którzy wracają do tych samych relacji albo wchodzą wciąż w ten sam typ związku z innymi ludźmi, nie robi tego dlatego, że nie rozumie, co się dzieje. Często rozumieją doskonale. Widzą wzorzec, potrafią go nazwać, potrafią nawet powiedzieć, skąd pochodzi. I wracają mimo to. To jest właśnie ten moment, który wymaga wyjaśnienia.",
 
-      "Psychologia przywiÄ…zania opisuje to jako kompulsjÄ™ powtarzania, ale ta etykieta niewiele tĹ‚umaczy. Bardziej uĹĽyteczne jest zobaczenie, jak to dziaĹ‚a w praktyce. TwĂłj ukĹ‚ad nerwowy, uksztaĹ‚towany przez lata wczesnych relacji, nauczyĹ‚ siÄ™ rozpoznawaÄ‡ pewien typ bliskoĹ›ci jako normalny. Niekoniecznie dobry. Normalny w sensie znajomy, przewidywalny na poziomie emocjonalnym, nawet jeĹ›li intelektualnie wiesz, ĹĽe to nie jest to, czego chcesz. MĂłzg przetwarza znajomoĹ›Ä‡ jako bezpieczeĹ„stwo. Nowa osoba, ktĂłra oferuje spokĂłj i staĹ‚oĹ›Ä‡, moĹĽe byÄ‡ przez twĂłj ukĹ‚ad nerwowy odczuwana jako nudna albo pĹ‚aska, nie dlatego, ĹĽe taka jest, ale dlatego, ĹĽe nie aktywuje tych samych Ĺ›cieĹĽek pobudzenia, ktĂłre znasz.",
+      "Psychologia przywiązania opisuje to jako kompulsję powtarzania, ale ta etykieta niewiele tłumaczy. Bardziej użyteczne jest zobaczenie, jak to działa w praktyce. Twój układ nerwowy, ukształtowany przez lata wczesnych relacji, nauczył się rozpoznawać pewien typ bliskości jako normalny. Niekoniecznie dobry. Normalny w sensie znajomy, przewidywalny na poziomie emocjonalnym, nawet jeśli intelektualnie wiesz, że to nie jest to, czego chcesz. Mózg przetwarza znajomość jako bezpieczeństwo. Nowa osoba, która oferuje spokój i stałość, może być przez twój układ nerwowy odczuwana jako nudna albo płaska, nie dlatego, że taka jest, ale dlatego, że nie aktywuje tych samych ścieżek pobudzenia, które znasz.",
 
-      "To jest jeden z najbardziej niekomfortowych faktĂłw o ludzkim przywiÄ…zaniu i jednoczeĹ›nie jeden z najrzadziej wypowiadanych wprost: moĹĽesz nie chcieÄ‡ kogoĹ›, kto jest dla ciebie dobry, nie dlatego, ĹĽe masz zĹ‚e intencje, ale dlatego, ĹĽe twĂłj system emocjonalny nie jest nauczony odczuwaÄ‡ tego jako atrakcyjnego.",
+      "To jest jeden z najbardziej niekomfortowych faktów o ludzkim przywiązaniu i jednocześnie jeden z najrzadziej wypowiadanych wprost: możesz nie chcieć kogoś, kto jest dla ciebie dobry, nie dlatego, że masz złe intencje, ale dlatego, że twój system emocjonalny nie jest nauczony odczuwać tego jako atrakcyjnego.",
 
-      "Przerywane wzmocnienie to pojÄ™cie z psychologii behawioralnej, ktĂłre opisuje mechanizm silniejszy, niĹĽ wiÄ™kszoĹ›Ä‡ ludzi sobie wyobraĹĽa. Kiedy nagroda pojawia siÄ™ nieregularnie, nieprzewidywalnie, raz jest, a raz jej nie ma, mĂłzg traktuje jÄ… jako waĹĽniejszÄ… niĹĽ nagrodÄ™, ktĂłra jest zawsze. To jest ten sam mechanizm, ktĂłry sprawia, ĹĽe hazard uzaleĹĽnia bardziej niĹĽ praca na pensji. W relacji wyglÄ…da to tak: sÄ… momenty bliskoĹ›ci, sÄ… momenty dystansu, jest czuĹ‚oĹ›Ä‡ i jest jej brak, jest poczucie, ĹĽe ktoĹ› ciÄ™ widzi, i jest poczucie, ĹĽe znikasz. I zamiast sprawiÄ‡, ĹĽe odchodzisz, ten rytm sprawia, ĹĽe zostajesz. TwĂłj mĂłzg jest dosĹ‚ownie uzaleĹĽniony od rozwiÄ…zania napiÄ™cia, ktĂłre ta osoba w tobie generuje.",
+      "Przerywane wzmocnienie to pojęcie z psychologii behawioralnej, które opisuje mechanizm silniejszy, niż większość ludzi sobie wyobraża. Kiedy nagroda pojawia się nieregularnie, nieprzewidywalnie, raz jest, a raz jej nie ma, mózg traktuje ją jako ważniejszą niż nagrodę, która jest zawsze. To jest ten sam mechanizm, który sprawia, że hazard uzależnia bardziej niż praca na pensji. W relacji wygląda to tak: są momenty bliskości, są momenty dystansu, jest czułość i jest jej brak, jest poczucie, że ktoś cię widzi, i jest poczucie, że znikasz. I zamiast sprawić, że odchodzisz, ten rytm sprawia, że zostajesz. Twój mózg jest dosłownie uzależniony od rozwiązania napięcia, które ta osoba w tobie generuje.",
 
-      "Do tego dochodzi coĹ›, co moĹĽna nazwaÄ‡ efektem utopionych kosztĂłw, tyle ĹĽe w wersji emocjonalnej. Im wiÄ™cej zainwestowaĹ‚eĹ› w relacjÄ™, im wiÄ™cej nadziei, czasu, energii, rozmĂłw o zmianach, prĂłb naprawy, tym trudniej z niej wyjĹ›Ä‡. Nie dlatego, ĹĽe jest dobra. Dlatego, ĹĽe wyjĹ›cie oznaczaĹ‚oby przyznanie, ĹĽe ta inwestycja nie miaĹ‚a sensu. A mĂłzg bardzo nie chce przyznawaÄ‡ siÄ™ do bĹ‚Ä™dĂłw, szczegĂłlnie tak kosztownych.",
+      "Do tego dochodzi coś, co można nazwać efektem utopionych kosztów, tyle że w wersji emocjonalnej. Im więcej zainwestowałeś w relację, im więcej nadziei, czasu, energii, rozmów o zmianach, prób naprawy, tym trudniej z niej wyjść. Nie dlatego, że jest dobra. Dlatego, że wyjście oznaczałoby przyznanie, że ta inwestycja nie miała sensu. A mózg bardzo nie chce przyznawać się do błędów, szczególnie tak kosztownych.",
 
-      "Jest jeszcze jeden wymiar, rzadko opisywany wprost. ZostajÄ…c w zĹ‚ej relacji albo do niej wracajÄ…c, czasem unikasz czegoĹ› bardziej przeraĹĽajÄ…cego niĹĽ sam zwiÄ…zek. Tego, kim jesteĹ› poza nim. Relacja, nawet trudna, daje strukturÄ™. Daje kogoĹ›, od kogo moĹĽesz siÄ™ odbijaÄ‡, o kogo moĹĽesz siÄ™ martwiÄ‡, kogo moĹĽesz prĂłbowaÄ‡ naprawiÄ‡ albo zrozumieÄ‡. To jest zajÄ™cie dla gĹ‚owy i dla serca. WyjĹ›cie z tego oznacza staniÄ™cie z samym sobÄ… bez tego zagospodarowania. I to jest dla wielu ludzi znacznie trudniejsze niĹĽ kolejna runda w znajomej relacji.",
+      "Jest jeszcze jeden wymiar, rzadko opisywany wprost. Zostając w złej relacji albo do niej wracając, czasem unikasz czegoś bardziej przerażającego niż sam związek. Tego, kim jesteś poza nim. Relacja, nawet trudna, daje strukturę. Daje kogoś, od kogo możesz się odbijać, o kogo możesz się martwić, kogo możesz próbować naprawić albo zrozumieć. To jest zajęcie dla głowy i dla serca. Wyjście z tego oznacza stanięcie z samym sobą bez tego zagospodarowania. I to jest dla wielu ludzi znacznie trudniejsze niż kolejna runda w znajomej relacji.",
 
-      "To, co opisujÄ™, nie jest teoriami. Jest obserwacjÄ… mechanizmĂłw, ktĂłre dziaĹ‚ajÄ… poniĹĽej progu Ĺ›wiadomej decyzji. MoĹĽesz je zobaczyÄ‡ u siebie dopiero wtedy, kiedy naprawdÄ™ przyjrzysz siÄ™ nie wzorcom w ogĂłle, ale temu, co konkretnie siÄ™ dzieje miÄ™dzy tobÄ… a tÄ… jednÄ… osobÄ…. Co ona robi, kiedy jest ci Ĺşle. Jak reagujesz, kiedy ona siÄ™ oddala. Co czujesz, kiedy wraca. To sÄ… dane. I z tymi danymi moĹĽna pracowaÄ‡.",
+      "To, co opisuję, nie jest teoriami. Jest obserwacją mechanizmów, które działają poniżej progu świadomej decyzji. Możesz je zobaczyć u siebie dopiero wtedy, kiedy naprawdę przyjrzysz się nie wzorcom w ogóle, ale temu, co konkretnie się dzieje między tobą a tą jedną osobą. Co ona robi, kiedy jest ci źle. Jak reagujesz, kiedy ona się oddala. Co czujesz, kiedy wraca. To są dane. I z tymi danymi można pracować.",
 
-      "Problem w tym, ĹĽe ogĂłlna wiedza o przywiÄ…zaniu rzadko do tego wystarczy. Bo wiedza o tym, skÄ…d wzorzec pochodzi, to nie to samo, co zobaczenie, jak ten wzorzec dziaĹ‚a teraz, z tÄ… osobÄ…, w tej konkretnej konfiguracji.",
+      "Problem w tym, że ogólna wiedza o przywiązaniu rzadko do tego wystarczy. Bo wiedza o tym, skąd wzorzec pochodzi, to nie to samo, co zobaczenie, jak ten wzorzec działa teraz, z tą osobą, w tej konkretnej konfiguracji.",
 
-      "JeĹ›li czytasz to i masz poczucie, ĹĽe rozumiesz mechanizm, ale wciÄ…ĹĽ nie rozumiesz, dlaczego ty, z tym konkretnym czĹ‚owiekiem, nie moĹĽesz z tego wyjĹ›Ä‡ albo przestaÄ‡ wracaÄ‡, to nie jest kwestia wiedzy, ktĂłrej ci brakuje. To jest kwestia spojrzenia na to, co rzeczywiĹ›cie siÄ™ dzieje, a nie na to, co powinno siÄ™ dziaÄ‡ wedĹ‚ug teorii.",
+      "Jeśli czytasz to i masz poczucie, że rozumiesz mechanizm, ale wciąż nie rozumiesz, dlaczego ty, z tym konkretnym człowiekiem, nie możesz z tego wyjść albo przestać wracać, to nie jest kwestia wiedzy, której ci brakuje. To jest kwestia spojrzenia na to, co rzeczywiście się dzieje, a nie na to, co powinno się dziać według teorii.",
 
-      "To jest zupeĹ‚nie inne pytanie. I wymaga zupeĹ‚nie innego podejĹ›cia.",
+      "To jest zupełnie inne pytanie. I wymaga zupełnie innego podejścia.",
     ],
   },
   {
     slug: "czy-zwiazek-jest-zdrowy",
     kicker: "DIAGNOSTYKA",
-    title: "Czy mĂłj zwiÄ…zek jest zdrowy",
-    lead: "Zdrowych zwiÄ…zkĂłw siÄ™ nie sprawdza w internecie o drugiej w nocy.",
+    title: "Czy mój związek jest zdrowy",
+    lead: "Zdrowych związków się nie sprawdza w internecie o drugiej w nocy.",
     body: [
-      "To pytanie wpisuje w wyszukiwarkÄ™ kilkadziesiÄ…t tysiÄ™cy osĂłb miesiÄ™cznie. Co juĹĽ samo w sobie jest informacjÄ…. Zdrowych zwiÄ…zkĂłw siÄ™ nie sprawdza w internecie o drugiej w nocy.",
+      "To pytanie wpisuje w wyszukiwarkę kilkadziesiąt tysięcy osób miesięcznie. Co już samo w sobie jest informacją. Zdrowych związków się nie sprawdza w internecie o drugiej w nocy.",
 
-      "Ale samo pytanie jest trudniejsze, niĹĽ siÄ™ wydaje. Nie dlatego, ĹĽe odpowiedĹş jest skomplikowana. CzÄ™sto jest zupeĹ‚nie odwrotnie: wiele osĂłb, ktĂłre to pytanie zadajÄ…, gdzieĹ› w Ĺ›rodku znajÄ… odpowiedĹş. TrudnoĹ›Ä‡ polega na tym, ĹĽe miÄ™dzy wiedzÄ… a uznaniem tej wiedzy jest przepaĹ›Ä‡, przez ktĂłrÄ… wiÄ™kszoĹ›Ä‡ ludzi nie potrafi samodzielnie przejĹ›Ä‡.",
+      "Ale samo pytanie jest trudniejsze, niż się wydaje. Nie dlatego, że odpowiedź jest skomplikowana. Często jest zupełnie odwrotnie: wiele osób, które to pytanie zadają, gdzieś w środku znają odpowiedź. Trudność polega na tym, że między wiedzą a uznaniem tej wiedzy jest przepaść, przez którą większość ludzi nie potrafi samodzielnie przejść.",
 
-      "Zacznijmy od tego, czego to pytanie zwykle nie dotyczy, mimo ĹĽe tak wyglÄ…da. Nie dotyczy tego, czy w zwiÄ…zku sÄ… konflikty. Para, ktĂłra siÄ™ nie kĹ‚Ăłci, czÄ™sto jest parÄ…, w ktĂłrej jedno z nich nauczyĹ‚o siÄ™ milczeÄ‡. ObecnoĹ›Ä‡ napiÄ™cia nie jest oznakÄ… choroby relacji. SposĂłb, w jaki to napiÄ™cie jest przetwarzane, owszem.",
+      "Zacznijmy od tego, czego to pytanie zwykle nie dotyczy, mimo że tak wygląda. Nie dotyczy tego, czy w związku są konflikty. Para, która się nie kłóci, często jest parą, w której jedno z nich nauczyło się milczeć. Obecność napięcia nie jest oznaką choroby relacji. Sposób, w jaki to napięcie jest przetwarzane, owszem.",
 
-      "Badacz John Gottman po kilkudziesiÄ™ciu latach pracy z parami wyodrÄ™bniĹ‚ cztery wzorce komunikacji, ktĂłre z bardzo wysokÄ… skutecznoĹ›ciÄ… przewidujÄ… rozpad zwiÄ…zku. Pogarda jest wĹ›rĂłd nich najgroĹşniejsza, bo nie chodzi tu o krzyk ani kĹ‚Ăłtnie, chodzi o subtelny komunikat: ty jesteĹ› poniĹĽej mnie. MoĹĽe byÄ‡ wyraĹĽana tonem gĹ‚osu, przekrÄ™caniem oczu, ironiÄ…, dobieraniem sĹ‚Ăłw, ktĂłre umniejszajÄ…. MoĹĽna jÄ… stosowaÄ‡ raz na kilka tygodni i nadal niszczyÄ‡ zwiÄ…zek systematycznie.",
+      "Badacz John Gottman po kilkudziesięciu latach pracy z parami wyodrębnił cztery wzorce komunikacji, które z bardzo wysoką skutecznością przewidują rozpad związku. Pogarda jest wśród nich najgroźniejsza, bo nie chodzi tu o krzyk ani kłótnie, chodzi o subtelny komunikat: ty jesteś poniżej mnie. Może być wyrażana tonem głosu, przekręcaniem oczu, ironią, dobieraniem słów, które umniejszają. Można ją stosować raz na kilka tygodni i nadal niszczyć związek systematycznie.",
 
-      "PrzyglÄ…daj siÄ™ temu, jak funkcjonujesz, kiedy jesteĹ› z tym czĹ‚owiekiem. Nie temu, co czujesz do niego. Temu, jak jesteĹ› z samym sobÄ… przy nim. Czy mĂłwisz to, co naprawdÄ™ myĹ›lisz, czy filtrujesz, zanim powiesz cokolwiek? Czy wnosisz do rozmĂłw swoje prawdziwe zdanie, czy dostosowujesz je do tego, co on lub ona chce usĹ‚yszeÄ‡? Czy po spÄ™dzeniu czasu razem czujesz siÄ™ naĹ‚adowany, czy oprĂłĹĽniony?",
+      "Przyglądaj się temu, jak funkcjonujesz, kiedy jesteś z tym człowiekiem. Nie temu, co czujesz do niego. Temu, jak jesteś z samym sobą przy nim. Czy mówisz to, co naprawdę myślisz, czy filtrujesz, zanim powiesz cokolwiek? Czy wnosisz do rozmów swoje prawdziwe zdanie, czy dostosowujesz je do tego, co on lub ona chce usłyszeć? Czy po spędzeniu czasu razem czujesz się naładowany, czy opróżniony?",
 
-      "Jest mechanizm, ktĂłry psychologowie opisujÄ… jako hypervigilance w relacji, stan podwyĹĽszonej czujnoĹ›ci wobec sygnaĹ‚Ăłw od partnera. Monitorujesz jego nastrĂłj, zanim cokolwiek powiesz. Interpretujesz ton wiadomoĹ›ci. Czekasz na sygnaĹ‚, ĹĽe jest dobrze, zanim sam zdecydujesz siÄ™ zrelaksowaÄ‡. To nie jest miĹ‚oĹ›Ä‡. To jest adaptacja ukĹ‚adu nerwowego do Ĺ›rodowiska, ktĂłre jest nieprzewidywalne. JeĹ›li robisz to chronicznie w zwiÄ…zku, twĂłj organizm traktuje tÄ™ relacjÄ™ jako sytuacjÄ™ wymagajÄ…cÄ… ostroĹĽnoĹ›ci. To jest informacja diagnostyczna, niezaleĹĽnie od tego, jak bardzo kochasz tÄ™ osobÄ™ i ile dobrych chwil miÄ™dzy wami jest.",
+      "Jest mechanizm, który psychologowie opisują jako hypervigilance w relacji, stan podwyższonej czujności wobec sygnałów od partnera. Monitorujesz jego nastrój, zanim cokolwiek powiesz. Interpretujesz ton wiadomości. Czekasz na sygnał, że jest dobrze, zanim sam zdecydujesz się zrelaksować. To nie jest miłość. To jest adaptacja układu nerwowego do środowiska, które jest nieprzewidywalne. Jeśli robisz to chronicznie w związku, twój organizm traktuje tę relację jako sytuację wymagającą ostrożności. To jest informacja diagnostyczna, niezależnie od tego, jak bardzo kochasz tę osobę i ile dobrych chwil między wami jest.",
 
-      "Innym rzadko opisywanym sygnaĹ‚em jest to, co dzieje siÄ™ z twojÄ… toĹĽsamoĹ›ciÄ… w czasie trwania relacji. W zwiÄ…zku, ktĂłry nie jest zdrowy, jeden z partnerĂłw zwykle kurczy siÄ™. Nie dramatycznie, nie z dnia na dzieĹ„. Stopniowo przestaje wspominaÄ‡ o pewnych zainteresowaniach, bo partner komentuje je z dystansem. Przestaje widywaÄ‡ siÄ™ z pewnymi znajomymi, bo to powoduje napiÄ™cie. Przestaje mĂłwiÄ‡ o pewnych potrzebach, bo za kaĹĽdym razem, gdy je zgĹ‚asza, czuje siÄ™ z tym gorzej niĹĽ przed rozmowÄ…. JeĹ›li porĂłwnasz siebie sprzed tej relacji i siebie teraz, co widzisz? Czy jesteĹ› kimĹ›, kogo lubisz bardziej, czy mniej?",
+      "Innym rzadko opisywanym sygnałem jest to, co dzieje się z twoją tożsamością w czasie trwania relacji. W związku, który nie jest zdrowy, jeden z partnerów zwykle kurczy się. Nie dramatycznie, nie z dnia na dzień. Stopniowo przestaje wspominać o pewnych zainteresowaniach, bo partner komentuje je z dystansem. Przestaje widywać się z pewnymi znajomymi, bo to powoduje napięcie. Przestaje mówić o pewnych potrzebach, bo za każdym razem, gdy je zgłasza, czuje się z tym gorzej niż przed rozmową. Jeśli porównasz siebie sprzed tej relacji i siebie teraz, co widzisz? Czy jesteś kimś, kogo lubisz bardziej, czy mniej?",
 
-      "Jest teĹĽ asymetria wysiĹ‚ku, ktĂłra jest moĹĽe najĹ‚atwiej obserwowalna, ale najczÄ™Ĺ›ciej racjonalizowana. Chodzi nie tylko o to, kto czÄ™Ĺ›ciej inicjuje spotkania czy rozmowy. Chodzi o to, kto w tej relacji pracuje nad relacjÄ…. Kto myĹ›li o tym, co miÄ™dzy wami. Kto czyta artykuĹ‚y takie jak ten. Kto wchodzi na terapiÄ™. Kto stara siÄ™ zrozumieÄ‡, co siÄ™ dzieje. JeĹ›li to tylko ty, to nie jest kwestia tego, ĹĽe jesteĹ› bardziej refleksyjny. To jest kwestia tego, ĹĽe ty jesteĹ› w tej relacji bardziej zainteresowany jej jakoĹ›ciÄ… niĹĽ twĂłj partner. I to jest informacja o tym zwiÄ…zku.",
+      "Jest też asymetria wysiłku, która jest może najłatwiej obserwowalna, ale najczęściej racjonalizowana. Chodzi nie tylko o to, kto częściej inicjuje spotkania czy rozmowy. Chodzi o to, kto w tej relacji pracuje nad relacją. Kto myśli o tym, co między wami. Kto czyta artykuły takie jak ten. Kto wchodzi na terapię. Kto stara się zrozumieć, co się dzieje. Jeśli to tylko ty, to nie jest kwestia tego, że jesteś bardziej refleksyjny. To jest kwestia tego, że ty jesteś w tej relacji bardziej zainteresowany jej jakością niż twój partner. I to jest informacja o tym związku.",
 
-      "OdpowiedĹş na pytanie, czy twĂłj zwiÄ…zek jest zdrowy, leĹĽy w detalach tego, co miÄ™dzy wami konkretnie siÄ™ dzieje. Nie w teorii. Nie w listach objawĂłw. W tym, jak reagujesz przy tej osobie, czego unikasz, o czym milczysz i kim jesteĹ› po roku spÄ™dzonym razem.",
+      "Odpowiedź na pytanie, czy twój związek jest zdrowy, leży w detalach tego, co między wami konkretnie się dzieje. Nie w teorii. Nie w listach objawów. W tym, jak reagujesz przy tej osobie, czego unikasz, o czym milczysz i kim jesteś po roku spędzonym razem.",
 
-      "Ĺ»aden artykuĹ‚ tego za ciebie nie zobaczy. MoĹĽesz to zobaczyÄ‡ tylko ty, ale dopiero wtedy, kiedy przestaniesz filtrowaÄ‡ to, co widzisz, przez to, co chcesz, ĹĽeby byĹ‚o prawdÄ….",
+      "Żaden artykuł tego za ciebie nie zobaczy. Możesz to zobaczyć tylko ty, ale dopiero wtedy, kiedy przestaniesz filtrować to, co widzisz, przez to, co chcesz, żeby było prawdą.",
     ],
   },
   {
     slug: "zwiazek-bez-przyszlosci",
     kicker: "ROKOWANIA",
-    title: "Jak rozpoznaÄ‡, ĹĽe zwiÄ…zek nie ma przyszĹ‚oĹ›ci",
-    lead: "WiÄ™kszoĹ›Ä‡ ludzi nie koĹ„czy zĹ‚ego zwiÄ…zku za wczeĹ›nie. KoĹ„czy go za pĂłĹşno.",
+    title: "Jak rozpoznać, że związek nie ma przyszłości",
+    lead: "Większość ludzi nie kończy złego związku za wcześnie. Kończy go za późno.",
     body: [
-      "WiÄ™kszoĹ›Ä‡ ludzi nie koĹ„czy zĹ‚ego zwiÄ…zku za wczeĹ›nie. KoĹ„czy go za pĂłĹşno. CzÄ™sto o kilka lat za pĂłĹşno. I nie dzieje siÄ™ tak dlatego, ĹĽe sÄ… naiwni albo sĹ‚abi. Dzieje siÄ™ tak dlatego, ĹĽe sygnaĹ‚y, o ktĂłrych tutaj piszÄ™, rzadko pojawiajÄ… siÄ™ jako wyraĹşne zdarzenia. SÄ… procesem. Powolnym przesuniÄ™ciem, ktĂłre jest prawie niewidoczne na co dzieĹ„, a widoczne dopiero wtedy, kiedy porĂłwnasz siebie sprzed trzech lat z sobÄ… teraz.",
+      "Większość ludzi nie kończy złego związku za wcześnie. Kończy go za późno. Często o kilka lat za późno. I nie dzieje się tak dlatego, że są naiwni albo słabi. Dzieje się tak dlatego, że sygnały, o których tutaj piszę, rzadko pojawiają się jako wyraźne zdarzenia. Są procesem. Powolnym przesunięciem, które jest prawie niewidoczne na co dzień, a widoczne dopiero wtedy, kiedy porównasz siebie sprzed trzech lat z sobą teraz.",
 
-      "Zacznijmy od czegoĹ›, co rzadko trafia do takich artykuĹ‚Ăłw. Uczucie i rokowania to dwie kompletnie rĂłĹĽne rzeczy. MoĹĽesz gĹ‚Ä™boko kochaÄ‡ kogoĹ› i jednoczeĹ›nie byÄ‡ w relacji, ktĂłra nie ma przyszĹ‚oĹ›ci. To nie jest sprzecznoĹ›Ä‡. To jest jedna z najczÄ™stszych i najbardziej bolesnych sytuacji, w jakich ludzie siÄ™ znajdujÄ…. Problem polega na tym, ĹĽe kultura romantyczna nauczyĹ‚a nas, ĹĽe miĹ‚oĹ›Ä‡ powinna wystarczyÄ‡. Ĺ»e jeĹ›li doĹ›Ä‡ siÄ™ staramy i doĹ›Ä‡ siÄ™ kochamy, to wszystko inne siÄ™ uĹ‚oĹĽy. To jest przekonanie, ktĂłre sprawia, ĹĽe ludzie zostajÄ… w miejscach, w ktĂłrych nie powinni byÄ‡, jeszcze przez rok albo trzy.",
+      "Zacznijmy od czegoś, co rzadko trafia do takich artykułów. Uczucie i rokowania to dwie kompletnie różne rzeczy. Możesz głęboko kochać kogoś i jednocześnie być w relacji, która nie ma przyszłości. To nie jest sprzeczność. To jest jedna z najczęstszych i najbardziej bolesnych sytuacji, w jakich ludzie się znajdują. Problem polega na tym, że kultura romantyczna nauczyła nas, że miłość powinna wystarczyć. Że jeśli dość się staramy i dość się kochamy, to wszystko inne się ułoży. To jest przekonanie, które sprawia, że ludzie zostają w miejscach, w których nie powinni być, jeszcze przez rok albo trzy.",
 
-      "Gottman, ktĂłry przez kilkadziesiÄ…t lat obserwowaĹ‚ pary w laboratoryjnych warunkach, doszedĹ‚ do wniosku, ĹĽe 69 procent konfliktĂłw w zwiÄ…zkach to konflikty nierozwiÄ…zywalne. Nie dlatego, ĹĽe pary sÄ… niedojrzaĹ‚e albo nie umiejÄ… rozmawiaÄ‡. Dlatego, ĹĽe wynikajÄ… z fundamentalnych rĂłĹĽnic w osobowoĹ›ci, wartoĹ›ciach albo potrzebach. Pary, ktĂłre trwajÄ…, nie sÄ… tymi, ktĂłre te konflikty rozwiÄ…zujÄ…. SÄ… tymi, ktĂłre nauczyĹ‚y siÄ™ z nimi ĹĽyÄ‡ w sposĂłb, ktĂłry nie niszczy ani jednej, ani drugiej strony.",
+      "Gottman, który przez kilkadziesiąt lat obserwował pary w laboratoryjnych warunkach, doszedł do wniosku, że 69 procent konfliktów w związkach to konflikty nierozwiązywalne. Nie dlatego, że pary są niedojrzałe albo nie umieją rozmawiać. Dlatego, że wynikają z fundamentalnych różnic w osobowości, wartościach albo potrzebach. Pary, które trwają, nie są tymi, które te konflikty rozwiązują. Są tymi, które nauczyły się z nimi żyć w sposób, który nie niszczy ani jednej, ani drugiej strony.",
 
-      "PrzyglÄ…daj siÄ™ temu, co dzieje siÄ™, kiedy rozmawiasz o przyszĹ‚oĹ›ci. Nie o wakacjach na jesieĹ„. O tym, gdzie bÄ™dziecie za trzy lata, co chcecie wspĂłlnie budowaÄ‡, jak wyobraĹĽacie sobie swoje ĹĽycie. Unikanie tych rozmĂłw przez partnera rzadko jest Ĺ›wiadomÄ… strategiÄ…. CzÄ™sto jest instynktownÄ… odpowiedziÄ… na niezgodnoĹ›Ä‡, ktĂłra jest zbyt niekomfortowa, ĹĽeby jÄ… zwerbalizowaÄ‡. JeĹ›li plany na przyszĹ‚oĹ›Ä‡ sÄ… zawsze ogĂłlne, zawsze zobaczymy, zawsze odkĹ‚adane, to nie jest kwestia tego, ĹĽe partner nie jest gotowy na rozmowÄ™. To jest kwestia tego, ĹĽe na poziomie emocjonalnym nie umieszcza ciÄ™ w tej przyszĹ‚oĹ›ci.",
+      "Przyglądaj się temu, co dzieje się, kiedy rozmawiasz o przyszłości. Nie o wakacjach na jesień. O tym, gdzie będziecie za trzy lata, co chcecie wspólnie budować, jak wyobrażacie sobie swoje życie. Unikanie tych rozmów przez partnera rzadko jest świadomą strategią. Często jest instynktowną odpowiedzią na niezgodność, która jest zbyt niekomfortowa, żeby ją zwerbalizować. Jeśli plany na przyszłość są zawsze ogólne, zawsze zobaczymy, zawsze odkładane, to nie jest kwestia tego, że partner nie jest gotowy na rozmowę. To jest kwestia tego, że na poziomie emocjonalnym nie umieszcza cię w tej przyszłości.",
 
-      "Jest teĹĽ coĹ›, co moĹĽna nazwaÄ‡ wyobraĹşniÄ… jako mechanizmem obronnym. ZauwaĹĽ, czy jesteĹ› bardziej zaangaĹĽowany w wyobraĹĽonÄ… wersjÄ™ tego zwiÄ…zku niĹĽ w tÄ™, ktĂłra rzeczywiĹ›cie istnieje. Relacja, ktĂłra istnieje gĹ‚Ăłwnie jako projekt naprawy albo jako coĹ›, co przetrwasz do momentu, w ktĂłrym coĹ› siÄ™ zmieni, nie jest relacjÄ…, w ktĂłrej ĹĽyjesz. Jest relacjÄ…, w ktĂłrej czekasz.",
+      "Jest też coś, co można nazwać wyobraźnią jako mechanizmem obronnym. Zauważ, czy jesteś bardziej zaangażowany w wyobrażoną wersję tego związku niż w tę, która rzeczywiście istnieje. Relacja, która istnieje głównie jako projekt naprawy albo jako coś, co przetrwasz do momentu, w którym coś się zmieni, nie jest relacją, w której żyjesz. Jest relacją, w której czekasz.",
 
-      "ZmÄ™czenie bez wyraĹşnej przyczyny to sygnaĹ‚, ktĂłry wielu ludzi ignoruje, bo nie wyglÄ…da jak coĹ› istotnego. Czujesz ulgÄ™, kiedy partner wychodzi. KaĹĽde spotkanie wymaga mobilizacji, ktĂłrej nie rozumiesz. Wracasz do domu po czasie spÄ™dzonym razem bardziej oprĂłĹĽniony, niĹĽ byĹ‚eĹ› przed. Nie ma dramatycznych scen. Po prostu jesteĹ› zmÄ™czony. To jest informacja od ciaĹ‚a, nie od gĹ‚owy. UkĹ‚ady nerwowe sÄ… dobre w rozpoznawaniu kosztĂłw Ĺ›rodowisk, w ktĂłrych ĹĽyjemy, nawet kiedy gĹ‚owa produkuje jeszcze argumenty za zostaniem.",
+      "Zmęczenie bez wyraźnej przyczyny to sygnał, który wielu ludzi ignoruje, bo nie wygląda jak coś istotnego. Czujesz ulgę, kiedy partner wychodzi. Każde spotkanie wymaga mobilizacji, której nie rozumiesz. Wracasz do domu po czasie spędzonym razem bardziej opróżniony, niż byłeś przed. Nie ma dramatycznych scen. Po prostu jesteś zmęczony. To jest informacja od ciała, nie od głowy. Układy nerwowe są dobre w rozpoznawaniu kosztów środowisk, w których żyjemy, nawet kiedy głowa produkuje jeszcze argumenty za zostaniem.",
 
-      "Jest jeszcze jeden mechanizm, ktĂłry sprawia, ĹĽe trudno to zobaczyÄ‡. Im wiÄ™cej zainwestowaĹ‚eĹ›, tym trudniej odejĹ›Ä‡. Nie dlatego, ĹĽe relacja jest dobra. Dlatego, ĹĽe psychologicznie znacznie trudniej jest zaakceptowaÄ‡, ĹĽe coĹ›, w co wĹ‚oĹĽyĹ‚eĹ› lata swojego ĹĽycia, nie przyniesie efektu, ktĂłrego oczekiwaĹ‚eĹ›. To jest efekt utopionych kosztĂłw w wersji emocjonalnej i dziaĹ‚a dokĹ‚adnie tak samo jak u inwestora, ktĂłry nie sprzedaje akcji tracÄ…cych na wartoĹ›ci, bo sprzedanie ich oznaczaĹ‚oby przyznanie siÄ™ do straty.",
+      "Jest jeszcze jeden mechanizm, który sprawia, że trudno to zobaczyć. Im więcej zainwestowałeś, tym trudniej odejść. Nie dlatego, że relacja jest dobra. Dlatego, że psychologicznie znacznie trudniej jest zaakceptować, że coś, w co włożyłeś lata swojego życia, nie przyniesie efektu, którego oczekiwałeś. To jest efekt utopionych kosztów w wersji emocjonalnej i działa dokładnie tak samo jak u inwestora, który nie sprzedaje akcji tracących na wartości, bo sprzedanie ich oznaczałoby przyznanie się do straty.",
 
-      "CzÄ™sto zostajemy nie dlatego, ĹĽe nie widzimy sygnaĹ‚Ăłw. Zostajemy dlatego, ĹĽe widzimy je i jednoczeĹ›nie boimy siÄ™ tego, co jest po drugiej stronie. WyjĹ›cie ze zwiÄ…zku to nie jest tylko utrata partnera. To jest utrata struktury, ktĂłra organizuje twoje ĹĽycie emocjonalne. KogoĹ›, od kogo siÄ™ odbijasz, o kogo siÄ™ martwisz, kogo prĂłbujesz zrozumieÄ‡. I zostaje pytanie o to, kim jesteĹ› bez tej relacji, czego chcesz, co moĹĽesz zbudowaÄ‡. To jest dla wielu osĂłb znacznie trudniejsze niĹĽ kolejny rok w znajomym miejscu.",
+      "Często zostajemy nie dlatego, że nie widzimy sygnałów. Zostajemy dlatego, że widzimy je i jednocześnie boimy się tego, co jest po drugiej stronie. Wyjście ze związku to nie jest tylko utrata partnera. To jest utrata struktury, która organizuje twoje życie emocjonalne. Kogoś, od kogo się odbijasz, o kogo się martwisz, kogo próbujesz zrozumieć. I zostaje pytanie o to, kim jesteś bez tej relacji, czego chcesz, co możesz zbudować. To jest dla wielu osób znacznie trudniejsze niż kolejny rok w znajomym miejscu.",
 
-      "Rozpoznanie, ĹĽe zwiÄ…zek nie ma przyszĹ‚oĹ›ci, nie jest kwestiÄ… zebrania wystarczajÄ…cej liczby dowodĂłw. WiÄ™kszoĹ›Ä‡ ludzi ma te dowody od dawna. Jest kwestiÄ… tego, ĹĽeby zobaczyÄ‡ je bez filtrowania przez nadziejÄ™, przez inwestycjÄ™ emocjonalnÄ…, przez lÄ™k przed tym, co po drugiej stronie.",
+      "Rozpoznanie, że związek nie ma przyszłości, nie jest kwestią zebrania wystarczającej liczby dowodów. Większość ludzi ma te dowody od dawna. Jest kwestią tego, żeby zobaczyć je bez filtrowania przez nadzieję, przez inwestycję emocjonalną, przez lęk przed tym, co po drugiej stronie.",
 
-      "I to jest operacja, ktĂłrÄ… kaĹĽdy musi przejĹ›Ä‡ sam, na materiale swojej konkretnej relacji, nie na teoriach.",
+      "I to jest operacja, którą każdy musi przejść sam, na materiale swojej konkretnej relacji, nie na teoriach.",
     ],
   },
 ];
 
-// â”€â”€ Styles â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Styles ──────────────────────────────────────────────────────────────────
 
 const styles: Record<string, React.CSSProperties> = {
   section: {
@@ -245,7 +245,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
 };
 
-// â”€â”€ Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ── Component ────────────────────────────────────────────────────────────────
 
 export function ArticlesSection({ onStartAnalysis }: { onStartAnalysis: () => void }) {
   const [openSlug, setOpenSlug] = useState<string | null>(null);
@@ -268,7 +268,7 @@ export function ArticlesSection({ onStartAnalysis }: { onStartAnalysis: () => vo
             <div style={styles.header}>
               <div style={styles.headerLeft}>
                 <span style={styles.eyebrow}>Czytaj</span>
-                <p style={styles.headerTitle}>Mechanizmy, ktĂłrych nie widaÄ‡ z bliska</p>
+                <p style={styles.headerTitle}>Mechanizmy, których nie widać z bliska</p>
               </div>
             </div>
 
@@ -288,7 +288,7 @@ export function ArticlesSection({ onStartAnalysis }: { onStartAnalysis: () => vo
                   <div style={styles.cardKicker}>{article.kicker}</div>
                   <h3 style={styles.cardTitle}>{article.title}</h3>
                   <p style={styles.cardLead}>{article.lead}</p>
-                  <div style={styles.cardArrow}>Czytaj â†’</div>
+                  <div style={styles.cardArrow}>Czytaj →</div>
                 </button>
               ))}
             </div>
@@ -308,7 +308,7 @@ export function ArticlesSection({ onStartAnalysis }: { onStartAnalysis: () => vo
                 style={styles.articleBack}
                 onClick={() => setOpenSlug(null)}
               >
-                â† WrĂłÄ‡
+                ← Wróć
               </button>
 
               <div style={styles.articleKicker}>{openArticle.kicker}</div>
@@ -321,13 +321,13 @@ export function ArticlesSection({ onStartAnalysis }: { onStartAnalysis: () => vo
 
               <div style={styles.articleCta}>
                 <p style={styles.articleCtaText}>
-                  JeĹ›li chcesz zobaczyÄ‡, co naprawdÄ™ dzieje siÄ™ w twojej konkretnej relacji, nie w teorii, ale na podstawie tego, co sam opisujesz.
+                  Jeśli chcesz zobaczyć, co naprawdę dzieje się w twojej konkretnej relacji, nie w teorii, ale na podstawie tego, co sam opisujesz.
                 </p>
                 <button
                   className="ctms-btn ctms-btn-primary"
                   onClick={onStartAnalysis}
                 >
-                  SprawdĹş swojÄ… relacjÄ™
+                  Sprawdź swoją relację
                 </button>
               </div>
             </div>
