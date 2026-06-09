@@ -254,7 +254,7 @@ export function ArticlesSection({ onStartAnalysis }: { onStartAnalysis: () => vo
   const openArticle = ARTICLES.find((a) => a.slug === openSlug);
 
   return (
-    <section style={styles.section}>
+    <section className="articles-section" style={styles.section}>
       <AnimatePresence mode="wait">
 
         {!openSlug && (
@@ -272,7 +272,7 @@ export function ArticlesSection({ onStartAnalysis }: { onStartAnalysis: () => vo
               </div>
             </div>
 
-            <div style={styles.grid}>
+            <div className="articles-grid" style={styles.grid}>
               {ARTICLES.map((article) => (
                 <button
                   key={article.slug}
