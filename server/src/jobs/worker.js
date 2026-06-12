@@ -1,3 +1,5 @@
+"use strict";
+
 const crypto = require("crypto");
 const { Worker, UnrecoverableError } = require("bullmq");
 const Redis = require("ioredis");
@@ -7,6 +9,7 @@ const prisma = require("../db/prisma");
 const openaiService = require("../services/openai.service");
 
 const redisUrl = process.env.REDIS_URL;
+
 if (!redisUrl) {
   throw new Error("Brak REDIS_URL w zmiennych środowiskowych.");
 }
@@ -19,9 +22,11 @@ workerRedis.on("error", (err) => {
   console.error("[Redis Worker] Błąd połączenia:", err.message);
 });
 
-const resend = process.env.RESEND_API_KEY
-  ? new Resend(process.env.RESEND_API_KEY)
-  : null;
+const resendApiKey = (process.env.RESEND_API_KEY || "").trim();
+const resendFromEmail = (process.env.RESEND_FROM_EMAIL || "").trim();
+const clientUrl = (process.env.CLIENT_URL || "https://www.czytomasens.pl").replace(/\/$/, "");
+
+const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 const LOCK_STALE_MS = 10 * 60 * 1000;
 
@@ -44,6 +49,171 @@ function createSignedAccess(token, ttlMs = 1000 * 60 * 60 * 48) {
   return { token, exp, sig };
 }
 
+function buildReportUrl(token) {
+  const access = createSignedAccess(token);
+  return `${clientUrl}?access_token=${encodeURIComponent(access.token)}&exp=${encodeURIComponent(access.exp)}&sig=${encodeURIComponent(access.sig)}`;
+}
+
+function safeJson(value, fallback) {
+  if (!value) return fallback;
+
+  if (typeof value === "object") return value;
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function buildEmailHtml(reportUrl) {
+  const safeUrl = escapeHtml(reportUrl);
+
+  return `
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8" />
+    <title>Twój raport CzyToMaSens jest gotowy</title>
+  </head>
+  <body style="margin:0;padding:0;background:#0b0b0b;color:#f5f1ea;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0b0b0b;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#151515;border:1px solid rgba(255,255,255,0.10);border-radius:22px;overflow:hidden;">
+            <tr>
+              <td style="padding:34px 30px 22px 30px;">
+                <div style="font-size:13px;letter-spacing:0.28em;color:#c5a059;text-transform:uppercase;margin-bottom:16px;">
+                  CzyToMaSens
+                </div>
+
+                <h1 style="margin:0 0 14px 0;font-size:30px;line-height:1.12;color:#f5f1ea;">
+                  Twój raport premium jest gotowy.
+                </h1>
+
+                <p style="margin:0 0 18px 0;font-size:16px;line-height:1.7;color:#cfc8bd;">
+                  System zakończył analizę. Raport możesz otworzyć przez bezpieczny link poniżej.
+                </p>
+
+                <p style="margin:0 0 26px 0;font-size:15px;line-height:1.7;color:#a8a099;">
+                  Link jest ważny 48 godzin. Raport możesz otworzyć na telefonie, komputerze albo wrócić do niego później z tej wiadomości.
+                </p>
+
+                <a href="${safeUrl}" style="display:inline-block;background:#c5a059;color:#111111;text-decoration:none;font-weight:700;border-radius:999px;padding:15px 24px;font-size:15px;">
+                  Otwórz raport
+                </a>
+
+                <p style="margin:28px 0 0 0;font-size:13px;line-height:1.7;color:#827b72;">
+                  Jeśli przycisk nie działa, skopiuj ten link do przeglądarki:<br />
+                  <span style="word-break:break-all;color:#c5a059;">${safeUrl}</span>
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:18px 30px 30px 30px;border-top:1px solid rgba(255,255,255,0.08);">
+                <p style="margin:0;font-size:12px;line-height:1.6;color:#777;">
+                  To automatyczna wiadomość z serwisu CzyToMaSens. Raport ma charakter informacyjny i refleksyjny. Nie zastępuje pomocy psychologicznej, prawnej ani medycznej.
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
+`;
+}
+
+function buildEmailText(reportUrl) {
+  return `Twój raport CzyToMaSens jest gotowy.
+
+Otwórz raport:
+${reportUrl}
+
+Link jest ważny 48 godzin.
+
+Raport ma charakter informacyjny i refleksyjny. Nie zastępuje pomocy psychologicznej, prawnej ani medycznej.`;
+}
+
+async function markEmailFailure(token, message) {
+  await prisma.session.update({
+    where: { id: token },
+    data: {
+      email_status: "FAILED",
+      last_error: `EMAIL: ${message}`,
+    },
+  });
+}
+
+async function sendReportEmail({ token, email }) {
+  if (!email) {
+    await prisma.session.update({
+      where: { id: token },
+      data: {
+        email_status: "NONE",
+      },
+    });
+    console.log(`[Worker] Brak adresu e-mail dla ${token}. Pomijam wysyłkę.`);
+    return;
+  }
+
+  if (!resendApiKey || !resend) {
+    await markEmailFailure(token, "Brak RESEND_API_KEY w zmiennych środowiskowych.");
+    console.error(`[Worker] Nie wysłano e-maila dla ${token}: brak RESEND_API_KEY.`);
+    return;
+  }
+
+  if (!resendFromEmail) {
+    await markEmailFailure(token, "Brak RESEND_FROM_EMAIL w zmiennych środowiskowych.");
+    console.error(`[Worker] Nie wysłano e-maila dla ${token}: brak RESEND_FROM_EMAIL.`);
+    return;
+  }
+
+  const reportUrl = buildReportUrl(token);
+
+  await prisma.session.update({
+    where: { id: token },
+    data: {
+      email_status: "PENDING",
+    },
+  });
+
+  try {
+    const result = await resend.emails.send({
+      from: resendFromEmail,
+      to: email,
+      subject: "Twój raport CzyToMaSens jest gotowy",
+      html: buildEmailHtml(reportUrl),
+      text: buildEmailText(reportUrl),
+    });
+
+    await prisma.session.update({
+      where: { id: token },
+      data: {
+        email_status: "SENT",
+        email_sent_at: new Date(),
+        last_error: null,
+      },
+    });
+
+    console.log(`[Worker] E-mail wysłany dla ${token}. Resend ID: ${result?.data?.id || "brak-id"}`);
+  } catch (error) {
+    console.error(`[Worker] Błąd e-maila dla ${token}:`, error.message);
+    await markEmailFailure(token, error.message);
+  }
+}
+
 console.log("Worker uruchomiony. Oczekuję na zadania...");
 
 const reportWorker = new Worker(
@@ -55,9 +225,7 @@ const reportWorker = new Worker(
       throw new UnrecoverableError("Brak tokenu w jobie.");
     }
 
-    console.log(
-      `[Worker] Start zadania ${token} | próba ${job.attemptsMade + 1}/${job.opts.attempts}`
-    );
+    console.log(`[Worker] Start zadania ${token} | próba ${job.attemptsMade + 1}/${job.opts.attempts}`);
 
     const staleBefore = new Date(Date.now() - LOCK_STALE_MS);
 
@@ -66,14 +234,10 @@ const reportWorker = new Worker(
         id: token,
         payment_status: "PAID",
         OR: [
-          {
-            report_status: "QUEUED",
-          },
+          { report_status: "QUEUED" },
           {
             report_status: "PROCESSING",
-            worker_locked_at: {
-              lt: staleBefore,
-            },
+            worker_locked_at: { lt: staleBefore },
           },
         ],
       },
@@ -99,7 +263,7 @@ const reportWorker = new Worker(
       }
 
       if (current.payment_status !== "PAID") {
-        throw new UnrecoverableError(`Sesja ${token} nie jest opłacona`);
+        throw new UnrecoverableError(`Sesja ${token} nie jest opłacona.`);
       }
 
       if (current.report_status === "READY") {
@@ -132,15 +296,8 @@ const reportWorker = new Worker(
     }
 
     try {
-      const payload =
-        typeof session.payload === "string"
-          ? JSON.parse(session.payload)
-          : session.payload;
-
-      const patterns =
-        typeof session.patterns === "string"
-          ? JSON.parse(session.patterns)
-          : session.patterns;
+      const payload = safeJson(session.payload, {});
+      const patterns = safeJson(session.patterns, []);
 
       const fullReport = await openaiService.generateFullReport({
         ...payload,
@@ -155,51 +312,16 @@ const reportWorker = new Worker(
           report_ready_at: new Date(),
           worker_locked_at: null,
           last_error: null,
-          email_status: session.email && resend ? "PENDING" : "NONE",
+          email_status: session.email ? "PENDING" : "NONE",
         },
       });
 
       console.log(`[Worker] Raport dla ${token} zapisany.`);
 
-      if (session.email && resend) {
-        try {
-          const access = createSignedAccess(token);
-          const baseUrl = process.env.CLIENT_URL || "http://localhost:5173";
-          const reportUrl = `${baseUrl}?access_token=${encodeURIComponent(access.token)}&exp=${encodeURIComponent(access.exp)}&sig=${encodeURIComponent(access.sig)}`;
-
-          await resend.emails.send({
-            from: process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev",
-            to: session.email,
-            subject: "Twój raport CzyToMaSens jest gotowy",
-            html: `<div style="font-family:Arial,sans-serif;line-height:1.6;color:#111">
-              <h2>Twój raport jest gotowy</h2>
-              <p>System zakończył analizę. Otwórz dokument przez bezpieczny link poniżej.</p>
-              <p><a href="${reportUrl}" style="display:inline-block;padding:12px 18px;background:#111;color:#fff;text-decoration:none;border-radius:8px">Otwórz raport</a></p>
-              <p style="font-size:12px;color:#666">Link wygasa za 48 godzin ze względów bezpieczeństwa.</p>
-            </div>`,
-          });
-
-          await prisma.session.update({
-            where: { id: token },
-            data: {
-              email_status: "SENT",
-              email_sent_at: new Date(),
-            },
-          });
-
-          console.log(`[Worker] E-mail wysłany dla ${token}.`);
-        } catch (emailError) {
-          console.error(`[Worker] Błąd e-maila dla ${token}:`, emailError.message);
-
-          await prisma.session.update({
-            where: { id: token },
-            data: {
-              email_status: "FAILED",
-              last_error: `EMAIL: ${emailError.message}`,
-            },
-          });
-        }
-      }
+      await sendReportEmail({
+        token,
+        email: session.email,
+      });
     } catch (error) {
       console.error(`[Worker] Błąd analizy dla ${token}:`, error.message);
 
