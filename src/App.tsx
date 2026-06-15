@@ -284,18 +284,98 @@ async function createCheckout(token: string, email: string, consentAcceptedAt: s
   return { url: data.url };
 }
 
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isTemporaryReportStatus(status: number): boolean {
+  // 202 = raport w kolejce / processing
+  // 402 = webhook Stripe jeszcze nie oznaczył sesji jako PAID
+  // 404 = sesja/raport może jeszcze nie być widoczny po powrocie ze Stripe
+  // 409/425 = techniczne stany "jeszcze nie teraz", jeśli backend kiedyś je zwróci
+  return status === 202 || status === 402 || status === 404 || status === 409 || status === 425;
+}
+
 async function fetchPaidReport(token: string): Promise<FullReport> {
-  const MAX_ATTEMPTS = 20;
+  const MAX_ATTEMPTS = 120; // 120 x 3 s = do 6 minut oczekiwania po płatności
   const INTERVAL_MS = 3000;
+
+  let lastMessage = "Raport jest jeszcze przygotowywany.";
+
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
-    const res = await fetch(`${API_BASE}/api/report/${encodeURIComponent(token)}`);
-    if (res.status === 202) { await new Promise((resolve) => setTimeout(resolve, INTERVAL_MS)); continue; }
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data?.error || "Błąd pobierania raportu.");
-    if (!data?.report) throw new Error("Serwer nie zwrócił raportu.");
-    return data.report as FullReport;
+    try {
+      const res = await fetch(`${API_BASE}/api/report/${encodeURIComponent(token)}`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data?.report) {
+        return data.report as FullReport;
+      }
+
+      lastMessage = data?.message || data?.error || lastMessage;
+
+      if (isTemporaryReportStatus(res.status)) {
+        await wait(INTERVAL_MS);
+        continue;
+      }
+
+      throw new Error(lastMessage || "Błąd pobierania raportu.");
+    } catch (error: any) {
+      const message = String(error?.message || "");
+
+      // Krótkie problemy sieciowe po przekierowaniu ze Stripe traktujemy jako stan przejściowy.
+      if (/failed to fetch|networkerror|load failed|fetch/i.test(message) && attempt < MAX_ATTEMPTS - 1) {
+        await wait(INTERVAL_MS);
+        continue;
+      }
+
+      if (attempt >= MAX_ATTEMPTS - 1) break;
+      throw error;
+    }
   }
-  throw new Error("Raport jest w trakcie przygotowania. Sprawdź skrzynkę, wyślemy link, gdy będzie gotowy.");
+
+  throw new Error(
+    `${lastMessage} Płatność została przyjęta, ale raport nadal się generuje. Nie płać drugi raz. Zostaw chwilę systemowi i kliknij „Sprawdź raport ponownie” albo sprawdź e-mail.`
+  );
+}
+
+async function fetchSignedReport(accessToken: string, accessExp: string, accessSig: string): Promise<FullReport> {
+  const MAX_ATTEMPTS = 60; // do 3 minut dla linku z maila
+  const INTERVAL_MS = 3000;
+
+  let lastMessage = "Raport nie jest jeszcze dostępny.";
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+    const res = await fetch(
+      `${API_BASE}/api/report/signed?token=${encodeURIComponent(accessToken)}&exp=${encodeURIComponent(accessExp)}&sig=${encodeURIComponent(accessSig)}`,
+      {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+      }
+    );
+
+    const data = await res.json().catch(() => ({}));
+
+    if (res.ok && data?.report) {
+      return data.report as FullReport;
+    }
+
+    lastMessage = data?.message || data?.error || lastMessage;
+
+    if (isTemporaryReportStatus(res.status)) {
+      await wait(INTERVAL_MS);
+      continue;
+    }
+
+    throw new Error(lastMessage || "Link wygasł albo raport nie jest dostępny.");
+  }
+
+  throw new Error(`${lastMessage} Spróbuj odświeżyć link za chwilę.`);
 }
 
 async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: AnswerMap, openText: string): Promise<Preview> {
@@ -573,38 +653,90 @@ export default function App() {
     if (!isPublicContentRoute) {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        const restoredStage: Stage = parsed.stage === "processing" ? (parsed.preview ? "preview" : "landing") : (parsed.stage || "landing");
-        setStage(restoredStage); setSelectedPath(parsed.selectedPath || null); setQuestionIndex(parsed.questionIndex || 0);
-        setAnswers(parsed.answers || {}); setOpenText(parsed.openText || ""); setEmail(parsed.email || "");
-        setPreview(parsed.preview || null); setFullReport(parsed.fullReport || null); setSessionToken(parsed.sessionToken || null);
-        setConsents(parsed.consents || [false, false, false, false]); setInterviewState(parsed.interviewState || null);
-      }
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const restoredStage: Stage = parsed.stage === "processing" ? (parsed.preview ? "preview" : "landing") : (parsed.stage || "landing");
+          setStage(restoredStage);
+          setSelectedPath(parsed.selectedPath || null);
+          setQuestionIndex(parsed.questionIndex || 0);
+          setAnswers(parsed.answers || {});
+          setOpenText(parsed.openText || "");
+          setEmail(parsed.email || "");
+          setPreview(parsed.preview || null);
+          setFullReport(parsed.fullReport || null);
+          setSessionToken(parsed.sessionToken || null);
+          setConsents(parsed.consents || [false, false, false, false]);
+          setInterviewState(parsed.interviewState || null);
+        }
       } catch {}
     }
-    
+
     const params = new URLSearchParams(window.location.search);
-    const success = params.get("success"); const token = params.get("token");
+    const success = params.get("success");
+    const token = params.get("token");
     const cancel = params.get("cancel") || params.get("cancelled") || params.get("canceled");
-    const accessToken = params.get("access_token"); const accessExp = params.get("exp"); const accessSig = params.get("sig");
-    
+    const accessToken = params.get("access_token");
+    const accessExp = params.get("exp");
+    const accessSig = params.get("sig");
+
     if (accessToken && accessExp && accessSig) {
-      setBusy(true); setStage("processing");
-      fetch(`${API_BASE}/api/report/signed?token=${encodeURIComponent(accessToken)}&exp=${encodeURIComponent(accessExp)}&sig=${encodeURIComponent(accessSig)}`)
-        .then((res) => res.json())
-        .then((data) => { if (!data?.ok || !data?.report) throw new Error(data?.message || "Raport niedostępny."); setFullReport(data.report); setSessionToken(accessToken); setStage("paid"); setBusy(false); })
-        .catch((e: any) => { setBusy(false); setStage("error"); setError(friendlyError(e, "Link wygasł albo raport nie jest dostępny.")); })
-        .finally(() => { window.history.replaceState({}, "", window.location.pathname); });
+      setBusy(true);
+      setError(null);
+      setStage("processing");
+      setSessionToken(accessToken);
+
+      fetchSignedReport(accessToken, accessExp, accessSig)
+        .then((report) => {
+          setFullReport(report);
+          setSessionToken(accessToken);
+          setStage("paid");
+          setBusy(false);
+        })
+        .catch((e: any) => {
+          setBusy(false);
+          setStage("error");
+          setError(friendlyError(e, "Link do raportu nie jest jeszcze dostępny albo wygasł. Spróbuj ponownie za chwilę."));
+        })
+        .finally(() => {
+          window.history.replaceState({}, "", window.location.pathname);
+        });
+
       return;
     }
-    if (cancel === "1" || cancel === "true") { setBusy(false); setStage("preview"); window.history.replaceState({}, "", window.location.pathname); return; }
+
+    if (cancel === "1" || cancel === "true") {
+      setBusy(false);
+      setStage("preview");
+      window.history.replaceState({}, "", window.location.pathname);
+      return;
+    }
+
     if (success === "1" && token) {
-      setBusy(true); setStage("processing");
+      setBusy(true);
+      setError(null);
+      setStage("processing");
+      setSessionToken(token);
+
       fetchPaidReport(token)
-        .then((report) => { setFullReport(report); setSessionToken(token); setStage("paid"); setBusy(false); })
-        .catch((e: any) => { setBusy(false); setStage("error"); setError(friendlyError(e, "Płatność wróciła poprawnie, ale raport nie jest jeszcze dostępny.")); })
-        .finally(() => { window.history.replaceState({}, "", window.location.pathname); });
+        .then((report) => {
+          setFullReport(report);
+          setSessionToken(token);
+          setStage("paid");
+          setBusy(false);
+        })
+        .catch((e: any) => {
+          setBusy(false);
+          setStage("error");
+          setError(
+            friendlyError(
+              e,
+              "Płatność wróciła poprawnie, ale raport nadal się przygotowuje. Nie płać drugi raz. Kliknij „Sprawdź raport ponownie” albo sprawdź e-mail za chwilę."
+            )
+          );
+        })
+        .finally(() => {
+          window.history.replaceState({}, "", window.location.pathname);
+        });
     }
   }, []);
 
@@ -739,6 +871,33 @@ export default function App() {
       const checkout = await createCheckout(token, email, new Date().toISOString());
       window.location.href = checkout.url;
     } catch (e: any) { setError(friendlyError(e, "Nie udało się rozpocząć płatności.")); setBusy(false); }
+  };
+
+  const retryPaidReport = async () => {
+    if (!sessionToken) {
+      setError("Brak tokenu sesji. Nie klikaj ponownie płatności — najpierw sprawdź mail albo logi płatności.");
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    setStage("processing");
+
+    try {
+      const report = await fetchPaidReport(sessionToken);
+      setFullReport(report);
+      setStage("paid");
+    } catch (e: any) {
+      setStage("error");
+      setError(
+        friendlyError(
+          e,
+          "Raport nadal się przygotowuje. Nie płać drugi raz. Kliknij „Sprawdź raport ponownie” za chwilę albo sprawdź e-mail."
+        )
+      );
+    } finally {
+      setBusy(false);
+    }
   };
 
   const renderPublicContentRoute = () => {
@@ -1078,15 +1237,23 @@ export default function App() {
           {stage === "error" && (
             <motion.div key="error" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel error-panel">
-                <div className="eyebrow danger">BŁĄD</div>
-                <h2>Coś poszło nie tak.</h2>
-                <p className="consent-copy">{error || "Nie udało się wykonać tej operacji. Spróbuj ponownie za chwilę."}</p>
+                <div className="eyebrow danger">STATUS RAPORTU</div>
+                <h2>Raport nie jest jeszcze gotowy.</h2>
+                <p className="consent-copy">
+                  {error || "Nie udało się jeszcze pobrać raportu. Jeżeli płatność została pobrana, nie płać drugi raz."}
+                </p>
+                <p className="consent-copy" style={{ color: BRAND.muted, fontSize: "14px" }}>
+                  Jeżeli płatność została pobrana, system powinien dokończyć generowanie raportu w tle i wysłać link na podany adres e-mail.
+                </p>
                 <div className="section-actions">
-                  <GhostButton onClick={resetAll}>Wróć na początek</GhostButton>
+                  {sessionToken && <PrimaryButton onClick={retryPaidReport} disabled={busy}>{busy ? "Sprawdzam..." : "Sprawdź raport ponownie"}</PrimaryButton>}
+                  <GhostButton onClick={resetAll}>Nowa analiza</GhostButton>
                 </div>
               </Glass>
             </motion.div>
           )}
+
+
         </AnimatePresence>
       </main>
 
