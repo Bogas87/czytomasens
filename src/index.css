@@ -1893,92 +1893,280 @@ button { cursor: pointer; }
   .articles-section button h3 {
     font-size: 23px !important;
   }
-}/* ARTICLES PREMIUM + CLICKABILITY PATCH
-   Wklej na sam koniec index.css, żeby nadpisać stare reguły .articles-section button z !important. */
+}/* CTMS FIX 2: artykuły, czcionki, wróć, mobile
+   Wklej na SAM KONIEC index.css. To nadpisuje stare zbyt szerokie reguły .articles-section button/h2/p. */
 
-.articles-section .article-soft-link {
-  width: auto !important;
-  min-width: 0 !important;
-  max-width: none !important;
-  min-height: 0 !important;
-  padding: 0 !important;
-  background: transparent !important;
-  border: 0 !important;
-  color: var(--gold-soft, #d7b978) !important;
-  font-weight: 800 !important;
-  text-align: right !important;
-  white-space: nowrap !important;
+.articles-section .articles-main-title {
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: clamp(28px, 3vw, 42px) !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.035em !important;
+  margin: 10px 0 0 !important;
+  color: var(--text, #f5f1ea) !important;
+}
+
+.articles-section .articles-main-subtitle {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: 17px !important;
+  line-height: 1.75 !important;
+  color: #b7aea5 !important;
+  max-width: 860px !important;
 }
 
 .articles-section .article-card-btn {
   min-height: 250px !important;
   padding: 28px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  text-align: left !important;
   overflow: hidden !important;
 }
 
-.articles-section .article-back,
-.articles-section .article-micro-btn,
-.articles-section .article-cta-btn,
-.articles-section .article-related-card {
-  width: auto !important;
-  min-height: 0 !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
-  white-space: normal !important;
-  overflow: visible !important;
+.articles-section .article-card-title,
+.articles-section button .article-card-title {
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: clamp(24px, 1.75vw, 30px) !important;
+  line-height: 1.12 !important;
+  letter-spacing: -0.035em !important;
+  margin: 0 !important;
+  color: var(--text, #f5f1ea) !important;
+}
+
+.articles-section .article-card-desc {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: 16px !important;
+  line-height: 1.72 !important;
+  color: #c8c0b8 !important;
+  margin: 16px 0 0 !important;
+}
+
+.articles-section .article-card-arrow {
+  color: var(--gold-soft, #d7b978) !important;
+  font-size: 14px !important;
+  font-weight: 800 !important;
+  margin-top: auto !important;
+  padding-top: 22px !important;
 }
 
 .articles-section .article-back {
-  padding: 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 38px !important;
+  max-width: none !important;
   display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 14px !important;
+  margin-bottom: 30px !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.025) !important;
+  color: #d6cec5 !important;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: 12px !important;
+  letter-spacing: .08em !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  cursor: pointer !important;
+  overflow: visible !important;
+}
+.articles-section .article-back:hover {
+  border-color: rgba(197,160,89,.45) !important;
+  color: var(--gold-soft, #d7b978) !important;
+}
+
+.articles-section .article-page-title {
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: clamp(36px, 4.2vw, 54px) !important;
+  line-height: 1.05 !important;
+  letter-spacing: -0.045em !important;
+  margin: 8px 0 18px !important;
+  color: var(--text, #f5f1ea) !important;
+  text-wrap: balance !important;
+}
+
+.articles-section .article-page-lead {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: clamp(18px, 1.55vw, 22px) !important;
+  line-height: 1.7 !important;
+  color: #ddd4ca !important;
+  margin: 0 0 30px !important;
+  max-width: 820px !important;
+}
+
+.articles-section .article-body-h2 {
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: clamp(26px, 2.2vw, 34px) !important;
+  line-height: 1.14 !important;
+  letter-spacing: -0.035em !important;
+  margin: 44px 0 16px !important;
+  color: var(--text, #f5f1ea) !important;
+  text-wrap: balance !important;
+}
+
+.articles-section .article-body-p {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+  font-size: 18px !important;
+  line-height: 1.86 !important;
+  color: #cfc7be !important;
+  margin: 0 0 22px !important;
+  max-width: 820px !important;
+}
+
+.articles-section .article-pullquote {
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: clamp(23px, 2.2vw, 32px) !important;
+  line-height: 1.24 !important;
+  color: var(--gold-soft, #d7b978) !important;
+  margin: 36px 0 !important;
+  padding: 22px 26px !important;
+  border-left: 3px solid var(--gold, #c5a059) !important;
+  background: rgba(197,160,89,.06) !important;
+}
+
+.articles-section .article-micro-cta {
+  padding: 24px !important;
+  margin: 36px 0 !important;
+  border-radius: 20px !important;
+  overflow: visible !important;
+}
+.articles-section .article-micro-cta p {
+  font-size: 17px !important;
+  line-height: 1.72 !important;
+  margin: 0 0 16px !important;
+  color: #e6ded5 !important;
 }
 
 .articles-section .article-micro-btn,
 .articles-section .article-cta-btn {
-  display: inline-flex !important;
-  align-self: flex-start !important;
-  min-height: 52px !important;
+  width: auto !important;
+  min-height: 48px !important;
+  max-width: 100% !important;
   padding: 0 24px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
   text-align: center !important;
+  overflow: visible !important;
+  white-space: normal !important;
+  font-size: 15px !important;
+  line-height: 1.2 !important;
+}
+
+.articles-section .article-final-cta {
+  padding: clamp(24px, 3vw, 34px) !important;
+  margin-top: 48px !important;
+  border-radius: 24px !important;
+}
+.articles-section .article-final-title {
+  font-family: Georgia, "Times New Roman", serif !important;
+  font-size: clamp(28px, 2.8vw, 40px) !important;
+  line-height: 1.12 !important;
+  margin: 0 0 12px !important;
+  color: var(--text, #f5f1ea) !important;
+}
+.articles-section .article-final-text {
+  font-size: 17px !important;
+  line-height: 1.76 !important;
+  color: #cec5bc !important;
+  margin: 0 0 22px !important;
 }
 
 .articles-section .article-related-grid {
   display: grid !important;
   grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  gap: 12px !important;
+  gap: 14px !important;
 }
-
 .articles-section .article-related-card {
+  min-height: 145px !important;
+  padding: 20px !important;
   display: block !important;
-  min-height: 150px !important;
-  padding: 18px !important;
+  overflow: hidden !important;
 }
-
-.articles-section .article-final-cta h2,
-.articles-section .article-micro-cta h2 {
-  margin-top: 0 !important;
+.articles-section .article-related-title {
+  font-size: 20px !important;
+  line-height: 1.16 !important;
+  margin-top: 10px !important;
 }
 
 @media (max-width: 900px) {
+  .articles-section {
+    margin-top: 38px !important;
+  }
   .articles-section .articles-grid,
   .articles-section .article-related-grid {
     grid-template-columns: 1fr !important;
+    gap: 14px !important;
   }
-
-  .articles-section .article-soft-link {
-    width: 100% !important;
-    text-align: left !important;
-    margin-top: 12px !important;
-  }
-
   .articles-section .article-card-btn {
     min-height: auto !important;
     padding: 22px !important;
   }
-
+  .articles-section .article-card-title {
+    font-size: 26px !important;
+  }
+  .articles-section .article-card-desc {
+    font-size: 15.5px !important;
+    line-height: 1.68 !important;
+  }
+  .articles-section .article-page-title {
+    font-size: clamp(32px, 9vw, 44px) !important;
+    line-height: 1.08 !important;
+  }
+  .articles-section .article-page-lead {
+    font-size: 17px !important;
+    line-height: 1.66 !important;
+  }
+  .articles-section .article-body-h2 {
+    font-size: 25px !important;
+    margin-top: 34px !important;
+  }
+  .articles-section .article-body-p {
+    font-size: 16.5px !important;
+    line-height: 1.78 !important;
+  }
+  .articles-section .article-pullquote {
+    font-size: 22px !important;
+    padding: 18px 20px !important;
+  }
   .articles-section .article-micro-btn,
   .articles-section .article-cta-btn {
     width: 100% !important;
-    justify-content: center !important;
+    min-height: 50px !important;
+    padding: 0 18px !important;
+  }
+  .articles-section .article-back {
+    width: auto !important;
+    padding: 0 14px !important;
+    min-height: 38px !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .articles-section .article-card-btn {
+    padding: 20px !important;
+    border-radius: 18px !important;
+  }
+  .articles-section .article-card-title {
+    font-size: 24px !important;
+  }
+  .articles-section .article-card-desc {
+    font-size: 15px !important;
+  }
+  .articles-section .article-page-title {
+    font-size: 32px !important;
+  }
+  .articles-section .article-page-lead {
+    font-size: 16px !important;
+  }
+  .articles-section .article-body-h2 {
+    font-size: 23px !important;
+  }
+  .articles-section .article-body-p {
+    font-size: 16px !important;
+    line-height: 1.76 !important;
+  }
+  .articles-section .article-final-title {
+    font-size: 26px !important;
   }
 }

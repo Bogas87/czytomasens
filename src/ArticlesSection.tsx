@@ -325,14 +325,14 @@ const styles: Record<string, React.CSSProperties> = {
   cardTitle: { fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "clamp(24px, 2.2vw, 31px)", fontWeight: 700, color: BRAND.text, lineHeight: 1.08, letterSpacing: "-0.035em", margin: 0 },
   cardLead: { fontSize: "16px", color: "#c8c0b8", lineHeight: 1.72, margin: "16px 0 0" },
   cardArrow: { fontSize: "13px", color: BRAND.gold, marginTop: "auto", paddingTop: "24px", fontWeight: 700 },
-  articleShell: { maxWidth: "960px", margin: "0 auto" },
-  articleWrap: { background: BRAND.panel, border: `1px solid ${BRAND.border}`, borderRadius: "22px", padding: "clamp(28px, 4vw, 58px)", boxShadow: "0 22px 80px rgba(0,0,0,.28)" },
+  articleShell: { maxWidth: "1040px", margin: "0 auto" },
+  articleWrap: { background: BRAND.panel, border: `1px solid ${BRAND.border}`, borderRadius: "22px", padding: "clamp(24px, 4vw, 56px)", boxShadow: "0 22px 80px rgba(0,0,0,.28)" },
   articleBack: { background: "transparent", border: 0, color: BRAND.muted, fontSize: "12px", letterSpacing: "0.1em", cursor: "pointer", padding: 0, marginBottom: "34px", textTransform: "uppercase", fontWeight: 700 },
   articleKickerRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", marginBottom: "12px" },
-  articleTitle: { fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "clamp(34px, 5vw, 58px)", color: BRAND.text, lineHeight: 1.02, letterSpacing: "-0.045em", margin: "0 0 18px" },
+  articleTitle: { fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "clamp(34px, 4.2vw, 54px)", color: BRAND.text, lineHeight: 1.02, letterSpacing: "-0.045em", margin: "0 0 18px" },
   articleLead: { color: "#ddd4ca", fontSize: "clamp(18px, 2vw, 22px)", lineHeight: 1.65, margin: "0 0 30px", maxWidth: "780px" },
   articleDivider: { width: "72px", height: "2px", background: `linear-gradient(90deg, ${BRAND.gold}, rgba(197,160,89,.12))`, border: 0, margin: "0 0 34px" },
-  h2: { fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "clamp(25px, 2.5vw, 34px)", lineHeight: 1.12, letterSpacing: "-0.03em", margin: "38px 0 14px", color: BRAND.text },
+  h2: { fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "clamp(24px, 2.2vw, 32px)", lineHeight: 1.12, letterSpacing: "-0.03em", margin: "38px 0 14px", color: BRAND.text },
   para: { fontSize: "18px", lineHeight: 1.86, color: "#c8c0b8", margin: "0 0 20px" },
   quote: { margin: "34px 0", padding: "24px 26px", borderLeft: `2px solid ${BRAND.gold}`, background: "rgba(197,160,89,.055)", color: BRAND.goldSoft, fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "clamp(24px, 2.5vw, 34px)", lineHeight: 1.18, letterSpacing: "-0.03em" },
   microCta: { margin: "34px 0", padding: "24px", border: "1px solid rgba(197,160,89,.18)", borderRadius: "18px", background: "linear-gradient(135deg, rgba(197,160,89,.09), rgba(255,255,255,.02))" },
@@ -397,8 +397,8 @@ export function ArticlesSection({
             <div style={styles.header}>
               <div>
                 <span style={styles.eyebrow}>{indexRoute ? "CZYTAJ" : "NIE JESTEŚ GOTOWY NA ANALIZĘ?"}</span>
-                <h2 style={styles.title}>{indexRoute ? "Artykuły, które pomagają zobaczyć relację trzeźwiej" : "Zacznij od jednego tekstu"}</h2>
-                <p style={styles.subtitle}>
+                <h2 className="articles-main-title" style={styles.title}>{indexRoute ? "Artykuły, które pomagają zobaczyć relację trzeźwiej" : "Zacznij od jednego tekstu"}</h2>
+                <p className="articles-main-subtitle" style={styles.subtitle}>
                   {indexRoute
                     ? "Bez prostych wyroków. Bez taniego pocieszania. Teksty dla osób, które czują, że w relacji coś się przesuwa, ale nie potrafią jeszcze uczciwie nazwać, co dokładnie."
                     : "Czasem najpierw trzeba nazwać problem, zanim da się go uczciwie opisać w analizie."}
@@ -425,9 +425,9 @@ export function ArticlesSection({
                     <span style={styles.cardKicker}>{indexRoute ? categoryLabels[article.category] : article.kicker}</span>
                     <span style={styles.readTime}>{article.readingTime}</span>
                   </div>
-                  <h3 style={styles.cardTitle}>{article.title}</h3>
-                  <p style={styles.cardLead}>{article.cardDescription || article.lead}</p>
-                  <div style={styles.cardArrow}>Przeczytaj tekst →</div>
+                  <h3 className="article-card-title" style={styles.cardTitle}>{article.title}</h3>
+                  <p className="article-card-desc" style={styles.cardLead}>{article.cardDescription || article.lead}</p>
+                  <div className="article-card-arrow" style={styles.cardArrow}>Przeczytaj tekst →</div>
                 </button>
               ))}
             </div>
@@ -438,18 +438,18 @@ export function ArticlesSection({
           <motion.div key="article" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
             <div style={styles.articleShell}>
               <article style={styles.articleWrap}>
-                <button className="article-back" style={styles.articleBack} onClick={back}>← Wróć</button>
+                <button className="article-back" style={styles.articleBack} onClick={back}>← Wróć do artykułów</button>
                 <div style={styles.articleKickerRow}>
                   <span style={styles.cardKicker}>{openArticle.kicker}</span>
                   <span style={styles.readTime}>{openArticle.readingTime}</span>
                 </div>
-                <h1 style={styles.articleTitle}>{openArticle.title}</h1>
-                <p style={styles.articleLead}>{openArticle.lead}</p>
+                <h1 className="article-page-title" style={styles.articleTitle}>{openArticle.title}</h1>
+                <p className="article-page-lead" style={styles.articleLead}>{openArticle.lead}</p>
                 <hr style={styles.articleDivider} />
 
                 {openArticle.body.map((block, i) => {
-                  if (block.type === "h2") return <h2 key={i} style={styles.h2}>{block.text}</h2>;
-                  if (block.type === "quote") return <div key={i} style={styles.quote}>{block.text}</div>;
+                  if (block.type === "h2") return <h2 key={i} className="article-body-h2" style={styles.h2}>{block.text}</h2>;
+                  if (block.type === "quote") return <div key={i} className="article-pullquote" style={styles.quote}>{block.text}</div>;
                   if (block.type === "microCta") {
                     return (
                       <div key={i} className="article-micro-cta" style={styles.microCta}>
@@ -458,12 +458,12 @@ export function ArticlesSection({
                       </div>
                     );
                   }
-                  return <p key={i} style={styles.para}>{block.text}</p>;
+                  return <p key={i} className="article-body-p" style={styles.para}>{block.text}</p>;
                 })}
 
                 <div className="article-final-cta" style={styles.finalCta}>
-                  <h2 style={styles.finalTitle}>Nie musisz rozstrzygać tego samą teorią.</h2>
-                  <p style={styles.finalText}>{openArticle.ctaText} Jeśli chcesz spojrzeć na swoją sytuację spokojniej i konkretniej, możesz zrobić prywatną analizę relacji.</p>
+                  <h2 className="article-final-title" style={styles.finalTitle}>Nie musisz rozstrzygać tego samą teorią.</h2>
+                  <p className="article-final-text" style={styles.finalText}>{openArticle.ctaText} Jeśli chcesz spojrzeć na swoją sytuację spokojniej i konkretniej, możesz zrobić prywatną analizę relacji.</p>
                   <button className="ctms-btn ctms-btn-primary article-cta-btn" onClick={onStartAnalysis}>{openArticle.ctaButton}</button>
                 </div>
 
@@ -474,7 +474,7 @@ export function ArticlesSection({
                       {relatedArticles.map((article) => (
                         <button key={article.slug} className="article-related-card" style={styles.relatedCard} onClick={() => open(article.slug)}>
                           <span style={styles.cardKicker}>{article.kicker}</span>
-                          <h3 style={{ ...styles.cardTitle, fontSize: "20px", marginTop: "10px" }}>{article.title}</h3>
+                          <h3 className="article-related-title" style={{ ...styles.cardTitle, fontSize: "20px", marginTop: "10px" }}>{article.title}</h3>
                         </button>
                       ))}
                     </div>
