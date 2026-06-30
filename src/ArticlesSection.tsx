@@ -302,32 +302,47 @@ export const ARTICLES: Article[] = [
 ];
 
 const categoryLabels: Record<Article["category"], string> = {
-  decyzja: "Kiedy nie wiesz, czy zostać",
-  sygnaly: "Kiedy czujesz, że coś nie gra",
-  status: "Kiedy relacja stoi w miejscu",
-  wzorzec: "Kiedy schemat się powtarza",
-  rokowania: "Kiedy patrzysz na przyszłość",
-  diagnostyka: "Kiedy chcesz sprawdzić kondycję relacji",
+  decyzja: "Decyzja: zostać, wrócić, odpuścić",
+  sygnaly: "Sygnały: niejasność, dystans, napięcie",
+  status: "Status: bliskość bez nazwy",
+  wzorzec: "Wzorzec: to wraca kolejny raz",
+  rokowania: "Przyszłość: czy to ma kierunek",
+  diagnostyka: "Kondycja relacji: co robi z Tobą na co dzień",
+};
+
+const articleInsights: Record<string, string[]> = {
+  "czy-ten-zwiazek-ma-sens": ["jak odróżnić chwilowy kryzys od relacji bez kierunku", "dlaczego jeden dobry moment nie kasuje powtarzalnego wzorca"],
+  "czy-ona-on-sie-mna-bawi": ["po czym poznać, że jesteś opcją, a nie priorytetem", "dlaczego mieszane sygnały tak mocno wciągają"],
+  "toksyczna-relacja-czy-trudny-moment": ["czym różni się trudny okres od stałej destrukcji", "jak sprawdzić, czy szacunek wraca, gdy presja mija"],
+  "czy-warto-dac-druga-szanse": ["czym różni się tęsknota od realnej zmiany", "co musi się zmienić, żeby powrót miał sens"],
+  "relacja-bez-zaangazowania": ["dlaczego brak nazwy też potrafi kosztować spokój", "kto korzysta z relacji bez jasnych zasad"],
+  "dlaczego-wracasz-do-tego-samego-partnera": ["dlaczego znane napięcie bywa mylone z chemią", "co sprawia, że wracasz mimo świadomości schematu"],
+  "czy-moj-zwiazek-jest-zdrowy": ["jak relacja wpływa na Ciebie na co dzień", "czym różni się konflikt od stałego napięcia"],
+  "jak-rozpoznac-ze-zwiazek-nie-ma-przyszlosci": ["po czym poznać brak wspólnego kierunku", "dlaczego miłość nie zawsze oznacza przyszłość"],
 };
 
 const styles: Record<string, React.CSSProperties> = {
   section: { marginTop: "52px", paddingBottom: "8px" },
-  header: { display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: "24px", marginBottom: "24px", paddingBottom: "18px", borderBottom: `1px solid rgba(255,255,255,0.06)` },
+  header: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", alignItems: "end", gap: "24px", marginBottom: "24px", paddingBottom: "22px", borderBottom: `1px solid rgba(255,255,255,0.06)` },
   eyebrow: { fontSize: "11px", letterSpacing: "0.16em", color: BRAND.gold, fontWeight: 700, textTransform: "uppercase" },
-  title: { fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "clamp(28px, 3vw, 42px)", lineHeight: 1.08, letterSpacing: "-0.035em", color: BRAND.text, margin: "10px 0 0" },
+  title: { fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "clamp(32px, 4vw, 56px)", lineHeight: 1.02, letterSpacing: "-0.045em", color: BRAND.text, margin: "10px 0 0", maxWidth: "900px" },
   subtitle: { color: BRAND.muted, lineHeight: 1.75, fontSize: "16px", maxWidth: "760px", margin: "12px 0 0" },
   grid: { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "16px" },
-  card: { background: BRAND.panel, border: `1px solid ${BRAND.border}`, borderRadius: "18px", padding: "28px", cursor: "pointer", transition: "border-color .2s, background .2s, transform .2s", display: "flex", flexDirection: "column", minHeight: "250px", textAlign: "left" },
+  card: { background: BRAND.panel, border: `1px solid ${BRAND.border}`, borderRadius: "18px", padding: "28px", cursor: "pointer", transition: "border-color .2s, background .2s, transform .2s", display: "flex", flexDirection: "column", minHeight: "330px", textAlign: "left" },
   cardHovered: { background: BRAND.panelStrong, borderColor: "rgba(197,160,89,0.42)", transform: "translateY(-2px)" },
   cardMeta: { display: "flex", justifyContent: "space-between", gap: "14px", marginBottom: "22px", alignItems: "center" },
   cardKicker: { fontSize: "10px", letterSpacing: "0.18em", color: BRAND.gold, fontWeight: 700, textTransform: "uppercase", opacity: 0.9 },
   readTime: { fontSize: "12px", color: "rgba(245,241,234,.48)" },
   cardTitle: { fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "clamp(24px, 2.2vw, 31px)", fontWeight: 700, color: BRAND.text, lineHeight: 1.08, letterSpacing: "-0.035em", margin: 0 },
   cardLead: { fontSize: "16px", color: "#c8c0b8", lineHeight: 1.72, margin: "16px 0 0" },
-  cardArrow: { fontSize: "13px", color: BRAND.gold, marginTop: "auto", paddingTop: "24px", fontWeight: 700 },
+  cardInsightBox: { marginTop: "18px", paddingTop: "16px", borderTop: "1px solid rgba(255,255,255,.07)", display: "grid", gap: "9px" },
+  cardInsightLabel: { color: BRAND.goldSoft, fontSize: "11px", letterSpacing: ".16em", textTransform: "uppercase", fontWeight: 800 },
+  cardInsightItem: { color: "#d9d1c8", fontSize: "14px", lineHeight: 1.55, display: "grid", gridTemplateColumns: "10px 1fr", gap: "8px" },
+  cardArrow: { fontSize: "14px", color: BRAND.goldSoft, marginTop: "auto", paddingTop: "22px", fontWeight: 800 },
+  softLink: { alignSelf: "end", width: "auto", minHeight: "auto", background: "transparent", border: `1px solid rgba(197,160,89,.35)`, borderRadius: "999px", color: BRAND.goldSoft, padding: "14px 18px", fontSize: "14px", fontWeight: 800, textAlign: "center", whiteSpace: "nowrap", boxShadow: "none" },
   articleShell: { maxWidth: "1040px", margin: "0 auto" },
   articleWrap: { background: BRAND.panel, border: `1px solid ${BRAND.border}`, borderRadius: "22px", padding: "clamp(24px, 4vw, 56px)", boxShadow: "0 22px 80px rgba(0,0,0,.28)" },
-  articleBack: { background: "transparent", border: 0, color: BRAND.muted, fontSize: "12px", letterSpacing: "0.1em", cursor: "pointer", padding: 0, marginBottom: "34px", textTransform: "uppercase", fontWeight: 700 },
+  articleBack: { background: "rgba(197,160,89,.08)", border: `1px solid rgba(197,160,89,.32)`, color: BRAND.goldSoft, fontSize: "13px", letterSpacing: "0.06em", cursor: "pointer", padding: "12px 16px", marginBottom: "34px", borderRadius: "999px", textTransform: "uppercase", fontWeight: 800, display: "inline-flex", width: "auto", minHeight: "auto" },
   articleKickerRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", marginBottom: "12px" },
   articleTitle: { fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "clamp(34px, 4.2vw, 54px)", color: BRAND.text, lineHeight: 1.02, letterSpacing: "-0.045em", margin: "0 0 18px" },
   articleLead: { color: "#ddd4ca", fontSize: "clamp(18px, 2vw, 22px)", lineHeight: 1.65, margin: "0 0 30px", maxWidth: "780px" },
@@ -396,17 +411,17 @@ export function ArticlesSection({
           <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
             <div style={styles.header}>
               <div>
-                <span style={styles.eyebrow}>{indexRoute ? "CZYTAJ" : "NIE JESTEŚ GOTOWY NA ANALIZĘ?"}</span>
-                <h2 className="articles-main-title" style={styles.title}>{indexRoute ? "Artykuły, które pomagają zobaczyć relację trzeźwiej" : "Zacznij od jednego tekstu"}</h2>
+                <span style={styles.eyebrow}>{indexRoute ? "MAPA SYTUACJI" : "ZANIM WEJDZIESZ W ANALIZĘ"}</span>
+                <h2 className="articles-main-title" style={styles.title}>{indexRoute ? "Nie czytaj dla ciekawości. Czytaj, kiedy coś już nie daje spokoju." : "Najpierw nazwij, co naprawdę się dzieje"}</h2>
                 <p className="articles-main-subtitle" style={styles.subtitle}>
                   {indexRoute
-                    ? "Bez prostych wyroków. Bez taniego pocieszania. Teksty dla osób, które czują, że w relacji coś się przesuwa, ale nie potrafią jeszcze uczciwie nazwać, co dokładnie."
-                    : "Czasem najpierw trzeba nazwać problem, zanim da się go uczciwie opisać w analizie."}
+                    ? "To nie jest blog z poradami. To mapa najczęstszych napięć w relacjach: niejasność, powroty, brak zaangażowania, mieszane sygnały i pytanie, czy to jeszcze ma kierunek."
+                    : "Trzy krótkie teksty, które pomagają złapać wzorzec zanim opiszesz swoją sytuację w analizie."}
                 </p>
               </div>
               {!indexRoute && (
-                <button className="article-soft-link" onClick={onNavigateHome}>
-                  Zobacz wszystkie artykuły →
+                <button className="article-soft-link" style={styles.softLink} onClick={onNavigateHome}>
+                  Zobacz pełną mapę tekstów →
                 </button>
               )}
             </div>
@@ -427,6 +442,12 @@ export function ArticlesSection({
                   </div>
                   <h3 className="article-card-title" style={styles.cardTitle}>{article.title}</h3>
                   <p className="article-card-desc" style={styles.cardLead}>{article.cardDescription || article.lead}</p>
+                  <div className="article-card-insights" style={styles.cardInsightBox}>
+                    <span style={styles.cardInsightLabel}>W środku</span>
+                    {(articleInsights[article.slug] || []).slice(0, 2).map((item) => (
+                      <span key={item} className="article-card-insight" style={styles.cardInsightItem}><span>•</span><span>{item}</span></span>
+                    ))}
+                  </div>
                   <div className="article-card-arrow" style={styles.cardArrow}>Przeczytaj tekst →</div>
                 </button>
               ))}
@@ -438,7 +459,7 @@ export function ArticlesSection({
           <motion.div key="article" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
             <div style={styles.articleShell}>
               <article style={styles.articleWrap}>
-                <button className="article-back" style={styles.articleBack} onClick={back}>← Wróć do artykułów</button>
+                <button className="article-back" style={styles.articleBack} onClick={back}>← Wróć do listy tekstów</button>
                 <div style={styles.articleKickerRow}>
                   <span style={styles.cardKicker}>{openArticle.kicker}</span>
                   <span style={styles.readTime}>{openArticle.readingTime}</span>

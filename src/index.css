@@ -2170,3 +2170,144 @@ button { cursor: pointer; }
     font-size: 26px !important;
   }
 }
+/* CTMS ARTICLES V3 — naprawa szarego kloca, bogatsze kafle, czytelny powrót, mobile */
+.articles-section .article-soft-link {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  padding: 14px 18px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+  border: 1px solid rgba(197,160,89,.38) !important;
+  border-radius: 999px !important;
+  color: var(--gold-soft, #d7b978) !important;
+  font-size: 14px !important;
+  font-weight: 850 !important;
+  line-height: 1.1 !important;
+  text-align: center !important;
+  box-shadow: none !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+}
+.articles-section .article-soft-link:hover {
+  background: rgba(197,160,89,.08) !important;
+  border-color: rgba(197,160,89,.62) !important;
+  transform: translateY(-1px) !important;
+}
+
+.articles-section .articles-main-title {
+  font-size: clamp(34px, 4.1vw, 60px) !important;
+  line-height: 1.02 !important;
+  max-width: 980px !important;
+}
+.articles-section .articles-main-subtitle {
+  max-width: 920px !important;
+  font-size: 18px !important;
+}
+.articles-section .article-card-btn {
+  min-height: 330px !important;
+  padding: 28px !important;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(197,160,89,.075), transparent 28%),
+    linear-gradient(180deg, rgba(255,255,255,.026), rgba(255,255,255,.012)),
+    rgba(10,10,10,.78) !important;
+  border-color: rgba(255,255,255,.09) !important;
+}
+.articles-section .article-card-btn:hover {
+  border-color: rgba(197,160,89,.55) !important;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(197,160,89,.11), transparent 30%),
+    linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.014)),
+    rgba(12,12,12,.88) !important;
+}
+.articles-section .article-card-insights {
+  margin-top: 18px !important;
+  padding-top: 16px !important;
+  border-top: 1px solid rgba(255,255,255,.075) !important;
+  display: grid !important;
+  gap: 9px !important;
+}
+.articles-section .article-card-insights span {
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+.articles-section .article-card-insight {
+  display: grid !important;
+  grid-template-columns: 10px 1fr !important;
+  gap: 8px !important;
+  color: #d9d1c8 !important;
+  font-size: 14px !important;
+  line-height: 1.55 !important;
+}
+.articles-section .article-card-arrow {
+  font-size: 15px !important;
+  padding-top: 22px !important;
+}
+
+.articles-section .article-back {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 12px 16px !important;
+  margin-bottom: 34px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: rgba(197,160,89,.08) !important;
+  border: 1px solid rgba(197,160,89,.38) !important;
+  border-radius: 999px !important;
+  color: var(--gold-soft, #d7b978) !important;
+  font-size: 13px !important;
+  font-weight: 850 !important;
+  line-height: 1.1 !important;
+  letter-spacing: .06em !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+}
+.articles-section .article-back:hover {
+  background: rgba(197,160,89,.13) !important;
+  border-color: rgba(197,160,89,.68) !important;
+}
+
+@media (max-width: 900px) {
+  .articles-section [style*="grid-template-columns: minmax(0px, 1fr) auto"],
+  .articles-section [style*="grid-template-columns: minmax(0, 1fr) auto"] {
+    grid-template-columns: 1fr !important;
+    align-items: start !important;
+  }
+  .articles-section .article-soft-link {
+    width: 100% !important;
+    white-space: normal !important;
+    padding: 14px 16px !important;
+  }
+  .articles-section .articles-main-title {
+    font-size: clamp(32px, 10vw, 46px) !important;
+  }
+  .articles-section .articles-main-subtitle {
+    font-size: 16.5px !important;
+  }
+  .articles-section .article-card-btn {
+    min-height: auto !important;
+  }
+}
+
+@media (max-width: 520px) {
+  .articles-section .article-card-insights {
+    margin-top: 15px !important;
+    padding-top: 14px !important;
+  }
+  .articles-section .article-card-insight {
+    font-size: 13.5px !important;
+  }
+  .articles-section .article-back {
+    width: 100% !important;
+    white-space: normal !important;
+    padding: 13px 14px !important;
+  }
+}
