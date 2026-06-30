@@ -1,12 +1,60 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://czytomasens.pl/</loc></url>
-  <url><loc>https://czytomasens.pl/artykuly</loc></url>
-  <url><loc>https://czytomasens.pl/artykuly/dlaczego-wracasz-do-tego-samego-partnera</loc></url>
-  <url><loc>https://czytomasens.pl/artykuly/czy-moj-zwiazek-jest-zdrowy</loc></url>
-  <url><loc>https://czytomasens.pl/artykuly/jak-rozpoznac-ze-zwiazek-nie-ma-przyszlosci</loc></url>
-  <url><loc>https://czytomasens.pl/regulamin</loc></url>
-  <url><loc>https://czytomasens.pl/polityka-prywatnosci</loc></url>
-  <url><loc>https://czytomasens.pl/rodo</loc></url>
-  <url><loc>https://czytomasens.pl/kontakt</loc></url>
+
+  <url>
+    <loc>https://czytomasens.pl/</loc>
+  </url>
+
+  <url>
+    <loc>https://czytomasens.pl/artykuly/</loc>
+  </url>
+
+  <url>
+    <loc>https://czytomasens.pl/artykuly/czy-ten-zwiazek-ma-sens/</loc>
+  </url>
+
+  <url>
+    <loc>https://czytomasens.pl/artykuly/czy-ona-on-sie-mna-bawi/</loc>
+  </url>
+
+  <url>
+    <loc>https://czytomasens.pl/artykuly/toksyczna-relacja-czy-trudny-moment/</loc>
+  </url>
+
+  <url>
+    <loc>https://czytomasens.pl/artykuly/czy-warto-dac-druga-szanse/</loc>
+  </url>
+
+  <url>
+    <loc>https://czytomasens.pl/artykuly/relacja-bez-zaangazowania/</loc>
+  </url>
+
+  <url>
+    <loc>https://czytomasens.pl/artykuly/dlaczego-wracasz-do-tego-samego-partnera/</loc>
+  </url>
+
+  <url>
+    <loc>https://czytomasens.pl/artykuly/czy-moj-zwiazek-jest-zdrowy/</loc>
+  </url>
+
+  <url>
+    <loc>https://czytomasens.pl/artykuly/jak-rozpoznac-ze-zwiazek-nie-ma-przyszlosci/</loc>
+  </url>
+
+  <url>
+    <loc>https://czytomasens.pl/regulamin/</loc>
+  </url>
+
+  <url>
+    <loc>https://czytomasens.pl/polityka-prywatnosci/</loc>
+  </url>
+
+  <url>
+    <loc>https://czytomasens.pl/rodo/</loc>
+  </url>
+
+  <url>
+    <loc>https://czytomasens.pl/kontakt/</loc>
+  </url>
+
 </urlset>
