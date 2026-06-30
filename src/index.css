@@ -1893,4 +1893,92 @@ button { cursor: pointer; }
   .articles-section button h3 {
     font-size: 23px !important;
   }
+}/* ARTICLES PREMIUM + CLICKABILITY PATCH
+   Wklej na sam koniec index.css, żeby nadpisać stare reguły .articles-section button z !important. */
+
+.articles-section .article-soft-link {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--gold-soft, #d7b978) !important;
+  font-weight: 800 !important;
+  text-align: right !important;
+  white-space: nowrap !important;
+}
+
+.articles-section .article-card-btn {
+  min-height: 250px !important;
+  padding: 28px !important;
+  overflow: hidden !important;
+}
+
+.articles-section .article-back,
+.articles-section .article-micro-btn,
+.articles-section .article-cta-btn,
+.articles-section .article-related-card {
+  width: auto !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  white-space: normal !important;
+  overflow: visible !important;
+}
+
+.articles-section .article-back {
+  padding: 0 !important;
+  display: inline-flex !important;
+}
+
+.articles-section .article-micro-btn,
+.articles-section .article-cta-btn {
+  display: inline-flex !important;
+  align-self: flex-start !important;
+  min-height: 52px !important;
+  padding: 0 24px !important;
+  text-align: center !important;
+}
+
+.articles-section .article-related-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.articles-section .article-related-card {
+  display: block !important;
+  min-height: 150px !important;
+  padding: 18px !important;
+}
+
+.articles-section .article-final-cta h2,
+.articles-section .article-micro-cta h2 {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 900px) {
+  .articles-section .articles-grid,
+  .articles-section .article-related-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .articles-section .article-soft-link {
+    width: 100% !important;
+    text-align: left !important;
+    margin-top: 12px !important;
+  }
+
+  .articles-section .article-card-btn {
+    min-height: auto !important;
+    padding: 22px !important;
+  }
+
+  .articles-section .article-micro-btn,
+  .articles-section .article-cta-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
 }
