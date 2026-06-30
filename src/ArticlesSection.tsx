@@ -340,8 +340,10 @@ const styles: Record<string, React.CSSProperties> = {
   cardInsightItem: { color: "#d9d1c8", fontSize: "14px", lineHeight: 1.55, display: "grid", gridTemplateColumns: "10px 1fr", gap: "8px" },
   cardArrow: { fontSize: "14px", color: BRAND.goldSoft, marginTop: "auto", paddingTop: "22px", fontWeight: 800 },
   softLink: { alignSelf: "end", width: "auto", minHeight: "auto", background: "transparent", border: `1px solid rgba(197,160,89,.35)`, borderRadius: "999px", color: BRAND.goldSoft, padding: "14px 18px", fontSize: "14px", fontWeight: 800, textAlign: "center", whiteSpace: "nowrap", boxShadow: "none" },
+  homeLink: { alignSelf: "end", width: "auto", minHeight: "auto", background: "rgba(255,255,255,.025)", border: `1px solid rgba(255,255,255,.12)`, borderRadius: "999px", color: "#ddd4ca", padding: "13px 17px", fontSize: "13px", fontWeight: 850, letterSpacing: ".04em", textTransform: "uppercase", textAlign: "center", whiteSpace: "nowrap", boxShadow: "none", cursor: "pointer" },
   articleShell: { maxWidth: "1040px", margin: "0 auto" },
   articleWrap: { background: BRAND.panel, border: `1px solid ${BRAND.border}`, borderRadius: "22px", padding: "clamp(24px, 4vw, 56px)", boxShadow: "0 22px 80px rgba(0,0,0,.28)" },
+  articleTopActions: { display: "flex", gap: "12px", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", marginBottom: "34px" },
   articleBack: { background: "rgba(197,160,89,.08)", border: `1px solid rgba(197,160,89,.32)`, color: BRAND.goldSoft, fontSize: "13px", letterSpacing: "0.06em", cursor: "pointer", padding: "12px 16px", marginBottom: "34px", borderRadius: "999px", textTransform: "uppercase", fontWeight: 800, display: "inline-flex", width: "auto", minHeight: "auto" },
   articleKickerRow: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "16px", marginBottom: "12px" },
   articleTitle: { fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "clamp(34px, 4.2vw, 54px)", color: BRAND.text, lineHeight: 1.02, letterSpacing: "-0.045em", margin: "0 0 18px" },
@@ -404,6 +406,12 @@ export function ArticlesSection({
     else setLocalSlug(null);
   };
 
+  const goToHome = () => {
+    if (typeof window !== "undefined") {
+      window.location.href = "/";
+    }
+  };
+
   return (
     <section className="articles-section" style={styles.section}>
       <AnimatePresence mode="wait">
@@ -412,18 +420,27 @@ export function ArticlesSection({
             <div style={styles.header}>
               <div>
                 <span style={styles.eyebrow}>{indexRoute ? "MAPA SYTUACJI" : "ZANIM WEJDZIESZ W ANALIZĘ"}</span>
-                <h2 className="articles-main-title" style={styles.title}>{indexRoute ? "Nie czytaj dla ciekawości. Czytaj, kiedy coś już nie daje spokoju." : "Najpierw nazwij, co naprawdę się dzieje"}</h2>
+                <h2 className="articles-main-title" style={styles.title}>
+                  {indexRoute ? "Teksty, które pomagają nazwać to, co dzieje się między wami" : "Najpierw nazwij, co naprawdę się dzieje"}
+                </h2>
                 <p className="articles-main-subtitle" style={styles.subtitle}>
                   {indexRoute
-                    ? "To nie jest blog z poradami. To mapa najczęstszych napięć w relacjach: niejasność, powroty, brak zaangażowania, mieszane sygnały i pytanie, czy to jeszcze ma kierunek."
+                    ? "To nie jest zwykły blog. To mapa najczęstszych sytuacji: niejasność, powroty, brak zaangażowania, mieszane sygnały i moment, w którym zaczynasz pytać, czy to jeszcze ma kierunek."
                     : "Trzy krótkie teksty, które pomagają złapać wzorzec zanim opiszesz swoją sytuację w analizie."}
                 </p>
               </div>
-              {!indexRoute && (
-                <button className="article-soft-link" style={styles.softLink} onClick={onNavigateHome}>
-                  Zobacz pełną mapę tekstów →
-                </button>
-              )}
+              <div className="article-header-actions" style={styles.headerActions}>
+                {indexRoute && (
+                  <button className="article-home-link" style={styles.homeLink} onClick={goToHome}>
+                    ← Wróć na stronę główną
+                  </button>
+                )}
+                {!indexRoute && (
+                  <button className="article-soft-link" style={styles.softLink} onClick={onNavigateHome}>
+                    Zobacz pełną mapę tekstów →
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="articles-grid" style={styles.grid}>
@@ -459,7 +476,10 @@ export function ArticlesSection({
           <motion.div key="article" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.25 }}>
             <div style={styles.articleShell}>
               <article style={styles.articleWrap}>
-                <button className="article-back" style={styles.articleBack} onClick={back}>← Wróć do listy tekstów</button>
+                <div className="article-top-actions" style={styles.articleTopActions}>
+                  <button className="article-back" style={styles.articleBack} onClick={back}>← Wróć do listy tekstów</button>
+                  <button className="article-home-link" style={styles.homeLink} onClick={goToHome}>Strona główna</button>
+                </div>
                 <div style={styles.articleKickerRow}>
                   <span style={styles.cardKicker}>{openArticle.kicker}</span>
                   <span style={styles.readTime}>{openArticle.readingTime}</span>
