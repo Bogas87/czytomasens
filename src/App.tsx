@@ -378,6 +378,79 @@ function buildMapSignals(forceMap: ForceMap, burdens: BurdenItem[], truthCards: 
   ];
 }
 
+
+type VisualBar = { label: string; value: number; text: string; tone?: "normal" | "gold" | "danger" | "green" };
+
+function clampScore(value: number): number {
+  return Math.max(5, Math.min(95, Math.round(value)));
+}
+
+function buildMapVisualBars(forceMap: ForceMap, burdens: BurdenItem[], truthCards: string[]): VisualBar[] {
+  const meLoad = FORCE_MAP_ITEMS.filter((item) => isMeHeavy(forceMap[item.key])).length;
+  const otherLoad = FORCE_MAP_ITEMS.filter((item) => isOtherHeavy(forceMap[item.key])).length;
+  const imbalance = Math.max(meLoad, otherLoad);
+  const highRiskBurden = hasBurden(burdens, "cisza") || hasBurden(burdens, "kłótnie") || hasBurden(burdens, "zdrada") || hasBurden(burdens, "powroty") || hasBurden(burdens, "brak jasności");
+  const loopSignal = truthCards.some((text) => text.includes("wracamy") || text.includes("nadziei") || text.includes("czekam"));
+  const tension = clampScore(34 + burdens.length * 12 + truthCards.length * 9 + (highRiskBurden ? 12 : 0));
+  const asymmetry = clampScore(28 + imbalance * 13 + (meLoad >= 3 || otherLoad >= 3 ? 18 : 0));
+  const clarityLoss = (hasBurden(burdens, "brak jasności") ? 28 : 0) + (loopSignal ? 16 : 0) + burdens.length * 5;
+  const clarity = clampScore(82 - clarityLoss);
+  const change = clampScore(72 - tension * 0.28 - asymmetry * 0.22 - (loopSignal ? 18 : 0) + (clarity > 60 ? 10 : 0));
+
+  return [
+    { label: "Napięcie", value: tension, tone: tension >= 70 ? "danger" : tension >= 45 ? "gold" : "green", text: tension >= 70 ? "relacja mocno rozregulowuje" : "napięcie jest widoczne, ale wymaga doprecyzowania" },
+    { label: "Asymetria", value: asymmetry, tone: asymmetry >= 70 ? "danger" : asymmetry >= 45 ? "gold" : "green", text: asymmetry >= 70 ? "ciężar nie rozkłada się równo" : "układ sił nie jest jeszcze jednoznaczny" },
+    { label: "Jasność", value: clarity, tone: clarity <= 35 ? "danger" : clarity <= 60 ? "gold" : "green", text: clarity <= 35 ? "za dużo rzeczy zostaje bez nazwania" : "część obrazu jest już czytelna" },
+    { label: "Zmiana", value: change, tone: change <= 35 ? "danger" : change <= 58 ? "gold" : "green", text: change <= 35 ? "widać więcej cyklu niż przełomu" : "potencjał wymaga sprawdzenia w faktach" },
+  ];
+}
+
+function buildPreviewVisualBars(preview: Preview): VisualBar[] {
+  const clarity = clampScore(100 - Math.max(preview.tension * 0.45, preview.asymmetry * 0.55));
+  return [
+    { label: "Napięcie", value: preview.tension, tone: preview.tension >= 70 ? "danger" : preview.tension >= 45 ? "gold" : "green", text: preview.tension >= 70 ? "relacja częściej uruchamia czujność niż spokój" : "napięcie jest obecne, ale nie musi dominować" },
+    { label: "Asymetria", value: preview.asymmetry, tone: preview.asymmetry >= 70 ? "danger" : preview.asymmetry >= 45 ? "gold" : "green", text: preview.asymmetry >= 70 ? "jedna strona prawdopodobnie niesie więcej ciężaru" : "nierównowaga wymaga dalszego odczytu" },
+    { label: "Jasność", value: clarity, tone: clarity <= 35 ? "danger" : clarity <= 60 ? "gold" : "green", text: clarity <= 35 ? "za dużo pozostaje w domysłach" : "część sytuacji daje się już nazwać" },
+    { label: "Zmiana", value: preview.change, tone: preview.change <= 35 ? "danger" : preview.change <= 58 ? "gold" : "green", text: preview.change <= 35 ? "na razie słabiej widać trwały zwrot" : "jest przestrzeń do sprawdzenia potencjału" },
+  ];
+}
+
+function buildCycleSteps(pathKey?: EntryKey, burdens: BurdenItem[] = [], truthCards: string[] = []): string[] {
+  if (pathKey === "betrayal" || hasBurden(burdens, "zdrada")) return ["pęknięcie", "kontrola", "chwilowa ulga", "powrót nieufności"];
+  if (pathKey === "conflict" || hasBurden(burdens, "kłótnie")) return ["napięcie", "konflikt", "cisza", "powrót wzorca"];
+  if (pathKey === "uncertain" || hasBurden(burdens, "brak jasności")) return ["kontakt", "nadzieja", "niejasność", "czekanie"];
+  if (pathKey === "loop" || hasBurden(burdens, "powroty") || truthCards.some((text) => text.includes("wracamy"))) return ["oddalenie", "tęsknota", "powrót", "ten sam problem"];
+  if (pathKey === "asymmetry" || hasBurden(burdens, "nierówne")) return ["staranie", "brak odpowiedzi", "dopasowanie", "zmęczenie"];
+  return ["sygnał", "napięcie", "doprecyzowanie", "wniosek"];
+}
+
+function VisualBars({ items }: { items: VisualBar[] }) {
+  return (
+    <div className="visual-bars">
+      {items.map((item) => (
+        <div key={item.label} className={`visual-bar-item ${item.tone || "normal"}`}>
+          <div className="visual-bar-head"><strong>{item.label}</strong><span>{item.value}%</span></div>
+          <div className="visual-bar-track"><div className="visual-bar-fill" style={{ width: `${item.value}%` }} /></div>
+          <div className="visual-bar-text">{item.text}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CycleDiagram({ steps }: { steps: string[] }) {
+  return (
+    <div className="cycle-diagram" aria-label="Dominujący cykl relacji">
+      {steps.map((step, index) => (
+        <React.Fragment key={`${step}-${index}`}>
+          <div className="cycle-step"><span>{String(index + 1).padStart(2, "0")}</span><strong>{step}</strong></div>
+          {index < steps.length - 1 && <div className="cycle-arrow">→</div>}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
 function uniqueClarifications(items: ClarificationQuestion[]): ClarificationQuestion[] {
   const seen = new Set<string>();
   return items.filter((item) => {
@@ -1451,22 +1524,22 @@ export default function App() {
                 </div>
               </section>
               
-              <section style={{ margin: "32px 0 0" }}>
-                <Glass style={{ padding: "36px 40px" }}>
-                  <div className="eyebrow" style={{ marginBottom: "24px" }}>CZYM TO NIE JEST</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px 40px" }}>
+              <section className="not-this-section">
+                <Glass className="not-this-strip">
+                  <div className="not-this-head">
+                    <div className="eyebrow">CZYM TO NIE JEST</div>
+                    <p>Krótko: bez typowania ludzi, bez wyroków i bez gotowych rad z internetu.</p>
+                  </div>
+                  <div className="not-this-grid">
                     {[
-                      ["Nie jest testem osobowości.", "Nie dostaniesz swojego „typu”. Dostaniesz obraz konkretnej sytuacji w której teraz jesteś."],
-                      ["Nie powie Ci co robić.", "Nie ma tu gotowych zaleceń ani tanich rad. Jest analiza i jedno pytanie, którego nie da się zignorować."],
-                      ["Nie oceni Twojego partnera.", "Opisuje mechanizmy, nie wydaje wyroków. Na podstawie Twoich słów, nie cudzych założeń."],
-                      ["Nie jest formularzem do odhaczenia.", "Pytania prowadzą głębiej z każdą odpowiedzią. To nie jest ankieta ani lista pól do kliknięcia."]
+                      ["Nie test osobowości", "Nie dostajesz typu. Dostajesz obraz konkretnej sytuacji."],
+                      ["Nie instrukcja co zrobić", "Wynik pokazuje mechanizm, nie podejmuje decyzji za Ciebie."],
+                      ["Nie ocena partnera", "Opisuje układ i zachowania, nie wydaje wyroków."],
+                      ["Nie formularz", "Mapa + doprecyzowanie prowadzą do sedna, nie do odhaczenia pól."]
                     ].map(([title, desc]) => (
-                      <div key={title} style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
-                        <span className="text-meta">•</span>
-                        <div>
-                          <strong style={{ color: BRAND.text, fontSize: "15px", display: "block", marginBottom: "4px" }}>{title}</strong>
-                          <span style={{ color: BRAND.muted, fontSize: "15px", lineHeight: "1.65" }}>{desc}</span>
-                        </div>
+                      <div key={title} className="not-this-item">
+                        <span>•</span>
+                        <div><strong>{title}</strong><small>{desc}</small></div>
                       </div>
                     ))}
                   </div>
@@ -1779,6 +1852,14 @@ export default function App() {
                     </div>
                   ))}
                 </div>
+                <div className="visual-insight-panel">
+                  <div className="eyebrow">WYKRES SYGNAŁÓW</div>
+                  <VisualBars items={buildMapVisualBars(forceMap, burdens, truthCards)} />
+                </div>
+                <div className="cycle-panel">
+                  <div className="eyebrow">DOMINUJĄCY CYKL</div>
+                  <CycleDiagram steps={buildCycleSteps(path.key, burdens, truthCards)} />
+                </div>
                 <div className="map-step-note strong-note">
                   Teraz zadam {clarificationQuestions.length || 1} {clarificationQuestions.length === 1 ? "pytanie" : clarificationQuestions.length === 2 ? "pytania" : "pytania"} doprecyzowujące. Tylko tam, gdzie sama mapa nie wystarczy do uczciwej interpretacji.
                 </div>
@@ -1897,6 +1978,16 @@ export default function App() {
                 <div className="preview-disclaimer">
                   To nie jest diagnoza ani decyzja za Ciebie. To pierwszy obraz wzorca wynikający z Twoich odpowiedzi: napięcia, asymetrii i realności zmiany.
                 </div>
+                <Glass className="preview-visual-panel">
+                  <div className="eyebrow">WYKRES ODCZYTU</div>
+                  <VisualBars items={buildPreviewVisualBars(preview)} />
+                  {path && (
+                    <div className="preview-cycle-wrap">
+                      <div className="eyebrow">MOŻLIWY CYKL</div>
+                      <CycleDiagram steps={buildCycleSteps(path.key, burdens, truthCards)} />
+                    </div>
+                  )}
+                </Glass>
                 <div className="metrics-grid">
                   {([[preview.tension, "NAPIĘCIE"], [preview.asymmetry, "ASYMETRIA"], [preview.change, "SZANSA ZMIANY"]] as [number, string][]).map(([value, label]) => (
                     <Glass key={label} className="metric-card"><div className="metric-value">{value}%</div><div className="metric-label">{label}</div></Glass>

@@ -3146,3 +3146,233 @@ button { cursor: pointer; }
     grid-template-columns: 1fr;
   }
 }
+
+/* --- Landing + wizualizacje wyniku: compact / mobile-first --- */
+.not-this-section {
+  margin: 22px 0 0;
+}
+
+.not-this-strip {
+  padding: 22px 24px;
+  display: grid;
+  grid-template-columns: minmax(220px, .42fr) minmax(0, 1fr);
+  gap: 22px;
+  align-items: center;
+}
+
+.not-this-head p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.not-this-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.not-this-item {
+  min-height: 96px;
+  padding: 13px 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.065);
+  background: rgba(255,255,255,.022);
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 9px;
+  align-items: start;
+}
+
+.not-this-item > span {
+  color: var(--gold-soft);
+  line-height: 1.2;
+}
+
+.not-this-item strong {
+  display: block;
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.25;
+  margin-bottom: 6px;
+}
+
+.not-this-item small {
+  display: block;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.visual-insight-panel,
+.cycle-panel,
+.preview-visual-panel {
+  position: relative;
+  z-index: 1;
+  margin-top: 18px;
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(197,160,89,.14);
+  background:
+    radial-gradient(circle at top left, rgba(197,160,89,.09), transparent 42%),
+    rgba(255,255,255,.018);
+}
+
+.preview-visual-panel {
+  margin: 22px 0 18px;
+}
+
+.visual-bars {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.visual-bar-item {
+  min-height: 136px;
+  padding: 16px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,.07);
+  background: rgba(0,0,0,.16);
+}
+
+.visual-bar-item.gold { border-color: rgba(197,160,89,.24); }
+.visual-bar-item.danger { border-color: rgba(226,165,165,.22); }
+.visual-bar-item.green { border-color: rgba(183,209,176,.20); }
+
+.visual-bar-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.visual-bar-head strong {
+  color: var(--text);
+  font-size: 14px;
+}
+
+.visual-bar-head span {
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--gold-soft);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.visual-bar-track {
+  height: 8px;
+  margin: 14px 0 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255,255,255,.07);
+}
+
+.visual-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(197,160,89,.62), rgba(215,185,120,.95));
+  box-shadow: 0 0 18px rgba(197,160,89,.22);
+}
+
+.visual-bar-item.danger .visual-bar-fill {
+  background: linear-gradient(90deg, rgba(226,165,165,.58), rgba(226,165,165,.92));
+}
+
+.visual-bar-item.green .visual-bar-fill {
+  background: linear-gradient(90deg, rgba(183,209,176,.48), rgba(183,209,176,.86));
+}
+
+.visual-bar-text {
+  color: #cfc6bd;
+  font-size: 13px;
+  line-height: 1.48;
+}
+
+.cycle-diagram {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
+  gap: 10px;
+  align-items: center;
+  margin-top: 16px;
+}
+
+.cycle-step {
+  min-height: 82px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,.07);
+  background: rgba(0,0,0,.18);
+}
+
+.cycle-step span {
+  display: block;
+  color: var(--gold);
+  font-size: 10px;
+  letter-spacing: .22em;
+  margin-bottom: 8px;
+}
+
+.cycle-step strong {
+  display: block;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.28;
+}
+
+.cycle-arrow {
+  color: var(--gold-soft);
+  opacity: .8;
+  font-size: 18px;
+}
+
+.preview-cycle-wrap {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+
+@media (max-width: 1120px) {
+  .not-this-strip {
+    grid-template-columns: 1fr;
+  }
+  .not-this-grid,
+  .visual-bars {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .not-this-section {
+    margin-top: 18px;
+  }
+  .not-this-strip {
+    padding: 18px;
+    gap: 16px;
+  }
+  .not-this-grid,
+  .visual-bars {
+    grid-template-columns: 1fr;
+  }
+  .not-this-item {
+    min-height: auto;
+  }
+  .visual-insight-panel,
+  .cycle-panel,
+  .preview-visual-panel {
+    padding: 16px;
+    border-radius: 20px;
+  }
+  .visual-bar-item {
+    min-height: auto;
+  }
+  .cycle-diagram {
+    grid-template-columns: 1fr;
+  }
+  .cycle-arrow {
+    transform: rotate(90deg);
+    text-align: center;
+    line-height: 1;
+  }
+}
