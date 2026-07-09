@@ -1227,6 +1227,20 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isPublicContentRoute) return;
+
+    const scrollToTop = () => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    };
+
+    const raf = window.requestAnimationFrame(scrollToTop);
+    return () => window.cancelAnimationFrame(raf);
+  }, [stage, questionIndex, clarificationIndex, isPublicContentRoute]);
+
+  useEffect(() => {
     const articleTitle = routeArticle?.seoTitle || (routeArticle ? `${routeArticle.title} | CzyToMaSens` : "");
     const articleDescription = routeArticle?.seoDescription || routeArticle?.lead || "";
     const legalTitle = routeLegalKey ? `${LEGAL_CONTENT[routeLegalKey].title} | CzyToMaSens` : "";
