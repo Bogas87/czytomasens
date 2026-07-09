@@ -442,13 +442,64 @@ function VisualBars({ items }: { items: VisualBar[] }) {
   );
 }
 
+function cycleStepDescription(step: string): string {
+  const normalized = step.toLowerCase();
+  const descriptions: Record<string, string> = {
+    "kontakt": "jest punkt zaczepienia",
+    "napięcie do udźwignięcia": "problem nie musi dominować",
+    "rozmowa": "jest przestrzeń na nazwanie sprawy",
+    "równowaga": "możliwy powrót do spokoju",
+    "różnica": "nie wszystko musi oznaczać kryzys",
+    "naprawa": "ważne jest konkretne zachowanie",
+    "powrót równowagi": "relacja może się regulować",
+    "trudność": "coś wymaga nazwania",
+    "nazwanie": "problem robi się czytelniejszy",
+    "współpraca": "liczy się udział obu stron",
+    "kierunek": "widać następny krok",
+    "działa": "są elementy, które trzymają układ",
+    "obciąża": "jest koszt, którego nie warto pomijać",
+    "wymaga sprawdzenia": "bez doprecyzowania łatwo o zły wniosek",
+    "wniosek": "dopiero całość pokaże obraz",
+    "bliskość": "jest coś, co nadal przyciąga",
+    "ciężar": "jednocześnie pojawia się obciążenie",
+    "próba naprawy": "jest ruch w stronę poprawy",
+    "niepewność": "nie wszystko daje stabilny grunt",
+    "pęknięcie": "coś naruszyło zaufanie",
+    "kontrola": "pojawia się potrzeba sprawdzania",
+    "chwilowa ulga": "napięcie spada tylko na moment",
+    "powrót nieufności": "stary lęk wraca do układu",
+    "napięcie": "koszt emocjonalny rośnie",
+    "konflikt": "spór zastępuje rozmowę",
+    "cisza": "brak naprawy utrwala dystans",
+    "powrót wzorca": "problem wraca w podobnej formie",
+    "nadzieja": "pojawia się oczekiwanie zmiany",
+    "niejasność": "brakuje stabilnej odpowiedzi",
+    "czekanie": "decyzja zostaje odłożona",
+    "oddalenie": "kontakt słabnie",
+    "tęsknota": "brak zaczyna działać jak magnes",
+    "powrót": "relacja znów się zbliża",
+    "ten sam problem": "wraca nierozwiązany mechanizm",
+    "staranie": "jedna strona mocno inwestuje",
+    "brak odpowiedzi": "druga strona nie daje podobnego ruchu",
+    "dopasowanie": "pojawia się schodzenie z własnych potrzeb",
+    "zmęczenie": "koszt zaczyna być widoczny",
+    "sygnał": "pierwszy wzorzec jest już widoczny",
+    "doprecyzowanie": "trzeba jeszcze dodać konkret",
+  };
+  return descriptions[normalized] || "ten element dopowie dalsza część analizy";
+}
+
 function CycleDiagram({ steps }: { steps: string[] }) {
   return (
-    <div className="cycle-diagram" aria-label="Dominujący cykl relacji">
+    <div className="cycle-diagram" aria-label="Możliwy układ relacji">
       {steps.map((step, index) => (
         <React.Fragment key={`${step}-${index}`}>
-          <div className="cycle-step"><span>{String(index + 1).padStart(2, "0")}</span><strong>{step}</strong></div>
-          {index < steps.length - 1 && <div className="cycle-arrow">→</div>}
+          <div className="cycle-step">
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <strong>{step}</strong>
+            <em>{cycleStepDescription(step)}</em>
+          </div>
+          {index < steps.length - 1 && <div className="cycle-arrow">↓</div>}
         </React.Fragment>
       ))}
     </div>
@@ -588,11 +639,11 @@ function PauseInsightPanel({ insight, onBack, onNext, nextLabel = "Dalej →" }:
         {insight.quote && <div className="pause-quote">„{insight.quote}”</div>}
         <div className="pause-grid">
           <div className="pause-visual-card">
-            <div className="eyebrow">ODCZYT NA TERAZ</div>
+            <div className="eyebrow">SYGNAŁY Z ODPOWIEDZI</div>
             <VisualBars items={insight.bars} />
           </div>
           <div className="pause-visual-card">
-            <div className="eyebrow">MOŻLIWY UKŁAD</div>
+            <div className="eyebrow">CO ZACZYNA SIĘ UKŁADAĆ</div>
             <CycleDiagram steps={insight.cycle || []} />
             {insight.chips && insight.chips.length > 0 && (
               <div className="pause-chip-row">
@@ -601,7 +652,7 @@ function PauseInsightPanel({ insight, onBack, onNext, nextLabel = "Dalej →" }:
             )}
           </div>
         </div>
-        <div className="map-step-note strong-note">To tylko pauza porządkująca, nie wynik. Jeśli odpowiedzi są wspierające, diagram też będzie wspierający. Jeśli są trudne, pokaże trudny wzorzec.</div>
+        <div className="pause-footnote">To jest chwilowy odczyt po tym etapie. Pełny obraz powstanie dopiero po doprecyzowaniu.</div>
         <div className="section-actions">
           <GhostButton onClick={onBack}>Wróć</GhostButton>
           <PrimaryButton onClick={onNext}>{nextLabel}</PrimaryButton>
@@ -1804,7 +1855,7 @@ export default function App() {
               insight={buildPauseInsight("questions", path, answers, forceMap, burdens, truthCards)}
               onBack={goBack}
               onNext={() => setStage("checkpoint")}
-              nextLabel="Przejdź do pytania granicznego →"
+              nextLabel="Dalej →"
             />
           )}
 
@@ -1877,7 +1928,7 @@ export default function App() {
               insight={buildPauseInsight("force", path, answers, forceMap, burdens, truthCards)}
               onBack={goBack}
               onNext={() => setStage("burdens")}
-              nextLabel="Dalej do ciężarów relacji →"
+              nextLabel="Dalej →"
             />
           )}
 
@@ -1928,7 +1979,7 @@ export default function App() {
               insight={buildPauseInsight("burdens", path, answers, forceMap, burdens, truthCards)}
               onBack={goBack}
               onNext={() => setStage("truth_cards")}
-              nextLabel="Dalej do momentu prawdy →"
+              nextLabel="Dalej →"
             />
           )}
 
@@ -1979,7 +2030,7 @@ export default function App() {
               insight={buildPauseInsight("truth", path, answers, forceMap, burdens, truthCards)}
               onBack={goBack}
               onNext={() => setStage("short_note")}
-              nextLabel="Dalej do krótkiej notatki →"
+              nextLabel="Dalej →"
             />
           )}
 
