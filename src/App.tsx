@@ -34,6 +34,10 @@ type Stage =
   | "entry"
   | "questions"
   | "checkpoint"
+  | "force_map"
+  | "burdens"
+  | "truth_cards"
+  | "short_note"
   | "interview"
   | "open_text"
   | "preview"
@@ -46,6 +50,16 @@ type EntryKey = "unease" | "betrayal" | "uncertain" | "asymmetry" | "conflict" |
 type Option = { id: string; label: string; score: number };
 type Question = { id: string; lead: string; text: string; options: Option[] };
 type AnswerMap = Record<string, string>;
+type ForceMapKey = "contactInitiative" | "repairAfterConflict" | "emotionalLabor" | "avoidance" | "fearOfLoss";
+type ForceValue = "definitely_me" | "mostly_me" | "balanced" | "mostly_other" | "definitely_other";
+type ForceMap = Partial<Record<ForceMapKey, ForceValue>>;
+type BurdenItem = { label: string; rank: number };
+type RelationshipMapPayload = {
+  forceMap: ForceMap;
+  burdens: BurdenItem[];
+  truthCards: string[];
+  userNote: string;
+};
 type LegalKey = "regulamin" | "prywatnosc" | "rodo" | "kontakt" | null;
 
 type EntryConfig = {
@@ -268,6 +282,59 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     openPrompt: "Co konkretnie trzyma Cię w tym cyklu i dlaczego mimo wszystkiego co wiesz, wracasz?",
   },
  ];
+
+const FORCE_MAP_ITEMS: { key: ForceMapKey; title: string; hint: string }[] = [
+  { key: "contactInitiative", title: "Kto częściej inicjuje kontakt?", hint: "Nie chodzi o jedną wiadomość, tylko o rytm relacji." },
+  { key: "repairAfterConflict", title: "Kto częściej naprawia po konflikcie?", hint: "Kto wraca do rozmowy, łagodzi napięcie albo próbuje domknąć temat." },
+  { key: "emotionalLabor", title: "Kto niesie większy ciężar emocjonalny?", hint: "Kto więcej analizuje, tłumaczy, czeka, pilnuje atmosfery." },
+  { key: "avoidance", title: "Kto częściej unika trudnych rozmów?", hint: "Wskaż stronę, która częściej odsuwa temat albo znika w ciszę." },
+  { key: "fearOfLoss", title: "Kto bardziej boi się utraty tej relacji?", hint: "Nie kto bardziej kocha, tylko kto bardziej boi się konsekwencji końca." },
+];
+
+const FORCE_OPTIONS: { value: ForceValue; label: string }[] = [
+  { value: "definitely_me", label: "Zdecydowanie ja" },
+  { value: "mostly_me", label: "Raczej ja" },
+  { value: "balanced", label: "Po równo" },
+  { value: "mostly_other", label: "Raczej druga osoba" },
+  { value: "definitely_other", label: "Zdecydowanie druga osoba" },
+];
+
+const BURDEN_OPTIONS = [
+  "brak jasności",
+  "kłótnie",
+  "cisza",
+  "nierówne starania",
+  "rutyna / wypalenie",
+  "zdrada / kłamstwo",
+  "ktoś trzeci",
+  "brak bliskości",
+  "powroty i rozstania",
+  "lęk przed samotnością",
+  "kontrola / zazdrość",
+  "finanse / codzienność",
+  "rodzina / presja z zewnątrz",
+  "seks / intymność",
+];
+
+const TRUTH_CARD_OPTIONS = [
+  "Gdybym przestał/przestała się starać, ta relacja by zgasła.",
+  "Po każdej poprawie wracamy w to samo miejsce.",
+  "Bardziej boję się końca niż wierzę w zmianę.",
+  "Najlepsze momenty zasłaniają mi to, co dzieje się najczęściej.",
+  "Ta relacja daje mi emocje, ale nie daje mi oparcia.",
+  "Nie wiem, czy chcę tej osoby, czy chcę żeby ta historia miała sens.",
+  "Czekam na jasność od kogoś, kto od dawna korzysta z mojego czekania.",
+  "Mam więcej nadziei niż faktów, które tę nadzieję potwierdzają.",
+];
+
+function forceLabel(value?: ForceValue): string {
+  return FORCE_OPTIONS.find((item) => item.value === value)?.label || "Nie zaznaczono";
+}
+
+function mapCompletion(forceMap: ForceMap, burdens: BurdenItem[], truthCards: string[]): number {
+  const forceDone = FORCE_MAP_ITEMS.filter((item) => Boolean(forceMap[item.key])).length;
+  return Math.round(((forceDone / FORCE_MAP_ITEMS.length) * 0.45 + (Math.min(burdens.length, 3) / 3) * 0.3 + (Math.min(truthCards.length, 2) / 2) * 0.25) * 100);
+}
 
 const LOCAL_INTERVIEW_QUESTIONS: Record<EntryKey, LocalInterviewQuestion[]> = {
   unease: [
@@ -506,10 +573,10 @@ async function fetchSignedReport(accessToken: string, accessExp: string, accessS
   throw new Error(`${lastMessage} Spróbuj odświeżyć link za chwilę.`);
 }
 
-async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: AnswerMap, openText: string): Promise<Preview> {
+async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: AnswerMap, openText: string, relationshipMap?: RelationshipMapPayload): Promise<Preview> {
   const answersArr = Object.entries(answers).map(([qid, oid]) => { const q = path.questions.find((x) => x.id === qid); const opt = q?.options.find((o) => o.id === oid); return { q: q?.text || qid, a: opt?.label || oid }; });
   try {
-    const res = await fetch(`${API_BASE}/api/analyze`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, path: path.key, mode: "soft", answers: answersArr, openText, customDescription: openText }) });
+    const res = await fetch(`${API_BASE}/api/analyze`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, path: path.key, mode: "soft", answers: answersArr, openText, customDescription: openText, relationshipMap }) });
     const data = await res.json().catch(() => ({}));
     if (data?.crisis) throw new Error("__CRISIS__");
     if (data?.ok && data?.preview) {
@@ -750,6 +817,10 @@ export default function App() {
   const [interviewState, setInterviewState] = useState<InterviewState | null>(null);
   const [interviewAnswer, setInterviewAnswer] = useState("");
   const [interviewBusy, setInterviewBusy] = useState(false);
+  const [forceMap, setForceMap] = useState<ForceMap>({});
+  const [burdens, setBurdens] = useState<BurdenItem[]>([]);
+  const [truthCards, setTruthCards] = useState<string[]>([]);
+  const [relationshipNote, setRelationshipNote] = useState("");
   const [routePath, setRoutePath] = useState(() => normalizePath(typeof window !== "undefined" ? window.location.pathname : "/"));
 
   const articleSlugFromRoute = routePath.startsWith("/artykuly/") ? decodeURIComponent(routePath.replace("/artykuly/", "")) : null;
@@ -844,6 +915,10 @@ export default function App() {
           setSessionToken(parsed.sessionToken || null);
           setConsents(parsed.consents || [false, false, false, false]);
           setInterviewState(parsed.interviewState || null);
+          setForceMap(parsed.forceMap || {});
+          setBurdens(parsed.burdens || []);
+          setTruthCards(parsed.truthCards || []);
+          setRelationshipNote(parsed.relationshipNote || "");
         }
       } catch {}
     }
@@ -918,8 +993,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState }));
-  }, [stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, forceMap, burdens, truthCards, relationshipNote }));
+  }, [stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, forceMap, burdens, truthCards, relationshipNote]);
 
   const ensureSession = async (entryKey: EntryKey): Promise<string> => {
     if (sessionToken) return sessionToken;
@@ -931,7 +1006,7 @@ export default function App() {
 
   const resetAll = () => {
     localStorage.removeItem(STORAGE_KEY);
-    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setConsents([false, false, false, false]); setLegalOpen(null); setInterviewState(null); setInterviewAnswer("");
+    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setConsents([false, false, false, false]); setLegalOpen(null); setInterviewState(null); setInterviewAnswer(""); setForceMap({}); setBurdens([]); setTruthCards([]); setRelationshipNote("");
     window.history.replaceState({}, "", "/");
     setRoutePath("/");
   };
@@ -942,7 +1017,7 @@ export default function App() {
       const data = await createSession(key);
       const token = data?.token || data?.sessionId || null;
       if (!token) throw new Error("Brak tokenu sesji.");
-      setSessionToken(token); setSelectedPath(key); setQuestionIndex(0); setAnswers({}); setOpenText(""); setPreview(null); setFullReport(null); setInterviewState(null);
+      setSessionToken(token); setSelectedPath(key); setQuestionIndex(0); setAnswers({}); setOpenText(""); setPreview(null); setFullReport(null); setInterviewState(null); setForceMap({}); setBurdens([]); setTruthCards([]); setRelationshipNote("");
       setStage("questions");
     } catch (e: any) { setError(friendlyError(e, "Nie udało się rozpocząć analizy.")); setStage("error"); }
     finally { setBusy(false); }
@@ -960,21 +1035,51 @@ export default function App() {
     if (!path) return;
     const newAnswers = { ...answers, [`${path.key}_checkpoint`]: optionId };
     setAnswers(newAnswers);
-    if (sessionToken) {
-      setBusy(true);
-      try {
-        const res = await fetch(`${API_BASE}/api/interview/start`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: sessionToken, path: path.key, initialContext: "" }) });
-        const d = await res.json().catch(() => ({}));
-        if (d.ok && d.question) {
-          setInterviewState({ path: path.key, currentQuestion: d.question, currentLead: d.lead || "", currentObservation: d.observation || "", history: [], depth: 1, finished: false, exchangeIndex: 0, source: "api" });
-          setInterviewAnswer(""); setStage("interview"); setBusy(false); return;
-        }
-      } catch {}
-      setBusy(false);
-    }
-    setInterviewState(createLocalInterviewState(path));
-    setInterviewAnswer("");
-    setStage("interview");
+    setStage("force_map");
+  };
+
+  const setForceValue = (key: ForceMapKey, value: ForceValue) => {
+    setForceMap((current) => ({ ...current, [key]: value }));
+  };
+
+  const toggleBurden = (label: string) => {
+    setBurdens((current) => {
+      const exists = current.find((item) => item.label === label);
+      if (exists) {
+        return current.filter((item) => item.label !== label).map((item, index) => ({ ...item, rank: index + 1 }));
+      }
+      if (current.length >= 3) return current;
+      return [...current, { label, rank: current.length + 1 }];
+    });
+  };
+
+  const toggleTruthCard = (text: string) => {
+    setTruthCards((current) => {
+      if (current.includes(text)) return current.filter((item) => item !== text);
+      if (current.length >= 2) return current;
+      return [...current, text];
+    });
+  };
+
+  const relationshipMapPayload = (): RelationshipMapPayload => ({
+    forceMap,
+    burdens,
+    truthCards,
+    userNote: relationshipNote.trim(),
+  });
+
+  const buildCompositeOpenText = (): string => {
+    const forceLines = FORCE_MAP_ITEMS
+      .map((item) => `- ${item.title}: ${forceLabel(forceMap[item.key])}`)
+      .join("\n");
+    const burdenLines = burdens.length
+      ? burdens.map((item) => `${item.rank}. ${item.label}`).join("\n")
+      : "Brak wskazanych ciężarów.";
+    const truthLines = truthCards.length
+      ? truthCards.map((item) => `- ${item}`).join("\n")
+      : "Brak wybranych zdań prawdy.";
+    const note = relationshipNote.trim() || "Brak dodatkowej notatki.";
+    return `MAPA RELACJI — dane kliknięte przez użytkownika\n\nUKŁAD SIŁ\n${forceLines}\n\nNAJWIĘKSZE CIĘŻARY\n${burdenLines}\n\nMOMENT PRAWDY\n${truthLines}\n\nDODATKOWA MYŚL UŻYTKOWNIKA\n${note}`;
   };
 
   const sendInterviewAnswer = async () => {
@@ -1043,24 +1148,31 @@ export default function App() {
     setError(null);
     if (stage === "questions") { if (questionIndex === 0) { setStage("entry"); return; } setQuestionIndex((v) => Math.max(0, v - 1)); return; }
     if (stage === "checkpoint") { setStage("questions"); return; }
+    if (stage === "force_map") { setStage("checkpoint"); return; }
+    if (stage === "burdens") { setStage("force_map"); return; }
+    if (stage === "truth_cards") { setStage("burdens"); return; }
+    if (stage === "short_note") { setStage("truth_cards"); return; }
     if (stage === "interview") { setStage("checkpoint"); return; }
-    if (stage === "open_text") { if (interviewState && interviewState.history.length > 0) { setStage("interview"); return; } setStage("checkpoint"); return; }
-    if (stage === "preview") { setStage("open_text"); return; }
+    if (stage === "open_text") { if (interviewState && interviewState.history.length > 0) { setStage("interview"); return; } setStage("truth_cards"); return; }
+    if (stage === "preview") { setStage("short_note"); return; }
     if (stage === "consent") { setStage("landing"); return; }
     if (stage === "entry") setStage("consent");
   };
 
   const buildPreviewAndGo = async () => {
     if (!path) return;
-    if (hasCrisisContent(openText)) { setStage("crisis"); return; }
+    const relationshipMap = relationshipMapPayload();
+    const finalOpenText = buildCompositeOpenText();
+    if (hasCrisisContent(finalOpenText)) { setStage("crisis"); return; }
+    setOpenText(finalOpenText);
     setBusy(true); setError(null);
     try {
       const token = await ensureSession(path.key);
       let previewData: Preview;
-      try { previewData = await fetchPreviewFromAPI(token, path, answers, openText); }
-      catch (e: any) { if (e?.message === "__CRISIS__") { setStage("crisis"); setBusy(false); return; } previewData = buildPreview(path, answers, openText); }
+      try { previewData = await fetchPreviewFromAPI(token, path, answers, finalOpenText, relationshipMap); }
+      catch (e: any) { if (e?.message === "__CRISIS__") { setStage("crisis"); setBusy(false); return; } previewData = buildPreview(path, answers, finalOpenText); }
       setPreview(previewData);
-      await updateSession({ token, path: path.key, answers, openText, preview: previewData, stage: "preview" });
+      await updateSession({ token, path: path.key, answers, openText: finalOpenText, relationshipMap, preview: previewData, stage: "preview" });
       setStage("preview");
     } catch (e: any) { setError(friendlyError(e, "Nie udało się przygotować pierwszego obrazu sytuacji.")); setStage("error"); }
     finally { setBusy(false); }
@@ -1072,7 +1184,7 @@ export default function App() {
     setBusy(true); setError(null);
     try {
       const token = await ensureSession(selectedPath);
-      await updateSession({ token, path: selectedPath, answers, openText, preview, email, consentAcceptedAt: new Date().toISOString(), stage: "checkout_started" });
+      await updateSession({ token, path: selectedPath, answers, openText, relationshipMap: relationshipMapPayload(), preview, email, consentAcceptedAt: new Date().toISOString(), stage: "checkout_started" });
       const checkout = await createCheckout(token, email, new Date().toISOString());
       window.location.href = checkout.url;
     } catch (e: any) { setError(friendlyError(e, "Nie udało się rozpocząć płatności.")); setBusy(false); }
@@ -1301,6 +1413,180 @@ export default function App() {
                   ))}
                 </div>
                 <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton></div>
+              </Glass>
+            </motion.div>
+          )}
+
+
+          {stage === "force_map" && path && (
+            <motion.div key={`${path.key}-force-map`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="section-head compact">
+                <div>
+                  <div className="eyebrow">MAPA RELACJI · KROK 1 Z 4</div>
+                  <h2>Układ sił</h2>
+                  <p>Nie przesuwasz suwaków. Po prostu zaznaczasz, po której stronie częściej leży ciężar danego elementu.</p>
+                </div>
+                <div className="progress-wrap">
+                  <span>{mapCompletion(forceMap, burdens, truthCards)}%</span>
+                  <div className="progress-track"><div className="progress-fill" style={{ width: `${mapCompletion(forceMap, burdens, truthCards)}%` }} /></div>
+                </div>
+              </div>
+              <Glass className="question-panel relationship-map-panel">
+                <div className="map-step-note">
+                  To jest część, która pozwala zobaczyć asymetrię bez pisania długiej historii. Wybierz najbliższą odpowiedź, nie idealną.
+                </div>
+                <div className="force-map-list">
+                  {FORCE_MAP_ITEMS.map((item) => (
+                    <div key={item.key} className="force-map-item">
+                      <div className="force-map-copy">
+                        <strong>{item.title}</strong>
+                        <span>{item.hint}</span>
+                      </div>
+                      <div className="force-options" role="group" aria-label={item.title}>
+                        {FORCE_OPTIONS.map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            className={`force-option ${forceMap[item.key] === opt.value ? "selected" : ""}`}
+                            onClick={() => setForceValue(item.key, opt.value)}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="section-actions">
+                  <GhostButton onClick={goBack}>Wróć</GhostButton>
+                  <PrimaryButton onClick={() => setStage("burdens")} disabled={FORCE_MAP_ITEMS.some((item) => !forceMap[item.key])}>Dalej →</PrimaryButton>
+                </div>
+              </Glass>
+            </motion.div>
+          )}
+
+          {stage === "burdens" && path && (
+            <motion.div key={`${path.key}-burdens`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="section-head compact">
+                <div>
+                  <div className="eyebrow">MAPA RELACJI · KROK 2 Z 4</div>
+                  <h2>Co najbardziej ciąży?</h2>
+                  <p>Wybierz maksymalnie trzy rzeczy. Kolejność kliknięcia oznacza wagę: 1 to największy ciężar.</p>
+                </div>
+                <div className="progress-wrap">
+                  <span>{burdens.length}/3</span>
+                  <div className="progress-track"><div className="progress-fill" style={{ width: `${(burdens.length / 3) * 100}%` }} /></div>
+                </div>
+              </div>
+              <Glass className="question-panel relationship-map-panel">
+                <div className="burden-grid">
+                  {BURDEN_OPTIONS.map((label) => {
+                    const selected = burdens.find((item) => item.label === label);
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        className={`burden-chip ${selected ? "selected" : ""}`}
+                        onClick={() => toggleBurden(label)}
+                      >
+                        {selected && <span className="burden-rank">{selected.rank}</span>}
+                        <span>{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="map-step-note">
+                  Bez przeciągania i bez precyzyjnego celowania. Klikasz tylko to, co faktycznie najbardziej ustawia tę relację.
+                </div>
+                <div className="section-actions">
+                  <GhostButton onClick={goBack}>Wróć</GhostButton>
+                  <PrimaryButton onClick={() => setStage("truth_cards")} disabled={burdens.length < 1}>Dalej →</PrimaryButton>
+                </div>
+              </Glass>
+            </motion.div>
+          )}
+
+          {stage === "truth_cards" && path && (
+            <motion.div key={`${path.key}-truth-cards`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="section-head compact">
+                <div>
+                  <div className="eyebrow">MAPA RELACJI · KROK 3 Z 4</div>
+                  <h2>Moment prawdy</h2>
+                  <p>Zaznacz jedno albo dwa zdania, które najbardziej trafiają w to, czego nie chcesz już obchodzić dookoła.</p>
+                </div>
+                <div className="progress-wrap">
+                  <span>{truthCards.length}/2</span>
+                  <div className="progress-track"><div className="progress-fill" style={{ width: `${(truthCards.length / 2) * 100}%` }} /></div>
+                </div>
+              </div>
+              <Glass className="question-panel relationship-map-panel">
+                <div className="truth-card-grid">
+                  {TRUTH_CARD_OPTIONS.map((text) => {
+                    const selected = truthCards.includes(text);
+                    return (
+                      <button
+                        key={text}
+                        type="button"
+                        className={`truth-card-choice ${selected ? "selected" : ""}`}
+                        onClick={() => toggleTruthCard(text)}
+                      >
+                        <span className="truth-check">{selected ? "✓" : ""}</span>
+                        <span>{text}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="map-step-note">
+                  To nie jest test. Chodzi o rozpoznanie zdania, które robi największe „klik” w Twojej sytuacji.
+                </div>
+                <div className="section-actions">
+                  <GhostButton onClick={goBack}>Wróć</GhostButton>
+                  <PrimaryButton onClick={() => setStage("short_note")} disabled={truthCards.length < 1}>Dalej →</PrimaryButton>
+                </div>
+              </Glass>
+            </motion.div>
+          )}
+
+          {stage === "short_note" && path && (
+            <motion.div key={`${path.key}-short-note`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="section-head compact">
+                <div>
+                  <div className="eyebrow">MAPA RELACJI · KROK 4 Z 4</div>
+                  <h2>Jedno zdanie od Ciebie</h2>
+                  <p>Nie pisz wypracowania. Dopisz tylko to, czego nie dało się kliknąć.</p>
+                </div>
+                <div className="progress-wrap">
+                  <span>Ostatni krok</span>
+                  <div className="progress-track"><div className="progress-fill" style={{ width: "100%" }} /></div>
+                </div>
+              </div>
+              <Glass className="question-panel relationship-map-panel">
+                <div className="map-summary-box">
+                  <div>
+                    <span>Układ sił</span>
+                    <strong>{FORCE_MAP_ITEMS.filter((item) => forceMap[item.key]).length}/{FORCE_MAP_ITEMS.length}</strong>
+                  </div>
+                  <div>
+                    <span>Ciężary</span>
+                    <strong>{burdens.map((item) => `${item.rank}. ${item.label}`).join(" · ") || "brak"}</strong>
+                  </div>
+                  <div>
+                    <span>Moment prawdy</span>
+                    <strong>{truthCards.length ? `${truthCards.length} zaznaczone` : "brak"}</strong>
+                  </div>
+                </div>
+                <textarea
+                  className="ctms-textarea ctms-textarea--short"
+                  value={relationshipNote}
+                  onChange={(e) => setRelationshipNote(e.target.value)}
+                  placeholder="Np. Po kłótni ja próbuję wrócić do rozmowy, a druga strona milczy przez kilka dni."
+                  maxLength={500}
+                />
+                <div className="text-meta"><div>Opcjonalnie, ale bardzo pomaga analizie.</div><div>{relationshipNote.length}/500</div></div>
+                <div className="section-actions">
+                  <GhostButton onClick={goBack}>Wróć</GhostButton>
+                  <PrimaryButton onClick={buildPreviewAndGo} disabled={busy}>{busy ? "Analizuję..." : "Pokaż pierwszy obraz sytuacji"}</PrimaryButton>
+                </div>
               </Glass>
             </motion.div>
           )}

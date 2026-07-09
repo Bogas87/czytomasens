@@ -2580,3 +2580,252 @@ button { cursor: pointer; }
     min-height: unset;
   }
 }
+
+
+/* --- Mapa Relacji: hybrydowy etap analizy, mobile-first --- */
+.relationship-map-panel {
+  overflow: hidden;
+}
+
+.map-step-note {
+  margin: 0 0 22px;
+  padding: 14px 16px;
+  border: 1px solid rgba(197,160,89,.22);
+  border-radius: 18px;
+  background: rgba(197,160,89,.055);
+  color: #d7cec4;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.force-map-list {
+  display: grid;
+  gap: 18px;
+}
+
+.force-map-item {
+  padding: 18px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 22px;
+  background: rgba(255,255,255,.025);
+}
+
+.force-map-copy {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.force-map-copy strong {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 21px;
+  line-height: 1.18;
+  color: var(--text);
+}
+
+.force-map-copy span {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.force-options {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.force-option,
+.burden-chip,
+.truth-card-choice {
+  appearance: none;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.025);
+  color: var(--text);
+  border-radius: 18px;
+  transition: transform .16s ease, border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+
+.force-option {
+  min-height: 54px;
+  padding: 10px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.force-option:hover,
+.burden-chip:hover,
+.truth-card-choice:hover {
+  transform: translateY(-1px);
+  border-color: rgba(197,160,89,.42);
+  background: rgba(255,255,255,.045);
+}
+
+.force-option.selected,
+.burden-chip.selected,
+.truth-card-choice.selected {
+  border-color: rgba(197,160,89,.82);
+  background:
+    radial-gradient(circle at top left, rgba(197,160,89,.20), transparent 38%),
+    rgba(197,160,89,.07);
+  box-shadow: 0 16px 40px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+.burden-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.burden-chip {
+  position: relative;
+  min-height: 62px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.burden-rank {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #e0bf75 0%, #c5a059 100%);
+  color: #15120c;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.truth-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.truth-card-choice {
+  min-height: 112px;
+  padding: 18px;
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 12px;
+  align-items: start;
+  text-align: left;
+  font-size: 16px;
+  font-weight: 750;
+  line-height: 1.42;
+}
+
+.truth-check {
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(197,160,89,.45);
+  color: #15120c;
+  background: rgba(197,160,89,.08);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.truth-card-choice.selected .truth-check {
+  background: linear-gradient(180deg, #e0bf75 0%, #c5a059 100%);
+  border-color: rgba(197,160,89,.9);
+}
+
+.map-summary-box {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.map-summary-box > div {
+  padding: 14px 16px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 18px;
+  background: rgba(255,255,255,.025);
+}
+
+.map-summary-box span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: .24em;
+  text-transform: uppercase;
+}
+
+.map-summary-box strong {
+  display: block;
+  color: #eee6dc;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.ctms-textarea--short {
+  min-height: 140px;
+}
+
+@media (max-width: 860px) {
+  .force-options {
+    grid-template-columns: 1fr;
+  }
+
+  .force-option {
+    min-height: 58px;
+    text-align: left;
+    justify-content: flex-start;
+    padding: 14px 16px;
+    font-size: 15px;
+  }
+
+  .burden-grid,
+  .truth-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .burden-chip {
+    min-height: 58px;
+    justify-content: flex-start;
+    text-align: left;
+    padding: 14px 16px;
+  }
+
+  .truth-card-choice {
+    min-height: auto;
+    padding: 16px;
+    font-size: 15px;
+  }
+
+  .relationship-map-panel .section-actions {
+    position: sticky;
+    bottom: 0;
+    z-index: 4;
+    padding-top: 14px;
+    background: linear-gradient(180deg, rgba(10,10,11,0), rgba(10,10,11,.96) 34%);
+  }
+}
+
+@media (max-width: 560px) {
+  .force-map-item {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .force-map-copy strong {
+    font-size: 19px;
+  }
+
+  .map-step-note {
+    font-size: 13px;
+  }
+}
