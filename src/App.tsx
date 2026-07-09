@@ -1209,7 +1209,7 @@ export default function App() {
               <Glass className="question-panel crisis-panel">
                 <div className="eyebrow danger">ZATRZYMAJ SIĘ</div>
                 <h2>To nie jest właściwe narzędzie dla sytuacji zagrożenia.</h2>
-                <p className="consent-copy">Jeśli jest ryzyko przemocy, zagrożenia życia albo skrzywdzenia siebie, przerwij analizę i skorzystaj z natychmiastowej pomocy.</p>
+                <p className="consent-copy">Jeśli jest ryzyko przemocy, zagrożenia życia albo skrzywdzenia siebie, przerwij analizę i skorzystaj z natychmiastowej pomocy. Nie analizuj relacji, kiedy jesteś w bezpośrednim zagrożeniu. Najpierw bezpieczeństwo, potem interpretacja.</p>
                 <div className="crisis-grid">
                   <Glass className="crisis-box"><strong>112</strong>. Numer alarmowy</Glass>
                   <Glass className="crisis-box"><strong>116 123</strong>. Telefon zaufania dla dorosłych</Glass>
@@ -1230,6 +1230,9 @@ export default function App() {
                   <div className="preview-mirror-top">{preview.mirror}</div>
                 </div>
                 <PremiumBadge preview={preview} />
+                <div className="preview-disclaimer">
+                  To nie jest diagnoza ani decyzja za Ciebie. To pierwszy obraz wzorca wynikający z Twoich odpowiedzi: napięcia, asymetrii i realności zmiany.
+                </div>
                 <div className="metrics-grid">
                   {([[preview.tension, "NAPIĘCIE"], [preview.asymmetry, "ASYMETRIA"], [preview.change, "SZANSA ZMIANY"]] as [number, string][]).map(([value, label]) => (
                     <Glass key={label} className="metric-card"><div className="metric-value">{value}%</div><div className="metric-label">{label}</div></Glass>
@@ -1242,7 +1245,20 @@ export default function App() {
                 </div>
                 <Glass className="unlock-panel">
                   <div className="eyebrow">TO TYLKO FRAGMENT</div>
-                  <p className="unlock-copy">Pełny raport to 17 sekcji generowanych wyłącznie na podstawie Twoich odpowiedzi.</p>
+                  <p className="unlock-copy">Pełny raport pokazuje nie tylko wynik, ale cały mechanizm tej historii. Bez diagnozowania, bez oceniania partnera/partnerki i bez gotowej decyzji za Ciebie.</p>
+                  <div className="unlock-benefits">
+                    {[
+                      "co naprawdę trzyma Cię w tej relacji",
+                      "gdzie jest największe napięcie i koszt emocjonalny",
+                      "czy problemem jest kryzys, schemat czy asymetria",
+                      "co daje realną nadzieję, a co tylko ją podtrzymuje",
+                      "jaki wzorzec wraca po rozmowach, obietnicach i chwilach ulgi",
+                      "jedno pytanie graniczne przed decyzją"
+                    ].map((item) => (
+                      <div key={item} className="unlock-benefit"><span>•</span><span>{item}</span></div>
+                    ))}
+                  </div>
+                  <div className="unlock-fineprint">Pełny raport ma 17 sekcji generowanych indywidualnie na podstawie Twoich odpowiedzi. Nie jest opinią specjalisty, diagnozą ani terapią. Jest prywatnym lustrem sytuacji.</div>
                   <div className="unlock-form">
                     <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Twój adres e-mail." />
                     <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Odblokuj pełny raport"}</PrimaryButton>
