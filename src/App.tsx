@@ -34,9 +34,13 @@ type Stage =
   | "entry"
   | "questions"
   | "checkpoint"
+  | "question_signal"
   | "force_map"
+  | "force_signal"
   | "burdens"
+  | "burden_signal"
   | "truth_cards"
+  | "truth_signal"
   | "short_note"
   | "map_summary"
   | "clarification"
@@ -448,6 +452,162 @@ function CycleDiagram({ steps }: { steps: string[] }) {
         </React.Fragment>
       ))}
     </div>
+  );
+}
+
+
+type InsightMode = "supportive" | "mixed" | "difficult";
+type PauseVariant = "questions" | "force" | "burdens" | "truth";
+
+type PauseInsight = {
+  mode: InsightMode;
+  eyebrow: string;
+  title: string;
+  text: string;
+  bars: VisualBar[];
+  chips?: string[];
+  cycle?: string[];
+  quote?: string;
+};
+
+function averageQuestionScore(path: EntryConfig | null, answers: AnswerMap): number {
+  if (!path) return 1.5;
+  const scores = path.questions
+    .map((q) => q.options.find((opt) => opt.id === answers[q.id])?.score)
+    .filter((v): v is number => typeof v === "number");
+  const checkpointScore = path.checkpoint.options.find((opt) => opt.id === answers[`${path.key}_checkpoint`])?.score;
+  if (typeof checkpointScore === "number") scores.push(checkpointScore);
+  if (!scores.length) return 1.5;
+  return scores.reduce((a, b) => a + b, 0) / scores.length;
+}
+
+function relationshipMode(path: EntryConfig | null, answers: AnswerMap, forceMap: ForceMap, burdens: BurdenItem[], truthCards: string[]): InsightMode {
+  const avg = averageQuestionScore(path, answers);
+  const meLoad = FORCE_MAP_ITEMS.filter((item) => isMeHeavy(forceMap[item.key])).length;
+  const otherLoad = FORCE_MAP_ITEMS.filter((item) => isOtherHeavy(forceMap[item.key])).length;
+  const imbalance = Math.max(meLoad, otherLoad);
+  const hardBurdenCount = burdens.filter((b) => /zdrada|kłamstwo|cisza|kłótnie|powroty|rozstania|ktoś trzeci|brak jasności|nierówne/i.test(b.label)).length;
+  const hardTruth = truthCards.some((t) => /wracamy|boję się końca|czekam|zgasła|nie daje mi oparcia/i.test(t));
+  if (avg <= 0.95 && imbalance <= 1 && hardBurdenCount <= 1 && !hardTruth) return "supportive";
+  if (avg >= 2.05 || imbalance >= 3 || hardBurdenCount >= 2 || hardTruth) return "difficult";
+  return "mixed";
+}
+
+function modeLabel(mode: InsightMode): string {
+  if (mode === "supportive") return "obraz wspierający";
+  if (mode === "difficult") return "obraz wymagający uważności";
+  return "obraz niejednoznaczny";
+}
+
+function buildAdaptiveBars(mode: InsightMode, variant: PauseVariant, path: EntryConfig | null, answers: AnswerMap, forceMap: ForceMap, burdens: BurdenItem[], truthCards: string[]): VisualBar[] {
+  const avg = averageQuestionScore(path, answers);
+  const questionRisk = clampScore(18 + avg * 25);
+  const questionStrength = clampScore(88 - avg * 21);
+  const forceBars = buildMapVisualBars(forceMap, burdens, truthCards);
+  if (variant === "questions") {
+    if (mode === "supportive") return [
+      { label: "Spokój", value: questionStrength, tone: "green", text: "odpowiedzi częściej pokazują oparcie niż chaos" },
+      { label: "Napięcie", value: questionRisk, tone: questionRisk > 55 ? "gold" : "green", text: "trudność jest widoczna, ale nie musi dominować" },
+      { label: "Kierunek", value: clampScore(questionStrength - 6), tone: "green", text: "widać materiał do rozmowy i porządkowania" },
+    ];
+    if (mode === "difficult") return [
+      { label: "Napięcie", value: questionRisk, tone: "danger", text: "odpowiedzi pokazują wyraźny koszt emocjonalny" },
+      { label: "Niepewność", value: clampScore(questionRisk + 5), tone: "danger", text: "część obrazu opiera się na domysłach albo czekaniu" },
+      { label: "Zmiana", value: clampScore(82 - questionRisk), tone: "gold", text: "potencjał trzeba sprawdzić w faktach, nie w nadziei" },
+    ];
+    return [
+      { label: "Plusy", value: clampScore(questionStrength), tone: "green", text: "w odpowiedziach są elementy, które mogą działać" },
+      { label: "Ciężar", value: clampScore(questionRisk), tone: "gold", text: "jednocześnie pojawia się napięcie wymagające nazwania" },
+      { label: "Jasność", value: clampScore(60 - avg * 8), tone: "gold", text: "obraz nie jest czarno-biały" },
+    ];
+  }
+  if (variant === "force") return forceBars.slice(0, 3);
+  if (variant === "burdens") {
+    const base = burdens.slice(0, 3);
+    if (!base.length) return [{ label: "Ciężar", value: 35, tone: "green", text: "nie wskazano jednego dominującego obciążenia" }];
+    return base.map((b, i) => ({ label: `${b.rank}. ${b.label}`, value: clampScore(92 - i * 18), tone: mode === "supportive" ? "green" : mode === "difficult" ? "danger" : "gold", text: i === 0 ? "to najmocniej ustawia dalszą interpretację" : "to dopowiada kontekst głównego ciężaru" }));
+  }
+  return buildPreviewVisualBars({ chance: 50, tension: forceBars[0]?.value || questionRisk, asymmetry: forceBars[1]?.value || 50, change: forceBars[3]?.value || questionStrength, badge: "", headline: "", truth: "", mirror: "", summary: "", paidTease: "", tone: "yellow" }).slice(0, 3);
+}
+
+function buildAdaptiveCycle(mode: InsightMode, variant: PauseVariant, pathKey?: EntryKey, burdens: BurdenItem[] = [], truthCards: string[] = []): string[] {
+  if (mode === "supportive") {
+    if (variant === "force") return ["różnica", "rozmowa", "naprawa", "powrót równowagi"];
+    if (variant === "burdens") return ["trudność", "nazwanie", "współpraca", "kierunek"];
+    return ["kontakt", "napięcie do udźwignięcia", "rozmowa", "równowaga"];
+  }
+  if (mode === "mixed") {
+    if (variant === "burdens") return ["bliskość", "ciężar", "próba naprawy", "niepewność"];
+    return ["działa", "obciąża", "wymaga sprawdzenia", "wniosek"];
+  }
+  return buildCycleSteps(pathKey, burdens, truthCards);
+}
+
+function buildPauseInsight(variant: PauseVariant, path: EntryConfig | null, answers: AnswerMap, forceMap: ForceMap, burdens: BurdenItem[], truthCards: string[]): PauseInsight {
+  const mode = relationshipMode(path, answers, forceMap, burdens, truthCards);
+  const bars = buildAdaptiveBars(mode, variant, path, answers, forceMap, burdens, truthCards);
+  const cycle = buildAdaptiveCycle(mode, variant, path?.key, burdens, truthCards);
+  const topBurden = burdens[0]?.label;
+  const truth = truthCards[0];
+
+  if (variant === "questions") {
+    if (mode === "supportive") return { mode, eyebrow: "PIERWSZY ODDECH", title: "Na razie widać więcej gruntu niż chaosu", text: "To nie znaczy, że nie ma problemu. Znaczy tylko, że odpowiedzi pokazują też zasoby: kontakt, możliwość rozmowy albo punkt zaczepienia do naprawy.", bars, cycle };
+    if (mode === "difficult") return { mode, eyebrow: "PIERWSZY SYGNAŁ", title: "Tu zaczyna się rysować realny koszt", text: "Odpowiedzi nie wyglądają jak pojedynczy zgrzyt. Bardziej jak napięcie, które już wpływa na spokój, jasność albo sposób podejmowania decyzji.", bars, cycle };
+    return { mode, eyebrow: "PIERWSZY SYGNAŁ", title: "Obraz jest mieszany, więc trzeba uważać z prostą oceną", text: "Są elementy, które mogą działać, ale są też miejsca, które zabierają stabilność. Dlatego dalsze kroki nie zakładają kryzysu, tylko doprecyzowują układ.", bars, cycle };
+  }
+
+  if (variant === "force") {
+    if (mode === "supportive") return { mode, eyebrow: "UKŁAD SIŁ", title: "Ciężar nie wygląda na jednostronny", text: "To dobry sygnał: relacja może mieć napięcia, ale nie musi opierać się na tym, że jedna osoba stale ciągnie wszystko sama.", bars, cycle };
+    if (mode === "difficult") return { mode, eyebrow: "UKŁAD SIŁ", title: "Widać nierówny rozkład odpowiedzialności", text: "Najważniejsze jest teraz sprawdzenie, czy ta nierównowaga jest chwilowa, czy stała. Bo stały układ sił często mówi więcej niż deklaracje.", bars, cycle };
+    return { mode, eyebrow: "UKŁAD SIŁ", title: "Nie wszystko leży po jednej stronie, ale równowaga nie jest pełna", text: "To etap pośredni: część rzeczy może działać, ale któreś obszary wymagają dokładniejszego nazwania.", bars, cycle };
+  }
+
+  if (variant === "burdens") {
+    if (mode === "supportive") return { mode, eyebrow: "CIĘŻARY RELACJI", title: topBurden ? "To wygląda bardziej jak obszar do uporządkowania" : "Nie widać jednego dominującego obciążenia", text: topBurden ? `Najmocniej zaznacza się: ${topBurden}. Przy wspierającym obrazie nie musi to oznaczać pęknięcia, ale pokazuje miejsce, które warto nazwać jasno.` : "Brak silnego ciężaru może oznaczać, że problem jest sytuacyjny albo jeszcze słabo nazwany.", bars, cycle, chips: burdens.map((b) => b.label) };
+    if (mode === "difficult") return { mode, eyebrow: "CIĘŻARY RELACJI", title: topBurden ? `Największy ciężar: ${topBurden}` : "Ciężar zaczyna dominować", text: "Tu nie chodzi o samą nazwę problemu, tylko o to, czy ten ciężar wraca i ustawia Wasze zachowania po raz kolejny.", bars, cycle, chips: burdens.map((b) => b.label) };
+    return { mode, eyebrow: "CIĘŻARY RELACJI", title: topBurden ? `Najmocniej wybija się: ${topBurden}` : "Ciężar nie jest jeszcze jednoznaczny", text: "To nie przesądza wyniku. Pokazuje tylko, gdzie analiza musi uważać, żeby nie pomylić chwilowego napięcia z trwałym wzorcem.", bars, cycle, chips: burdens.map((b) => b.label) };
+  }
+
+  if (mode === "supportive") return { mode, eyebrow: "MOMENT PRAWDY", title: "Wybrane zdanie nie musi oznaczać końca", text: "Może być raczej miejscem, które wymaga rozmowy. System nie będzie zakładał problemu tam, gdzie odpowiedzi pokazują też wzajemność i możliwość naprawy.", bars, cycle, quote: truth };
+  if (mode === "difficult") return { mode, eyebrow: "MOMENT PRAWDY", title: "To zdanie ustawia dalszą interpretację", text: "Nie dlatego, że samo jedno zdanie przesądza o relacji. Dlatego, że często pokazuje, czego użytkownik już nie chce dalej omijać.", bars, cycle, quote: truth };
+  return { mode, eyebrow: "MOMENT PRAWDY", title: "To jest punkt do rozróżnienia, nie wyrok", text: "Ten wybór pomaga oddzielić realny problem od lęku, przywiązania albo chwilowego zmęczenia.", bars, cycle, quote: truth };
+}
+
+function PauseInsightPanel({ insight, onBack, onNext, nextLabel = "Dalej →" }: { insight: PauseInsight; onBack: () => void; onNext: () => void; nextLabel?: string }) {
+  return (
+    <motion.div key={`${insight.eyebrow}-${insight.title}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+      <div className="section-head compact">
+        <div>
+          <div className="eyebrow">{insight.eyebrow}</div>
+          <h2>{insight.title}</h2>
+          <p>{insight.text}</p>
+        </div>
+        <div className={`mode-pill ${insight.mode}`}>{modeLabel(insight.mode)}</div>
+      </div>
+      <Glass className={`question-panel relationship-map-panel pause-panel ${insight.mode}`}>
+        {insight.quote && <div className="pause-quote">„{insight.quote}”</div>}
+        <div className="pause-grid">
+          <div className="pause-visual-card">
+            <div className="eyebrow">ODCZYT NA TERAZ</div>
+            <VisualBars items={insight.bars} />
+          </div>
+          <div className="pause-visual-card">
+            <div className="eyebrow">MOŻLIWY UKŁAD</div>
+            <CycleDiagram steps={insight.cycle || []} />
+            {insight.chips && insight.chips.length > 0 && (
+              <div className="pause-chip-row">
+                {insight.chips.map((chip) => <span key={chip}>{chip}</span>)}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="map-step-note strong-note">To tylko pauza porządkująca, nie wynik. Jeśli odpowiedzi są wspierające, diagram też będzie wspierający. Jeśli są trudne, pokaże trudny wzorzec.</div>
+        <div className="section-actions">
+          <GhostButton onClick={onBack}>Wróć</GhostButton>
+          <PrimaryButton onClick={onNext}>{nextLabel}</PrimaryButton>
+        </div>
+      </Glass>
+    </motion.div>
   );
 }
 
@@ -1200,7 +1360,7 @@ export default function App() {
     const next = { ...answers, [qid]: optionId };
     setAnswers(next);
     if (!path) return;
-    if (questionIndex >= path.questions.length - 1) { setStage("checkpoint"); return; }
+    if (questionIndex >= path.questions.length - 1) { setStage("question_signal"); return; }
     setQuestionIndex((v) => v + 1);
   };
 
@@ -1362,11 +1522,15 @@ export default function App() {
   const goBack = () => {
     setError(null);
     if (stage === "questions") { if (questionIndex === 0) { setStage("entry"); return; } setQuestionIndex((v) => Math.max(0, v - 1)); return; }
-    if (stage === "checkpoint") { setStage("questions"); return; }
+    if (stage === "question_signal") { setStage("questions"); return; }
+    if (stage === "checkpoint") { setStage("question_signal"); return; }
     if (stage === "force_map") { setStage("checkpoint"); return; }
-    if (stage === "burdens") { setStage("force_map"); return; }
-    if (stage === "truth_cards") { setStage("burdens"); return; }
-    if (stage === "short_note") { setStage("truth_cards"); return; }
+    if (stage === "force_signal") { setStage("force_map"); return; }
+    if (stage === "burdens") { setStage("force_signal"); return; }
+    if (stage === "burden_signal") { setStage("burdens"); return; }
+    if (stage === "truth_cards") { setStage("burden_signal"); return; }
+    if (stage === "truth_signal") { setStage("truth_cards"); return; }
+    if (stage === "short_note") { setStage("truth_signal"); return; }
     if (stage === "map_summary") { setStage("short_note"); return; }
     if (stage === "clarification") {
       if (clarificationIndex > 0) {
@@ -1634,6 +1798,16 @@ export default function App() {
             </motion.div>
           )}
 
+
+          {stage === "question_signal" && path && (
+            <PauseInsightPanel
+              insight={buildPauseInsight("questions", path, answers, forceMap, burdens, truthCards)}
+              onBack={goBack}
+              onNext={() => setStage("checkpoint")}
+              nextLabel="Przejdź do pytania granicznego →"
+            />
+          )}
+
           {stage === "checkpoint" && path && (
             <motion.div key={`${path.key}-checkpoint`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="question-panel">
@@ -1691,10 +1865,20 @@ export default function App() {
                 </div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => setStage("burdens")} disabled={FORCE_MAP_ITEMS.some((item) => !forceMap[item.key])}>Dalej →</PrimaryButton>
+                  <PrimaryButton onClick={() => setStage("force_signal")} disabled={FORCE_MAP_ITEMS.some((item) => !forceMap[item.key])}>Dalej →</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
+          )}
+
+
+          {stage === "force_signal" && path && (
+            <PauseInsightPanel
+              insight={buildPauseInsight("force", path, answers, forceMap, burdens, truthCards)}
+              onBack={goBack}
+              onNext={() => setStage("burdens")}
+              nextLabel="Dalej do ciężarów relacji →"
+            />
           )}
 
           {stage === "burdens" && path && (
@@ -1732,10 +1916,20 @@ export default function App() {
                 </div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => setStage("truth_cards")} disabled={burdens.length < 1}>Dalej →</PrimaryButton>
+                  <PrimaryButton onClick={() => setStage("burden_signal")} disabled={burdens.length < 1}>Dalej →</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
+          )}
+
+
+          {stage === "burden_signal" && path && (
+            <PauseInsightPanel
+              insight={buildPauseInsight("burdens", path, answers, forceMap, burdens, truthCards)}
+              onBack={goBack}
+              onNext={() => setStage("truth_cards")}
+              nextLabel="Dalej do momentu prawdy →"
+            />
           )}
 
           {stage === "truth_cards" && path && (
@@ -1773,10 +1967,20 @@ export default function App() {
                 </div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => setStage("short_note")} disabled={truthCards.length < 1}>Dalej →</PrimaryButton>
+                  <PrimaryButton onClick={() => setStage("truth_signal")} disabled={truthCards.length < 1}>Dalej →</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
+          )}
+
+
+          {stage === "truth_signal" && path && (
+            <PauseInsightPanel
+              insight={buildPauseInsight("truth", path, answers, forceMap, burdens, truthCards)}
+              onBack={goBack}
+              onNext={() => setStage("short_note")}
+              nextLabel="Dalej do krótkiej notatki →"
+            />
           )}
 
           {stage === "short_note" && path && (

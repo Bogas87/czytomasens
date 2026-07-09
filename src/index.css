@@ -3376,3 +3376,155 @@ button { cursor: pointer; }
     line-height: 1;
   }
 }
+
+/* Adaptacyjne bloki oddechowe między etapami analizy */
+.mode-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(197,160,89,.22);
+  background: rgba(197,160,89,.065);
+  color: var(--gold-soft);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.mode-pill.supportive {
+  border-color: rgba(183,209,176,.24);
+  background: rgba(183,209,176,.07);
+  color: var(--success);
+}
+
+.mode-pill.difficult {
+  border-color: rgba(226,165,165,.26);
+  background: rgba(226,165,165,.065);
+  color: var(--danger);
+}
+
+.pause-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.pause-panel::before {
+  content: "";
+  position: absolute;
+  width: 260px;
+  height: 260px;
+  right: -90px;
+  top: -110px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(197,160,89,.18), transparent 65%);
+  pointer-events: none;
+}
+
+.pause-panel.supportive::before {
+  background: radial-gradient(circle, rgba(183,209,176,.14), transparent 66%);
+}
+
+.pause-panel.difficult::before {
+  background: radial-gradient(circle, rgba(226,165,165,.12), transparent 66%);
+}
+
+.pause-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  gap: 16px;
+}
+
+.pause-visual-card {
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,.07);
+  background:
+    radial-gradient(circle at top left, rgba(197,160,89,.065), transparent 44%),
+    rgba(0,0,0,.15);
+}
+
+.pause-panel.supportive .pause-visual-card {
+  background:
+    radial-gradient(circle at top left, rgba(183,209,176,.06), transparent 44%),
+    rgba(0,0,0,.15);
+}
+
+.pause-quote {
+  position: relative;
+  margin-bottom: 16px;
+  padding: 18px 20px;
+  border-radius: 22px;
+  border: 1px solid rgba(197,160,89,.24);
+  background: rgba(197,160,89,.055);
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--gold-soft);
+  font-size: clamp(20px, 2.4vw, 30px);
+  line-height: 1.18;
+  letter-spacing: -.02em;
+}
+
+.pause-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.pause-chip-row span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(197,160,89,.22);
+  background: rgba(197,160,89,.055);
+  color: #e8dccd;
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.pause-panel .visual-bars {
+  grid-template-columns: 1fr;
+}
+
+.pause-panel .visual-bar-item {
+  min-height: auto;
+  padding: 14px;
+}
+
+.pause-panel .cycle-diagram {
+  grid-template-columns: 1fr;
+}
+
+.pause-panel .cycle-arrow {
+  transform: rotate(90deg);
+  text-align: center;
+  line-height: 1;
+}
+
+@media (max-width: 920px) {
+  .pause-grid {
+    grid-template-columns: 1fr;
+  }
+  .mode-pill {
+    width: 100%;
+    white-space: normal;
+    text-align: center;
+  }
+}
+
+@media (max-width: 760px) {
+  .pause-visual-card {
+    padding: 16px;
+    border-radius: 20px;
+  }
+  .pause-quote {
+    padding: 16px;
+    font-size: 21px;
+  }
+}
