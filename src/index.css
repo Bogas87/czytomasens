@@ -3624,3 +3624,321 @@ button { cursor: pointer; }
     padding: 13px;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   MOBILE SCALING HOTFIX
+   Cel: brak poziomego rozjazdu na telefonie, czytelne karty,
+   brak elementów szerszych niż viewport, spokojniejsze skalowanie.
+   ───────────────────────────────────────────────────────────── */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+.ctms-shell,
+.ctms-main,
+.ctms-main.narrow,
+.ctms-topbar,
+.hero-grid,
+.entry-grid,
+.preview-grid,
+.metrics-grid,
+.pause-grid,
+.signal-grid,
+.visual-bars,
+.not-this-grid,
+.not-this-strip,
+.cycle-diagram,
+.preview-map-grid,
+.relationship-map-grid,
+.map-grid,
+.report-sections,
+.articles-section,
+.articles-section * {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.ctms-shell {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.ctms-main,
+.ctms-main.narrow {
+  width: 100%;
+}
+
+img,
+svg,
+canvas,
+video {
+  max-width: 100%;
+  height: auto;
+}
+
+button,
+input,
+textarea,
+select {
+  max-width: 100%;
+}
+
+.ctms-btn,
+.answer-card,
+.entry-card,
+.feature-card,
+.metric-card,
+.report-section,
+.preview-card,
+.question-panel,
+.glass-panel,
+.ctms-glass,
+.unlock-panel,
+.pause-visual-card,
+.visual-insight-panel,
+.cycle-panel,
+.preview-visual-panel,
+.signal-card,
+.map-preview-card {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  :root {
+    --ctms-mobile-pad: 14px;
+  }
+
+  .ctms-shell {
+    padding-left: var(--ctms-mobile-pad) !important;
+    padding-right: var(--ctms-mobile-pad) !important;
+  }
+
+  .ctms-topbar {
+    width: 100% !important;
+    max-width: 100% !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: space-between !important;
+    gap: 10px !important;
+  }
+
+  .ctms-logo-wrap {
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+  }
+
+  .ctms-logo {
+    max-width: 100% !important;
+    font-size: clamp(28px, 10vw, 40px) !important;
+    line-height: .94 !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .ctms-logo-sub,
+  .eyebrow,
+  .question-lead,
+  .section-head p,
+  .hero-copy p,
+  .report-head p,
+  .pause-footnote,
+  .preview-disclaimer {
+    overflow-wrap: anywhere !important;
+  }
+
+  .hero-grid,
+  .entry-grid,
+  .preview-grid,
+  .metrics-grid,
+  .ctms-feature-editorial-grid,
+  .pause-grid,
+  .signal-grid,
+  .visual-bars,
+  .not-this-grid,
+  .not-this-strip,
+  .preview-map-grid,
+  .relationship-map-grid,
+  .map-grid,
+  .articles-section .articles-grid,
+  .articles-section .article-related-grid {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+  }
+
+  .hero-panel,
+  .story-panel,
+  .question-panel,
+  .preview-card,
+  .glass-panel,
+  .ctms-glass,
+  .consent-panel,
+  .loading-panel,
+  .unlock-panel,
+  .pause-visual-card,
+  .visual-insight-panel,
+  .cycle-panel,
+  .preview-visual-panel,
+  .signal-card,
+  .map-preview-card,
+  .not-this-strip {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    border-radius: 20px !important;
+  }
+
+  .hero-copy h1,
+  .section-head h2,
+  .question-copy h3,
+  .preview-hero h2,
+  .report-head h2,
+  .question-panel h2,
+  .articles-section .article-page-title {
+    font-size: clamp(24px, 8.2vw, 34px) !important;
+    line-height: 1.08 !important;
+    letter-spacing: -.035em !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .section-head,
+  .section-head.compact {
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .progress-wrap,
+  .progress-bar-wrap {
+    width: 100% !important;
+  }
+
+  .progress-track,
+  .progress-bar-track {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+  }
+
+  .ctms-btn,
+  .section-actions .ctms-btn,
+  .ctms-landing-actions .ctms-btn,
+  .consent-actions .ctms-btn {
+    width: 100% !important;
+    min-height: 52px !important;
+    white-space: normal !important;
+    text-align: center !important;
+    line-height: 1.2 !important;
+  }
+
+  .section-actions,
+  .ctms-landing-actions,
+  .consent-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    width: 100% !important;
+  }
+
+  .metrics-grid {
+    gap: 10px !important;
+  }
+
+  .metric-card {
+    padding: 14px 12px !important;
+  }
+
+  .metric-value,
+  .ctms-preview-score {
+    font-size: clamp(34px, 12vw, 58px) !important;
+  }
+
+  .signal-orbit {
+    width: min(190px, 62vw) !important;
+    height: min(190px, 62vw) !important;
+  }
+
+  .signal-core {
+    inset: 62px !important;
+    font-size: 15px !important;
+  }
+
+  .signal-orbit::before { inset: 30px !important; }
+  .signal-orbit::after { inset: 64px !important; }
+
+  .pause-panel .cycle-step,
+  .cycle-step {
+    grid-template-columns: 36px minmax(0, 1fr) !important;
+    width: 100% !important;
+  }
+
+  .pause-panel .cycle-step strong,
+  .cycle-step strong {
+    font-size: 14px !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .pause-panel .cycle-step em,
+  .cycle-step em {
+    font-size: 12px !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .pause-quote,
+  .clarification-question {
+    font-size: clamp(19px, 6vw, 25px) !important;
+    line-height: 1.18 !important;
+    padding: 14px !important;
+  }
+
+  .ctms-textarea,
+  .clarification-textarea,
+  textarea {
+    font-size: 16px !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 390px) {
+  :root {
+    --ctms-mobile-pad: 12px;
+  }
+
+  .hero-panel,
+  .story-panel,
+  .question-panel,
+  .preview-card,
+  .glass-panel,
+  .ctms-glass,
+  .unlock-panel,
+  .pause-visual-card,
+  .visual-insight-panel,
+  .cycle-panel,
+  .preview-visual-panel,
+  .signal-card,
+  .map-preview-card,
+  .not-this-strip {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .ctms-logo {
+    font-size: clamp(26px, 9.5vw, 34px) !important;
+  }
+
+  .hero-copy h1,
+  .section-head h2,
+  .question-copy h3,
+  .preview-hero h2,
+  .report-head h2,
+  .question-panel h2 {
+    font-size: clamp(23px, 8vw, 31px) !important;
+  }
+}
