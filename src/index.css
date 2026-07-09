@@ -2829,3 +2829,202 @@ button { cursor: pointer; }
     font-size: 13px;
   }
 }
+
+.signal-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.signal-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(197,160,89,.18), transparent 24%),
+    radial-gradient(circle at 84% 72%, rgba(226,165,165,.08), transparent 22%);
+  opacity: .9;
+}
+
+.signal-orbit {
+  position: relative;
+  width: min(260px, 72vw);
+  height: min(260px, 72vw);
+  margin: 0 auto 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(197,160,89,.22);
+  background:
+    radial-gradient(circle at center, rgba(197,160,89,.13), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.01));
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.035), 0 24px 70px rgba(0,0,0,.34);
+}
+
+.signal-orbit::before,
+.signal-orbit::after {
+  content: "";
+  position: absolute;
+  inset: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.07);
+}
+
+.signal-orbit::after {
+  inset: 76px;
+  border-color: rgba(197,160,89,.18);
+}
+
+.signal-core {
+  position: absolute;
+  inset: 86px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  border-radius: 999px;
+  color: var(--gold-soft);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 19px;
+  line-height: 1.05;
+  background: rgba(8,8,9,.86);
+  border: 1px solid rgba(197,160,89,.36);
+  box-shadow: 0 0 42px rgba(197,160,89,.18);
+}
+
+.signal-dot {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #e0bf75 0%, #c5a059 100%);
+  box-shadow: 0 0 22px rgba(197,160,89,.55);
+}
+
+.signal-dot.dot-a { left: 34px; top: 72px; }
+.signal-dot.dot-b { right: 48px; top: 38px; }
+.signal-dot.dot-c { right: 58px; bottom: 54px; }
+
+.signal-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.signal-card {
+  min-height: 132px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.07);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.026), rgba(255,255,255,.012)),
+    rgba(255,255,255,.018);
+}
+
+.signal-card.gold {
+  border-color: rgba(197,160,89,.34);
+  background: radial-gradient(circle at top left, rgba(197,160,89,.14), transparent 42%), rgba(255,255,255,.02);
+}
+
+.signal-card.danger {
+  border-color: rgba(226,165,165,.22);
+  background: radial-gradient(circle at top left, rgba(226,165,165,.10), transparent 42%), rgba(255,255,255,.02);
+}
+
+.signal-card span {
+  display: block;
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.signal-card strong {
+  display: block;
+  color: #eee6dc;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(20px, 2.2vw, 27px);
+  line-height: 1.12;
+  letter-spacing: -.02em;
+}
+
+.strong-note {
+  position: relative;
+  z-index: 1;
+  margin-top: 18px;
+  border-color: rgba(197,160,89,.20);
+}
+
+.clarification-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+.clarification-panel::before {
+  content: "";
+  position: absolute;
+  right: -80px;
+  top: -80px;
+  width: 260px;
+  height: 260px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(197,160,89,.16), transparent 66%);
+  pointer-events: none;
+}
+
+.clarification-question {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 18px;
+  padding: 20px 22px;
+  border-radius: 22px;
+  border: 1px solid rgba(197,160,89,.20);
+  background: rgba(197,160,89,.055);
+  color: #f2eadf;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(22px, 2.6vw, 34px);
+  line-height: 1.18;
+  letter-spacing: -.02em;
+}
+
+.clarification-textarea {
+  position: relative;
+  z-index: 1;
+  min-height: 190px;
+}
+
+@media (max-width: 860px) {
+  .signal-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .signal-card {
+    min-height: auto;
+    padding: 16px;
+  }
+
+  .signal-card strong {
+    font-size: 22px;
+  }
+
+  .signal-orbit {
+    width: min(220px, 74vw);
+    height: min(220px, 74vw);
+    margin-bottom: 18px;
+  }
+
+  .signal-core {
+    inset: 72px;
+    font-size: 17px;
+  }
+
+  .clarification-question {
+    padding: 18px;
+    font-size: 22px;
+  }
+
+  .clarification-textarea {
+    min-height: 170px;
+  }
+}

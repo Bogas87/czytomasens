@@ -38,6 +38,8 @@ type Stage =
   | "burdens"
   | "truth_cards"
   | "short_note"
+  | "map_summary"
+  | "clarification"
   | "interview"
   | "open_text"
   | "preview"
@@ -54,11 +56,15 @@ type ForceMapKey = "contactInitiative" | "repairAfterConflict" | "emotionalLabor
 type ForceValue = "definitely_me" | "mostly_me" | "balanced" | "mostly_other" | "definitely_other";
 type ForceMap = Partial<Record<ForceMapKey, ForceValue>>;
 type BurdenItem = { label: string; rank: number };
+type ClarificationQuestion = { id: string; lead: string; text: string; signal: string };
+type ClarificationAnswerMap = Record<string, string>;
+type MapSignal = { label: string; value: string; tone: "normal" | "gold" | "danger" };
 type RelationshipMapPayload = {
   forceMap: ForceMap;
   burdens: BurdenItem[];
   truthCards: string[];
   userNote: string;
+  clarificationAnswers?: { question: string; answer: string; signal: string }[];
 };
 type LegalKey = "regulamin" | "prywatnosc" | "rodo" | "kontakt" | null;
 
@@ -334,6 +340,92 @@ function forceLabel(value?: ForceValue): string {
 function mapCompletion(forceMap: ForceMap, burdens: BurdenItem[], truthCards: string[]): number {
   const forceDone = FORCE_MAP_ITEMS.filter((item) => Boolean(forceMap[item.key])).length;
   return Math.round(((forceDone / FORCE_MAP_ITEMS.length) * 0.45 + (Math.min(burdens.length, 3) / 3) * 0.3 + (Math.min(truthCards.length, 2) / 2) * 0.25) * 100);
+}
+
+function isMeHeavy(value?: ForceValue): boolean {
+  return value === "definitely_me" || value === "mostly_me";
+}
+
+function isOtherHeavy(value?: ForceValue): boolean {
+  return value === "definitely_other" || value === "mostly_other";
+}
+
+function hasBurden(burdens: BurdenItem[], fragment: string): boolean {
+  return burdens.some((item) => item.label.toLowerCase().includes(fragment.toLowerCase()));
+}
+
+function buildMapSignals(forceMap: ForceMap, burdens: BurdenItem[], truthCards: string[]): MapSignal[] {
+  const meLoad = FORCE_MAP_ITEMS.filter((item) => isMeHeavy(forceMap[item.key])).length;
+  const otherLoad = FORCE_MAP_ITEMS.filter((item) => isOtherHeavy(forceMap[item.key])).length;
+  const topBurden = burdens[0]?.label || "brak jednego dominującego ciężaru";
+  const asymmetry = meLoad >= 3 ? "ciężar częściej po Twojej stronie" : otherLoad >= 3 ? "ciężar częściej po stronie drugiej osoby" : "układ częściowo zrównoważony";
+  const risk = truthCards.some((text) => text.includes("wracamy w to samo")) || hasBurden(burdens, "powroty") ? "powtarzanie tego samego cyklu" :
+    truthCards.some((text) => text.includes("boję się końca")) || hasBurden(burdens, "lęk") ? "lęk może mieszać się z decyzją" :
+    hasBurden(burdens, "cisza") ? "cisza może zastępować naprawę" :
+    hasBurden(burdens, "zdrada") ? "zaufanie wymaga konkretów, nie samych deklaracji" :
+    "trzeba odróżnić realną zmianę od chwilowej ulgi";
+  const focus = meLoad >= 3 ? "czy relacja działa bez Twojego ciągnięcia" :
+    hasBurden(burdens, "brak jasności") ? "czy brak jasności jest przypadkiem, czy wygodnym stanem" :
+    hasBurden(burdens, "kłótnie") ? "co zostaje po konflikcie" :
+    hasBurden(burdens, "rutyna") ? "czy to spokój, czy rezygnacja" :
+    "co naprawdę musi się zmienić w zachowaniu";
+
+  return [
+    { label: "Największy ciężar", value: topBurden, tone: burdens.length ? "gold" : "normal" },
+    { label: "Układ sił", value: asymmetry, tone: meLoad >= 3 || otherLoad >= 3 ? "danger" : "normal" },
+    { label: "Punkt ryzyka", value: risk, tone: "danger" },
+    { label: "Do doprecyzowania", value: focus, tone: "gold" },
+  ];
+}
+
+function uniqueClarifications(items: ClarificationQuestion[]): ClarificationQuestion[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+}
+
+function buildClarificationQuestions(path: EntryConfig, forceMap: ForceMap, burdens: BurdenItem[], truthCards: string[], note: string): ClarificationQuestion[] {
+  const candidates: ClarificationQuestion[] = [];
+  const meLoad = FORCE_MAP_ITEMS.filter((item) => isMeHeavy(forceMap[item.key])).length;
+
+  if (meLoad >= 3 || isMeHeavy(forceMap.repairAfterConflict) || isMeHeavy(forceMap.emotionalLabor)) {
+    candidates.push({ id: "asymmetry-reality", signal: "asymetria", lead: "Mapa pokazuje, że ciężar może leżeć bardziej po jednej stronie.", text: "Co realnie dzieje się z kontaktem, rozmową albo naprawą, kiedy Ty przestajesz to inicjować?" });
+  }
+  if (hasBurden(burdens, "cisza") || isOtherHeavy(forceMap.avoidance)) {
+    candidates.push({ id: "silence-pattern", signal: "cisza / unikanie", lead: "Cisza po napięciu często mówi więcej niż sama kłótnia.", text: "Jak wygląda cisza albo wycofanie po trudnym momencie: ile trwa, kto ją przerywa i co dzieje się potem?" });
+  }
+  if (hasBurden(burdens, "kłótnie")) {
+    candidates.push({ id: "conflict-after", signal: "konflikt", lead: "Konflikt nie rozstrzyga się w momencie kłótni, tylko po niej.", text: "Po ostatnich trzech kłótniach co naprawdę zmieniło się w zachowaniu którejkolwiek ze stron?" });
+  }
+  if (hasBurden(burdens, "zdrada") || path.key === "betrayal") {
+    candidates.push({ id: "trust-proof", signal: "zaufanie", lead: "Po kłamstwie najważniejsze są nie zapewnienia, tylko powtarzalne działania.", text: "Co dziś bardziej niszczy zaufanie: samo wydarzenie, czy sposób w jaki druga strona zachowuje się po nim?" });
+  }
+  if (hasBurden(burdens, "brak jasności") || path.key === "uncertain") {
+    candidates.push({ id: "clarity-cost", signal: "brak jasności", lead: "Brak jasności nie jest neutralny, bo ktoś zwykle płaci za niego spokojem.", text: "Co dokładnie pozostaje między Wami niedopowiedziane i co Ty robisz więcej właśnie dlatego, że nie masz tej jasności?" });
+  }
+  if (hasBurden(burdens, "powroty") || truthCards.some((text) => text.includes("wracamy w to samo")) || path.key === "loop") {
+    candidates.push({ id: "cycle-proof", signal: "pętla", lead: "Chwilowa poprawa potrafi wyglądać jak zmiana, dopóki nie sprawdzisz, co zostaje po czasie.", text: "Po czym poznajesz, że poprawa jest realna, a po czym, że to tylko uspokojenie sytuacji na chwilę?" });
+  }
+  if (truthCards.some((text) => text.includes("boję się końca")) || hasBurden(burdens, "lęk")) {
+    candidates.push({ id: "fear-vs-choice", signal: "lęk przed stratą", lead: "Lęk przed końcem potrafi udawać pewność, że trzeba zostać.", text: "Czego boisz się bardziej: utraty tej osoby, czy tego, że po odejściu cała historia okaże się bez sensu?" });
+  }
+  if (hasBurden(burdens, "rutyna") || path.key === "stagnation") {
+    candidates.push({ id: "stagnation-proof", signal: "stagnacja", lead: "Spokój i rezygnacja z zewnątrz mogą wyglądać podobnie.", text: "Po czym poznajesz, że między Wami jest jeszcze żywy kontakt, a nie tylko przyzwyczajenie i poprawne funkcjonowanie obok siebie?" });
+  }
+  if (path.key === "triangle" || hasBurden(burdens, "ktoś trzeci")) {
+    candidates.push({ id: "third-person-meaning", signal: "ktoś trzeci", lead: "Trzecia osoba często pokazuje brak, który istniał wcześniej.", text: "Gdyby nie było tej trzeciej osoby, jaki problem w obecnej relacji nadal musiałby zostać nazwany?" });
+  }
+
+  candidates.push({ id: "one-change", signal: "realność zmiany", lead: "Na końcu liczy się nie deklaracja, tylko konkret zachowania.", text: "Jaka jedna rzecz musiałaby się zmienić w zachowaniu tej osoby, żebyś uznał/uznała, że to nie jest tylko chwilowa poprawa?" });
+  candidates.push({ id: "missing-context", signal: "brakujący kontekst", lead: "Mapa pokazuje układ, ale nie zna jeszcze jednego konkretu z życia.", text: `Jaki jeden fakt z tej relacji najbardziej zmieniłby ocenę sytuacji, gdyby ktoś z zewnątrz go poznał?` });
+
+  const unique = uniqueClarifications(candidates);
+  const strongSignals = burdens.length + truthCards.length + (meLoad >= 3 ? 1 : 0) + (note.trim().length < 40 ? 1 : 0);
+  const limit = strongSignals >= 5 ? 3 : strongSignals >= 3 ? 2 : 1;
+  return unique.slice(0, limit);
 }
 
 const LOCAL_INTERVIEW_QUESTIONS: Record<EntryKey, LocalInterviewQuestion[]> = {
@@ -821,6 +913,10 @@ export default function App() {
   const [burdens, setBurdens] = useState<BurdenItem[]>([]);
   const [truthCards, setTruthCards] = useState<string[]>([]);
   const [relationshipNote, setRelationshipNote] = useState("");
+  const [clarificationQuestions, setClarificationQuestions] = useState<ClarificationQuestion[]>([]);
+  const [clarificationAnswers, setClarificationAnswers] = useState<ClarificationAnswerMap>({});
+  const [clarificationIndex, setClarificationIndex] = useState(0);
+  const [clarificationDraft, setClarificationDraft] = useState("");
   const [routePath, setRoutePath] = useState(() => normalizePath(typeof window !== "undefined" ? window.location.pathname : "/"));
 
   const articleSlugFromRoute = routePath.startsWith("/artykuly/") ? decodeURIComponent(routePath.replace("/artykuly/", "")) : null;
@@ -919,6 +1015,10 @@ export default function App() {
           setBurdens(parsed.burdens || []);
           setTruthCards(parsed.truthCards || []);
           setRelationshipNote(parsed.relationshipNote || "");
+          setClarificationQuestions(parsed.clarificationQuestions || []);
+          setClarificationAnswers(parsed.clarificationAnswers || {});
+          setClarificationIndex(parsed.clarificationIndex || 0);
+          setClarificationDraft(parsed.clarificationDraft || "");
         }
       } catch {}
     }
@@ -993,8 +1093,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, forceMap, burdens, truthCards, relationshipNote }));
-  }, [stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, forceMap, burdens, truthCards, relationshipNote]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, forceMap, burdens, truthCards, relationshipNote, clarificationQuestions, clarificationAnswers, clarificationIndex, clarificationDraft }));
+  }, [stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, forceMap, burdens, truthCards, relationshipNote, clarificationQuestions, clarificationAnswers, clarificationIndex, clarificationDraft]);
 
   const ensureSession = async (entryKey: EntryKey): Promise<string> => {
     if (sessionToken) return sessionToken;
@@ -1006,7 +1106,7 @@ export default function App() {
 
   const resetAll = () => {
     localStorage.removeItem(STORAGE_KEY);
-    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setConsents([false, false, false, false]); setLegalOpen(null); setInterviewState(null); setInterviewAnswer(""); setForceMap({}); setBurdens([]); setTruthCards([]); setRelationshipNote("");
+    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setConsents([false, false, false, false]); setLegalOpen(null); setInterviewState(null); setInterviewAnswer(""); setForceMap({}); setBurdens([]); setTruthCards([]); setRelationshipNote(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft("");
     window.history.replaceState({}, "", "/");
     setRoutePath("/");
   };
@@ -1017,7 +1117,7 @@ export default function App() {
       const data = await createSession(key);
       const token = data?.token || data?.sessionId || null;
       if (!token) throw new Error("Brak tokenu sesji.");
-      setSessionToken(token); setSelectedPath(key); setQuestionIndex(0); setAnswers({}); setOpenText(""); setPreview(null); setFullReport(null); setInterviewState(null); setForceMap({}); setBurdens([]); setTruthCards([]); setRelationshipNote("");
+      setSessionToken(token); setSelectedPath(key); setQuestionIndex(0); setAnswers({}); setOpenText(""); setPreview(null); setFullReport(null); setInterviewState(null); setForceMap({}); setBurdens([]); setTruthCards([]); setRelationshipNote(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft("");
       setStage("questions");
     } catch (e: any) { setError(friendlyError(e, "Nie udało się rozpocząć analizy.")); setStage("error"); }
     finally { setBusy(false); }
@@ -1061,14 +1161,22 @@ export default function App() {
     });
   };
 
-  const relationshipMapPayload = (): RelationshipMapPayload => ({
-    forceMap,
-    burdens,
-    truthCards,
-    userNote: relationshipNote.trim(),
-  });
+  const relationshipMapPayload = (clarificationsOverride?: ClarificationAnswerMap): RelationshipMapPayload => {
+    const answersSource = clarificationsOverride || clarificationAnswers;
+    return {
+      forceMap,
+      burdens,
+      truthCards,
+      userNote: relationshipNote.trim(),
+      clarificationAnswers: clarificationQuestions.map((q) => ({
+        question: q.text,
+        signal: q.signal,
+        answer: (answersSource[q.id] || "").trim(),
+      })).filter((item) => item.answer),
+    };
+  };
 
-  const buildCompositeOpenText = (): string => {
+  const buildCompositeOpenText = (clarificationsOverride?: ClarificationAnswerMap): string => {
     const forceLines = FORCE_MAP_ITEMS
       .map((item) => `- ${item.title}: ${forceLabel(forceMap[item.key])}`)
       .join("\n");
@@ -1080,6 +1188,40 @@ export default function App() {
       : "Brak wybranych zdań prawdy.";
     const note = relationshipNote.trim() || "Brak dodatkowej notatki.";
     return `MAPA RELACJI — dane kliknięte przez użytkownika\n\nUKŁAD SIŁ\n${forceLines}\n\nNAJWIĘKSZE CIĘŻARY\n${burdenLines}\n\nMOMENT PRAWDY\n${truthLines}\n\nDODATKOWA MYŚL UŻYTKOWNIKA\n${note}`;
+  };
+
+  const prepareMapSummary = () => {
+    if (!path) return;
+    const nextQuestions = buildClarificationQuestions(path, forceMap, burdens, truthCards, relationshipNote);
+    setClarificationQuestions(nextQuestions);
+    setClarificationAnswers({});
+    setClarificationIndex(0);
+    setClarificationDraft("");
+    setStage("map_summary");
+  };
+
+  const goToClarification = () => {
+    if (!clarificationQuestions.length) {
+      buildPreviewAndGo({});
+      return;
+    }
+    setClarificationIndex(0);
+    setClarificationDraft(clarificationAnswers[clarificationQuestions[0].id] || "");
+    setStage("clarification");
+  };
+
+  const saveClarificationAndNext = (skip = false) => {
+    const question = clarificationQuestions[clarificationIndex];
+    if (!question) { buildPreviewAndGo(clarificationAnswers); return; }
+    const nextAnswers = { ...clarificationAnswers, [question.id]: skip ? "" : clarificationDraft.trim() };
+    setClarificationAnswers(nextAnswers);
+    if (clarificationIndex >= clarificationQuestions.length - 1) {
+      buildPreviewAndGo(nextAnswers);
+      return;
+    }
+    const nextIndex = clarificationIndex + 1;
+    setClarificationIndex(nextIndex);
+    setClarificationDraft(nextAnswers[clarificationQuestions[nextIndex].id] || "");
   };
 
   const sendInterviewAnswer = async () => {
@@ -1152,17 +1294,27 @@ export default function App() {
     if (stage === "burdens") { setStage("force_map"); return; }
     if (stage === "truth_cards") { setStage("burdens"); return; }
     if (stage === "short_note") { setStage("truth_cards"); return; }
+    if (stage === "map_summary") { setStage("short_note"); return; }
+    if (stage === "clarification") {
+      if (clarificationIndex > 0) {
+        const prevIndex = clarificationIndex - 1;
+        setClarificationIndex(prevIndex);
+        setClarificationDraft(clarificationAnswers[clarificationQuestions[prevIndex]?.id] || "");
+        return;
+      }
+      setStage("map_summary"); return;
+    }
     if (stage === "interview") { setStage("checkpoint"); return; }
     if (stage === "open_text") { if (interviewState && interviewState.history.length > 0) { setStage("interview"); return; } setStage("truth_cards"); return; }
-    if (stage === "preview") { setStage("short_note"); return; }
+    if (stage === "preview") { setStage(clarificationQuestions.length ? "clarification" : "map_summary"); return; }
     if (stage === "consent") { setStage("landing"); return; }
     if (stage === "entry") setStage("consent");
   };
 
-  const buildPreviewAndGo = async () => {
+  const buildPreviewAndGo = async (clarificationsOverride?: ClarificationAnswerMap) => {
     if (!path) return;
-    const relationshipMap = relationshipMapPayload();
-    const finalOpenText = buildCompositeOpenText();
+    const relationshipMap = relationshipMapPayload(clarificationsOverride);
+    const finalOpenText = buildCompositeOpenText(clarificationsOverride);
     if (hasCrisisContent(finalOpenText)) { setStage("crisis"); return; }
     setOpenText(finalOpenText);
     setBusy(true); setError(null);
@@ -1585,7 +1737,81 @@ export default function App() {
                 <div className="text-meta"><div>Opcjonalnie, ale bardzo pomaga analizie.</div><div>{relationshipNote.length}/500</div></div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={buildPreviewAndGo} disabled={busy}>{busy ? "Analizuję..." : "Pokaż pierwszy obraz sytuacji"}</PrimaryButton>
+                  <PrimaryButton onClick={prepareMapSummary} disabled={busy}>Dalej →</PrimaryButton>
+                </div>
+              </Glass>
+            </motion.div>
+          )}
+
+
+          {stage === "map_summary" && path && (
+            <motion.div key={`${path.key}-map-summary`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="section-head compact">
+                <div>
+                  <div className="eyebrow">WSTĘPNY OBRAZ UKŁADU</div>
+                  <h2>System już widzi pierwsze sygnały</h2>
+                  <p>To nie jest jeszcze raport. To szybkie spięcie Mapy Relacji, żeby doprecyzowanie było trafne, a nie przypadkowe.</p>
+                </div>
+                <div className="progress-wrap">
+                  <span>Mapa gotowa</span>
+                  <div className="progress-track"><div className="progress-fill" style={{ width: "100%" }} /></div>
+                </div>
+              </div>
+              <Glass className="question-panel relationship-map-panel signal-panel">
+                <div className="signal-orbit" aria-hidden="true">
+                  <div className="signal-core">Mapa<br />Relacji</div>
+                  <span className="signal-dot dot-a" />
+                  <span className="signal-dot dot-b" />
+                  <span className="signal-dot dot-c" />
+                </div>
+                <div className="signal-grid">
+                  {buildMapSignals(forceMap, burdens, truthCards).map((signal) => (
+                    <div key={signal.label} className={`signal-card ${signal.tone}`}>
+                      <span>{signal.label}</span>
+                      <strong>{signal.value}</strong>
+                    </div>
+                  ))}
+                </div>
+                <div className="map-step-note strong-note">
+                  Teraz zadam {clarificationQuestions.length || 1} {clarificationQuestions.length === 1 ? "pytanie" : clarificationQuestions.length === 2 ? "pytania" : "pytania"} doprecyzowujące. Tylko tam, gdzie sama mapa nie wystarczy do uczciwej interpretacji.
+                </div>
+                <div className="section-actions">
+                  <GhostButton onClick={goBack}>Wróć</GhostButton>
+                  <PrimaryButton onClick={goToClarification}>Doprecyzuj wynik →</PrimaryButton>
+                </div>
+              </Glass>
+            </motion.div>
+          )}
+
+          {stage === "clarification" && path && clarificationQuestions[clarificationIndex] && (
+            <motion.div key={`${path.key}-clarification-${clarificationIndex}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="section-head compact">
+                <div>
+                  <div className="eyebrow">DOPRECYZOWANIE · PYTANIE {clarificationIndex + 1} Z {clarificationQuestions.length}</div>
+                  <h2>{clarificationQuestions[clarificationIndex].signal}</h2>
+                  <p>{clarificationQuestions[clarificationIndex].lead}</p>
+                </div>
+                <div className="progress-wrap">
+                  <span>{clarificationIndex + 1}/{clarificationQuestions.length}</span>
+                  <div className="progress-track"><div className="progress-fill" style={{ width: `${((clarificationIndex + 1) / clarificationQuestions.length) * 100}%` }} /></div>
+                </div>
+              </div>
+              <Glass className="question-panel relationship-map-panel clarification-panel">
+                <div className="clarification-question">
+                  {clarificationQuestions[clarificationIndex].text}
+                </div>
+                <textarea
+                  className="ctms-textarea clarification-textarea"
+                  value={clarificationDraft}
+                  onChange={(e) => setClarificationDraft(e.target.value)}
+                  placeholder="Odpowiedz konkretnie. Wystarczą 2–4 zdania."
+                  maxLength={700}
+                />
+                <div className="text-meta"><div>Im bardziej konkretnie, tym mniej ogólny będzie raport.</div><div>{clarificationDraft.length}/700</div></div>
+                <div className="section-actions">
+                  <GhostButton onClick={goBack}>Wróć</GhostButton>
+                  <GhostButton onClick={() => saveClarificationAndNext(true)}>Pomiń</GhostButton>
+                  <PrimaryButton onClick={() => saveClarificationAndNext(false)} disabled={busy || clarificationDraft.trim().length < 12}>{clarificationIndex >= clarificationQuestions.length - 1 ? (busy ? "Analizuję..." : "Pokaż pierwszy obraz sytuacji") : "Dalej →"}</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
@@ -1629,7 +1855,7 @@ export default function App() {
                 <div className="text-meta"><div>To jest rdzeń analizy.</div><div>{openText.length}/3000</div></div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={buildPreviewAndGo} disabled={busy || openText.trim().length < 10}>{busy ? "Analizuję..." : "Pokaż pierwszy obraz sytuacji"}</PrimaryButton>
+                  <PrimaryButton onClick={() => buildPreviewAndGo()} disabled={busy || openText.trim().length < 10}>{busy ? "Analizuję..." : "Pokaż pierwszy obraz sytuacji"}</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
