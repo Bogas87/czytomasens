@@ -1423,22 +1423,29 @@ export default function App() {
                   <div className="hero-kicker">TWOJA RELACJA MA WZORZEC.</div>
                   <h1>Już wiesz, że <span>coś nie gra.</span><br />Tu zobaczysz, co naprawdę się dzieje.</h1>
                   <p style={{ lineHeight: 1.75, color: BRAND.muted, marginBottom: "28px" }}>Nie jesteś tu po potwierdzenie, że wszystko jest okej. Jesteś tu, bo coś nie daje Ci spokoju i chcesz zobaczyć sprawę uczciwie, bez dopowiadania sobie wygodnej wersji.</p>
+                  <div className="hero-proof-line">Nie odpowiadasz na test. W kilku krokach układasz obraz relacji: co ciąży, kto niesie ciężar, gdzie jest nierównowaga i czego nie da się dłużej omijać.</div>
                   <div className="ctms-landing-actions">
-                    <PrimaryButton onClick={() => setStage("consent")}>Chcę sprawdzić</PrimaryButton>
+                    <PrimaryButton onClick={() => setStage("consent")}>Zobacz swój pierwszy obraz relacji</PrimaryButton>
                   </div>
                 </Glass>
                 <div className="hero-side-stack">
-                  <Glass className="glass-panel story-panel visual-story">
-                    <div className="story-kicker">CO ZOBACZYSZ</div>
-                    <h3>To, czego jeszcze nie nazwałeś</h3>
-                    <div className="story-points">
-                      <div><span>▸</span><p>Twój wzorzec w relacjach: jak reagujesz na bliskość i odrzucenie, zanim zdążysz to przemyśleć</p></div>
-                      <div><span>▸</span><p>Dlaczego wracasz do tego samego miejsca i co naprawdę trzyma Cię tam, gdzie nie chcesz być</p></div>
-                      <div><span>▸</span><p>To, czego nie chcesz widzieć, bo właśnie tam zwykle zaczyna się zmiana</p></div>
+                  <Glass className="glass-panel story-panel map-preview-card">
+                    <div className="story-kicker">MAPA RELACJI</div>
+                    <h3>Nie quiz. Krótka rekonstrukcja tego, co dzieje się między Wami.</h3>
+                    <div className="mini-map-board">
+                      <div className="mini-map-node main"><span>Największy ciężar</span><strong>Cisza po konflikcie</strong></div>
+                      <div className="mini-map-node"><span>Układ sił</span><strong>Ty częściej naprawiasz</strong></div>
+                      <div className="mini-map-node"><span>Moment prawdy</span><strong>Po poprawie wraca to samo</strong></div>
+                      <div className="mini-map-node"><span>Doprecyzowanie</span><strong>Co dzieje się, gdy przestajesz ciągnąć?</strong></div>
+                    </div>
+                    <div className="mini-signal-strip">
+                      <div><span>Napięcie</span><strong>85%</strong></div>
+                      <div><span>Asymetria</span><strong>70%</strong></div>
+                      <div><span>Zmiana</span><strong>25%</strong></div>
                     </div>
                     <div className="story-lock">
-                      <div className="story-lock-icon">🔒</div>
-                      <div><strong>Pełny raport</strong><span>Jednorazowo. Raport generowany indywidualnie na podstawie Twoich odpowiedzi.</span></div>
+                      <div className="story-lock-icon">◆</div>
+                      <div><strong>Pierwszy obraz sytuacji</strong><span>Najpierw widzisz mechanizm. Pełny raport pokazuje koszt, ryzyko i realność zmiany.</span></div>
                     </div>
                   </Glass>
                 </div>
@@ -1466,24 +1473,24 @@ export default function App() {
                 </Glass>
               </section>
               
-              <section className="ctms-feature-editorial-grid" style={{ marginTop: "24px" }}>
-                <Glass className="feature-card">
+              <section className="ctms-feature-editorial-grid process-grid" style={{ marginTop: "24px" }}>
+                <Glass className="feature-card process-card">
                   <div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div>
-                  <h3>Schodzi głębiej niż myślisz</h3>
+                  <h3>Mapa Relacji</h3>
                   <div className="feature-line" />
-                  <p>Każde pytanie ma prowadzić do sedna sprawy. Nie chodzi o odhaczanie pól, tylko o uchwycenie mechanizmu.</p>
+                  <p>Wybierasz ciężary, układ sił i Moment prawdy. Bez pisania wypracowania i bez technicznych wykresów.</p>
                 </Glass>
-                <Glass className="feature-card">
+                <Glass className="feature-card process-card">
                   <div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div>
-                  <h3>Mówi to czego inni nie powiedzą</h3>
+                  <h3>Doprecyzowanie</h3>
                   <div className="feature-line" />
-                  <p>Nie pocieszenie. Nie ocena. Precyzyjny obraz tego, co widać z zewnątrz, bez zakładania z góry, kto ma rację.</p>
+                  <p>System dopytuje o 1–3 miejsca, które najbardziej zmieniają interpretację. Nie pyta o wszystko. Pyta o sedno.</p>
                 </Glass>
-                <Glass className="feature-card">
+                <Glass className="feature-card process-card">
                   <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
-                  <h3>Zostajesz z czymś konkretnym</h3>
+                  <h3>Pierwszy obraz</h3>
                   <div className="feature-line" />
-                  <p>Nie z listą kroków ani motywacją na dziś. Z obrazem mechanizmu i jednym pytaniem, które z niego wynika.</p>
+                  <p>Dostajesz wstępny wynik: napięcie, asymetrię, szansę zmiany i główny mechanizm, który warto zobaczyć przed decyzją.</p>
                 </Glass>
               </section>
 

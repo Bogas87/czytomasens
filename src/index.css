@@ -3028,3 +3028,121 @@ button { cursor: pointer; }
     min-height: 170px;
   }
 }
+
+
+/* Landing WOW patch: pokazuje realny produkt zamiast samej obietnicy */
+.hero-proof-line {
+  margin-top: 22px;
+  max-width: 620px;
+  padding: 16px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(197,160,89,.18);
+  background: rgba(197,160,89,.055);
+  color: #e6ddd2;
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.map-preview-card {
+  position: relative;
+  overflow: hidden;
+}
+.map-preview-card::before {
+  content: "";
+  position: absolute;
+  inset: -20% -10% auto auto;
+  width: 320px;
+  height: 320px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(197,160,89,.22), rgba(197,160,89,.08) 34%, transparent 66%);
+  filter: blur(6px);
+  pointer-events: none;
+}
+.map-preview-card h3 {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 22px;
+}
+
+.mini-map-board {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+.mini-map-node {
+  min-height: 104px;
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.075);
+  background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+}
+.mini-map-node.main {
+  border-color: rgba(197,160,89,.42);
+  background: radial-gradient(circle at top left, rgba(197,160,89,.16), transparent 46%), rgba(255,255,255,.035);
+}
+.mini-map-node span {
+  display: block;
+  color: var(--gold);
+  font-size: 10px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  margin-bottom: 9px;
+}
+.mini-map-node strong {
+  display: block;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.mini-signal-strip {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.mini-signal-strip div {
+  padding: 14px 12px;
+  border-radius: 18px;
+  border: 1px solid rgba(197,160,89,.18);
+  background: rgba(0,0,0,.16);
+  text-align: center;
+}
+.mini-signal-strip span {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+}
+.mini-signal-strip strong {
+  display: block;
+  margin-top: 5px;
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--gold-soft);
+  font-size: 28px;
+  line-height: 1;
+}
+.process-card p { font-size: 16px; }
+
+@media (max-width: 760px) {
+  .hero-proof-line {
+    font-size: 14px;
+    padding: 14px 15px;
+  }
+  .mini-map-board {
+    grid-template-columns: 1fr;
+  }
+  .mini-map-node {
+    min-height: auto;
+  }
+  .mini-signal-strip {
+    grid-template-columns: 1fr;
+  }
+}
