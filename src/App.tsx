@@ -74,10 +74,12 @@ type FullReport = {
 };
 
 type InterviewExchange = { ai: string; user: string; lead?: string; observation?: string };
+type LocalInterviewQuestion = { lead: string; question: string; observation?: string };
 type InterviewState = {
   path: EntryKey; currentQuestion: string; currentLead: string;
   currentObservation: string; history: InterviewExchange[];
   depth: number; finished: boolean; exchangeIndex: number;
+  source?: "api" | "local"; localQuestions?: LocalInterviewQuestion[]; localIndex?: number;
 };
 
 type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string };
@@ -265,7 +267,73 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     checkpoint: { title: "Jedno pytanie. Bez ucieczki.", text: "Jeśli nic się nie zmieni i za rok będziecie dokładnie w tym samym miejscu co teraz, czy to jest życie które akceptujesz?", options: [{ id: "a", label: "Nie. Ale nie wiem jak z tego wyjść.", score: 3 }, { id: "b", label: "Nie chcę tego, ale nie jestem gotowy na zmianę.", score: 2 }, { id: "c", label: "Nie. I dlatego chcę to zrozumieć i coś z tym zrobić.", score: 1 }, { id: "d", label: "Wierzę że do tego nie dojdzie. Że coś się zmieni.", score: 0 }] },
     openPrompt: "Co konkretnie trzyma Cię w tym cyklu i dlaczego mimo wszystkiego co wiesz, wracasz?",
   },
-];
+ ];
+
+const LOCAL_INTERVIEW_QUESTIONS: Record<EntryKey, LocalInterviewQuestion[]> = {
+  unease: [
+    { lead: "Najpierw trzeba nazwać, gdzie zaczyna się napięcie.", question: "Kiedy najczęściej czujesz, że coś jest nie tak: po rozmowach, przy ciszy, przy planach, przy braku kontaktu czy przy myśli o przyszłości?", observation: "Nie szukamy jeszcze decyzji. Szukamy punktu, w którym relacja traci spokój." },
+    { lead: "Niepokój zwykle ma swój powtarzalny moment.", question: "Jaka sytuacja wraca najczęściej i za każdym razem zostawia Cię z podobnym uczuciem?", observation: "Powtarzalność jest ważniejsza niż pojedynczy incydent." },
+    { lead: "Teraz oddziel fakty od tłumaczeń.", question: "Co konkretnie widzisz w zachowaniu tej osoby, a co dopowiadasz sobie, żeby to jakoś utrzymać w całości?", observation: "Tu zaczyna się różnica między tym, co się dzieje, a tym, co próbujesz sobie o tym opowiedzieć." },
+  ],
+  betrayal: [
+    { lead: "Po zdradzie najważniejsze są nie słowa, tylko ciężar odpowiedzialności.", question: "Co ta osoba realnie zmieniła od tamtej sytuacji, a co zostało tylko na poziomie przeprosin albo obietnic?", observation: "Odbudowa zaufania zaczyna się tam, gdzie druga strona przestaje oczekiwać, że ból po prostu minie." },
+    { lead: "Sprawdź, czy żyjesz już normalnie, czy nadal w trybie kontroli.", question: "W jakich momentach najczęściej wraca potrzeba sprawdzania, pytania albo analizowania szczegółów?", observation: "Stała czujność nie jest spokojem. Jest kosztem, który relacja zaczęła pobierać." },
+    { lead: "Zaufanie wraca przez zachowanie, nie przez zmęczenie tematem.", question: "Co musiałoby się wydarzyć, żebyś naprawdę poczuł/poczuła, że nie musisz już pilnować tej historii?", observation: "To pytanie pokazuje, czy oczekujesz realnej zmiany, czy tylko ulgi od napięcia." },
+  ],
+  uncertain: [
+    { lead: "Niejasność rzadko trwa przypadkiem.", question: "Co dokładnie jest między Wami niedopowiedziane: status, zaangażowanie, przyszłość, wyłączność czy odpowiedzialność za relację?", observation: "Im dłużej coś pozostaje niejasne, tym bardziej zaczyna ustawiać całą relację." },
+    { lead: "Zobacz, kto płaci za brak definicji.", question: "Co Ty robisz więcej właśnie dlatego, że nie masz jasności: czekasz, dopasowujesz się, tłumaczysz, inicjujesz, kontrolujesz emocje?", observation: "Brak jasności nie jest neutralny. Ktoś zwykle ponosi jego koszt." },
+    { lead: "Teraz najprostszy test.", question: "Gdyby ta osoba naprawdę chciała dać Ci spokój i pewność, co mogłaby zrobić już teraz, bez wielkich deklaracji?", observation: "Ta odpowiedź odróżnia realną trudność od wygodnej nieokreśloności." },
+  ],
+  asymmetry: [
+    { lead: "Asymetrię widać najlepiej wtedy, gdy przestajesz ciągnąć.", question: "Co realnie stałoby się z kontaktem, bliskością i rozmowami, gdybyś przez chwilę przestał/przestała inicjować i naprawiać?", observation: "To pytanie pokazuje, czy relacja stoi na dwóch osobach, czy głównie na Twoim wysiłku." },
+    { lead: "Nie chodzi tylko o ilość starań, ale o ich ciężar.", question: "Które rzeczy w tej relacji bierzesz na siebie prawie automatycznie, choć coraz bardziej Cię to męczy?", observation: "Czasem człowiek nie zauważa, że stał się silnikiem całego układu." },
+    { lead: "Teraz nazwij koszt.", question: "Kim stajesz się przy tej osobie, kiedy znowu próbujesz utrzymać coś, czego druga strona nie niesie tak samo?", observation: "Najważniejszy nie jest sam wysiłek, tylko to, co ten wysiłek robi z Tobą." },
+  ],
+  conflict: [
+    { lead: "Kłótnia nie jest problemem sama w sobie. Problemem jest to, co zostaje po niej.", question: "Co najczęściej dzieje się po konflikcie: naprawa, cisza, dystans, kolejne wypominanie czy udawanie, że nic się nie stało?", observation: "Relację bardziej definiuje sposób naprawy niż sam fakt sporu." },
+    { lead: "Sprawdź, o co naprawdę walczycie.", question: "Czy Wasze kłótnie dotyczą konkretnych spraw, czy po chwili zamieniają się w walkę o rację, uwagę, szacunek albo kontrolę?", observation: "Gdy temat znika, a zostaje walka, konflikt przestaje rozwiązywać cokolwiek." },
+    { lead: "Teraz najważniejsze: czy konflikt coś zmienia.", question: "Po ostatnich trzech kłótniach co realnie zmieniło się w zachowaniu którejkolwiek ze stron?", observation: "Jeśli po konflikcie nie ma zmiany, konflikt staje się tylko cyklem napięcia." },
+  ],
+  stagnation: [
+    { lead: "Cisza w relacji może być spokojem albo rezygnacją.", question: "Po czym poznajesz, że między Wami jest jeszcze żywy kontakt, a nie tylko przyzwyczajenie i poprawne funkcjonowanie obok siebie?", observation: "Brak awantur nie zawsze oznacza bliskość." },
+    { lead: "Zobacz, co zniknęło jako pierwsze.", question: "Czego najbardziej brakuje Ci z wcześniejszej wersji tej relacji: rozmów, ciekawości, dotyku, planów, lekkości czy poczucia bycia wybranym/wybraną?", observation: "To, co zniknęło pierwsze, często pokazuje prawdziwe miejsce pęknięcia." },
+    { lead: "Teraz bez sentymentu.", question: "Co dzisiaj realnie trzyma Was razem, jeśli odłożysz wspomnienia, obowiązki i lęk przed zmianą?", observation: "Ta odpowiedź odróżnia relację żywą od relacji podtrzymywanej rozpędem." },
+  ],
+  returning: [
+    { lead: "Tęsknota potrafi wygładzać powód rozstania.", question: "Który element tej relacji najłatwiej dziś idealizujesz, mimo że wcześniej właśnie on bolał albo wracał jako problem?", observation: "Po rozstaniu pamięć często przepuszcza ulgę, a zatrzymuje najlepsze kadry." },
+    { lead: "Powrót ma sens tylko wtedy, gdy wracacie do czegoś innego.", question: "Co konkretnie musiałoby być inne po powrocie i skąd miałoby wynikać, że to nie będzie kolejna ta sama próba?", observation: "Bez konkretu powrót bywa tylko powrotem do znanego bólu." },
+    { lead: "Oddziel osobę od niedomkniętej historii.", question: "Czego bardziej nie umiesz puścić: tej konkretnej osoby czy wersji zakończenia, której nadal dla siebie chcesz?", observation: "Czasem nie trzyma człowiek, tylko potrzeba, żeby historia wreszcie miała sens." },
+  ],
+  triangle: [
+    { lead: "Trzecia osoba rzadko jest tylko trzecią osobą.", question: "Co ta osoba uruchomiła w Tobie, czego od dawna nie czułeś/czułaś w obecnej relacji?", observation: "Nowa fascynacja często pokazuje brak, który istniał wcześniej." },
+    { lead: "Sprawdź, czy patrzysz na człowieka, czy na obietnicę wyjścia.", question: "Co w tej trzeciej osobie jest realnie poznane, a co jest jeszcze wyobrażeniem, kontrastem albo ucieczką od napięcia?", observation: "To ważne, bo wyobrażenie prawie zawsze jest lżejsze niż codzienność." },
+    { lead: "Teraz wróć do obecnej relacji.", question: "Gdyby nie było tej trzeciej osoby, jaki problem w obecnej relacji nadal musiałby zostać nazwany?", observation: "To pytanie oddziela nową historię od starego pęknięcia." },
+  ],
+  loop: [
+    { lead: "Pętla ma swój rytm.", question: "Jak wygląda ostatni pełny cykl między Wami: co uruchomiło napięcie, co doprowadziło do powrotu i co potem znowu zaczęło znikać?", observation: "Dopóki cykl nie zostanie nazwany, każde pojednanie wygląda jak nowy początek." },
+    { lead: "Sprawdź, czy po powrotach zostaje zmiana, czy tylko ulga.", question: "Co po ostatnim powrocie naprawdę utrzymało się dłużej niż kilka tygodni?", observation: "Ulga po odzyskaniu kontaktu może bardzo łatwo udawać naprawę." },
+    { lead: "Teraz najtrudniejsze.", question: "Co daje Ci ten cykl, mimo że jednocześnie Cię męczy: intensywność, poczucie bycia potrzebnym/potrzebną, nadzieję, adrenalinę czy uniknięcie pustki?", observation: "Czasem człowieka trzyma nie tylko osoba, ale cały rytm napięcia i ulgi." },
+  ],
+};
+
+function createLocalInterviewState(path: EntryConfig): InterviewState {
+  const localQuestions = LOCAL_INTERVIEW_QUESTIONS[path.key];
+  const first = localQuestions[0];
+  return {
+    path: path.key,
+    currentQuestion: first.question,
+    currentLead: first.lead,
+    currentObservation: first.observation || "",
+    history: [],
+    depth: 1,
+    finished: false,
+    exchangeIndex: 0,
+    source: "local",
+    localQuestions,
+    localIndex: 0,
+  };
+}
 
 const LEGAL_CONTENT: Record<Exclude<LegalKey, null>, { title: string; body: string }> = {
   regulamin: {
@@ -455,6 +523,55 @@ async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: An
     }
   } catch (e: any) { if (e?.message === "__CRISIS__") throw e; }
   return buildPreview(path, answers, openText);
+}
+
+
+function dominantPreviewAxis(preview: Preview): string {
+  const unresolved = 100 - preview.change;
+  if (preview.tension >= preview.asymmetry && preview.tension >= unresolved) return "napięcie";
+  if (preview.asymmetry >= preview.tension && preview.asymmetry >= unresolved) return "asymetria";
+  return "realność zmiany";
+}
+
+function buildPreviewMap(path: EntryConfig, preview: Preview) {
+  const axis = dominantPreviewAxis(preview);
+  const riskText = preview.change <= 30
+    ? "Największe ryzyko jest takie, że chwilowe uspokojenie po rozmowie może wyglądać jak zmiana, choć nie musi niczego przesuwać w zachowaniu."
+    : preview.change <= 55
+      ? "Największe ryzyko leży w tym, że część rzeczy jeszcze działa, ale nie wiadomo, czy wystarczy to do trwałej zmiany."
+      : "Największe ryzyko nie polega na braku potencjału, tylko na tym, że słabsze miejsca zostaną zlekceważone, bo wynik wygląda względnie dobrze.";
+  const axisText = axis === "napięcie"
+    ? "Najmocniej wybija się napięcie: relacja nie daje prostego spokoju, tylko wymusza czujność, reakcję albo obronę."
+    : axis === "asymetria"
+      ? "Najmocniej wybija się asymetria: widać różnicę między tym, kto niesie ciężar relacji, a kto częściej zostawia rzeczy bez domknięcia."
+      : "Najmocniej wybija się pytanie o realność zmiany: nie chodzi o deklaracje, tylko o to, czy zachowanie rzeczywiście przesuwa relację w lepsze miejsce.";
+  const pathQuestion: Record<EntryKey, string> = {
+    unease: "Czy ten niepokój jest sygnałem konkretnego pęknięcia, czy sumą wielu drobnych rzeczy, których nie da się już ignorować?",
+    betrayal: "Czy odbudowa zaufania dzieje się realnie, czy tylko temat zdrady został zmęczony i wypchnięty z rozmów?",
+    uncertain: "Czy brak jasności jest przejściowy, czy stał się wygodnym układem, w którym jedna osoba czeka, a druga nie musi decydować?",
+    asymmetry: "Czy to jeszcze chwilowa nierówność, czy relacja zaczęła działać głównie dzięki Twojemu wysiłkowi?",
+    conflict: "Czy kłótnie rozwiązują problem, czy tylko zostawiają ciszę, dystans i kolejny powód do następnej walki?",
+    stagnation: "Czy to spokojniejszy etap relacji, czy moment, w którym obie strony przestały już naprawdę po siebie sięgać?",
+    returning: "Czy chcesz wrócić do tej osoby, czy do wersji historii, która wreszcie miałaby dobre zakończenie?",
+    triangle: "Czy trzecia osoba jest realną odpowiedzią, czy tylko pokazuje brak, który istniał wcześniej?",
+    loop: "Czy wracacie do miłości, czy do znajomego cyklu napięcia, ulgi i kolejnego rozczarowania?",
+  };
+  return [
+    { label: "Najmocniejszy sygnał", text: axisText },
+    { label: "Największe ryzyko", text: riskText },
+    { label: "Pytanie, którego jeszcze nie widać w wyniku", text: pathQuestion[path.key] },
+    { label: "Co wymaga pogłębienia", text: "Pełny raport rozdziela fakty, nadzieję, koszt emocjonalny i realną zmianę, zamiast zostawiać Cię tylko z jednym procentem." },
+  ];
+}
+
+function buildPremiumSamples(path: EntryConfig, preview: Preview) {
+  const mechanism = dominantPreviewAxis(preview);
+  const conflictSample = path.key === "conflict" ? "czy kłótnia jest próbą rozwiązania problemu, czy sposobem walki o wpływ, uwagę albo kontrolę" : "jaki wzorzec naprawdę organizuje tę relację i dlaczego wraca mimo rozmów";
+  return [
+    { title: "Dominujący mechanizm relacji", text: mechanism === "napięcie" ? conflictSample : "czy głównym ciężarem jest napięcie, asymetria, niejasność, pętla ulgi czy brak realnej zmiany" },
+    { title: "Asymetria zaangażowania", text: "kto inicjuje, kto naprawia, kto czeka, kto unika i kto swoim zachowaniem ustawia rytm całej relacji" },
+    { title: "Co tylko udaje poprawę", text: "czy po trudnych momentach pojawia się zmiana, czy tylko chwilowa ulga, która po czasie znowu wraca do tego samego miejsca" },
+  ];
 }
 
 function LogoBlock() {
@@ -849,13 +966,15 @@ export default function App() {
         const res = await fetch(`${API_BASE}/api/interview/start`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: sessionToken, path: path.key, initialContext: "" }) });
         const d = await res.json().catch(() => ({}));
         if (d.ok && d.question) {
-          setInterviewState({ path: path.key, currentQuestion: d.question, currentLead: d.lead || "", currentObservation: d.observation || "", history: [], depth: 1, finished: false, exchangeIndex: 0 });
+          setInterviewState({ path: path.key, currentQuestion: d.question, currentLead: d.lead || "", currentObservation: d.observation || "", history: [], depth: 1, finished: false, exchangeIndex: 0, source: "api" });
           setInterviewAnswer(""); setStage("interview"); setBusy(false); return;
         }
       } catch {}
       setBusy(false);
     }
-    setStage("open_text");
+    setInterviewState(createLocalInterviewState(path));
+    setInterviewAnswer("");
+    setStage("interview");
   };
 
   const sendInterviewAnswer = async () => {
@@ -863,6 +982,32 @@ export default function App() {
     if (hasCrisisContent(interviewAnswer)) { setStage("crisis"); return; }
     const currentExchangeCount = interviewState.history.length + 1;
     const updatedHistory: InterviewExchange[] = [...interviewState.history, { ai: interviewState.currentQuestion, user: interviewAnswer.trim(), lead: interviewState.currentLead, observation: interviewState.currentObservation }];
+
+    if (interviewState.source === "local") {
+      const localQuestions = interviewState.localQuestions || [];
+      const nextIndex = (interviewState.localIndex ?? 0) + 1;
+      if (nextIndex < localQuestions.length) {
+        const nextQuestion = localQuestions[nextIndex];
+        setInterviewState({
+          ...interviewState,
+          history: updatedHistory,
+          currentQuestion: nextQuestion.question,
+          currentLead: nextQuestion.lead,
+          currentObservation: nextQuestion.observation || "",
+          depth: nextIndex + 1,
+          exchangeIndex: nextIndex,
+          localIndex: nextIndex,
+        });
+        setInterviewAnswer("");
+        return;
+      }
+      const transcript = updatedHistory.map((e) => `Pytanie: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n");
+      setInterviewState({ ...interviewState, history: updatedHistory, finished: true });
+      setOpenText(transcript);
+      setStage("open_text");
+      setInterviewAnswer("");
+      return;
+    }
     
     if (currentExchangeCount > 5) {
       setInterviewBusy(true);
@@ -1240,30 +1385,54 @@ export default function App() {
                 </div>
                 <div className="preview-grid">
                   <Glass className="report-section"><div className="eyebrow">CO JUŻ WIDAĆ</div><p>{preview.summary}</p></Glass>
-                  <Glass className="report-section"><div className="eyebrow">MECHANIZM</div><p>{preview.tone === "green" ? "Najmocniej działa tu jeszcze wzajemność i struktura." : preview.tone === "yellow" ? "Napięcie miesza się tu z nadzieją i przywiązaniem." : "Najmocniej pracuje tu mechanizm ulgi po napięciu i lęk przed stratą."}</p></Glass>
+                  <Glass className="report-section"><div className="eyebrow">MECHANIZM</div><p>{preview.tone === "green" ? "Najmocniej działa tu jeszcze wzajemność i struktura, ale to nie znosi słabszych miejsc." : preview.tone === "yellow" ? "Napięcie miesza się tu z nadzieją, przywiązaniem i pytaniem, czy druga strona niesie relację podobnie." : "Najmocniej pracuje tu mechanizm napięcia, ulgi i powrotu do tego samego miejsca."}</p></Glass>
                   <Glass className="report-section"><div className="eyebrow">CZEGO PODGLĄD NIE ZAWIERA</div><p>{preview.paidTease}</p></Glass>
                 </div>
-                <Glass className="unlock-panel">
-                  <div className="eyebrow">TO TYLKO FRAGMENT</div>
-                  <p className="unlock-copy">Pełny raport pokazuje nie tylko wynik, ale cały mechanizm tej historii. Bez diagnozowania, bez oceniania partnera/partnerki i bez gotowej decyzji za Ciebie.</p>
-                  <div className="unlock-benefits">
-                    {[
-                      "co naprawdę trzyma Cię w tej relacji",
-                      "gdzie jest największe napięcie i koszt emocjonalny",
-                      "czy problemem jest kryzys, schemat czy asymetria",
-                      "co daje realną nadzieję, a co tylko ją podtrzymuje",
-                      "jaki wzorzec wraca po rozmowach, obietnicach i chwilach ulgi",
-                      "jedno pytanie graniczne przed decyzją"
-                    ].map((item) => (
-                      <div key={item} className="unlock-benefit"><span>•</span><span>{item}</span></div>
-                    ))}
-                  </div>
-                  <div className="unlock-fineprint">Pełny raport ma 17 sekcji generowanych indywidualnie na podstawie Twoich odpowiedzi. Nie jest opinią specjalisty, diagnozą ani terapią. Jest prywatnym lustrem sytuacji.</div>
-                  <div className="unlock-form">
-                    <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Twój adres e-mail." />
-                    <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Odblokuj pełny raport"}</PrimaryButton>
-                  </div>
-                </Glass>
+                {path && (
+                  <Glass className="preview-map-panel">
+                    <div className="eyebrow">WSTĘPNA MAPA SYTUACJI</div>
+                    <div className="preview-map-grid">
+                      {buildPreviewMap(path, preview).map((item) => (
+                        <div key={item.label} className="preview-map-item">
+                          <strong>{item.label}</strong>
+                          <span>{item.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </Glass>
+                )}
+                {path && (
+                  <Glass className="unlock-panel unlock-panel--strong">
+                    <div className="eyebrow">TO TYLKO FRAGMENT</div>
+                    <p className="unlock-copy">Pełny raport nie pokazuje tylko wyniku. Rozbiera tę sytuację na mechanizm, koszt emocjonalny, asymetrię, realność zmiany i miejsca, w których nadzieja może przykrywać fakty.</p>
+                    <div className="premium-sample-grid">
+                      {buildPremiumSamples(path, preview).map((item, index) => (
+                        <div key={item.title} className="premium-sample-card">
+                          <div className="premium-sample-no">0{index + 1}</div>
+                          <strong>{item.title}</strong>
+                          <span>{item.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="unlock-benefits">
+                      {[
+                        "co naprawdę trzyma Cię w tej relacji",
+                        "gdzie jest największe napięcie i koszt emocjonalny",
+                        "czy problemem jest kryzys, schemat czy asymetria",
+                        "co daje realną nadzieję, a co tylko ją podtrzymuje",
+                        "jaki wzorzec wraca po rozmowach, obietnicach i chwilach ulgi",
+                        "jedno pytanie graniczne przed decyzją"
+                      ].map((item) => (
+                        <div key={item} className="unlock-benefit"><span>•</span><span>{item}</span></div>
+                      ))}
+                    </div>
+                    <div className="unlock-fineprint">Pełny raport ma 17 sekcji generowanych indywidualnie na podstawie Twoich odpowiedzi. Nie jest opinią specjalisty, diagnozą ani terapią. Jest prywatnym lustrem sytuacji.</div>
+                    <div className="unlock-form">
+                      <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Twój adres e-mail." />
+                      <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Pokaż pełną analizę tej relacji"}</PrimaryButton>
+                    </div>
+                  </Glass>
+                )}
                 {error && <div className="error-line">{error}</div>}
                 <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton><GhostButton onClick={resetAll}>Od początku</GhostButton></div>
               </Glass>

@@ -2489,3 +2489,94 @@ button { cursor: pointer; }
     font-size: 13.5px;
   }
 }
+
+/* ── PREVIEW PLUS - deeper free report teaser ───────────────── */
+.preview-map-panel {
+  padding: 24px;
+}
+
+.preview-map-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.preview-map-item {
+  min-height: 130px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(255,255,255,.07);
+  background: rgba(255,255,255,.025);
+}
+
+.preview-map-item strong {
+  display: block;
+  color: var(--gold-soft);
+  font-size: 12px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.preview-map-item span {
+  display: block;
+  color: #e7ded5;
+  font-size: 15px;
+  line-height: 1.72;
+}
+
+.unlock-panel--strong {
+  border-color: rgba(197,160,89,.16) !important;
+}
+
+.premium-sample-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.premium-sample-card {
+  min-height: 190px;
+  padding: 18px;
+  border-radius: 22px;
+  border: 1px solid rgba(197,160,89,.16);
+  background:
+    radial-gradient(circle at top left, rgba(197,160,89,.09), transparent 45%),
+    rgba(255,255,255,.025);
+}
+
+.premium-sample-no {
+  color: var(--gold);
+  font-size: 12px;
+  letter-spacing: .28em;
+  margin-bottom: 12px;
+}
+
+.premium-sample-card strong {
+  display: block;
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--text);
+  font-size: 20px;
+  line-height: 1.18;
+  margin-bottom: 10px;
+}
+
+.premium-sample-card span {
+  display: block;
+  color: #cfc6bd;
+  font-size: 14px;
+  line-height: 1.68;
+}
+
+@media (max-width: 900px) {
+  .preview-map-grid,
+  .premium-sample-grid {
+    grid-template-columns: 1fr;
+  }
+  .preview-map-item,
+  .premium-sample-card {
+    min-height: unset;
+  }
+}
