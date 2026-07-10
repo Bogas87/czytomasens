@@ -1106,7 +1106,7 @@ async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutM
 async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: AnswerMap, openText: string, relationshipMap?: RelationshipMapPayload): Promise<Preview> {
   const answersArr = Object.entries(answers).map(([qid, oid]) => { const q = path.questions.find((x) => x.id === qid); const opt = q?.options.find((o) => o.id === oid); return { q: q?.text || qid, a: opt?.label || oid }; });
   try {
-    const res = await fetchWithTimeout(`${API_BASE}/api/analyze`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, path: path.key, mode: "soft", answers: answersArr, openText, customDescription: openText, relationshipMap }) }, 25000);
+    const res = await fetchWithTimeout(`${API_BASE}/api/analyze`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, path: path.key, mode: "soft", answers: answersArr, openText, customDescription: openText, relationshipMap }) }, 10000);
     const data = await res.json().catch(() => ({}));
     if (data?.crisis) throw new Error("__CRISIS__");
     if (data?.ok && data?.preview) {
@@ -1259,13 +1259,10 @@ function CookieBanner() {
 }
 
 const PROCESSING_MESSAGES = [
-  "Czytam Twoje odpowiedzi",
-  "Sprawdzam, co naprawdę się powtarza",
-  "Oddzielam fakty od dopowiedzeń",
-  "Szukam miejsca, które zmienia odczyt",
-  "Układam wynik prostym językiem",
-  "Sprawdzam, czego nie warto powtarzać",
-  "Kończę pierwszy obraz sytuacji",
+  "Czytam odpowiedzi",
+  "Sprawdzam przykłady",
+  "Układam pierwszy wynik",
+  "Kończę podsumowanie",
 ];
 
 function ProcessingScreen() {
@@ -1286,7 +1283,7 @@ function ProcessingScreen() {
         </div>
         <h2 style={{ marginBottom: "12px", fontSize: "clamp(20px,4vw,26px)" }}>Przygotowuję wynik</h2>
         <div className="processing-message">{PROCESSING_MESSAGES[msgIndex]}{".".repeat(dots)}</div>
-        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>Nie przepisuję Twoich odpowiedzi. Szukam tego, co z nich wynika.<br />Nie zamykaj karty. To zajmie chwilę.</p>
+        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>To potrwa chwilę. Zaraz pokażemy pierwszy wynik.</p>
         <div className="processing-bar"><div className="processing-bar-fill" /></div>
       </Glass>
     </div>
@@ -1813,13 +1810,19 @@ export default function App() {
       }
 
       let previewData: Preview;
+      const localFallback = buildPreview(path, answers, finalOpenText);
       try {
-        previewData = token
-          ? await fetchPreviewFromAPI(token, path, answers, finalOpenText, relationshipMap)
-          : buildPreview(path, answers, finalOpenText);
+        if (token) {
+          previewData = await Promise.race([
+            fetchPreviewFromAPI(token, path, answers, finalOpenText, relationshipMap),
+            new Promise<Preview>((resolve) => window.setTimeout(() => resolve(localFallback), 12000)),
+          ]);
+        } else {
+          previewData = localFallback;
+        }
       } catch (e: any) {
         if (e?.message === "__CRISIS__") { setStage("crisis"); return; }
-        previewData = buildPreview(path, answers, finalOpenText);
+        previewData = localFallback;
       }
 
       setPreview(previewData);
