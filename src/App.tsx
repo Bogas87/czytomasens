@@ -433,7 +433,7 @@ function buildCycleSteps(pathKey?: EntryKey, burdens: BurdenItem[] = [], truthCa
   if (pathKey === "uncertain" || hasBurden(burdens, "brak jasności")) return ["kontakt", "nadzieja", "niejasność", "czekanie"];
   if (pathKey === "loop" || hasBurden(burdens, "powroty") || truthCards.some((text) => text.includes("wracamy"))) return ["oddalenie", "tęsknota", "powrót", "ten sam problem"];
   if (pathKey === "asymmetry" || hasBurden(burdens, "nierówne")) return ["staranie", "brak odpowiedzi", "dopasowanie", "zmęczenie"];
-  return ["sygnał", "napięcie", "doprecyzowanie", "wniosek"];
+  return ["pierwszy sygnał", "miejsce kosztu", "konkret z życia", "wniosek dla Ciebie"];
 }
 
 function VisualBars({ items }: { items: VisualBar[] }) {
@@ -464,10 +464,14 @@ function cycleStepDescription(step: string): string {
     "nazwanie": "problem robi się czytelniejszy",
     "współpraca": "liczy się udział obu stron",
     "kierunek": "widać następny krok",
-    "działa": "są elementy, które trzymają układ",
-    "obciąża": "jest koszt, którego nie warto pomijać",
-    "wymaga sprawdzenia": "bez doprecyzowania łatwo o zły wniosek",
-    "wniosek": "dopiero całość pokaże obraz",
+    "działa": "są elementy, które nadal dają oparcie",
+    "obciąża": "pojawia się koszt, którego nie warto pomijać",
+    "wymaga sprawdzenia": "potrzebny jest przykład z życia, nie sama etykieta",
+    "wniosek": "dopiero zachowanie pokaże, czy to zmiana",
+    "co jeszcze działa": "co w tej relacji nadal ma grunt",
+    "co już kosztuje": "gdzie pojawia się napięcie albo zmęczenie",
+    "co trzeba sprawdzić": "jaki fakt z życia zmieniłby odczyt",
+    "wniosek z faktów": "co można powiedzieć bez dopowiadania historii",
     "bliskość": "jest coś, co nadal przyciąga",
     "ciężar": "jednocześnie pojawia się obciążenie",
     "próba naprawy": "jest ruch w stronę poprawy",
@@ -492,6 +496,10 @@ function cycleStepDescription(step: string): string {
     "dopasowanie": "pojawia się schodzenie z własnych potrzeb",
     "zmęczenie": "koszt zaczyna być widoczny",
     "sygnał": "coś zaczyna się powtarzać",
+    "pierwszy sygnał": "pierwsza rzecz, która wybija się z odpowiedzi",
+    "miejsce kosztu": "gdzie relacja zaczyna zabierać spokój",
+    "konkret z życia": "jedna sytuacja, która może zmienić ocenę",
+    "wniosek dla ciebie": "co z tego wynika w praktyce",
     "doprecyzowanie": "jedna rzecz może zmienić odczyt",
   };
   return descriptions[normalized] || "ten element dopowie dalsza część analizy";
@@ -615,7 +623,7 @@ function buildAdaptiveCycle(mode: InsightMode, variant: PauseVariant, pathKey?: 
   }
   if (mode === "mixed") {
     if (variant === "burdens") return ["bliskość", "ciężar", "próba naprawy", "niepewność"];
-    return ["działa", "obciąża", "wymaga sprawdzenia", "wniosek"];
+    return ["co jeszcze działa", "co już kosztuje", "co trzeba sprawdzić", "wniosek z faktów"];
   }
   return buildCycleSteps(pathKey, burdens, truthCards);
 }
@@ -749,11 +757,11 @@ function PauseInsightPanel({ insight, onBack, onNext, nextLabel = "Dalej →" }:
         {insight.quote && <div className="pause-quote">„{insight.quote}”</div>}
         <div className="pause-grid">
           <div className="pause-visual-card">
-            <div className="eyebrow">CO TO MOŻE OZNACZAĆ</div>
+            <div className="eyebrow">CO JUŻ WIDAĆ</div>
             <VisualBars items={insight.bars} />
           </div>
           <div className="pause-visual-card">
-            <div className="eyebrow">CZEGO JESZCZE NIE WIEMY</div>
+            <div className="eyebrow">CO SPRAWDZAMY DALEJ</div>
             <CycleDiagram steps={insight.cycle || []} />
             {insight.chips && insight.chips.length > 0 && (
               <div className="pause-chip-row">
@@ -1185,6 +1193,31 @@ function metricExplanationCards(preview: Preview) {
   ];
 }
 
+
+function ensurePreview(value: any, fallback: Preview): Preview {
+  if (!value || typeof value !== "object") return fallback;
+  const chance = Number(value.chance);
+  const tension = Number(value.tension);
+  const asymmetry = Number(value.asymmetry);
+  const change = Number(value.change);
+  if (![chance, tension, asymmetry, change].every(Number.isFinite)) return fallback;
+  return {
+    ...fallback,
+    ...value,
+    chance: clamp(chance, 5, 95),
+    tension: clamp(tension, 5, 97),
+    asymmetry: clamp(asymmetry, 5, 97),
+    change: clamp(change, 5, 90),
+    badge: typeof value.badge === "string" && value.badge.trim() ? value.badge : fallback.badge,
+    headline: typeof value.headline === "string" && value.headline.trim() ? value.headline : fallback.headline,
+    truth: typeof value.truth === "string" && value.truth.trim() ? value.truth : fallback.truth,
+    mirror: typeof value.mirror === "string" && value.mirror.trim() ? value.mirror : fallback.mirror,
+    summary: typeof value.summary === "string" && value.summary.trim() ? value.summary : fallback.summary,
+    paidTease: typeof value.paidTease === "string" && value.paidTease.trim() ? value.paidTease : fallback.paidTease,
+    tone: value.tone === "red" || value.tone === "yellow" || value.tone === "green" ? value.tone : fallback.tone,
+  } as Preview;
+}
+
 function dominantPreviewAxis(preview: Preview): string {
   const unresolved = 100 - preview.change;
   if (preview.tension >= preview.asymmetry && preview.tension >= unresolved) return "napięcie";
@@ -1260,11 +1293,12 @@ function GhostButton({ children, onClick }: { children: React.ReactNode; onClick
 function PremiumBadge({ preview }: { preview: Preview }) {
   const color = preview.tone === "red" ? BRAND.danger : preview.tone === "green" ? BRAND.success : BRAND.goldSoft;
   return (
-    <Glass className="ctms-preview-badge score-card-strong">
-      <div className="ctms-kicker">WYNIK NA TERAZ</div>
+    <Glass className="ctms-preview-badge ctms-preview-badge--clean">
+      <div className="ctms-kicker">PIERWSZY ODCZYT</div>
       <div className="ctms-preview-score" style={{ color }}>{preview.chance}%</div>
       <div className="ctms-preview-label">{preview.badge}</div>
-      <div className="score-card-note">To nie jest wyrok ani instrukcja. To pierwszy odczyt, czy w odpowiedziach widać więcej spokoju, napięcia czy miejsca do sprawdzenia.</div>
+      <div className="ctms-preview-truth">{preview.truth}</div>
+      <div className="ctms-preview-mirror">{preview.mirror}</div>
     </Glass>
   );
 }
@@ -1314,7 +1348,7 @@ function ProcessingScreen() {
           <div className="processing-ring processing-ring--2" />
           <div className="processing-dot" />
         </div>
-        <h2 style={{ marginBottom: "12px", fontSize: "clamp(20px,4vw,26px)" }}>Przygotowuję pierwszy wynik</h2>
+        <h2 style={{ marginBottom: "12px", fontSize: "clamp(20px,4vw,26px)" }}>Przygotowuję wynik</h2>
         <div className="processing-message">{PROCESSING_MESSAGES[msgIndex]}{".".repeat(dots)}</div>
         <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>To potrwa chwilę. Zaraz pokażemy pierwszy wynik.</p>
         <div className="processing-bar"><div className="processing-bar-fill" /></div>
@@ -1858,6 +1892,7 @@ export default function App() {
         previewData = localFallback;
       }
 
+      previewData = ensurePreview(previewData, localFallback);
       setPreview(previewData);
 
       if (token) {
@@ -1965,35 +2000,58 @@ export default function App() {
                 <Glass className="glass-panel hero-panel hero-copy hero-panel--clean">
                   <div className="eyebrow with-line">PRYWATNA ANALIZA KONKRETNEJ RELACJI</div>
                   <h1>Zobacz, <span>co naprawdę dzieje się między Wami.</span></h1>
-                  <p className="hero-lead-plain">CzyToMaSens pomaga uporządkować sytuację w relacji: co wraca, gdzie znika jasność, kto częściej niesie ciężar i czy widać realną zmianę. To nie jest quiz, czat ani diagnoza.</p>
-                  <div className="hero-simple-flow" aria-label="Jak działa analiza">
-                    <div><span>01</span><strong>Zaznaczasz fakty</strong></div>
-                    <div><span>02</span><strong>Dopowiadasz jeden przykład</strong></div>
-                    <div><span>03</span><strong>Dostajesz pierwszy odczyt</strong></div>
+                  <p className="hero-main-copy">CzyToMaSens porządkuje sytuację, w której trudno już oddzielić fakty od nadziei, zmęczenia albo domysłów. Nie dostajesz ogólnej porady. Dostajesz pierwszy odczyt tej konkretnej relacji.</p>
+                  <div className="hero-definition-card">
+                    <strong>Co dostajesz?</strong>
+                    <span>Krótki obraz tego, co wraca, gdzie znika jasność, kto częściej niesie ciężar i czy widać realną zmianę w zachowaniu.</span>
                   </div>
                   <div className="ctms-landing-actions">
                     <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij analizę relacji</PrimaryButton>
                   </div>
                 </Glass>
-                <Glass className="glass-panel hero-panel hero-what-panel">
-                  <div className="eyebrow">CO DOSTAJESZ</div>
-                  <h3>Nie ocenę partnera. Odczyt sytuacji.</h3>
-                  <div className="what-list">
-                    <div><strong>Co się powtarza</strong><span>czy problem jest jednorazowy, czy wraca w podobnym kształcie</span></div>
-                    <div><strong>Gdzie jest ciężar</strong><span>kto częściej naprawia, czeka, tłumaczy albo domyka temat</span></div>
-                    <div><strong>Co daje nadzieję</strong><span>czy widać konkretny ruch, czy tylko chwilową ulgę</span></div>
-                    <div><strong>Co wymaga sprawdzenia</strong><span>jedna rzecz, która najbardziej zmienia odczyt sytuacji</span></div>
+                <div className="hero-side-stack">
+                  <Glass className="glass-panel story-panel landing-result-preview">
+                    <div className="story-kicker">PIERWSZY ODCZYT</div>
+                    <h3>Nie etykieta. Nie diagnoza. Konkretna mapa sytuacji.</h3>
+                    <div className="landing-report-preview">
+                      <div className="landing-report-main">
+                        <span>Najważniejszy sygnał</span>
+                        <strong>co powtarza się między Wami, nawet jeśli za każdym razem wygląda trochę inaczej</strong>
+                      </div>
+                      <div className="landing-report-row">
+                        <span>Gdzie jest ciężar</span>
+                        <strong>kto częściej wraca do rozmowy, czeka, tłumaczy albo próbuje domknąć temat</strong>
+                      </div>
+                      <div className="landing-report-row">
+                        <span>Co daje nadzieję</span>
+                        <strong>czy widać zachowanie, które realnie zmienia sytuację, a nie tylko chwilową ulgę</strong>
+                      </div>
+                      <div className="landing-report-row muted">
+                        <span>Co zostaje do sprawdzenia</span>
+                        <strong>jedna rzecz, bez której wynik byłby tylko domysłem</strong>
+                      </div>
+                    </div>
+                    <div className="landing-lens-strip">
+                      <div><small>napięcie</small><b>koszt</b></div>
+                      <div><small>jasność</small><b>kierunek</b></div>
+                      <div><small>zmiana</small><b>fakty</b></div>
+                    </div>
+                  </Glass>
+                </div>
+              </section>
+
+              <section className="landing-definition-section">
+                <Glass className="landing-definition-strip">
+                  <div>
+                    <div className="eyebrow">CZYM JEST CZYTOMASENS</div>
+                    <p>Prywatnym narzędziem do uporządkowania relacji przed rozmową, decyzją albo kolejnym powrotem do tego samego punktu.</p>
+                  </div>
+                  <div className="landing-definition-mini">
+                    <span>fakty</span><span>ciężar</span><span>zmiana</span>
                   </div>
                 </Glass>
               </section>
-
-              <section className="what-is-section">
-                <Glass className="what-is-strip">
-                  <div className="eyebrow">CZYM JEST CZYTOMASENS</div>
-                  <p>Prywatnym narzędziem do uporządkowania relacji. Najpierw zbiera fakty, potem pokazuje pierwszy wniosek: gdzie jest napięcie, gdzie nierówność, a gdzie realny potencjał.</p>
-                </Glass>
-              </section>
-
+              
               <ArticlesSection onNavigateHome={() => navigateTo("/artykuly")} onNavigateArticle={(slug) => navigateTo(`/artykuly/${slug}`)} onStartAnalysis={() => setStage("consent")} />
             </motion.div>
           )}
@@ -2046,7 +2104,8 @@ export default function App() {
                   <div className="progress-track"><div className="progress-fill" style={{ width: `${((questionIndex + 1) / path.questions.length) * 100}%` }} /></div>
                 </div>
               </div>
-              <Glass className="question-panel">
+              <Glass className="question-panel question-panel--single">
+                <div className="single-question-label">Pytanie {questionIndex + 1} z {path.questions.length}</div>
                 <div className="question-copy">
                   <div className="question-lead">{currentQuestion.lead}</div>
                   <h3>{currentQuestion.text}</h3>
@@ -2102,13 +2161,13 @@ export default function App() {
               </div>
               <Glass className="question-panel relationship-map-panel">
                 <div className="map-step-note">
-                  Teraz odpowiadasz na kilka osobnych pytań o to, jak rozkłada się ciężar relacji. Przy każdym wybierz najbliższą odpowiedź, nie idealną.
+                  Każda karta to osobne pytanie. Zaznacz najbliższą odpowiedź. Nie musi pasować idealnie.
                 </div>
                 <div className="force-map-list">
                   {FORCE_MAP_ITEMS.map((item, index) => (
-                    <div key={item.key} className="force-map-item">
-                      <div className="force-question-index">Pytanie {index + 1} z {FORCE_MAP_ITEMS.length}</div>
+                    <div key={item.key} className="force-map-item force-map-item--stepped">
                       <div className="force-map-copy">
+                        <div className="force-question-index">Pytanie {index + 1} z {FORCE_MAP_ITEMS.length}</div>
                         <strong>{item.title}</strong>
                         <span>{item.hint}</span>
                       </div>
@@ -2382,7 +2441,8 @@ export default function App() {
                   <div className="progress-track"><div className="progress-fill" style={{ width: `${(interviewState.depth / 5) * 100}%` }} /></div>
                 </div>
               </div>
-              <Glass className="question-panel">
+              <Glass className="question-panel question-panel--single">
+                <div className="single-question-label">Pytanie pogłębiające</div>
                 <div className="question-copy">
                   {interviewState.currentLead && <div className="question-lead">{interviewState.currentLead}</div>}
                   <h3>{interviewState.currentQuestion}</h3>
@@ -2433,20 +2493,25 @@ export default function App() {
             </motion.div>
           )}
 
-          {stage === "preview" && preview && (
+          {stage === "preview" && (() => {
+            const safePreview = preview || (path ? buildPreview(path, answers, openText || buildCompositeOpenText(clarificationAnswers)) : null);
+            const previewForRender = safePreview;
+            return previewForRender ? (
+            (() => { const preview = previewForRender; return (
             <motion.div key="preview" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <Glass className="preview-card">
+              <Glass className="preview-card preview-card--report">
                 <div className="preview-hero">
                   <div className="eyebrow">PIERWSZY OBRAZ SYTUACJI</div>
                   <h2>{preview.headline}</h2>
                   <div className="preview-truth-top">{preview.truth}</div>
+                  <div className="preview-mirror-top">{preview.mirror}</div>
                 </div>
                 <PremiumBadge preview={preview} />
                 <div className="preview-disclaimer">
-                  To nie jest diagnoza ani decyzja za Ciebie. To pierwszy wniosek z Twoich odpowiedzi.
+                  To nie jest diagnoza ani decyzja za Ciebie. To krótki odczyt sytuacji: co już widać, co może Cię mylić i co warto sprawdzić dalej.
                 </div>
                 <Glass className="preview-visual-panel">
-                  <div className="eyebrow">CO POKAZUJĄ ODPOWIEDZI</div>
+                  <div className="eyebrow">PIERWSZY OBRAZ W LICZBACH</div>
                   <VisualBars items={buildPreviewVisualBars(preview)} />
                   {path && (
                     <div className="preview-cycle-wrap">
@@ -2455,31 +2520,38 @@ export default function App() {
                     </div>
                   )}
                 </Glass>
-                <div className="metrics-grid metrics-grid--visual">
-                  {metricExplanationCards(preview).map((item) => (
-                    <Glass key={item.label} className="metric-card metric-card--visual">
-                      <div className="metric-card-head"><div className="metric-label">{item.label}</div><div className="metric-value">{item.value}%</div></div>
-                      <div className="metric-track"><div className="metric-track-fill" style={{ width: `${item.value}%` }} /></div>
-                      <p>{item.text}</p>
-                    </Glass>
+                <div className="metrics-grid">
+                  {([[preview.tension, "NAPIĘCIE"], [preview.asymmetry, "ASYMETRIA"], [preview.change, "SZANSA ZMIANY"]] as [number, string][]).map(([value, label]) => (
+                    <Glass key={label} className="metric-card"><div className="metric-value">{value}%</div><div className="metric-label">{label}</div></Glass>
                   ))}
                 </div>
+                <Glass className="preview-metrics-explained">
+                  <div className="eyebrow">CO OZNACZAJĄ TE LICZBY</div>
+                  <div className="metric-explain-grid">
+                    {metricExplanationCards(preview).map((item) => (
+                      <div key={item.label} className="metric-explain-card">
+                        <div className="metric-explain-head"><strong>{item.label}</strong><span>{item.value}%</span></div>
+                        <p>{item.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </Glass>
                 <Glass className="preview-analysis-panel">
-                  <div className="eyebrow">CO WYNIKA Z ODPOWIEDZI</div>
+                  <div className="eyebrow">NAJWAŻNIEJSZE Z TEJ CZĘŚCI</div>
                   <div className="preview-analysis-grid">
                     <div className="preview-analysis-item">
                       <span>01</span>
-                      <strong>Co już wiesz</strong>
+                      <strong>Fakt, którego nie trzeba już udowadniać</strong>
                       <p>{previewFallbackText(preview, "whatUserKnows", preview.summary)}</p>
                     </div>
                     <div className="preview-analysis-item highlight">
                       <span>02</span>
-                      <strong>Co z tego wynika</strong>
+                      <strong>Co to zmienia</strong>
                       <p>{previewFallbackText(preview, "hiddenInsight", preview.mirror)}</p>
                     </div>
                     <div className="preview-analysis-item">
                       <span>03</span>
-                      <strong>Co się nie klei</strong>
+                      <strong>Co wymaga sprawdzenia</strong>
                       <p>{previewFallbackText(preview, "contradiction", "Sprawdź, czy to, na co liczysz, zgadza się z tym, co rzeczywiście regularnie dzieje się między Wami.")}</p>
                     </div>
                     <div className="preview-analysis-item conclusion">
@@ -2490,8 +2562,8 @@ export default function App() {
                   </div>
                 </Glass>
                 <div className="preview-grid">
-                  <Glass className="report-section"><div className="eyebrow">WNIOSEK NA TERAZ</div><p>{preview.summary}</p></Glass>
-                  <Glass className="report-section"><div className="eyebrow">CO WARTO ZOBACZYĆ</div><p>{preview.tone === "green" ? "Są tu elementy, na których realnie można się oprzeć. To nie znaczy, że wszystko jest załatwione. Znaczy, że odpowiedzi nie pokazują samego chaosu." : preview.tone === "yellow" ? "Obok nadziei widać też koszt. To miejsce, w którym łatwo pomylić chwilowe uspokojenie z prawdziwą zmianą." : "Trudność ma tu powtarzalny kształt. To ważniejsze niż pojedynczy gorszy moment."}</p></Glass>
+                  <Glass className="report-section"><div className="eyebrow">NAJWAŻNIEJSZY WNIOSEK</div><p>{preview.summary}</p></Glass>
+                  <Glass className="report-section"><div className="eyebrow">CO TO ZMIENIA</div><p>{preview.tone === "green" ? "Ten wynik nie mówi, że wszystko jest idealne. Mówi, że w odpowiedziach widać elementy, na których realnie można się oprzeć." : preview.tone === "yellow" ? "Ten wynik nie rozstrzyga za Ciebie. Pokazuje, że obok nadziei działa też coś, czego nie warto już tłumaczyć przypadkiem." : "Ten wynik nie mówi tylko, że jest trudno. Pokazuje, że trudność zaczęła mieć powtarzalny kształt."}</p></Glass>
                   <Glass className="report-section"><div className="eyebrow">CO DAJE PEŁNA ANALIZA</div><p>{preview.paidTease}</p></Glass>
                 </div>
                 {path && (
@@ -2543,7 +2615,9 @@ export default function App() {
                 <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton><GhostButton onClick={resetAll}>Od początku</GhostButton></div>
               </Glass>
             </motion.div>
-          )}
+            ); })()
+            ) : <ProcessingScreen />;
+          })()}
 
           {stage === "processing" && (
             <motion.div key="processing" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
@@ -2553,7 +2627,7 @@ export default function App() {
 
           {stage === "paid" && fullReport && (
             <motion.div key="paid" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <Glass className="preview-card">
+              <Glass className="preview-card preview-card--report paid-report-card">
                 <div className="eyebrow">RAPORT PREMIUM</div>
                 <div className="report-head">
                   <h2>{fullReport.headline || "Ta relacja daje Ci kontakt, ale nie daje Ci oparcia."}</h2>
