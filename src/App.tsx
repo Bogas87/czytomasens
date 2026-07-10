@@ -424,12 +424,15 @@ function buildMapVisualBars(forceMap: ForceMap, burdens: BurdenItem[], truthCard
 }
 
 function buildPreviewVisualBars(preview: Preview): VisualBar[] {
-  const clarity = clampScore(100 - Math.max(preview.tension * 0.45, preview.asymmetry * 0.55));
+  const tension = clampScore(preview?.tension ?? 50);
+  const asymmetry = clampScore(preview?.asymmetry ?? 50);
+  const change = clampScore(preview?.change ?? 45);
+  const clarity = clampScore(100 - Math.max(tension * 0.45, asymmetry * 0.55));
   return [
-    { label: "Napięcie", value: preview.tension, tone: preview.tension >= 70 ? "danger" : preview.tension >= 45 ? "gold" : "green", text: preview.tension >= 70 ? "relacja częściej uruchamia czujność niż spokój" : "napięcie jest obecne, ale nie musi dominować" },
-    { label: "Asymetria", value: preview.asymmetry, tone: preview.asymmetry >= 70 ? "danger" : preview.asymmetry >= 45 ? "gold" : "green", text: preview.asymmetry >= 70 ? "jedna strona prawdopodobnie niesie więcej ciężaru" : "nierównowaga wymaga dalszego odczytu" },
+    { label: "Napięcie", value: tension, tone: tension >= 70 ? "danger" : tension >= 45 ? "gold" : "green", text: tension >= 70 ? "relacja częściej uruchamia czujność niż spokój" : "napięcie jest obecne, ale nie musi dominować" },
+    { label: "Asymetria", value: asymmetry, tone: asymmetry >= 70 ? "danger" : asymmetry >= 45 ? "gold" : "green", text: asymmetry >= 70 ? "jedna strona prawdopodobnie niesie więcej ciężaru" : "nierównowaga wymaga dalszego odczytu" },
     { label: "Jasność", value: clarity, tone: clarity <= 35 ? "danger" : clarity <= 60 ? "gold" : "green", text: clarity <= 35 ? "za dużo pozostaje w domysłach" : "część sytuacji daje się już nazwać" },
-    { label: "Zmiana", value: preview.change, tone: preview.change <= 35 ? "danger" : preview.change <= 58 ? "gold" : "green", text: preview.change <= 35 ? "na razie słabiej widać trwały zwrot" : "jest przestrzeń do sprawdzenia potencjału" },
+    { label: "Zmiana", value: change, tone: change <= 35 ? "danger" : change <= 58 ? "gold" : "green", text: change <= 35 ? "na razie słabiej widać trwały zwrot" : "jest przestrzeń do sprawdzenia potencjału" },
   ];
 }
 
@@ -1225,9 +1228,12 @@ function ensurePreview(value: any, fallback: Preview): Preview {
 }
 
 function dominantPreviewAxis(preview: Preview): string {
-  const unresolved = 100 - preview.change;
-  if (preview.tension >= preview.asymmetry && preview.tension >= unresolved) return "napięcie";
-  if (preview.asymmetry >= preview.tension && preview.asymmetry >= unresolved) return "asymetria";
+  const tension = clampScore(preview?.tension ?? 50);
+  const asymmetry = clampScore(preview?.asymmetry ?? 50);
+  const change = clampScore(preview?.change ?? 45);
+  const unresolved = 100 - change;
+  if (tension >= asymmetry && tension >= unresolved) return "napięcie";
+  if (asymmetry >= tension && asymmetry >= unresolved) return "asymetria";
   return "realność zmiany";
 }
 
@@ -1342,8 +1348,8 @@ function buildFreeInsightCards(path: EntryConfig, preview: Preview) {
       check: "Sprawdź, czy po każdym powrocie znika stary problem, czy tylko zaczyna się nowy cykl.",
     },
   };
-  const axisCard = baseByAxis[axis];
-  const pathCard = byPath[path.key];
+  const axisCard = baseByAxis[axis] || baseByAxis["realność zmiany"] || baseByAxis.napięcie;
+  const pathCard = byPath[path?.key as EntryKey] || byPath.unease;
   return [
     { no: "01", title: pathCard.title, text: pathCard.text, check: pathCard.check },
     { no: "02", title: axisCard.title, text: axisCard.text, check: axisCard.check },
@@ -2637,10 +2643,11 @@ function AppInner() {
           )}
 
           {stage === "preview" && (() => {
-            const safePreview = preview || (path ? buildPreview(path, answers, openText || buildCompositeOpenText(clarificationAnswers)) : null);
-            const previewForRender = safePreview;
+            const safePath = path || ENTRY_CONFIGS.find((item) => item.key === selectedPath) || ENTRY_CONFIGS[0];
+            const fallbackPreview = buildPreview(safePath, answers, openText || buildCompositeOpenText(clarificationAnswers));
+            const previewForRender = ensurePreview(preview, fallbackPreview);
             return previewForRender ? (
-            (() => { const preview = previewForRender; return (
+            (() => { const preview = previewForRender; const renderPath = safePath; return (
             <motion.div key="preview" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="preview-card preview-card--report">
                 <div className="preview-hero">
@@ -2660,7 +2667,7 @@ function AppInner() {
                   <Glass className="preview-analysis-panel preview-analysis-panel--premium">
                     <div className="eyebrow">CO WIDAĆ PO PIERWSZYM ODCZYCIE</div>
                     <div className="preview-analysis-grid preview-analysis-grid--report">
-                      {buildFreeInsightCards(path, preview).map((item) => (
+                      {buildFreeInsightCards(renderPath, preview).map((item) => (
                         <div key={item.no} className="preview-analysis-item preview-analysis-item--rich">
                           <span>{item.no}</span>
                           <strong>{item.title}</strong>
@@ -2677,11 +2684,11 @@ function AppInner() {
                   </Glass>
                 </div>
 
-                {path && (
+                {renderPath && (
                   <Glass className="preview-cycle-panel preview-cycle-panel--rich">
                     <div className="eyebrow">CO MOŻE WRACAĆ, JEŚLI NIC SIĘ NIE ZMIENI</div>
                     <div className="free-pattern-grid">
-                      {buildRecurringPatternCards(path, preview).map((item) => (
+                      {buildRecurringPatternCards(renderPath, preview).map((item) => (
                         <div key={item.no} className="free-pattern-card">
                           <span>{item.no}</span>
                           <strong>{item.title}</strong>
@@ -2692,11 +2699,11 @@ function AppInner() {
                   </Glass>
                 )}
 
-                {path && (
+                {renderPath && (
                   <Glass className="preview-map-panel">
                     <div className="eyebrow">CO JUŻ SIĘ RYSUJE</div>
                     <div className="preview-map-grid">
-                      {buildPreviewMap(path, preview).map((item) => (
+                      {buildPreviewMap(renderPath, preview).map((item) => (
                         <div key={item.label} className="preview-map-item">
                           <strong>{item.label}</strong>
                           <span>{item.text}</span>
@@ -2705,12 +2712,12 @@ function AppInner() {
                     </div>
                   </Glass>
                 )}
-                {path && (
+                {renderPath && (
                   <Glass className="unlock-panel unlock-panel--strong">
                     <div className="eyebrow">CO DOSTAJESZ W PEŁNEJ ANALIZIE</div>
                     <p className="unlock-copy">Pełna analiza nie powiela pierwszego odczytu. Rozbija go na konkretne części: co uruchamia napięcie, kto podtrzymuje kontakt, które zachowania dają realną podstawę do nadziei i gdzie zaczyna się tylko chwilowe uspokojenie.</p>
                     <div className="premium-sample-grid">
-                      {buildPremiumSamples(path, preview).map((item, index) => (
+                      {buildPremiumSamples(renderPath, preview).map((item, index) => (
                         <div key={item.title} className="premium-sample-card">
                           <div className="premium-sample-no">0{index + 1}</div>
                           <strong>{item.title}</strong>
