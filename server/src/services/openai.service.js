@@ -100,6 +100,8 @@ DODATKOWE ZASADY JĘZYKA — TO MA NIE BRZMIEĆ JAK AI:
 - Nie streszczaj odpowiedzi użytkownika. Każda sekcja ma dodać coś, czego użytkownik mógł sam nie nazwać.
 - Nie mów użytkownikowi jego słowami. Jeśli użytkownik zaznaczył lub napisał X, Ty masz pokazać: co z X wynika, co może go mylić i jaki fakt zmieniłby ocenę.
 - Nie używaj tych samych słów co użytkownik jako głównego wniosku. Nazwa klikniętego kafelka to punkt startu, nie analiza.
+- Nie zaczynaj kilku sekcji od tej samej konstrukcji typu: "w twoich odpowiedziach widać". Zmieniaj rytm zdań.
+- Nie rób listy tego, co użytkownik kliknął. Jeżeli pojawia się lista, każdy punkt ma zawierać wniosek: "to oznacza, że...", "to zmienia odczyt, bo...", "to może mylić, bo...".
 - Jeśli pytanie otwarte dało konkretny przykład, oprzyj wniosek na tym przykładzie, nie na etykietach z formularza.
 - Jeżeli odpowiedzi są pozytywne albo dojrzałe, pokaż to uczciwie. Nie szukaj problemu na siłę.
 - Jeżeli odpowiedzi są niejednoznaczne, napisz uczciwie: czego nie da się jeszcze rozstrzygnąć i jaka informacja zmieniłaby odczyt.
@@ -195,7 +197,9 @@ STYL:
 - Nie nadużywaj słów: mechanizm, dynamika, struktura, obszar, wzorzec, asymetria. Używaj ich tylko wtedy, gdy od razu wyjaśniasz je prostym językiem.
 - Zakazane puste frazy: "pełny obraz", "głębsza analiza", "obszar wymagający doprecyzowania", "system wykrył", "na podstawie danych".
 - Każda sekcja ma dodać nowy wniosek. Nie może tylko powtarzać odpowiedzi użytkownika w ładniejszej formie.
+- Jeśli dwa fragmenty raportu brzmią podobnie, usuń powtórzenie i dodaj nowy wniosek.
 - Jeśli użytkownik napisał konkretny przykład, pokaż co ten przykład zmienia w odczycie. Nie cytuj go bez potrzeby.
+- Nie kopiuj słów użytkownika jako konkluzji. Przykład użytkownika jest dowodem, nie gotową odpowiedzią.
 - Nazwy z Mapy Relacji, ciężarów i kart prawdy traktuj jak tropy, nie jak gotowe wnioski.
 - Jeśli pojawia się liczba albo metryka, wyjaśnij ją zwykłym językiem: co oznacza w praktyce, z czego wynika i czego nie przesądza.
 
@@ -208,7 +212,7 @@ Metryki mają być spójne z treścią. Nie zawyżaj nadziei bez twardych sygna�
 STRUKTURA RAPORTU — DOKŁADNIE 17 SEKCJI, W TEJ KOLEJNOŚCI:
 
 1. [tone: normal] NAJWAŻNIEJSZE NA POCZĄTEK
-Jedno lub dwa zdania, które nazywają główny układ. Bez wyroku. Bez rady. Mechanizm i kierunek.
+Jedno lub dwa zdania, które mówią sedno prostym językiem. Bez wyroku. Bez rady. Napisz, co tu realnie działa między dwiema osobami i dokąd to prowadzi, jeśli nic się nie zmieni.
 
 2. [tone: normal] CO TU NAPRAWDĘ DZIAŁA
 Co naprawdę napędza tę sytuację: lęk, przywiązanie, brak jasności, powtarzanie tego samego, brak decyzji, nierówny ciężar, nadzieja, chemia albo realna więź.
@@ -237,8 +241,8 @@ Pokaż wyłącznie te elementy, które faktycznie dają podstawę do nadziei: ko
 10. [tone: danger] CO MOŻE TYLKO WYGLĄDAĆ JAK NADZIEJA
 Pokaż elementy, które mogą wyglądać jak nadzieja, ale nią nie są: chwilowe ocieplenie, słowa bez działań, powroty po dystansie, chemia po napięciu, strach przed stratą.
 
-11. [tone: normal] CO POWTARZA SIĘ W ODPOWIEDZIACH
-Minimum 5 konkretnych obserwacji. Każda zaczyna się od "Twoje odpowiedzi pokazują..." albo "Kiedy opisujesz...". Odnoś się do danych użytkownika, szczególnie do odpowiedzi doprecyzowujących, jeśli są dostępne.
+11. [tone: normal] CO Z TEGO WYNIKA W PRAKTYCE
+Nie wypisuj tego, co użytkownik zaznaczył. Daj 4–5 krótkich wniosków praktycznych. Każdy punkt ma odpowiadać na pytanie: co to zmienia w ocenie sytuacji, czego użytkownik może nie widzieć albo jaki fakt byłby teraz decydujący.
 
 12. [tone: gold] GDZIE MOŻESZ SOBIE DOPISYWAĆ SENS
 Najważniejsza sekcja lustra. Pokaż jedną lub kilka ślepych plamek. Bez ataku. Bez psychologizowania. Precyzyjnie.
@@ -277,7 +281,7 @@ ZWRÓĆ STRICT JSON:
     {"title": "CZY WIDAĆ PRAWDZIWY RUCH", "text": "...", "tone": "normal"},
     {"title": "CO DAJE NADZIEJĘ", "text": "...", "tone": "gold"},
     {"title": "CO MOŻE TYLKO WYGLĄDAĆ JAK NADZIEJA", "text": "...", "tone": "danger"},
-    {"title": "CO POWTARZA SIĘ W ODPOWIEDZIACH", "text": "...", "tone": "normal"},
+    {"title": "CO Z TEGO WYNIKA W PRAKTYCE", "text": "...", "tone": "normal"},
     {"title": "GDZIE MOŻESZ SOBIE DOPISYWAĆ SENS", "text": "...", "tone": "gold"},
     {"title": "SCENARIUSZ A — JEŚLI NIC SIĘ NIE ZMIENI", "text": "...", "tone": "normal"},
     {"title": "SCENARIUSZ B — JEŚLI POSTAWISZ GRANICĘ", "text": "...", "tone": "normal"},

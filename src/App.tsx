@@ -816,7 +816,7 @@ function buildClarificationQuestions(path: EntryConfig, forceMap: ForceMap, burd
     candidates.push({ id: "third-person-meaning", signal: "Co ta osoba pokazała", lead: "Trzecia osoba nie zawsze jest przyczyną. Czasem tylko odsłania brak, który był wcześniej.", text: "Gdyby tej trzeciej osoby w ogóle nie było, jaki problem w obecnej relacji i tak zostałby na stole?" });
   }
 
-  candidates.push({ id: "one-change", signal: "Jeden konkret", lead: "Na końcu liczy się zachowanie, nie obietnica.", text: "Jaka jedna konkretna rzecz musiałaby się zmienić w zachowaniu tej osoby, żebyś uznał/uznała: „to nie jest tylko chwilowa poprawa”?" });
+  candidates.push({ id: "one-change", signal: "Jeden konkret", lead: "Na końcu liczy się to, co ktoś robi, nie to, co obiecuje.", text: "Co musiałoby się zmienić w zachowaniu tej osoby, żebyś poczuł/poczuła: „to nie jest tylko chwilowa poprawa”?" });
   candidates.push({ id: "missing-context", signal: "Jedna rzecz z życia", lead: "Żeby wynik nie brzmiał jak przepisanie odpowiedzi, potrzebny jest jeden fakt, nie ogólny opis.", text: `Jaki jeden konkretny fakt z tej relacji najbardziej zmieniłby ocenę sytuacji, gdyby ktoś z boku go poznał?` });
 
   const unique = uniqueClarifications(candidates);
@@ -1093,10 +1093,20 @@ function findSectionText(sections: FullReportSection[], key: string, fallback = 
   return (found?.text || fallback || "").trim();
 }
 
+async function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 25000): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
 async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: AnswerMap, openText: string, relationshipMap?: RelationshipMapPayload): Promise<Preview> {
   const answersArr = Object.entries(answers).map(([qid, oid]) => { const q = path.questions.find((x) => x.id === qid); const opt = q?.options.find((o) => o.id === oid); return { q: q?.text || qid, a: opt?.label || oid }; });
   try {
-    const res = await fetch(`${API_BASE}/api/analyze`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, path: path.key, mode: "soft", answers: answersArr, openText, customDescription: openText, relationshipMap }) });
+    const res = await fetchWithTimeout(`${API_BASE}/api/analyze`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, path: path.key, mode: "soft", answers: answersArr, openText, customDescription: openText, relationshipMap }) }, 25000);
     const data = await res.json().catch(() => ({}));
     if (data?.crisis) throw new Error("__CRISIS__");
     if (data?.ok && data?.preview) {
@@ -1249,13 +1259,13 @@ function CookieBanner() {
 }
 
 const PROCESSING_MESSAGES = [
-  "Analizuję wzorzec relacyjny...",
-  "Identyfikuję mechanizmy obronne...",
-  "Mapuję dynamikę zaangażowania...",
-  "Szukam sprzeczności w odpowiedziach...",
-  "Buduję profil przywiązania...",
-  "Przygotowuję sekcję lustrzaną...",
-  "Finalizuję raport...",
+  "Czytam Twoje odpowiedzi",
+  "Sprawdzam, co naprawdę się powtarza",
+  "Oddzielam fakty od dopowiedzeń",
+  "Szukam miejsca, które zmienia odczyt",
+  "Układam wynik prostym językiem",
+  "Sprawdzam, czego nie warto powtarzać",
+  "Kończę pierwszy obraz sytuacji",
 ];
 
 function ProcessingScreen() {
@@ -1274,9 +1284,9 @@ function ProcessingScreen() {
           <div className="processing-ring processing-ring--2" />
           <div className="processing-dot" />
         </div>
-        <h2 style={{ marginBottom: "12px", fontSize: "clamp(20px,4vw,26px)" }}>Raport jest generowany</h2>
+        <h2 style={{ marginBottom: "12px", fontSize: "clamp(20px,4vw,26px)" }}>Przygotowuję wynik</h2>
         <div className="processing-message">{PROCESSING_MESSAGES[msgIndex]}{".".repeat(dots)}</div>
-        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>Każde zdanie dotyczy tylko Ciebie.<br />Nie zamykaj karty. To zajmie chwilę.</p>
+        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>Nie przepisuję Twoich odpowiedzi. Szukam tego, co z nich wynika.<br />Nie zamykaj karty. To zajmie chwilę.</p>
         <div className="processing-bar"><div className="processing-bar-fill" /></div>
       </Glass>
     </div>
@@ -1788,18 +1798,44 @@ export default function App() {
     const relationshipMap = relationshipMapPayload(clarificationsOverride);
     const finalOpenText = buildCompositeOpenText(clarificationsOverride);
     if (hasCrisisContent(finalOpenText)) { setStage("crisis"); return; }
+
     setOpenText(finalOpenText);
-    setBusy(true); setError(null);
+    setBusy(true);
+    setError(null);
+    setStage("processing");
+
     try {
-      const token = await ensureSession(path.key);
+      let token = sessionToken || "";
+      try {
+        token = await ensureSession(path.key);
+      } catch {
+        token = "";
+      }
+
       let previewData: Preview;
-      try { previewData = await fetchPreviewFromAPI(token, path, answers, finalOpenText, relationshipMap); }
-      catch (e: any) { if (e?.message === "__CRISIS__") { setStage("crisis"); setBusy(false); return; } previewData = buildPreview(path, answers, finalOpenText); }
+      try {
+        previewData = token
+          ? await fetchPreviewFromAPI(token, path, answers, finalOpenText, relationshipMap)
+          : buildPreview(path, answers, finalOpenText);
+      } catch (e: any) {
+        if (e?.message === "__CRISIS__") { setStage("crisis"); return; }
+        previewData = buildPreview(path, answers, finalOpenText);
+      }
+
       setPreview(previewData);
-      await updateSession({ token, path: path.key, answers, openText: finalOpenText, relationshipMap, preview: previewData, stage: "preview" });
+
+      if (token) {
+        updateSession({ token, path: path.key, answers, openText: finalOpenText, relationshipMap, preview: previewData, stage: "preview" })
+          .catch(() => {});
+      }
+
       setStage("preview");
-    } catch (e: any) { setError(friendlyError(e, "Nie udało się przygotować pierwszego obrazu sytuacji.")); setStage("error"); }
-    finally { setBusy(false); }
+    } catch (e: any) {
+      setPreview(buildPreview(path, answers, finalOpenText));
+      setStage("preview");
+    } finally {
+      setBusy(false);
+    }
   };
 
   const pay = async () => {
@@ -2503,7 +2539,7 @@ export default function App() {
                       {[
                         "co naprawdę trzyma Cię w tej relacji",
                         "gdzie jest największe napięcie i koszt emocjonalny",
-                        "czy problemem jest kryzys, schemat czy asymetria",
+                        "czy problem wraca, czy da się go realnie zatrzymać",
                         "co daje realną nadzieję, a co tylko ją podtrzymuje",
                         "jaki wzorzec wraca po rozmowach, obietnicach i chwilach ulgi",
                         "jedno pytanie graniczne przed decyzją"
