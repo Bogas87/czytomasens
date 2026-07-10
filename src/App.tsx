@@ -393,6 +393,12 @@ function buildMapSignals(forceMap: ForceMap, burdens: BurdenItem[], truthCards: 
 
 type VisualBar = { label: string; value: number; text: string; tone?: "normal" | "gold" | "danger" | "green" };
 
+function clamp(value: number, min: number, max: number): number {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return min;
+  return Math.max(min, Math.min(max, n));
+}
+
 function clampScore(value: number): number {
   return Math.max(5, Math.min(95, Math.round(value)));
 }
@@ -2687,12 +2693,6 @@ function AppInner() {
                 )}
 
                 {path && (
-                  <Glass className="preview-premium-tease preview-premium-tease--value">
-                    <div className="eyebrow">DLACZEGO TO NIE POWINNO KOŃCZYĆ SIĘ NA PROCENTACH</div>
-                    <p>{buildPremiumBridge(path, preview)}</p>
-                  </Glass>
-                )}
-                {path && (
                   <Glass className="preview-map-panel">
                     <div className="eyebrow">CO JUŻ SIĘ RYSUJE</div>
                     <div className="preview-map-grid">
@@ -2879,8 +2879,8 @@ class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { 
           <main className="ctms-shell">
             <div className="ctms-glass question-panel error-panel" style={{ maxWidth: 860, margin: "80px auto", padding: 32 }}>
               <div className="eyebrow danger">PRZERWANE WYŚWIETLANIE</div>
-              <h2>Strona przerwała odczyt wyniku.</h2>
-              <p className="consent-copy">To błąd wyświetlenia, nie Twoich odpowiedzi. Odśwież stronę i zacznij analizę ponownie. Nie wykonuj płatności ponownie, jeśli była już rozpoczęta.</p>
+              <h2>Nie udało się wyświetlić wyniku.</h2>
+              <p className="consent-copy">Odśwież stronę. Jeśli płatność była rozpoczęta, nie wykonuj jej ponownie.</p>
               <button className="ctms-btn ctms-btn-primary" onClick={() => { localStorage.removeItem(STORAGE_KEY); window.location.href = "/"; }}>Wróć do początku</button>
             </div>
           </main>
