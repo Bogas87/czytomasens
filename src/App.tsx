@@ -1149,6 +1149,42 @@ async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: An
 }
 
 
+
+function previewFallbackText(preview: Preview, key: keyof Preview, fallback = ""): string {
+  const raw = preview[key];
+  const text = typeof raw === "string" ? raw.trim() : "";
+  if (text) return text;
+  const fb = typeof fallback === "string" ? fallback.trim() : "";
+  if (fb) return fb;
+  return "Na tym etapie nie da się tego uczciwie nazwać jednym zdaniem. Dalsza część wyniku pokazuje, co już widać i czego jeszcze nie warto przesądzać.";
+}
+
+function metricExplanationCards(preview: Preview) {
+  const fallbackTension = preview.tension >= 70
+    ? "Ta liczba pokazuje, że relacja częściej uruchamia czujność, napięcie albo potrzebę analizowania niż spokojny kontakt. Nie mówi, kto ma rację. Pokazuje koszt, który pojawia się po Twojej stronie."
+    : preview.tension >= 45
+      ? "To nie wygląda na pełny spokój, ale też nie musi oznaczać rozpadu. Liczba pokazuje, że są miejsca, w których kontakt wymaga dopowiedzenia albo naprawy."
+      : "Napięcie nie wychodzi tu jako główny ciężar. Jeśli coś przeszkadza, prawdopodobnie trzeba patrzeć bardziej na konkretne zachowania niż na ogólne poczucie kryzysu.";
+
+  const fallbackAsymmetry = preview.asymmetry >= 70
+    ? "Ta liczba pokazuje, że ciężar kontaktu, naprawy albo czekania może częściej leżeć po jednej stronie. Ważne jest nie samo uczucie, tylko to, kto realnie coś robi, kiedy pojawia się problem."
+    : preview.asymmetry >= 45
+      ? "Tu widać pewną nierówność, ale nie wystarczy nazwać jej problemem. Trzeba sprawdzić, czy jest chwilowa, czy powtarza się zawsze wtedy, gdy robi się trudniej."
+      : "Ciężar nie wygląda na mocno jednostronny. Jeśli odpowiedzi były szczere, relacja ma więcej wzajemności niż układu, w którym jedna osoba ciągnie wszystko za dwoje.";
+
+  const fallbackChange = preview.change <= 35
+    ? "Ta liczba nie mówi, że nic nie da się zrobić. Mówi, że w odpowiedziach słabiej widać trwałe zachowania, które realnie przesuwają relację w lepsze miejsce."
+    : preview.change <= 60
+      ? "Widać jakiś potencjał, ale nie wystarczy sama ulga po rozmowie albo dobra chwila. Najważniejsze pytanie brzmi: czy po trudnym momencie coś naprawdę zmienia się w zachowaniu."
+      : "Tu widać więcej realnego ruchu niż samej nadziei. To nie znaczy, że wszystko jest proste, ale odpowiedzi pokazują punkty, na których można się oprzeć.";
+
+  return [
+    { label: "Napięcie", value: preview.tension, text: previewFallbackText(preview, "tensionMeaning", fallbackTension) },
+    { label: "Ciężar po stronach", value: preview.asymmetry, text: previewFallbackText(preview, "asymmetryMeaning", fallbackAsymmetry) },
+    { label: "Realność zmiany", value: preview.change, text: previewFallbackText(preview, "changeMeaning", fallbackChange) },
+  ];
+}
+
 function dominantPreviewAxis(preview: Preview): string {
   const unresolved = 100 - preview.change;
   if (preview.tension >= preview.asymmetry && preview.tension >= unresolved) return "napięcie";
@@ -2113,7 +2149,7 @@ export default function App() {
               </div>
               <Glass className="question-panel relationship-map-panel">
                 <div className="map-step-note">
-                  To jest część, która pozwala zobaczyć asymetrię bez pisania długiej historii. Wybierz najbliższą odpowiedź, nie idealną.
+                  Teraz odpowiadasz na kilka osobnych pytań o to, jak rozkłada się ciężar relacji. Przy każdym wybierz najbliższą odpowiedź, nie idealną.
                 </div>
                 <div className="force-map-list">
                   {FORCE_MAP_ITEMS.map((item) => (

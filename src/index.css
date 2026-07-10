@@ -4297,3 +4297,59 @@ select {
     font-size: 14px;
   }
 }
+
+
+/* PROCESS / LANDING CLARITY PATCH */
+.force-question-index {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin-bottom: 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(197,160,89,.34);
+  background: rgba(197,160,89,.07);
+  color: var(--gold-soft);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+
+.force-map-item {
+  position: relative;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.032), rgba(255,255,255,.014)),
+    radial-gradient(circle at 2% 0%, rgba(197,160,89,.10), transparent 28%);
+}
+
+.force-map-item + .force-map-item {
+  margin-top: 4px;
+}
+
+.force-map-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18px;
+  bottom: 18px;
+  width: 2px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(197,160,89,.82), rgba(197,160,89,.08));
+}
+
+.hero-proof-note {
+  max-width: 620px;
+}
+
+@media (max-width: 760px) {
+  .force-question-index {
+    font-size: 10px;
+    letter-spacing: .12em;
+  }
+
+  .force-map-item::before {
+    top: 14px;
+    bottom: 14px;
+  }
+}
