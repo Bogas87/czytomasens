@@ -1266,6 +1266,120 @@ function buildPremiumSamples(path: EntryConfig, preview: Preview) {
   ];
 }
 
+function buildFreeInsightCards(path: EntryConfig, preview: Preview) {
+  const axis = dominantPreviewAxis(preview);
+  const baseByAxis: Record<string, { title: string; text: string; check: string }> = {
+    napięcie: {
+      title: "Najmocniej wybija się napięcie",
+      text: "W tej relacji ważne nie jest tylko to, co czujesz, ale to, ile czujności uruchamia kontakt. Jeżeli po rozmowie dalej sprawdzasz ton wiadomości, ciszę albo drobne zmiany zachowania, to nie jest zwykły brak pewności.",
+      check: "Sprawdź, czy po trudnym momencie wraca spokój, czy tylko na chwilę spada napięcie.",
+    },
+    asymetria: {
+      title: "Ciężar nie rozkłada się równo",
+      text: "Pierwszy odczyt pokazuje, że jedna strona może częściej pilnować kontaktu, naprawy albo atmosfery. To nie przesądza winy. Pokazuje, gdzie relacja zaczyna działać kosztem jednej osoby.",
+      check: "Sprawdź, co dzieje się, gdy Ty przestajesz ciągnąć rozmowę, wyjaśniać albo domykać temat.",
+    },
+    "realność zmiany": {
+      title: "Kluczowe jest to, czy zmiana jest realna",
+      text: "Dobre momenty są ważne, ale same nie wystarczą. Pierwszy odczyt każe patrzeć nie na obietnice i chwilową ulgę, tylko na to, czy zachowanie po napięciu naprawdę przesuwa relację w inne miejsce.",
+      check: "Sprawdź, czy po rozmowach zmienia się konkretne działanie, czy tylko przez kilka dni jest spokojniej.",
+    },
+  };
+  const byPath: Record<EntryKey, { title: string; text: string; check: string }> = {
+    unease: {
+      title: "Niepokój nie musi być przypadkiem",
+      text: "Jeżeli trudno wskazać jeden powód, to nie znaczy, że problemu nie ma. Czasem najbardziej męczy suma drobnych rzeczy: niedopowiedzeń, reakcji, ciszy i momentów, po których niby wszystko jest normalnie, ale Ty już nie wracasz do pełnego spokoju.",
+      check: "Nazwij jeden moment, po którym coś w Tobie zostało, mimo że z zewnątrz nic wielkiego się nie stało.",
+    },
+    betrayal: {
+      title: "Zaufanie odbudowuje się zachowaniem, nie deklaracją",
+      text: "Po zdradzie albo kłamstwie nie wystarczy, że temat zostanie zamknięty słowami. Liczy się, czy druga osoba znosi Twoje pytania, daje przejrzystość i bierze odpowiedzialność bez przerzucania na Ciebie napięcia.",
+      check: "Sprawdź, czy masz więcej spokoju, czy tylko mniej odwagi, żeby wracać do tematu.",
+    },
+    uncertain: {
+      title: "Brak jasności też jest informacją",
+      text: "Jeśli jedna osoba czeka na określenie relacji, a druga wciąż zostawia wszystko w zawieszeniu, to nie jest neutralny stan. Niejasność może dawać komuś bliskość bez decyzji i odpowiedzialności.",
+      check: "Sprawdź, kto zyskuje na tym, że temat nadal nie jest nazwany.",
+    },
+    asymmetry: {
+      title: "Relacja może działać, bo Ty ją podtrzymujesz",
+      text: "Pierwszy odczyt szuka nie tego, kto bardziej kocha, tylko kto częściej robi ruch. Kto zaczyna rozmowę, kto łagodzi konflikt, kto wraca po ciszy i kto zostaje z napięciem, gdy temat znika.",
+      check: "Zobacz, co realnie wydarzyłoby się przez kilka dni, gdybyś nie inicjował kontaktu ani naprawy.",
+    },
+    conflict: {
+      title: "Kłótnia ma sens tylko wtedy, gdy coś po niej się zmienia",
+      text: "Sam fakt konfliktu nie przekreśla relacji. Problem zaczyna się wtedy, gdy kłótnie są tylko rozładowaniem napięcia, po którym wraca cisza, dystans albo ten sam temat w nowej wersji.",
+      check: "Porównaj ostatnie dwie kłótnie: co po nich naprawdę zmieniło się w zachowaniu, nie w słowach.",
+    },
+    stagnation: {
+      title: "Spokój i pustka mogą wyglądać podobnie",
+      text: "Relacja nie musi być głośna, żeby traciła sens. Czasem problemem nie jest awantura, tylko to, że coraz mniej po siebie sięgacie, coraz mniej Was ciekawi i coraz łatwiej funkcjonować obok siebie niż razem.",
+      check: "Sprawdź, czy brakuje konfliktu, czy brakuje żywego kontaktu.",
+    },
+    returning: {
+      title: "Powrót musi dotyczyć zmiany, nie samej tęsknoty",
+      text: "Tęsknota po rozstaniu potrafi wyglądać jak dowód, że warto wracać. Ale ona mówi głównie, że rozłąka bolała. Nie mówi jeszcze, czy problem, który Was rozdzielił, został rozwiązany.",
+      check: "Sprawdź, co konkretnie jest inne niż przed rozstaniem.",
+    },
+    triangle: {
+      title: "Trzecia osoba rzadko jest całym problemem",
+      text: "Ktoś trzeci może przyspieszyć decyzję albo ujawnić brak, który był wcześniej. Pierwszy odczyt nie pyta tylko, kogo wybrać. Pyta, co w obecnej relacji zrobiło miejsce na taki układ.",
+      check: "Sprawdź, jaki problem zostałby między Wami nawet wtedy, gdyby trzeciej osoby nie było.",
+    },
+    loop: {
+      title: "Powrót do siebie nie zawsze oznacza powrót do relacji",
+      text: "Czasem wracacie nie dlatego, że coś się zmieniło, tylko dlatego, że napięcie rozłąki staje się silniejsze niż pamięć o problemie. Wtedy powrót daje ulgę, ale nie rozwiązuje układu.",
+      check: "Sprawdź, czy po każdym powrocie znika stary problem, czy tylko zaczyna się nowy cykl.",
+    },
+  };
+  const axisCard = baseByAxis[axis];
+  const pathCard = byPath[path.key];
+  return [
+    { no: "01", title: pathCard.title, text: pathCard.text, check: pathCard.check },
+    { no: "02", title: axisCard.title, text: axisCard.text, check: axisCard.check },
+    { no: "03", title: "Co może Cię mylić", text: previewFallbackText(preview, "contradiction", "Najbardziej mylące są momenty, które dają ulgę, ale nie zmieniają zasad działania relacji. Dobry dzień, czuła wiadomość albo spokojna rozmowa mogą uspokoić emocje, ale nie muszą oznaczać realnej zmiany."), check: "Nie patrz tylko na poprawę nastroju. Patrz na powtarzalne zachowanie po kilku dniach." },
+    { no: "04", title: "Co trzeba sprawdzić dalej", text: previewFallbackText(preview, "concreteConclusion", preview.paidTease), check: "Pełny raport powinien rozdzielić fakty, nadzieję, koszt emocjonalny i realny ruch drugiej strony." },
+  ];
+}
+
+function buildRecurringPatternCards(path: EntryConfig, preview: Preview) {
+  const steps = buildCycleSteps(path.key, [], []);
+  const descriptions: Record<string, string> = {
+    kontakt: "Pojawia się sygnał bliskości albo wiadomość, która znowu daje punkt zaczepienia.",
+    nadzieja: "Zaczynasz dopowiadać lepszy scenariusz, bo przez chwilę wygląda, jakby coś ruszyło.",
+    niejasność: "Brakuje stabilnej odpowiedzi: relacja jest blisko, ale nadal nie daje jasnego gruntu.",
+    czekanie: "Decyzja zostaje odłożona, a napięcie przechodzi na Ciebie.",
+    staranie: "Jedna osoba robi ruch, tłumaczy, łagodzi albo szuka sposobu na kontakt.",
+    "brak odpowiedzi": "Druga strona nie musi dawać tyle samo, bo relacja i tak jest podtrzymywana.",
+    dopasowanie: "Zaczynasz zmieniać swoje zachowanie, żeby nie stracić resztek kontaktu.",
+    zmęczenie: "Koszt rośnie, ale trudno odpuścić, bo wciąż pojawiają się momenty nadziei.",
+    napięcie: "Coś narasta i zaczyna ustawiać rozmowę jeszcze zanim padną konkretne słowa.",
+    konflikt: "Dochodzi do spięcia, ale ono nie zawsze rozwiązuje to, co je wywołało.",
+    cisza: "Po wszystkim nie ma domknięcia, tylko odsunięcie tematu albo chłód.",
+    "powrót wzorca": "Po chwili wraca podobny układ, tylko pod innym pretekstem.",
+    oddalenie: "Jedna lub obie strony odsuwają się, ale temat nie zostaje naprawdę zamknięty.",
+    tęsknota: "Ból rozłąki zaczyna przykrywać pamięć o tym, dlaczego zrobiło się trudno.",
+    powrót: "Kontakt wraca i daje ulgę, ale jeszcze nie dowodzi zmiany.",
+    "ten sam problem": "Po czasie okazuje się, że źródło napięcia nadal jest na miejscu.",
+    pęknięcie: "Zaufanie zostało naruszone i relacja nie wraca do poprzedniego poziomu sama z siebie.",
+    kontrola: "Pojawia się potrzeba sprawdzania, dopytywania albo szukania potwierdzeń.",
+    "chwilowa ulga": "Jedna rozmowa albo gest obniża napięcie, ale nie odbudowuje jeszcze bezpieczeństwa.",
+    "powrót nieufności": "Bez konsekwentnych zachowań stare pytania wracają.",
+  };
+  return steps.map((step, index) => ({
+    no: `0${index + 1}`,
+    title: step,
+    text: descriptions[step] || cycleStepDescription(step),
+  }));
+}
+
+function buildPremiumBridge(path: EntryConfig, preview: Preview) {
+  const axis = dominantPreviewAxis(preview);
+  if (axis === "asymetria") return "Pełny raport powinien pokazać, czy nierówność jest chwilowa, czy relacja działa głównie dlatego, że jedna strona bierze na siebie kontakt, naprawę i czekanie.";
+  if (axis === "napięcie") return "Pełny raport powinien pokazać, skąd bierze się napięcie: z konkretnego konfliktu, braku jasności, lęku przed stratą czy powracającego sposobu traktowania trudnych tematów.";
+  return "Pełny raport powinien oddzielić realną zmianę od chwilowej ulgi: co faktycznie przesuwa relację, a co tylko na moment uspokaja emocje.";
+}
+
 function LogoBlock() {
   return (
     <div className="ctms-logo-wrap">
@@ -2510,37 +2624,45 @@ export default function App() {
                 <div className="preview-two-column">
                   <Glass className="preview-analysis-panel preview-analysis-panel--premium">
                     <div className="eyebrow">CO WIDAĆ PO PIERWSZYM ODCZYCIE</div>
-                    <div className="preview-analysis-grid preview-analysis-grid--stacked">
-                      <div className="preview-analysis-item highlight">
-                        <span>01</span>
-                        <strong>Co może Cię mylić</strong>
-                        <p>{previewFallbackText(preview, "contradiction", "Sprawdź, czy uspokojenie po rozmowie oznacza zmianę zachowania, czy tylko chwilową ulgę.")}</p>
-                      </div>
-                      <div className="preview-analysis-item conclusion">
-                        <span>02</span>
-                        <strong>Co widać po zachowaniu, nie po deklaracjach</strong>
-                        <p>{previewFallbackText(preview, "concreteConclusion", preview.paidTease)}</p>
-                      </div>
+                    <div className="preview-analysis-grid preview-analysis-grid--report">
+                      {buildFreeInsightCards(path, preview).map((item) => (
+                        <div key={item.no} className="preview-analysis-item preview-analysis-item--rich">
+                          <span>{item.no}</span>
+                          <strong>{item.title}</strong>
+                          <p>{item.text}</p>
+                          <em>{item.check}</em>
+                        </div>
+                      ))}
                     </div>
                   </Glass>
                   <Glass className="preview-visual-panel preview-visual-panel--premium">
                     <div className="eyebrow">MAPA ODCZYTU</div>
-                    <p className="visual-panel-intro">Mapa pokazuje nie osobę, tylko układ: napięcie, nierównowagę, jasność i realność zmiany.</p>
+                    <p className="visual-panel-intro">To szybka mapa tego, gdzie relacja najbardziej obciąża: w napięciu, nierównowadze, jasności albo realnej zmianie zachowania.</p>
                     <VisualBars items={buildPreviewVisualBars(preview)} />
                   </Glass>
                 </div>
 
                 {path && (
-                  <Glass className="preview-cycle-panel">
-                    <div className="eyebrow">CO MOŻE WRACAĆ</div>
-                    <CycleDiagram steps={buildCycleSteps(path.key, burdens, truthCards)} />
+                  <Glass className="preview-cycle-panel preview-cycle-panel--rich">
+                    <div className="eyebrow">CO MOŻE WRACAĆ, JEŚLI NIC SIĘ NIE ZMIENI</div>
+                    <div className="free-pattern-grid">
+                      {buildRecurringPatternCards(path, preview).map((item) => (
+                        <div key={item.no} className="free-pattern-card">
+                          <span>{item.no}</span>
+                          <strong>{item.title}</strong>
+                          <p>{item.text}</p>
+                        </div>
+                      ))}
+                    </div>
                   </Glass>
                 )}
 
-                <Glass className="preview-premium-tease">
-                  <div className="eyebrow">CO PEŁNY RAPORT ROZBIERA DALEJ</div>
-                  <p>{preview.paidTease}</p>
-                </Glass>
+                {path && (
+                  <Glass className="preview-premium-tease preview-premium-tease--value">
+                    <div className="eyebrow">DLACZEGO TO NIE POWINNO KOŃCZYĆ SIĘ NA PROCENTACH</div>
+                    <p>{buildPremiumBridge(path, preview)}</p>
+                  </Glass>
+                )}
                 {path && (
                   <Glass className="preview-map-panel">
                     <div className="eyebrow">CO JUŻ SIĘ RYSUJE</div>
