@@ -2000,41 +2000,21 @@ export default function App() {
                 <Glass className="glass-panel hero-panel hero-copy hero-panel--clean">
                   <div className="eyebrow with-line">PRYWATNA ANALIZA KONKRETNEJ RELACJI</div>
                   <h1>Zobacz, <span>co naprawdę dzieje się między Wami.</span></h1>
-                  <p className="hero-main-copy">CzyToMaSens porządkuje sytuację, w której trudno już oddzielić fakty od nadziei, zmęczenia albo domysłów. Nie dostajesz ogólnej porady. Dostajesz pierwszy odczyt tej konkretnej relacji.</p>
-                  <div className="hero-definition-card">
-                    <strong>Co dostajesz?</strong>
-                    <span>Krótki obraz tego, co wraca, gdzie znika jasność, kto częściej niesie ciężar i czy widać realną zmianę w zachowaniu.</span>
-                  </div>
+                  <p className="hero-main-copy">CzyToMaSens to prywatny odczyt tej jednej relacji. Nie zgaduje i nie wydaje wyroków. Porządkuje fakty, powtarzające się reakcje i miejsca, w których nadzieja zaczyna mieszać się z domysłami.</p>
+                  <p className="hero-premium-copy">Dostajesz uporządkowany pierwszy wynik: co już widać, co może Cię mylić i które pytanie naprawdę zmienia decyzję.</p>
                   <div className="ctms-landing-actions">
                     <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij analizę relacji</PrimaryButton>
                   </div>
                 </Glass>
                 <div className="hero-side-stack">
                   <Glass className="glass-panel story-panel landing-result-preview">
-                    <div className="story-kicker">PIERWSZY ODCZYT</div>
-                    <h3>Nie etykieta. Nie diagnoza. Konkretna mapa sytuacji.</h3>
-                    <div className="landing-report-preview">
-                      <div className="landing-report-main">
-                        <span>Najważniejszy sygnał</span>
-                        <strong>co powtarza się między Wami, nawet jeśli za każdym razem wygląda trochę inaczej</strong>
-                      </div>
-                      <div className="landing-report-row">
-                        <span>Gdzie jest ciężar</span>
-                        <strong>kto częściej wraca do rozmowy, czeka, tłumaczy albo próbuje domknąć temat</strong>
-                      </div>
-                      <div className="landing-report-row">
-                        <span>Co daje nadzieję</span>
-                        <strong>czy widać zachowanie, które realnie zmienia sytuację, a nie tylko chwilową ulgę</strong>
-                      </div>
-                      <div className="landing-report-row muted">
-                        <span>Co zostaje do sprawdzenia</span>
-                        <strong>jedna rzecz, bez której wynik byłby tylko domysłem</strong>
-                      </div>
-                    </div>
-                    <div className="landing-lens-strip">
-                      <div><small>napięcie</small><b>koszt</b></div>
-                      <div><small>jasność</small><b>kierunek</b></div>
-                      <div><small>zmiana</small><b>fakty</b></div>
+                    <div className="story-kicker">CO DOSTAJESZ</div>
+                    <h3>Nie poradę z internetu. Odczyt konkretnej historii.</h3>
+                    <div className="landing-premium-list">
+                      <div><span>01</span><strong>Zobaczysz, co wraca mimo rozmów i obietnic.</strong></div>
+                      <div><span>02</span><strong>Sprawdzisz, czy ciężar kontaktu i naprawy naprawdę jest wspólny.</strong></div>
+                      <div><span>03</span><strong>Oddzielisz realną zmianę w zachowaniu od chwilowej ulgi.</strong></div>
+                      <div><span>04</span><strong>Dostaniesz jeden punkt, którego nie warto już omijać.</strong></div>
                     </div>
                   </Glass>
                 </div>
@@ -2044,10 +2024,8 @@ export default function App() {
                 <Glass className="landing-definition-strip">
                   <div>
                     <div className="eyebrow">CZYM JEST CZYTOMASENS</div>
-                    <p>Prywatnym narzędziem do uporządkowania relacji przed rozmową, decyzją albo kolejnym powrotem do tego samego punktu.</p>
-                  </div>
-                  <div className="landing-definition-mini">
-                    <span>fakty</span><span>ciężar</span><span>zmiana</span>
+                    <p>CzyToMaSens jest prywatnym narzędziem do uporządkowania relacji przed rozmową, decyzją albo kolejnym powrotem do tego samego punktu. Prowadzi Cię przez fakty, ciężar emocjonalny, zachowania po konflikcie i jeden konkretny przykład z życia.</p>
+                    <p>Na końcu nie dostajesz etykiety ani wyroku. Dostajesz pierwszy odczyt: gdzie relacja daje oparcie, gdzie zaczyna kosztować za dużo i co musiałoby zmienić się w zachowaniu, żeby nadzieja nie była tylko dopowiedzeniem.</p>
                   </div>
                 </Glass>
               </section>
@@ -2508,7 +2486,7 @@ export default function App() {
                 </div>
                 <PremiumBadge preview={preview} />
                 <div className="preview-disclaimer">
-                  To nie jest diagnoza ani decyzja za Ciebie. To krótki odczyt sytuacji: co już widać, co może Cię mylić i co warto sprawdzić dalej.
+                  To nie jest diagnoza ani decyzja za Ciebie. To pierwszy odczyt tej relacji: co już widać, co może Cię mylić i które miejsce wymaga uczciwego sprawdzenia.
                 </div>
                 <Glass className="preview-visual-panel">
                   <div className="eyebrow">PIERWSZY OBRAZ W LICZBACH</div>
