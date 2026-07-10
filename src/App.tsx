@@ -1252,17 +1252,21 @@ function buildPreviewMap(path: EntryConfig, preview: Preview) {
     { label: "Najmocniejszy sygnał", text: axisText },
     { label: "Największe ryzyko", text: riskText },
     { label: "Pytanie, którego jeszcze nie widać w wyniku", text: pathQuestion[path.key] },
-    { label: "Co jeszcze trzeba zobaczyć", text: "Który fragment tej relacji naprawdę przesuwa sytuację: zachowanie po rozmowie, gotowość do naprawy, jasna decyzja czy tylko chwilowe uspokojenie atmosfery." },
+    { label: "Co wymaga pogłębienia", text: "Pełny raport rozdziela fakty, nadzieję, koszt emocjonalny i realną zmianę, zamiast zostawiać Cię tylko z jednym procentem." },
   ];
 }
 
 function buildPremiumSamples(path: EntryConfig, preview: Preview) {
-  const mechanism = dominantPreviewAxis(preview);
-  const conflictSample = path.key === "conflict" ? "czy kłótnia jest próbą rozwiązania problemu, czy sposobem walki o wpływ, uwagę albo kontrolę" : "jaki wzorzec naprawdę organizuje tę relację i dlaczego wraca mimo rozmów";
+  const axis = dominantPreviewAxis(preview);
+  const first = axis === "napięcie"
+    ? "skąd bierze się napięcie i czy jest związane z konkretnym konfliktem, brakiem jasności, nieufnością czy sposobem prowadzenia trudnych rozmów"
+    : axis === "asymetria"
+      ? "czy nierównowaga jest chwilowa, czy relacja działa głównie dlatego, że jedna osoba częściej inicjuje, wyjaśnia i domyka temat"
+      : "czy widać realną zmianę zachowania, czy tylko krótkie okresy spokoju po rozmowie, obietnicy albo napięciu";
   return [
-    { title: "Co tu naprawdę działa", text: mechanism === "napięcie" ? conflictSample : "czy główny ciężar leży w napięciu, braku jasności, nierównych staraniach, chwilowych poprawach czy braku konkretnej zmiany" },
-    { title: "Kto niesie więcej", text: "kto częściej inicjuje, naprawia, czeka, wraca do rozmowy i zostaje z napięciem po trudnych momentach" },
-    { title: "Co wygląda jak poprawa", text: "czy po trudnych momentach naprawdę zmienia się zachowanie, czy tylko na chwilę robi się spokojniej" },
+    { title: "Źródło napięcia", text: first },
+    { title: "Ciężar po obu stronach", text: "kto wraca do rozmowy, kto czeka, kto naprawia atmosferę i co dzieje się wtedy, gdy nie próbujesz wszystkiego domknąć samodzielnie" },
+    { title: "Granica między zmianą a ulgą", text: "które zachowania dają realną podstawę do nadziei, a które tylko obniżają napięcie na kilka dni i pozwalają wrócić do tego samego miejsca" },
   ];
 }
 
@@ -1338,7 +1342,7 @@ function buildFreeInsightCards(path: EntryConfig, preview: Preview) {
     { no: "01", title: pathCard.title, text: pathCard.text, check: pathCard.check },
     { no: "02", title: axisCard.title, text: axisCard.text, check: axisCard.check },
     { no: "03", title: "Co może Cię mylić", text: previewFallbackText(preview, "contradiction", "Najbardziej mylące są momenty, które dają ulgę, ale nie zmieniają zasad działania relacji. Dobry dzień, czuła wiadomość albo spokojna rozmowa mogą uspokoić emocje, ale nie muszą oznaczać realnej zmiany."), check: "Nie patrz tylko na poprawę nastroju. Patrz na powtarzalne zachowanie po kilku dniach." },
-    { no: "04", title: "Co trzeba sprawdzić dalej", text: previewFallbackText(preview, "concreteConclusion", "Najważniejsze jest teraz oddzielić to, co faktycznie zmienia zachowanie, od tego, co tylko na chwilę zmniejsza napięcie."), check: "Sprawdź, czy po kilku dniach od rozmowy widać konkretny ruch, czy wraca ten sam układ." },
+    { no: "04", title: "Co trzeba sprawdzić dalej", text: previewFallbackText(preview, "concreteConclusion", preview.paidTease), check: "Pełna analiza rozdziela fakty, nadzieję, koszt emocjonalny i realny ruch drugiej strony." },
   ];
 }
 
@@ -1373,33 +1377,11 @@ function buildRecurringPatternCards(path: EntryConfig, preview: Preview) {
   }));
 }
 
-function buildNextCheckCards(path: EntryConfig, preview: Preview) {
+function buildPremiumBridge(path: EntryConfig, preview: Preview) {
   const axis = dominantPreviewAxis(preview);
-  const byAxis: Record<string, { title: string; text: string }[]> = {
-    asymetria: [
-      { title: "Kto naprawdę podtrzymuje kontakt", text: "Czy relacja działa również wtedy, gdy Ty nie zaczynasz rozmowy, nie tłumaczysz i nie domykasz trudnego tematu." },
-      { title: "Co robi druga strona bez nacisku", text: "Nie po prośbie, nie po kłótni i nie z lęku przed stratą, tylko wtedy, gdy sama ma wykonać ruch." },
-      { title: "Gdzie kończy się cierpliwość", text: "Czy czekanie daje przestrzeń na zmianę, czy tylko uczy drugą osobę, że może nie podejmować decyzji." },
-    ],
-    napięcie: [
-      { title: "Skąd bierze się napięcie", text: "Czy źródłem jest jeden konflikt, brak jasności, lęk przed stratą, czy sposób, w jaki wracacie do trudnych tematów." },
-      { title: "Co dzieje się po rozmowie", text: "Czy rozmowa przynosi zmianę zachowania, czy tylko chwilową ulgę i powrót tego samego napięcia." },
-      { title: "Kiedy tracisz spokój", text: "Które zachowania uruchamiają czujność: cisza, unikanie, mieszane sygnały, obietnice bez następnego kroku." },
-    ],
-    "realność zmiany": [
-      { title: "Co jest zmianą, a co ulgą", text: "Czy po trudnym momencie zmienia się konkretny sposób działania, czy tylko przez kilka dni jest spokojniej." },
-      { title: "Jaki fakt zmieniłby odczyt", text: "Jedna rzecz w zachowaniu drugiej strony może ważyć więcej niż kilka dobrych deklaracji." },
-      { title: "Czy jest ruch po obu stronach", text: "Relacja ma sens tylko wtedy, gdy naprawa nie opiera się na jednej osobie." },
-    ],
-  };
-  const cards = byAxis[axis] || byAxis["realność zmiany"];
-  const pathSpecific: Partial<Record<EntryKey, { title: string; text: string }>> = {
-    uncertain: { title: "Czy niejasność komuś służy", text: "Brak decyzji też ustawia relację: jedna osoba czeka, druga ma bliskość bez odpowiedzialności." },
-    returning: { title: "Czy wracasz do zmiany, czy do tęsknoty", text: "Tęsknota mówi, że rozłąka bolała. Nie mówi jeszcze, czy stary problem został rozwiązany." },
-    betrayal: { title: "Czy odbudowa jest widoczna", text: "Po zdradzie liczy się przejrzystość, cierpliwość i odpowiedzialność, nie samo zamknięcie tematu." },
-    loop: { title: "Czy cykl naprawdę został przerwany", text: "Powrót daje ulgę, ale dopiero inne zachowanie pokazuje, czy to nie jest ten sam układ od początku." },
-  };
-  return [...cards, pathSpecific[path.key] || { title: "Jaki jest następny konkretny test", text: "Nie kolejna rozmowa o intencjach, tylko obserwacja tego, co druga osoba realnie zrobi po tej rozmowie." }];
+  if (axis === "asymetria") return "Pierwszy odczyt pokazuje nierównowagę. Pełna analiza rozdziela, czy to chwilowe przesunięcie, czy stały układ: kto zaczyna kontakt, kto naprawia, kto czeka i co dzieje się, gdy jedna strona przestaje ciągnąć temat.";
+  if (axis === "napięcie") return "Pierwszy odczyt pokazuje napięcie. Pełna analiza rozdziela jego źródło: konflikt, brak jasności, lęk przed stratą, nieufność albo sposób prowadzenia trudnych rozmów.";
+  return "Pierwszy odczyt pokazuje pytanie o zmianę. Pełna analiza oddziela realny ruch od chwilowej ulgi: co faktycznie przesuwa zachowanie, a co tylko na moment uspokaja emocje.";
 }
 
 function LogoBlock() {
@@ -2137,9 +2119,9 @@ export default function App() {
                   <div className="eyebrow with-line">PRYWATNY RAPORT O KONKRETNEJ RELACJI</div>
                   <h1>Zobacz, czy walczysz o relację, <span>czy już tylko o własną nadzieję.</span></h1>
                   <p className="hero-main-copy">CzyToMaSens porządkuje fakty, reakcje i powtarzające się sytuacje, żeby pokazać, co naprawdę trzyma Cię w tej relacji i czy za słowami widać zmianę.</p>
-                  <div className="hero-premium-statement">
-                    <strong>To nie jest quiz ani lista objawów.</strong>
-                    <span>Dostajesz raportowy odczyt jednej konkretnej historii: gdzie znika jasność, kto wraca po napięciu, co daje nadzieję i które zachowanie trzeba sprawdzić przed kolejną decyzją.</span>
+                  <div className="hero-premium-statement hero-premium-statement--clear">
+                    <strong>Prywatny odczyt jednej relacji.</strong>
+                    <span>Porządkuje fakty, powtarzające się reakcje i miejsca, w których nadzieja zaczyna mieszać się z domysłami. Na końcu dostajesz wynik, który pokazuje, co w tej historii naprawdę wymaga sprawdzenia.</span>
                   </div>
                   <div className="ctms-landing-actions">
                     <PrimaryButton onClick={() => setStage("consent")}>Zacznij prywatny odczyt</PrimaryButton>
@@ -2659,7 +2641,7 @@ export default function App() {
                   </Glass>
                   <Glass className="preview-visual-panel preview-visual-panel--premium">
                     <div className="eyebrow">MAPA ODCZYTU</div>
-                    <p className="visual-panel-intro">To szybka mapa tego, gdzie relacja najbardziej obciąża: w napięciu, nierównowadze, jasności albo realnej zmianie zachowania.</p>
+                    <p className="visual-panel-intro">Mapa pokazuje cztery obszary pierwszego odczytu. Nie jest oceną osoby, tylko zapisem tego, gdzie pojawia się napięcie, nierównowaga, jasność i ślad realnej zmiany.</p>
                     <VisualBars items={buildPreviewVisualBars(preview)} />
                   </Glass>
                 </div>
@@ -2680,16 +2662,9 @@ export default function App() {
                 )}
 
                 {path && (
-                  <Glass className="preview-next-panel">
-                    <div className="eyebrow">CO PEŁNA ANALIZA ROZBIJA NA KONKRETY</div>
-                    <div className="preview-next-grid">
-                      {buildNextCheckCards(path, preview).map((item) => (
-                        <div key={item.title} className="preview-next-card">
-                          <strong>{item.title}</strong>
-                          <p>{item.text}</p>
-                        </div>
-                      ))}
-                    </div>
+                  <Glass className="preview-premium-tease preview-premium-tease--value">
+                    <div className="eyebrow">DLACZEGO TO NIE POWINNO KOŃCZYĆ SIĘ NA PROCENTACH</div>
+                    <p>{buildPremiumBridge(path, preview)}</p>
                   </Glass>
                 )}
                 {path && (
@@ -2708,7 +2683,7 @@ export default function App() {
                 {path && (
                   <Glass className="unlock-panel unlock-panel--strong">
                     <div className="eyebrow">CO DOSTAJESZ W PEŁNEJ ANALIZIE</div>
-                    <p className="unlock-copy">Nie chodzi o dłuższą wersję tych samych zdań. Pełny raport pokazuje, gdzie ten układ się zapętla, co daje prawdziwą nadzieję, co tylko ją udaje i jakie są trzy możliwe dalsze scenariusze.</p>
+                    <p className="unlock-copy">Pełna analiza nie powiela pierwszego odczytu. Rozbija go na konkretne części: co uruchamia napięcie, kto podtrzymuje kontakt, które zachowania dają realną podstawę do nadziei i gdzie zaczyna się tylko chwilowe uspokojenie.</p>
                     <div className="premium-sample-grid">
                       {buildPremiumSamples(path, preview).map((item, index) => (
                         <div key={item.title} className="premium-sample-card">
@@ -2730,7 +2705,7 @@ export default function App() {
                         <div key={item} className="unlock-benefit"><span>•</span><span>{item}</span></div>
                       ))}
                     </div>
-                    <div className="unlock-fineprint">Pełny raport ma 17 sekcji generowanych indywidualnie na podstawie Twoich odpowiedzi. Nie jest opinią specjalisty, diagnozą ani terapią. Jest prywatnym lustrem sytuacji.</div>
+                    <div className="unlock-fineprint">Raport premium ma 17 sekcji przygotowanych na podstawie Twoich odpowiedzi. Nie jest diagnozą ani terapią. Jest prywatnym odczytem tej konkretnej relacji: faktów, reakcji, kosztu emocjonalnego i możliwych scenariuszy.</div>
                     <div className="unlock-form">
                       <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Twój adres e-mail." />
                       <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Pokaż pełną analizę tej relacji"}</PrimaryButton>

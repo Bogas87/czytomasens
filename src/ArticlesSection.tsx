@@ -492,8 +492,8 @@ export function ArticlesSection({
                 </h2>
                 <p className="articles-main-subtitle" style={styles.subtitle}>
                   {indexRoute
-                    ? "To nie jest zwykły blog. To mapa najczęstszych sytuacji: niejasność, powroty, brak zaangażowania, mieszane sygnały i moment, w którym zaczynasz pytać, czy to jeszcze ma kierunek."
-                    : "Trzy teksty na spokojne wejście. Każdy dotyka innego momentu: decyzji, niejasności albo powrotu do tego samego miejsca."}
+                    ? "Poradniki do zrozumienia relacji: decyzje, powroty, niejasność, brak zaangażowania, mieszane sygnały i moment, w którym zaczynasz pytać, czy ta historia ma jeszcze kierunek."
+                    : "Poradniki, które pomagają nazwać sytuację przed analizą: bez prostych wyroków, bez taniego pocieszania, z naciskiem na to, co realnie powtarza się między dwiema osobami."}
                 </p>
               </div>
               <div className="article-header-actions" style={styles.headerActions}>
