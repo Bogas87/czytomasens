@@ -2495,7 +2495,7 @@ export default function App() {
             <motion.div key="preview" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="preview-card preview-card--report">
                 <div className="preview-hero">
-                  <div className="eyebrow">DARMOWY ODCZYT RAPORTU</div>
+                  <div className="eyebrow">PIERWSZY ODCZYT RELACJI</div>
                   <h2>{preview.headline}</h2>
                   <div className="preview-truth-top">{preview.truth}</div>
                   <div className="preview-mirror-top">{preview.mirror}</div>
@@ -2504,12 +2504,12 @@ export default function App() {
                   <div className="eyebrow">NAJWAŻNIEJSZY WNIOSEK</div>
                   <h3>{preview.summary}</h3>
                   <p>{previewFallbackText(preview, "hiddenInsight", preview.mirror)}</p>
-                  <div className="preview-core-footnote">To jest skrót raportu. Pełna analiza rozwija scenariusze, ryzyka i pytanie graniczne przed decyzją.</div>
+                  <div className="preview-core-footnote">To pierwszy odczyt Twojej sytuacji. Pełna analiza pokazuje scenariusze, ryzyka i pytanie graniczne przed decyzją.</div>
                 </Glass>
 
                 <div className="preview-two-column">
                   <Glass className="preview-analysis-panel preview-analysis-panel--premium">
-                    <div className="eyebrow">CO TEN ODCZYT ZMIENIA</div>
+                    <div className="eyebrow">CO WIDAĆ PO PIERWSZYM ODCZYCIE</div>
                     <div className="preview-analysis-grid preview-analysis-grid--stacked">
                       <div className="preview-analysis-item highlight">
                         <span>01</span>
@@ -2524,8 +2524,8 @@ export default function App() {
                     </div>
                   </Glass>
                   <Glass className="preview-visual-panel preview-visual-panel--premium">
-                    <div className="eyebrow">WIZUALNA MAPA SYTUACJI</div>
-                    <p className="visual-panel-intro">To nie jest ocena osoby. To szybki zapis napięcia, nierównowagi i widoczności zmiany.</p>
+                    <div className="eyebrow">MAPA ODCZYTU</div>
+                    <p className="visual-panel-intro">Mapa pokazuje nie osobę, tylko układ: napięcie, nierównowagę, jasność i realność zmiany.</p>
                     <VisualBars items={buildPreviewVisualBars(preview)} />
                   </Glass>
                 </div>
