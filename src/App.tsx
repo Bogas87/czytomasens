@@ -486,13 +486,13 @@ function cycleStepDescription(step: string): string {
     "oddalenie": "kontakt słabnie",
     "tęsknota": "brak zaczyna działać jak magnes",
     "powrót": "relacja znów się zbliża",
-    "ten sam problem": "wraca nierozwiązany mechanizm",
+    "ten sam problem": "wraca coś, co nie zostało domknięte",
     "staranie": "jedna strona mocno inwestuje",
     "brak odpowiedzi": "druga strona nie daje podobnego ruchu",
     "dopasowanie": "pojawia się schodzenie z własnych potrzeb",
     "zmęczenie": "koszt zaczyna być widoczny",
-    "sygnał": "pierwszy wzorzec jest już widoczny",
-    "doprecyzowanie": "trzeba jeszcze dodać konkret",
+    "sygnał": "coś zaczyna się powtarzać",
+    "doprecyzowanie": "jedna rzecz może zmienić odczyt",
   };
   return descriptions[normalized] || "ten element dopowie dalsza część analizy";
 }
@@ -836,10 +836,10 @@ function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): 
   const asymmetry = safeNumber(Math.round(24 + intensity * 62), 12, 97);
   const change = safeNumber(Math.round(74 - intensity * 48), 8, 84);
   
-  if (chance <= 24) return { chance, tension, asymmetry, change, tone: "red", badge: "Wzorzec wysokiego ryzyka", headline: "To nie wygląda jak kryzys do przeczekania.", truth: "W tym co opisujesz widać coś więcej niż trudny moment. Widać mechanizm który się powtarza.", mirror: "Napięcie i przywiązanie zaczęły tu robić za spoiwo. To nie jest spokojny grunt, to balansowanie na krawędzi która stała się normą.", summary: "Taki wynik pojawia się gdy w relacji obok uczucia działa już coś innego – chaos, nierówność, chroniczny brak jasności albo cykl który się nie kończy.", paidTease: "Pełny raport pokaże co konkretnie trzyma Cię w tym układzie, i dlaczego samo uczucie tego nie wyjaśnia." };
-  if (chance <= 49) return { chance, tension, asymmetry, change, tone: "yellow", badge: "Układ chwiejny", headline: "Coś tu jeszcze trzyma. Ale obok tego jest coś co ciągnie w dół.", truth: "To nie jest relacja która jest po prostu trudna. To relacja która mogłaby być stabilna, ale nie jest.", mirror: "Widać tu przywiązanie. Ale widać też nierówność, zmęczenie albo niepewność która trwa za długo żeby była przypadkowa.", summary: "Taki wynik pojawia się gdy obok realnego uczucia mocno pracują już też inne siły: niejasność, różne poziomy zaangażowania, trudność z podjęciem decyzji.", paidTease: "Pełny raport rozłoży to na warstwy: co jeszcze działa, co się już rozjechało i gdzie leży największe ryzyko." };
-  if (chance <= 69) return { chance, tension, asymmetry, change, tone: "yellow", badge: "Jest potencjał, ale nie bez zastrzeżeń", headline: "Tu coś jeszcze ma sens. Ale nie na autopilocie.", truth: "To nie jest relacja skazana na powtarzanie tego samego. Ale sama dobra wola i nadzieja to za mało.", mirror: "Widać miejsca które wymagają pracy – nie dlatego że coś jest nie do naprawienia, ale dlatego że zostawione same sobie się pogłębią.", summary: "Taki wynik pojawia się gdy relacja ma realny materiał, ale nie obroni się samym sentymentem ani przyzwyczajeniem.", paidTease: "Pełna analiza pokaże co daje nadzieję, co ją podcina i które wzorce są tu kluczowe." };
-  return { chance, tension, asymmetry, change, tone: "green", badge: "Układ z realnym potencjałem", headline: "Tu widać grunt. Nie tylko emocje.", truth: "W odpowiedziach jest więcej spójności niż chaosu. To nie jest relacja napędzana wyłącznie lękiem ani nawykiem.", mirror: "To nie znaczy że nie ma słabszych punktów. Znaczy tyle że jest na czym budować, jeśli będziesz to widział.", summary: "Taki wynik pojawia się gdy obok napięcia nadal istnieje realna struktura – kontakt, wzajemność, zdolność do rozmowy.", paidTease: "Pełna analiza pokaże z czego dokładnie bierze się ten potencjał i gdzie mimo wszystko są jego słabsze miejsca." };
+  if (chance <= 24) return { chance, tension, asymmetry, change, tone: "red", badge: "Dużo napięcia i mało stabilnego gruntu", headline: "To nie wygląda jak coś, co samo się uspokoi.", truth: "Najmocniej widać, że trudne momenty nie kończą się realną naprawą. One raczej zostają w tle i wracają przy kolejnej sytuacji.", mirror: "Uczucie może tu nadal być, ale coraz częściej miesza się z czujnością, czekaniem albo próbą utrzymania czegoś, co nie daje spokoju.", summary: "Ten wynik pojawia się, gdy relacja zaczyna kosztować więcej energii, niż daje oparcia: przez chaos, nierówne starania, brak jasności albo powroty do tego samego problemu.", paidTease: "Pełny raport pokaże, co konkretnie trzyma Cię przy tej relacji, co jest nadzieją, a co realną zmianą po drugiej stronie." };
+  if (chance <= 49) return { chance, tension, asymmetry, change, tone: "yellow", badge: "Są dobre momenty, ale nie ma pełnego spokoju", headline: "Coś tu jeszcze trzyma. Ale coś innego wyraźnie męczy.", truth: "Nie chodzi tylko o to, że jest trudno. Chodzi o to, że trudność wraca i zaczyna ustawiać całą relację.", mirror: "Widać przywiązanie, ale obok niego widać też zmęczenie, nierówne starania albo niepewność, która trwa zbyt długo, żeby ją zbyć przypadkiem.", summary: "Ten wynik pojawia się, gdy uczucie nadal ma znaczenie, ale nie wystarcza do tego, żeby dać stabilność, jasność i poczucie wzajemności.", paidTease: "Pełny raport pokaże, co jeszcze działa, co już Cię kosztuje i po czym odróżnić prawdziwą zmianę od chwilowego uspokojenia." };
+  if (chance <= 69) return { chance, tension, asymmetry, change, tone: "yellow", badge: "Jest potencjał, ale wymaga konkretów", headline: "Tu coś jeszcze ma sens. Ale nie na autopilocie.", truth: "Nie wygląda to jak relacja skazana na powtarzanie tego samego. Ale sama dobra wola nie wystarczy, jeśli po trudnych momentach nie pojawia się inny sposób działania.", mirror: "Są miejsca, na których można budować. Są też takie, których nie warto zostawiać bez nazwania, bo z czasem zwykle robią się większe.", summary: "Ten wynik pojawia się, gdy relacja ma jeszcze realny materiał, ale nie obroni się samym sentymentem, przyzwyczajeniem albo obietnicami.", paidTease: "Pełny raport pokaże, co daje podstawy do nadziei, co ją osłabia i jaki konkretny sygnał warto teraz sprawdzić." };
+  return { chance, tension, asymmetry, change, tone: "green", badge: "Widać stabilniejszy grunt", headline: "Tu jest coś, na czym można budować.", truth: "W odpowiedziach jest więcej spójności niż chaosu. To nie wygląda jak relacja trzymana wyłącznie lękiem albo przyzwyczajeniem.", mirror: "To nie znaczy, że wszystko jest idealne. Znaczy tyle, że obok trudności widać kontakt, wzajemność i zdolność wracania do rozmowy.", summary: "Ten wynik pojawia się, gdy relacja ma nie tylko emocje, ale też pewien grunt: odpowiedzialność, rozmowę, konsekwencję albo wspólny kierunek.", paidTease: "Pełny raport pokaże, skąd bierze się ten potencjał i które słabsze miejsca warto sprawdzić, zanim urosną." };
 }
 
 async function createSession(entryKey: EntryKey): Promise<SessionCreateResponse> {
@@ -957,6 +957,37 @@ async function fetchSignedReport(accessToken: string, accessExp: string, accessS
   throw new Error(`${lastMessage} Spróbuj odświeżyć link za chwilę.`);
 }
 
+
+function normalizeSectionKey(value: string): string {
+  return (value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ł/g, "l")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function findSectionText(sections: FullReportSection[], key: string, fallback = ""): string {
+  const normalizedKey = normalizeSectionKey(key);
+  const aliases: Record<string, string[]> = {
+    "co uzytkownik sam juz wie": ["co juz wiesz", "to juz wiesz", "co jest jasne"],
+    "co wynika ale nie zostalo powiedziane wprost": ["co z tego wynika", "czego mogles nie nazwac", "co jest pod spodem"],
+    "najwieksza sprzecznosc": ["gdzie jest rozjazd", "co sie nie sklada", "najwiekszy rozjazd"],
+    "jeden konkretny wniosek": ["jeden wniosek", "najwazniejszy wniosek", "co warto zabrac"],
+    "co dokladnie daje premium": ["co daje pelny raport", "co dostaniesz w pelnym raporcie", "co bedzie dalej"],
+    "metryka napiecie": ["napiecie", "koszt emocjonalny"],
+    "metryka asymetria": ["ciezar po stronach", "nierowny ciezar", "kto niesie wiecej"],
+    "metryka zmiana": ["szansa na zmiane", "realnosc zmiany", "czy widac zmiane"],
+  };
+  const keys = [normalizedKey, ...(aliases[normalizedKey] || []).map(normalizeSectionKey)];
+  const found = sections.find((section) => {
+    const title = normalizeSectionKey(section.title || "");
+    return keys.some((candidate) => title.includes(candidate) || candidate.includes(title));
+  });
+  return (found?.text || fallback || "").trim();
+}
+
 async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: AnswerMap, openText: string, relationshipMap?: RelationshipMapPayload): Promise<Preview> {
   const answersArr = Object.entries(answers).map(([qid, oid]) => { const q = path.questions.find((x) => x.id === qid); const opt = q?.options.find((o) => o.id === oid); return { q: q?.text || qid, a: opt?.label || oid }; });
   try {
@@ -975,7 +1006,7 @@ async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: An
       const hiddenInsight = findSectionText(sections, "co wynika ale nie zostalo powiedziane wprost", sections[1]?.text || sections[0]?.text || "");
       const contradiction = findSectionText(sections, "najwieksza sprzecznosc", "Na tym etapie nie chodzi o szukanie winy. Chodzi o sprawdzenie, czy Twoje nadzieje zgadzają się z tym, co regularnie dzieje się między Wami.");
       const concreteConclusion = findSectionText(sections, "jeden konkretny wniosek", sections[1]?.text || p.previewLine || "");
-      const premiumSpecific = findSectionText(sections, "co dokladnie daje premium", p.closing || "Pełny raport pokaże mechanizm, sprzeczności, koszt emocjonalny i możliwe scenariusze dalszego ciągu.");
+      const premiumSpecific = findSectionText(sections, "co dokladnie daje premium", p.closing || "Pełny raport pokaże, co naprawdę trzyma tę relację, gdzie rozmijają się nadzieje z faktami i jaki następny krok ma sens.");
       return {
         chance: clamp(chance, 5, 95),
         tension: clamp(tension, 5, 97),
@@ -1045,9 +1076,9 @@ function buildPremiumSamples(path: EntryConfig, preview: Preview) {
   const mechanism = dominantPreviewAxis(preview);
   const conflictSample = path.key === "conflict" ? "czy kłótnia jest próbą rozwiązania problemu, czy sposobem walki o wpływ, uwagę albo kontrolę" : "jaki wzorzec naprawdę organizuje tę relację i dlaczego wraca mimo rozmów";
   return [
-    { title: "Dominujący mechanizm relacji", text: mechanism === "napięcie" ? conflictSample : "czy głównym ciężarem jest napięcie, asymetria, niejasność, pętla ulgi czy brak realnej zmiany" },
-    { title: "Asymetria zaangażowania", text: "kto inicjuje, kto naprawia, kto czeka, kto unika i kto swoim zachowaniem ustawia rytm całej relacji" },
-    { title: "Co tylko udaje poprawę", text: "czy po trudnych momentach pojawia się zmiana, czy tylko chwilowa ulga, która po czasie znowu wraca do tego samego miejsca" },
+    { title: "Co tu naprawdę działa", text: mechanism === "napięcie" ? conflictSample : "czy główny ciężar leży w napięciu, braku jasności, nierównych staraniach, chwilowych poprawach czy braku konkretnej zmiany" },
+    { title: "Kto niesie więcej", text: "kto częściej inicjuje, naprawia, czeka, wraca do rozmowy i zostaje z napięciem po trudnych momentach" },
+    { title: "Co wygląda jak poprawa", text: "czy po trudnych momentach naprawdę zmienia się zachowanie, czy tylko na chwilę robi się spokojniej" },
   ];
 }
 
@@ -1291,10 +1322,10 @@ export default function App() {
     const description = routeArticle
       ? articleDescription
       : routePath === "/artykuly"
-        ? "Artykuły o relacjach, powrotach, niezdrowych związkach, napięciu, bliskości i mechanizmach, których często nie widać od środka."
+        ? "Artykuły o relacjach, powrotach, niepewności, bliskości i sytuacjach, które od środka trudno nazwać."
         : routeLegalKey
           ? legalDescription
-          : "Prywatna analiza relacji. Zobacz wzorce, napięcia, asymetrię i mechanizmy, które mogą decydować o tym, czy Twoja relacja ma sens.";
+          : "Prywatna analiza relacji. Zobacz, co naprawdę wraca między Wami, kto niesie większy ciężar i czy ta relacja ma jeszcze sens.";
 
     document.title = title;
     setMetaName("description", description);
@@ -1796,7 +1827,7 @@ export default function App() {
                   <div className="not-this-grid">
                     {[
                       ["Nie test osobowości", "Nie dostajesz typu. Dostajesz obraz konkretnej sytuacji."],
-                      ["Nie instrukcja co zrobić", "Wynik pokazuje mechanizm, nie podejmuje decyzji za Ciebie."],
+                      ["Nie instrukcja co zrobić", "Wynik pokazuje, co się powtarza i gdzie decyzja wymaga jasności."],
                       ["Nie ocena partnera", "Opisuje układ i zachowania, nie wydaje wyroków."],
                       ["Nie formularz", "Kilka wyborów i krótkie dopowiedzenie. Bez długiego formularza."]
                     ].map(([title, desc]) => (
