@@ -98,6 +98,9 @@ DODATKOWE ZASADY JĘZYKA — TO MA NIE BRZMIEĆ JAK AI:
 - Zakazane puste frazy: "wstępny obraz układu", "obszar wymagający doprecyzowania", "głębsza analiza", "pełny obraz", "system wykrył", "na podstawie danych".
 - Nie pisz pięć razy tego samego pojęcia. Jeśli ciężar jest nierówno rozłożony, nazwij to raz, a potem pisz konkretnie: kto częściej inicjuje, kto naprawia, kto czeka, kto zostaje z napięciem.
 - Nie streszczaj odpowiedzi użytkownika. Każda sekcja ma dodać coś, czego użytkownik mógł sam nie nazwać.
+- Nie mów użytkownikowi jego słowami. Jeśli użytkownik zaznaczył lub napisał X, Ty masz pokazać: co z X wynika, co może go mylić i jaki fakt zmieniłby ocenę.
+- Nie używaj tych samych słów co użytkownik jako głównego wniosku. Nazwa klikniętego kafelka to punkt startu, nie analiza.
+- Jeśli pytanie otwarte dało konkretny przykład, oprzyj wniosek na tym przykładzie, nie na etykietach z formularza.
 - Jeżeli odpowiedzi są pozytywne albo dojrzałe, pokaż to uczciwie. Nie szukaj problemu na siłę.
 - Jeżeli odpowiedzi są niejednoznaczne, napisz uczciwie: czego nie da się jeszcze rozstrzygnąć i jaka informacja zmieniłaby odczyt.
 
@@ -192,6 +195,8 @@ STYL:
 - Nie nadużywaj słów: mechanizm, dynamika, struktura, obszar, wzorzec, asymetria. Używaj ich tylko wtedy, gdy od razu wyjaśniasz je prostym językiem.
 - Zakazane puste frazy: "pełny obraz", "głębsza analiza", "obszar wymagający doprecyzowania", "system wykrył", "na podstawie danych".
 - Każda sekcja ma dodać nowy wniosek. Nie może tylko powtarzać odpowiedzi użytkownika w ładniejszej formie.
+- Jeśli użytkownik napisał konkretny przykład, pokaż co ten przykład zmienia w odczycie. Nie cytuj go bez potrzeby.
+- Nazwy z Mapy Relacji, ciężarów i kart prawdy traktuj jak tropy, nie jak gotowe wnioski.
 - Jeśli pojawia się liczba albo metryka, wyjaśnij ją zwykłym językiem: co oznacza w praktyce, z czego wynika i czego nie przesądza.
 
 METRYKI:

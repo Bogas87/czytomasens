@@ -523,6 +523,8 @@ type PauseInsight = {
   eyebrow: string;
   title: string;
   text: string;
+  takeaway?: string;
+  notProof?: string;
   bars: VisualBar[];
   chips?: string[];
   cycle?: string[];
@@ -553,9 +555,9 @@ function relationshipMode(path: EntryConfig | null, answers: AnswerMap, forceMap
 }
 
 function modeLabel(mode: InsightMode): string {
-  if (mode === "supportive") return "obraz wspierający";
-  if (mode === "difficult") return "obraz wymagający uważności";
-  return "obraz niejednoznaczny";
+  if (mode === "supportive") return "sporo gruntu";
+  if (mode === "difficult") return "wymaga uwagi";
+  return "mieszany sygnał";
 }
 
 function buildAdaptiveBars(mode: InsightMode, variant: PauseVariant, path: EntryConfig | null, answers: AnswerMap, forceMap: ForceMap, burdens: BurdenItem[], truthCards: string[]): VisualBar[] {
@@ -563,29 +565,45 @@ function buildAdaptiveBars(mode: InsightMode, variant: PauseVariant, path: Entry
   const questionRisk = clampScore(18 + avg * 25);
   const questionStrength = clampScore(88 - avg * 21);
   const forceBars = buildMapVisualBars(forceMap, burdens, truthCards);
+
   if (variant === "questions") {
     if (mode === "supportive") return [
-      { label: "Spokój", value: questionStrength, tone: "green", text: "odpowiedzi częściej pokazują oparcie niż chaos" },
-      { label: "Napięcie", value: questionRisk, tone: questionRisk > 55 ? "gold" : "green", text: "trudność jest widoczna, ale nie musi dominować" },
-      { label: "Kierunek", value: clampScore(questionStrength - 6), tone: "green", text: "widać materiał do rozmowy i porządkowania" },
+      { label: "Spokój", value: questionStrength, tone: "green", text: "odpowiedzi częściej pokazują możliwość rozmowy niż chaos" },
+      { label: "Trudność", value: questionRisk, tone: questionRisk > 55 ? "gold" : "green", text: "jest temat do sprawdzenia, ale nie wygląda na cały obraz" },
+      { label: "Grunt", value: clampScore(questionStrength - 6), tone: "green", text: "widać coś, na czym można oprzeć dalszy odczyt" },
     ];
     if (mode === "difficult") return [
-      { label: "Napięcie", value: questionRisk, tone: "danger", text: "odpowiedzi pokazują wyraźny koszt emocjonalny" },
-      { label: "Niepewność", value: clampScore(questionRisk + 5), tone: "danger", text: "część obrazu opiera się na domysłach albo czekaniu" },
-      { label: "Zmiana", value: clampScore(82 - questionRisk), tone: "gold", text: "potencjał trzeba sprawdzić w faktach, nie w nadziei" },
+      { label: "Koszt", value: questionRisk, tone: "danger", text: "odpowiedzi pokazują, że sytuacja zabiera sporo spokoju" },
+      { label: "Jasność", value: clampScore(100 - questionRisk), tone: "danger", text: "część spraw zostaje domyślana zamiast nazwana" },
+      { label: "Ruch", value: clampScore(82 - questionRisk), tone: "gold", text: "trzeba sprawdzić, czy zmieniają się zachowania, nie tylko nastrój" },
     ];
     return [
-      { label: "Plusy", value: clampScore(questionStrength), tone: "green", text: "w odpowiedziach są elementy, które mogą działać" },
-      { label: "Ciężar", value: clampScore(questionRisk), tone: "gold", text: "jednocześnie pojawia się napięcie wymagające nazwania" },
-      { label: "Jasność", value: clampScore(60 - avg * 8), tone: "gold", text: "obraz nie jest czarno-biały" },
+      { label: "Działa", value: clampScore(questionStrength), tone: "green", text: "są elementy, które mogą dawać tej relacji oparcie" },
+      { label: "Męczy", value: clampScore(questionRisk), tone: "gold", text: "jest też koszt, którego nie da się pominąć" },
+      { label: "Niejasne", value: clampScore(60 - avg * 8), tone: "gold", text: "trzeba oddzielić fakty od nadziei i domysłów" },
     ];
   }
-  if (variant === "force") return forceBars.slice(0, 3);
+
+  if (variant === "force") return forceBars.slice(0, 3).map((bar) => ({
+    ...bar,
+    text: bar.label.toLowerCase().includes("napraw")
+      ? "chodzi o to, kto wraca do rozmowy i bierze sprawę na siebie"
+      : bar.label.toLowerCase().includes("inicj")
+        ? "chodzi o to, kto częściej robi pierwszy ruch"
+        : bar.text
+  }));
+
   if (variant === "burdens") {
     const base = burdens.slice(0, 3);
-    if (!base.length) return [{ label: "Ciężar", value: 35, tone: "green", text: "nie wskazano jednego dominującego obciążenia" }];
-    return base.map((b, i) => ({ label: `${b.rank}. ${b.label}`, value: clampScore(92 - i * 18), tone: mode === "supportive" ? "green" : mode === "difficult" ? "danger" : "gold", text: i === 0 ? "to najmocniej ustawia dalszą interpretację" : "to dopowiada kontekst głównego ciężaru" }));
+    if (!base.length) return [{ label: "Brak jednego ciężaru", value: 35, tone: "green", text: "problem może być sytuacyjny albo jeszcze za słabo nazwany" }];
+    return base.map((b, i) => ({
+      label: `${b.rank}. ${b.label}`,
+      value: clampScore(92 - i * 18),
+      tone: mode === "supportive" ? "green" : mode === "difficult" ? "danger" : "gold",
+      text: i === 0 ? "to nie jest wniosek, tylko miejsce które najmocniej wpływa na dalsze pytania" : "to dopowiada, gdzie relacja traci lekkość albo jasność"
+    }));
   }
+
   return buildPreviewVisualBars({ chance: 50, tension: forceBars[0]?.value || questionRisk, asymmetry: forceBars[1]?.value || 50, change: forceBars[3]?.value || questionStrength, badge: "", headline: "", truth: "", mirror: "", summary: "", paidTease: "", tone: "yellow" }).slice(0, 3);
 }
 
@@ -610,26 +628,110 @@ function buildPauseInsight(variant: PauseVariant, path: EntryConfig | null, answ
   const truth = truthCards[0];
 
   if (variant === "questions") {
-    if (mode === "supportive") return { mode, eyebrow: "PIERWSZY ODDECH", title: "Na razie widać więcej gruntu niż chaosu", text: "To nie znaczy, że nie ma problemu. Znaczy tylko, że odpowiedzi pokazują też zasoby: kontakt, możliwość rozmowy albo punkt zaczepienia do naprawy.", bars, cycle };
-    if (mode === "difficult") return { mode, eyebrow: "PIERWSZY SYGNAŁ", title: "Tu zaczyna się rysować realny koszt", text: "Odpowiedzi nie wyglądają jak pojedynczy zgrzyt. Bardziej jak napięcie, które już wpływa na spokój, jasność albo sposób podejmowania decyzji.", bars, cycle };
-    return { mode, eyebrow: "PIERWSZY SYGNAŁ", title: "Obraz jest mieszany, więc trzeba uważać z prostą oceną", text: "Są elementy, które mogą działać, ale są też miejsca, które zabierają stabilność. Dlatego dalsze kroki nie zakładają kryzysu, tylko doprecyzowują układ.", bars, cycle };
+    if (mode === "supportive") return {
+      mode, eyebrow: "PO PIERWSZYCH ODPOWIEDZIACH",
+      title: "Na razie nie widać, żeby problem przykrywał całą relację",
+      text: "To nie jest pochwała ani werdykt. Pierwsze odpowiedzi pokazują, że obok trudności może być też kontakt, rozmowa albo coś, co nadal daje oparcie.",
+      takeaway: "Dalsze kroki sprawdzą, czy ten grunt jest realny w zachowaniu, nie tylko w deklaracjach.",
+      notProof: "To jeszcze nie znaczy, że wszystko jest dobrze.",
+      bars, cycle
+    };
+    if (mode === "difficult") return {
+      mode, eyebrow: "PO PIERWSZYCH ODPOWIEDZIACH",
+      title: "Pierwszy sygnał jest taki: ta sytuacja kosztuje sporo spokoju",
+      text: "Nie chodzi o to, że jedna odpowiedź przesądza wynik. Chodzi o to, że kilka odpowiedzi idzie w podobną stronę: więcej napięcia, domysłów albo czekania niż stabilności.",
+      takeaway: "Teraz trzeba sprawdzić, czy ten koszt wynika z chwilowego kryzysu, czy z czegoś, co wraca regularnie.",
+      notProof: "To nie jest jeszcze decyzja, że relacja nie ma sensu.",
+      bars, cycle
+    };
+    return {
+      mode, eyebrow: "PO PIERWSZYCH ODPOWIEDZIACH",
+      title: "Tu nie wychodzi proste „dobrze” albo „źle”",
+      text: "W odpowiedziach są jednocześnie rzeczy, które mogą trzymać relację, i takie, które ją obciążają. Dlatego wynik nie powinien iść na skróty.",
+      takeaway: "Dalej sprawdzimy, kto co niesie i co powtarza się najczęściej.",
+      notProof: "To nie jest jeszcze gotowy wniosek, tylko kierunek dalszego sprawdzania.",
+      bars, cycle
+    };
   }
 
   if (variant === "force") {
-    if (mode === "supportive") return { mode, eyebrow: "UKŁAD SIŁ", title: "Ciężar nie wygląda na jednostronny", text: "To dobry sygnał: relacja może mieć napięcia, ale nie musi opierać się na tym, że jedna osoba stale ciągnie wszystko sama.", bars, cycle };
-    if (mode === "difficult") return { mode, eyebrow: "UKŁAD SIŁ", title: "Widać nierówny rozkład odpowiedzialności", text: "Najważniejsze jest teraz sprawdzenie, czy ta nierównowaga jest chwilowa, czy stała. Bo stały układ sił często mówi więcej niż deklaracje.", bars, cycle };
-    return { mode, eyebrow: "UKŁAD SIŁ", title: "Nie wszystko leży po jednej stronie, ale równowaga nie jest pełna", text: "To etap pośredni: część rzeczy może działać, ale któreś obszary wymagają dokładniejszego nazwania.", bars, cycle };
+    if (mode === "supportive") return {
+      mode, eyebrow: "PO UKŁADZIE SIŁ",
+      title: "Ciężar nie wygląda na oczywiście jednostronny",
+      text: "To ważne, bo relacja może mieć trudne miejsca, a mimo to nie opierać się wyłącznie na wysiłku jednej osoby.",
+      takeaway: "Wynik będzie dalej sprawdzał, czy ta względna równowaga utrzymuje się też przy konfliktach i decyzjach.",
+      notProof: "To nie unieważnia problemów, tylko pokazuje, że nie wszystko trzeba czytać jako brak wzajemności.",
+      bars, cycle
+    };
+    if (mode === "difficult") return {
+      mode, eyebrow: "PO UKŁADZIE SIŁ",
+      title: "Najmocniej widać pytanie: kto naprawdę dźwiga tę relację",
+      text: "Jeśli jedna osoba częściej zaczyna rozmowę, naprawia po konflikcie albo pilnuje kontaktu, problem nie leży tylko w uczuciach. Leży też w podziale ciężaru.",
+      takeaway: "Dalszy wynik powinien sprawdzić, czy druga strona odpowiada działaniem, czy tylko chwilową obecnością.",
+      notProof: "To nie jest ocena partnera. To sprawdzenie, jak rozkłada się odpowiedzialność.",
+      bars, cycle
+    };
+    return {
+      mode, eyebrow: "PO UKŁADZIE SIŁ",
+      title: "Równowaga nie jest pełna, ale nie wszystko jest po jednej stronie",
+      text: "To sygnał mieszany. Część ciężaru może być po Twojej stronie, ale nie widać jeszcze, czy to stały układ, czy reakcja na konkretny etap.",
+      takeaway: "Następny krok pokaże, co najbardziej obciąża tę relację w praktyce.",
+      notProof: "To nie jest jeszcze dowód na jednostronność.",
+      bars, cycle
+    };
   }
 
   if (variant === "burdens") {
-    if (mode === "supportive") return { mode, eyebrow: "CIĘŻARY RELACJI", title: topBurden ? "To wygląda bardziej jak obszar do uporządkowania" : "Nie widać jednego dominującego obciążenia", text: topBurden ? `Najmocniej zaznacza się: ${topBurden}. Przy wspierającym obrazie nie musi to oznaczać pęknięcia, ale pokazuje miejsce, które warto nazwać jasno.` : "Brak silnego ciężaru może oznaczać, że problem jest sytuacyjny albo jeszcze słabo nazwany.", bars, cycle, chips: burdens.map((b) => b.label) };
-    if (mode === "difficult") return { mode, eyebrow: "CIĘŻARY RELACJI", title: topBurden ? `Największy ciężar: ${topBurden}` : "Ciężar zaczyna dominować", text: "Tu nie chodzi o samą nazwę problemu, tylko o to, czy ten ciężar wraca i ustawia Wasze zachowania po raz kolejny.", bars, cycle, chips: burdens.map((b) => b.label) };
-    return { mode, eyebrow: "CIĘŻARY RELACJI", title: topBurden ? `Najmocniej wybija się: ${topBurden}` : "Ciężar nie jest jeszcze jednoznaczny", text: "To nie przesądza wyniku. Pokazuje tylko, gdzie analiza musi uważać, żeby nie pomylić chwilowego napięcia z trwałym wzorcem.", bars, cycle, chips: burdens.map((b) => b.label) };
+    if (mode === "supportive") return {
+      mode, eyebrow: "PO WYBORZE CIĘŻARÓW",
+      title: topBurden ? `Najbardziej trzeba nazwać: ${topBurden}` : "Nie ma jednego ciężaru, który przykrywa wszystko",
+      text: topBurden ? "To wygląda bardziej jak temat do uporządkowania niż automatyczny dowód, że relacja jest zła." : "Czasem problem nie jest jednym wielkim ciężarem, tylko kilkoma drobnymi napięciami, które zbierają się po czasie.",
+      takeaway: "Wynik nie powinien robić z tego dramatu, jeśli odpowiedzi pokazują też współpracę i kontakt.",
+      notProof: "Samo wskazanie ciężaru nie mówi jeszcze, czy druga strona chce i potrafi coś zmienić.",
+      bars, cycle, chips: burdens.map((b) => b.label)
+    };
+    if (mode === "difficult") return {
+      mode, eyebrow: "PO WYBORZE CIĘŻARÓW",
+      title: topBurden ? `${topBurden} nie jest tylko etykietą problemu` : "Ciężar zaczyna ustawiać dalszy odczyt",
+      text: "Najważniejsze nie jest samo słowo, które zaznaczyłeś. Ważniejsze jest to, czy ten temat wraca, zmienia Twoje zachowanie i zostawia Cię z większym kosztem niż drugą stronę.",
+      takeaway: "Dalsze pytanie ma sprawdzić konkretną sytuację z życia, żeby raport nie powtórzył tylko zaznaczenia.",
+      notProof: "To jeszcze nie mówi, kto jest winny. Mówi, gdzie trzeba szukać faktów.",
+      bars, cycle, chips: burdens.map((b) => b.label)
+    };
+    return {
+      mode, eyebrow: "PO WYBORZE CIĘŻARÓW",
+      title: topBurden ? `Najmocniej wraca temat: ${topBurden}` : "Ciężar nie jest jeszcze jednoznaczny",
+      text: "Ten wybór jest punktem zaczepienia, nie gotowym raportem. Trzeba jeszcze sprawdzić, czy to chwilowe napięcie, czy coś, co powtarza się w podobny sposób.",
+      takeaway: "Raport powinien z tego wyciągnąć wniosek, a nie przepisać nazwę zaznaczonego kafelka.",
+      notProof: "Sama nazwa problemu nie wystarczy do uczciwej oceny.",
+      bars, cycle, chips: burdens.map((b) => b.label)
+    };
   }
 
-  if (mode === "supportive") return { mode, eyebrow: "MOMENT PRAWDY", title: "Wybrane zdanie nie musi oznaczać końca", text: "Może być raczej miejscem, które wymaga rozmowy. System nie będzie zakładał problemu tam, gdzie odpowiedzi pokazują też wzajemność i możliwość naprawy.", bars, cycle, quote: truth };
-  if (mode === "difficult") return { mode, eyebrow: "MOMENT PRAWDY", title: "To zdanie ustawia dalszą interpretację", text: "Nie dlatego, że samo jedno zdanie przesądza o relacji. Dlatego, że często pokazuje, czego użytkownik już nie chce dalej omijać.", bars, cycle, quote: truth };
-  return { mode, eyebrow: "MOMENT PRAWDY", title: "To jest punkt do rozróżnienia, nie wyrok", text: "Ten wybór pomaga oddzielić realny problem od lęku, przywiązania albo chwilowego zmęczenia.", bars, cycle, quote: truth };
+  if (mode === "supportive") return {
+    mode, eyebrow: "PO MOMENCIE PRAWDY",
+    title: "To zdanie nie musi oznaczać końca",
+    text: "Może pokazywać miejsce, które domaga się rozmowy, a nie dowód, że wszystko się rozsypuje.",
+    takeaway: "Jeśli w odpowiedziach jest wzajemność, wynik ma ją pokazać uczciwie.",
+    notProof: "Jedno mocne zdanie nie powinno przykrywać całego obrazu.",
+    bars, cycle, quote: truth
+  };
+  if (mode === "difficult") return {
+    mode, eyebrow: "PO MOMENCIE PRAWDY",
+    title: "To zdanie może pokazywać coś, czego nie chcesz już omijać",
+    text: "Nie dlatego, że samo zdanie przesądza o relacji. Dlatego, że często trafia dokładnie tam, gdzie człowiek przestał już wierzyć własnym tłumaczeniom.",
+    takeaway: "Ostatnie pytania mają sprawdzić fakt z życia, a nie tylko Twoje odczucie.",
+    notProof: "To nadal nie jest wyrok. To wskazanie miejsca do sprawdzenia.",
+    bars, cycle, quote: truth
+  };
+  return {
+    mode, eyebrow: "PO MOMENCIE PRAWDY",
+    title: "To jest punkt do rozróżnienia, nie gotowa odpowiedź",
+    text: "Wybrane zdanie pomaga zobaczyć, gdzie miesza się realny problem, lęk, przywiązanie albo zmęczenie.",
+    takeaway: "Dlatego na końcu dopytamy o konkret, który może zmienić odczyt.",
+    notProof: "Nie będziemy udawać pewności tam, gdzie jej jeszcze nie ma.",
+    bars, cycle, quote: truth
+  };
 }
 
 function PauseInsightPanel({ insight, onBack, onNext, nextLabel = "Dalej →" }: { insight: PauseInsight; onBack: () => void; onNext: () => void; nextLabel?: string }) {
@@ -647,11 +749,11 @@ function PauseInsightPanel({ insight, onBack, onNext, nextLabel = "Dalej →" }:
         {insight.quote && <div className="pause-quote">„{insight.quote}”</div>}
         <div className="pause-grid">
           <div className="pause-visual-card">
-            <div className="eyebrow">SYGNAŁY Z ODPOWIEDZI</div>
+            <div className="eyebrow">CO TO MOŻE OZNACZAĆ</div>
             <VisualBars items={insight.bars} />
           </div>
           <div className="pause-visual-card">
-            <div className="eyebrow">CO ZACZYNA SIĘ UKŁADAĆ</div>
+            <div className="eyebrow">CZEGO JESZCZE NIE WIEMY</div>
             <CycleDiagram steps={insight.cycle || []} />
             {insight.chips && insight.chips.length > 0 && (
               <div className="pause-chip-row">
@@ -660,7 +762,10 @@ function PauseInsightPanel({ insight, onBack, onNext, nextLabel = "Dalej →" }:
             )}
           </div>
         </div>
-        <div className="pause-footnote">Na razie tyle widać. Za chwilę dopytamy o konkrety, żeby wynik nie był ogólny.</div>
+        <div className="pause-explain-grid">
+          {insight.takeaway && <div><span>Wniosek na teraz</span><strong>{insight.takeaway}</strong></div>}
+          {insight.notProof && <div><span>To jeszcze nie znaczy</span><strong>{insight.notProof}</strong></div>}
+        </div>
         <div className="section-actions">
           <GhostButton onClick={onBack}>Wróć</GhostButton>
           <PrimaryButton onClick={onNext}>{nextLabel}</PrimaryButton>
@@ -684,35 +789,35 @@ function buildClarificationQuestions(path: EntryConfig, forceMap: ForceMap, burd
   const meLoad = FORCE_MAP_ITEMS.filter((item) => isMeHeavy(forceMap[item.key])).length;
 
   if (meLoad >= 3 || isMeHeavy(forceMap.repairAfterConflict) || isMeHeavy(forceMap.emotionalLabor)) {
-    candidates.push({ id: "asymmetry-reality", signal: "asymetria", lead: "Mapa pokazuje, że ciężar może leżeć bardziej po jednej stronie.", text: "Co realnie dzieje się z kontaktem, rozmową albo naprawą, kiedy Ty przestajesz to inicjować?" });
+    candidates.push({ id: "asymmetry-reality", signal: "Kto ciągnie kontakt", lead: "Nie pytamy, kto bardziej kocha. Pytamy, co dzieje się, gdy Ty na chwilę przestajesz ciągnąć temat.", text: "Gdybyś przez kilka dni nie zaczynał/zaczynała rozmowy, nie wracał/wracała do problemu i nie próbował/próbowała naprawiać, co najpewniej by się wydarzyło?" });
   }
   if (hasBurden(burdens, "cisza") || isOtherHeavy(forceMap.avoidance)) {
-    candidates.push({ id: "silence-pattern", signal: "cisza / unikanie", lead: "Cisza po napięciu często mówi więcej niż sama kłótnia.", text: "Jak wygląda cisza albo wycofanie po trudnym momencie: ile trwa, kto ją przerywa i co dzieje się potem?" });
+    candidates.push({ id: "silence-pattern", signal: "Cisza po trudnym momencie", lead: "Tu liczy się zwykły przebieg sytuacji, nie interpretacja.", text: "Kiedy robi się cicho po kłótni albo napięciu: ile to zwykle trwa, kto pierwszy wraca do kontaktu i czy po tym coś się realnie zmienia?" });
   }
   if (hasBurden(burdens, "kłótnie")) {
-    candidates.push({ id: "conflict-after", signal: "konflikt", lead: "Konflikt nie rozstrzyga się w momencie kłótni, tylko po niej.", text: "Po ostatnich trzech kłótniach co naprawdę zmieniło się w zachowaniu którejkolwiek ze stron?" });
+    candidates.push({ id: "conflict-after", signal: "Co zostaje po kłótni", lead: "Nie chodzi o to, jak mocna była kłótnia. Chodzi o to, co zostało po niej.", text: "Przypomnij sobie ostatnie 2–3 kłótnie. Co po nich naprawdę zmieniło się w zachowaniu którejkolwiek ze stron?" });
   }
   if (hasBurden(burdens, "zdrada") || path.key === "betrayal") {
-    candidates.push({ id: "trust-proof", signal: "zaufanie", lead: "Po kłamstwie najważniejsze są nie zapewnienia, tylko powtarzalne działania.", text: "Co dziś bardziej niszczy zaufanie: samo wydarzenie, czy sposób w jaki druga strona zachowuje się po nim?" });
+    candidates.push({ id: "trust-proof", signal: "Co dzieje się po kłamstwie", lead: "Tu nie wystarczy, że ktoś przeprosił. Liczy się to, co robi później.", text: "Co dziś bardziej utrudnia Ci zaufanie: samo wydarzenie, czy to, jak druga strona zachowuje się po nim? Podaj jeden konkretny przykład." });
   }
   if (hasBurden(burdens, "brak jasności") || path.key === "uncertain") {
-    candidates.push({ id: "clarity-cost", signal: "brak jasności", lead: "Brak jasności nie jest neutralny, bo ktoś zwykle płaci za niego spokojem.", text: "Co dokładnie pozostaje między Wami niedopowiedziane i co Ty robisz więcej właśnie dlatego, że nie masz tej jasności?" });
+    candidates.push({ id: "clarity-cost", signal: "Co nadal nie jest nazwane", lead: "Nie chodzi o wielkie deklaracje. Chodzi o jedną rzecz, której brak najbardziej męczy.", text: "Co dokładnie nadal jest między Wami niejasne i co Ty przez to robisz więcej: czekasz, piszesz pierwszy/pierwsza, tłumaczysz, odpuszczasz swoje potrzeby?" });
   }
   if (hasBurden(burdens, "powroty") || truthCards.some((text) => text.includes("wracamy w to samo")) || path.key === "loop") {
-    candidates.push({ id: "cycle-proof", signal: "pętla", lead: "Chwilowa poprawa potrafi wyglądać jak zmiana, dopóki nie sprawdzisz, co zostaje po czasie.", text: "Po czym poznajesz, że poprawa jest realna, a po czym, że to tylko uspokojenie sytuacji na chwilę?" });
+    candidates.push({ id: "cycle-proof", signal: "Czy poprawa zostaje", lead: "Najłatwiej pomylić ulgę po napięciu z prawdziwą zmianą.", text: "Kiedy robi się lepiej, co później zostaje na dłużej: konkretne zachowanie, inny sposób rozmowy, większa odpowiedzialność — czy głównie chwilowy spokój?" });
   }
   if (truthCards.some((text) => text.includes("boję się końca")) || hasBurden(burdens, "lęk")) {
-    candidates.push({ id: "fear-vs-choice", signal: "lęk przed stratą", lead: "Lęk przed końcem potrafi udawać pewność, że trzeba zostać.", text: "Czego boisz się bardziej: utraty tej osoby, czy tego, że po odejściu cała historia okaże się bez sensu?" });
+    candidates.push({ id: "fear-vs-choice", signal: "Czego boisz się naprawdę", lead: "Czasem trudno odróżnić miłość od strachu przed pustką po tej historii.", text: "Co byłoby dla Ciebie trudniejsze: stracić tę osobę, czy uznać, że ta historia nie poszła tam, gdzie miała pójść?" });
   }
   if (hasBurden(burdens, "rutyna") || path.key === "stagnation") {
-    candidates.push({ id: "stagnation-proof", signal: "stagnacja", lead: "Spokój i rezygnacja z zewnątrz mogą wyglądać podobnie.", text: "Po czym poznajesz, że między Wami jest jeszcze żywy kontakt, a nie tylko przyzwyczajenie i poprawne funkcjonowanie obok siebie?" });
+    candidates.push({ id: "stagnation-proof", signal: "Czy jest jeszcze kontakt", lead: "Brak kłótni nie zawsze oznacza bliskość.", text: "Po czym poznajesz, że między Wami jest jeszcze ciekawość, bliskość albo chęć bycia razem, a nie tylko przyzwyczajenie?" });
   }
   if (path.key === "triangle" || hasBurden(burdens, "ktoś trzeci")) {
-    candidates.push({ id: "third-person-meaning", signal: "ktoś trzeci", lead: "Trzecia osoba często pokazuje brak, który istniał wcześniej.", text: "Gdyby nie było tej trzeciej osoby, jaki problem w obecnej relacji nadal musiałby zostać nazwany?" });
+    candidates.push({ id: "third-person-meaning", signal: "Co ta osoba pokazała", lead: "Trzecia osoba nie zawsze jest przyczyną. Czasem tylko odsłania brak, który był wcześniej.", text: "Gdyby tej trzeciej osoby w ogóle nie było, jaki problem w obecnej relacji i tak zostałby na stole?" });
   }
 
-  candidates.push({ id: "one-change", signal: "realność zmiany", lead: "Na końcu liczy się nie deklaracja, tylko konkret zachowania.", text: "Jaka jedna rzecz musiałaby się zmienić w zachowaniu tej osoby, żebyś uznał/uznała, że to nie jest tylko chwilowa poprawa?" });
-  candidates.push({ id: "missing-context", signal: "brakujący kontekst", lead: "Mapa pokazuje układ, ale nie zna jeszcze jednego konkretu z życia.", text: `Jaki jeden fakt z tej relacji najbardziej zmieniłby ocenę sytuacji, gdyby ktoś z zewnątrz go poznał?` });
+  candidates.push({ id: "one-change", signal: "Jeden konkret", lead: "Na końcu liczy się zachowanie, nie obietnica.", text: "Jaka jedna konkretna rzecz musiałaby się zmienić w zachowaniu tej osoby, żebyś uznał/uznała: „to nie jest tylko chwilowa poprawa”?" });
+  candidates.push({ id: "missing-context", signal: "Jedna rzecz z życia", lead: "Żeby wynik nie brzmiał jak przepisanie odpowiedzi, potrzebny jest jeden fakt, nie ogólny opis.", text: `Jaki jeden konkretny fakt z tej relacji najbardziej zmieniłby ocenę sytuacji, gdyby ktoś z boku go poznał?` });
 
   const unique = uniqueClarifications(candidates);
   const strongSignals = burdens.length + truthCards.length + (meLoad >= 3 ? 1 : 0) + (note.trim().length < 40 ? 1 : 0);
@@ -723,8 +828,8 @@ function buildClarificationQuestions(path: EntryConfig, forceMap: ForceMap, burd
 const LOCAL_INTERVIEW_QUESTIONS: Record<EntryKey, LocalInterviewQuestion[]> = {
   unease: [
     { lead: "Najpierw trzeba nazwać, gdzie zaczyna się napięcie.", question: "Kiedy najczęściej czujesz, że coś jest nie tak: po rozmowach, przy ciszy, przy planach, przy braku kontaktu czy przy myśli o przyszłości?", observation: "Nie szukamy jeszcze decyzji. Szukamy punktu, w którym relacja traci spokój." },
-    { lead: "Niepokój zwykle ma swój powtarzalny moment.", question: "Jaka sytuacja wraca najczęściej i za każdym razem zostawia Cię z podobnym uczuciem?", observation: "Powtarzalność jest ważniejsza niż pojedynczy incydent." },
-    { lead: "Teraz oddziel fakty od tłumaczeń.", question: "Co konkretnie widzisz w zachowaniu tej osoby, a co dopowiadasz sobie, żeby to jakoś utrzymać w całości?", observation: "Tu zaczyna się różnica między tym, co się dzieje, a tym, co próbujesz sobie o tym opowiedzieć." },
+    { lead: "Niepokój zwykle ma swój powtarzalny moment.", question: "Jaka sytuacja wraca najczęściej i za każdym razem zostawia Cię z podobnym uczuciem?", observation: "Interesuje nas to, co wraca, nie jednorazowa sytuacja." },
+    { lead: "Teraz oddziel fakty od tłumaczeń.", question: "Co konkretnie widzisz w zachowaniu tej osoby, a co dopowiadasz sobie, żeby to jakoś utrzymać w całości?", observation: "To pomaga oddzielić fakt od tłumaczenia." },
   ],
   betrayal: [
     { lead: "Po zdradzie najważniejsze są nie słowa, tylko ciężar odpowiedzialności.", question: "Co ta osoba realnie zmieniła od tamtej sytuacji, a co zostało tylko na poziomie przeprosin albo obietnic?", observation: "Odbudowa zaufania zaczyna się tam, gdzie druga strona przestaje oczekiwać, że ból po prostu minie." },
@@ -738,12 +843,12 @@ const LOCAL_INTERVIEW_QUESTIONS: Record<EntryKey, LocalInterviewQuestion[]> = {
   ],
   asymmetry: [
     { lead: "Asymetrię widać najlepiej wtedy, gdy przestajesz ciągnąć.", question: "Co realnie stałoby się z kontaktem, bliskością i rozmowami, gdybyś przez chwilę przestał/przestała inicjować i naprawiać?", observation: "To pytanie pokazuje, czy relacja stoi na dwóch osobach, czy głównie na Twoim wysiłku." },
-    { lead: "Nie chodzi tylko o ilość starań, ale o ich ciężar.", question: "Które rzeczy w tej relacji bierzesz na siebie prawie automatycznie, choć coraz bardziej Cię to męczy?", observation: "Czasem człowiek nie zauważa, że stał się silnikiem całego układu." },
+    { lead: "Nie chodzi tylko o ilość starań, ale o ich ciężar.", question: "Które rzeczy w tej relacji bierzesz na siebie prawie automatycznie, choć coraz bardziej Cię to męczy?", observation: "Czasem dopiero po takim pytaniu widać, ile rzeczy robisz automatycznie." },
     { lead: "Teraz nazwij koszt.", question: "Kim stajesz się przy tej osobie, kiedy znowu próbujesz utrzymać coś, czego druga strona nie niesie tak samo?", observation: "Najważniejszy nie jest sam wysiłek, tylko to, co ten wysiłek robi z Tobą." },
   ],
   conflict: [
     { lead: "Kłótnia nie jest problemem sama w sobie. Problemem jest to, co zostaje po niej.", question: "Co najczęściej dzieje się po konflikcie: naprawa, cisza, dystans, kolejne wypominanie czy udawanie, że nic się nie stało?", observation: "Relację bardziej definiuje sposób naprawy niż sam fakt sporu." },
-    { lead: "Sprawdź, o co naprawdę walczycie.", question: "Czy Wasze kłótnie dotyczą konkretnych spraw, czy po chwili zamieniają się w walkę o rację, uwagę, szacunek albo kontrolę?", observation: "Gdy temat znika, a zostaje walka, konflikt przestaje rozwiązywać cokolwiek." },
+    { lead: "Sprawdź, o co naprawdę walczycie.", question: "Czy Wasze kłótnie dotyczą konkretnych spraw, czy po chwili zamieniają się w walkę o rację, uwagę, szacunek albo kontrolę?", observation: "Jeśli temat znika, a zostaje walka, kłótnia przestaje cokolwiek naprawiać." },
     { lead: "Teraz najważniejsze: czy konflikt coś zmienia.", question: "Po ostatnich trzech kłótniach co realnie zmieniło się w zachowaniu którejkolwiek ze stron?", observation: "Jeśli po konflikcie nie ma zmiany, konflikt staje się tylko cyklem napięcia." },
   ],
   stagnation: [
@@ -762,7 +867,7 @@ const LOCAL_INTERVIEW_QUESTIONS: Record<EntryKey, LocalInterviewQuestion[]> = {
     { lead: "Teraz wróć do obecnej relacji.", question: "Gdyby nie było tej trzeciej osoby, jaki problem w obecnej relacji nadal musiałby zostać nazwany?", observation: "To pytanie oddziela nową historię od starego pęknięcia." },
   ],
   loop: [
-    { lead: "Pętla ma swój rytm.", question: "Jak wygląda ostatni pełny cykl między Wami: co uruchomiło napięcie, co doprowadziło do powrotu i co potem znowu zaczęło znikać?", observation: "Dopóki cykl nie zostanie nazwany, każde pojednanie wygląda jak nowy początek." },
+    { lead: "Pętla ma swój rytm.", question: "Jak wygląda ostatni pełny cykl między Wami: co uruchomiło napięcie, co doprowadziło do powrotu i co potem znowu zaczęło znikać?", observation: "Dopóki nie nazwiesz tego rytmu, każdy powrót może wyglądać jak nowy start." },
     { lead: "Sprawdź, czy po powrotach zostaje zmiana, czy tylko ulga.", question: "Co po ostatnim powrocie naprawdę utrzymało się dłużej niż kilka tygodni?", observation: "Ulga po odzyskaniu kontaktu może bardzo łatwo udawać naprawę." },
     { lead: "Teraz najtrudniejsze.", question: "Co daje Ci ten cykl, mimo że jednocześnie Cię męczy: intensywność, poczucie bycia potrzebnym/potrzebną, nadzieję, adrenalinę czy uniknięcie pustki?", observation: "Czasem człowieka trzyma nie tylko osoba, ale cały rytm napięcia i ulgi." },
   ],
@@ -2162,9 +2267,9 @@ export default function App() {
             <motion.div key={`${path.key}-map-summary`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
                 <div>
-                  <div className="eyebrow">CO JUŻ WIDAĆ</div>
-                  <h2>Zaczyna się układać pierwszy obraz</h2>
-                  <p>To jeszcze nie jest wynik. Chodzi o to, żeby przed raportem dopytać tylko o to, co naprawdę ma znaczenie.</p>
+                  <div className="eyebrow">PRZED WYNIKIEM</div>
+                  <h2>Nie zgadujemy. Dopytamy o konkret</h2>
+                  <p>Wybory pokazały kierunek. Teraz potrzebny jest przykład z życia, żeby raport nie powtórzył tylko tego, co zostało kliknięte.</p>
                 </div>
                 <div className="progress-wrap">
                   <span>Mapa gotowa</span>
@@ -2187,15 +2292,15 @@ export default function App() {
                   ))}
                 </div>
                 <div className="visual-insight-panel">
-                  <div className="eyebrow">WYKRES SYGNAŁÓW</div>
+                  <div className="eyebrow">CO TRZEBA SPRAWDZIĆ</div>
                   <VisualBars items={buildMapVisualBars(forceMap, burdens, truthCards)} />
                 </div>
                 <div className="cycle-panel">
-                  <div className="eyebrow">DOMINUJĄCY CYKL</div>
+                  <div className="eyebrow">MOŻLIWY PRZEBIEG</div>
                   <CycleDiagram steps={buildCycleSteps(path.key, burdens, truthCards)} />
                 </div>
                 <div className="map-step-note strong-note">
-                  Jeszcze {clarificationQuestions.length || 1} {clarificationQuestions.length === 1 ? "krótka odpowiedź" : clarificationQuestions.length === 2 ? "krótkie odpowiedzi" : "krótkie odpowiedzi"}. To pomoże odróżnić to, co naprawdę się dzieje, od tego, co tylko podobnie wygląda.
+                  Jeszcze {clarificationQuestions.length || 1} {clarificationQuestions.length === 1 ? "konkretna odpowiedź" : clarificationQuestions.length === 2 ? "konkretne odpowiedzi" : "konkretne odpowiedzi"}. Chodzi o przykład, nie o długi opis.
                 </div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
@@ -2209,9 +2314,9 @@ export default function App() {
             <motion.div key={`${path.key}-clarification-${clarificationIndex}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
                 <div>
-                  <div className="eyebrow">DOPYTAMY O JEDNĄ RZECZ {clarificationIndex + 1} Z {clarificationQuestions.length}</div>
+                  <div className="eyebrow">JEDEN KONKRET {clarificationIndex + 1} Z {clarificationQuestions.length}</div>
                   <h2>{clarificationQuestions[clarificationIndex].signal}</h2>
-                  <p>{clarificationQuestions[clarificationIndex].lead}</p>
+                  <p>{clarificationQuestions[clarificationIndex].lead} Odpowiedz zwyczajnie, na przykładzie jednej sytuacji.</p>
                 </div>
                 <div className="progress-wrap">
                   <span>{clarificationIndex + 1}/{clarificationQuestions.length}</span>
@@ -2226,7 +2331,7 @@ export default function App() {
                   className="ctms-textarea clarification-textarea"
                   value={clarificationDraft}
                   onChange={(e) => setClarificationDraft(e.target.value)}
-                  placeholder="Napisz normalnie, jak do kogoś z boku. Wystarczą 2–4 zdania."
+                  placeholder="Np. Po ostatniej kłótni ja napisałem pierwszy, ona odpisała po dwóch dniach i temat już nie wrócił."
                   maxLength={700}
                 />
                 <div className="text-meta"><div>Wystarczą konkrety. Nie pisz wypracowania.</div><div>{clarificationDraft.length}/700</div></div>
