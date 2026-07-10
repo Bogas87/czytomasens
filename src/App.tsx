@@ -1996,53 +1996,52 @@ export default function App() {
 
           {stage === "landing" && !isPublicContentRoute && (
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <section className="hero-grid hero-grid--clean hero-grid--premium-v2">
-                <Glass className="glass-panel hero-panel hero-copy hero-panel--clean hero-copy--premium-v2">
-                  <div className="eyebrow with-line">PRYWATNY ODCZYT KONKRETNEJ RELACJI</div>
-                  <h1>Sprawdź, czy walczysz o relację, <span>czy już tylko o własną nadzieję.</span></h1>
-                  <p className="hero-main-copy">CzyToMaSens nie działa jak quiz. Prowadzi Cię przez sytuacje, reakcje i momenty po napięciu, żeby pokazać, co naprawdę dzieje się między Wami, a czego trudno zobaczyć, kiedy jesteś w środku.</p>
-                  <p className="hero-premium-copy">Na końcu dostajesz raportowy odczyt tej jednej historii: najważniejszy wniosek, to co może Cię mylić, mapę napięcia i konkret, który warto sprawdzić przed kolejną rozmową, powrotem albo decyzją.</p>
-                  <div className="hero-value-line">
-                    <span>Nie ocena partnera.</span>
-                    <span>Nie lista objawów.</span>
-                    <span>Odczyt zachowań, powrotów i faktów.</span>
+              <section className="hero-grid hero-grid--clean hero-grid--premium-v3">
+                <Glass className="glass-panel hero-panel hero-copy hero-panel--clean hero-copy--premium-v3">
+                  <div className="eyebrow with-line">PRYWATNY RAPORT O KONKRETNEJ RELACJI</div>
+                  <h1>Zobacz, czy walczysz o relację, <span>czy już tylko o własną nadzieję.</span></h1>
+                  <p className="hero-main-copy">CzyToMaSens porządkuje fakty, reakcje i powtarzające się sytuacje, żeby pokazać, co naprawdę trzyma Cię w tej relacji i czy za słowami widać zmianę.</p>
+                  <div className="hero-premium-statement">
+                    <strong>To nie jest quiz ani lista objawów.</strong>
+                    <span>Dostajesz raportowy odczyt jednej konkretnej historii: gdzie znika jasność, kto wraca po napięciu, co daje nadzieję i które zachowanie trzeba sprawdzić przed kolejną decyzją.</span>
                   </div>
                   <div className="ctms-landing-actions">
                     <PrimaryButton onClick={() => setStage("consent")}>Zacznij prywatny odczyt</PrimaryButton>
                   </div>
                 </Glass>
                 <div className="hero-side-stack">
-                  <Glass className="glass-panel story-panel landing-result-preview landing-result-preview--premium landing-result-preview--v2">
-                    <div className="story-kicker">FRAGMENT PRZYKŁADOWEGO RAPORTU</div>
-                    <h3>Nie chodzi o to, co czujesz. Chodzi o to, co stale dzieje się między Wami.</h3>
-                    <div className="landing-sample-report landing-sample-report--v2">
-                      <div className="landing-sample-block landing-sample-block--main">
+                  <Glass className="glass-panel story-panel landing-result-preview landing-result-preview--premium landing-result-preview--v3">
+                    <div className="report-preview-label">PRZYKŁADOWY FRAGMENT ODCZYTU</div>
+                    <h3>Najpierw fakt. Potem sens. Dopiero na końcu decyzja.</h3>
+                    <div className="landing-report-document">
+                      <div className="landing-report-row landing-report-row--main">
                         <span>Najmocniejszy sygnał</span>
-                        <strong>Nie brakuje emocji. Brakuje stałego potwierdzenia, że obie strony naprawdę idą w tę samą stronę.</strong>
+                        <strong>Nie brakuje emocji. Brakuje stabilnego potwierdzenia, że obie strony niosą tę relację w tym samym kierunku.</strong>
                       </div>
-                      <div className="landing-sample-block">
-                        <span>Co to oznacza w praktyce</span>
-                        <strong>Bliskość pojawia się falami, ale po trudniejszych momentach to Ty częściej zostajesz z pytaniem, czy wszystko znowu nie wróci do punktu wyjścia.</strong>
+                      <div className="landing-report-row">
+                        <span>Co może Cię mylić</span>
+                        <strong>Dobre momenty mogą przykrywać fakt, że po trudnych rozmowach zmienia się atmosfera, ale niekoniecznie zachowanie.</strong>
                       </div>
-                      <div className="landing-sample-block">
-                        <span>Co warto sprawdzić</span>
-                        <strong>Czy po rozmowie zmienia się zachowanie, czy tylko przez kilka dni robi się spokojniej.</strong>
+                      <div className="landing-report-row">
+                        <span>Co sprawdzić dalej</span>
+                        <strong>Kto wraca do kontaktu po napięciu i czy po rozmowie pojawia się nowy sposób działania, czy tylko kilka spokojniejszych dni.</strong>
                       </div>
                     </div>
                   </Glass>
                 </div>
               </section>
 
-              <section className="landing-definition-section landing-definition-section--v2">
-                <Glass className="landing-definition-strip landing-definition-strip--v2">
+              <section className="landing-definition-section landing-definition-section--v3">
+                <Glass className="landing-definition-strip landing-definition-strip--v3">
                   <div>
                     <div className="eyebrow">CZYM JEST CZYTOMASENS</div>
-                    <p>To prywatne narzędzie do uporządkowania relacji, która nie daje spokoju. Nie zastępuje rozmowy, terapii ani decyzji. Ma zrobić coś innego: pomóc Ci zobaczyć, czy problem jest chwilowy, czy wraca w tym samym miejscu, tylko pod inną nazwą.</p>
-                    <p>Analiza patrzy na konkret: kto inicjuje kontakt po konflikcie, kto naprawia, kto unika, co dzieje się po dobrych momentach i czy za deklaracjami idzie zmiana zachowania. Dzięki temu wynik nie jest ogólną poradą o związkach, tylko odczytem tej jednej sytuacji.</p>
+                    <h2>To narzędzie do zobaczenia relacji bez dopowiadania sobie reszty.</h2>
+                    <p>W relacji najtrudniej ocenić nie pojedyncze zdarzenie, tylko powtarzalność. Jedna wiadomość, jedna rozmowa albo jeden dobry wieczór potrafią przykryć to, co wraca od miesięcy.</p>
+                    <p>CzyToMaSens układa Twoje odpowiedzi w raport: pokazuje, co dzieje się po konflikcie, kto zwykle naprawia kontakt, gdzie pojawia się niejasność i czy poprawa wygląda jak realna zmiana, czy tylko chwilowe uspokojenie.</p>
                   </div>
                   <div className="landing-definition-aside">
-                    <strong>Efekt, którego szukamy:</strong>
-                    <span>masz wyjść z raportu z jednym mocnym zdaniem, którego nie da się już łatwo odsunąć.</span>
+                    <strong>Masz dostać konkret.</strong>
+                    <span>Nie diagnozę. Nie pocieszenie. Odczyt, który pomaga zobaczyć, czy jest tu kierunek, czy tylko kolejne czekanie.</span>
                   </div>
                 </Glass>
               </section>
@@ -2496,7 +2495,7 @@ export default function App() {
             <motion.div key="preview" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Glass className="preview-card preview-card--report">
                 <div className="preview-hero">
-                  <div className="eyebrow">ODCZYT WSTĘPNY RAPORTU</div>
+                  <div className="eyebrow">DARMOWY ODCZYT RAPORTU</div>
                   <h2>{preview.headline}</h2>
                   <div className="preview-truth-top">{preview.truth}</div>
                   <div className="preview-mirror-top">{preview.mirror}</div>
@@ -2505,12 +2504,12 @@ export default function App() {
                   <div className="eyebrow">NAJWAŻNIEJSZY WNIOSEK</div>
                   <h3>{preview.summary}</h3>
                   <p>{previewFallbackText(preview, "hiddenInsight", preview.mirror)}</p>
-                  <div className="preview-core-footnote">To jest część darmowa. Ma dać konkretny odczyt, nie tylko zapowiedź płatnego raportu.</div>
+                  <div className="preview-core-footnote">To jest skrót raportu. Pełna analiza rozwija scenariusze, ryzyka i pytanie graniczne przed decyzją.</div>
                 </Glass>
 
                 <div className="preview-two-column">
                   <Glass className="preview-analysis-panel preview-analysis-panel--premium">
-                    <div className="eyebrow">CO WARTO ZOBACZYĆ ZANIM PODEJMIESZ DECYZJĘ</div>
+                    <div className="eyebrow">CO TEN ODCZYT ZMIENIA</div>
                     <div className="preview-analysis-grid preview-analysis-grid--stacked">
                       <div className="preview-analysis-item highlight">
                         <span>01</span>
@@ -2519,14 +2518,14 @@ export default function App() {
                       </div>
                       <div className="preview-analysis-item conclusion">
                         <span>02</span>
-                        <strong>Co zmienia odczyt sytuacji</strong>
+                        <strong>Co widać po zachowaniu, nie po deklaracjach</strong>
                         <p>{previewFallbackText(preview, "concreteConclusion", preview.paidTease)}</p>
                       </div>
                     </div>
                   </Glass>
                   <Glass className="preview-visual-panel preview-visual-panel--premium">
-                    <div className="eyebrow">MAPA ODCZYTU</div>
-                    <p className="visual-panel-intro">Procenty są tylko skrótem. Ważniejsze jest to, który wskaźnik najmocniej ustawia całą sytuację.</p>
+                    <div className="eyebrow">WIZUALNA MAPA SYTUACJI</div>
+                    <p className="visual-panel-intro">To nie jest ocena osoby. To szybki zapis napięcia, nierównowagi i widoczności zmiany.</p>
                     <VisualBars items={buildPreviewVisualBars(preview)} />
                   </Glass>
                 </div>
@@ -2539,7 +2538,7 @@ export default function App() {
                 )}
 
                 <Glass className="preview-premium-tease">
-                  <div className="eyebrow">CO DAJE PEŁNY RAPORT</div>
+                  <div className="eyebrow">CO PEŁNY RAPORT ROZBIERA DALEJ</div>
                   <p>{preview.paidTease}</p>
                 </Glass>
                 {path && (
