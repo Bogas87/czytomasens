@@ -88,6 +88,14 @@ type Preview = {
   chance: number; tension: number; asymmetry: number; change: number;
   badge: string; headline: string; truth: string; mirror: string;
   summary: string; paidTease: string; tone: "red" | "yellow" | "green";
+  whatUserKnows?: string;
+  hiddenInsight?: string;
+  contradiction?: string;
+  concreteConclusion?: string;
+  tensionMeaning?: string;
+  asymmetryMeaning?: string;
+  changeMeaning?: string;
+  premiumSpecific?: string;
 };
 
 type FullReportSection = { title: string; text: string; tone?: "normal" | "gold" | "danger" };
@@ -652,7 +660,7 @@ function PauseInsightPanel({ insight, onBack, onNext, nextLabel = "Dalej →" }:
             )}
           </div>
         </div>
-        <div className="pause-footnote">To jest chwilowy odczyt po tym etapie. Pełny obraz powstanie dopiero po doprecyzowaniu.</div>
+        <div className="pause-footnote">Na razie tyle widać. Za chwilę dopytamy o konkrety, żeby wynik nie był ogólny.</div>
         <div className="section-actions">
           <GhostButton onClick={onBack}>Wróć</GhostButton>
           <PrimaryButton onClick={onNext}>{nextLabel}</PrimaryButton>
@@ -962,7 +970,33 @@ async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: An
       const change = typeof p.rebuildPercent === "number" ? p.rebuildPercent : 50;
       const chance = Math.round(100 - tension * 0.5 - asymmetry * 0.3 + change * 0.2);
       const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-      return { chance: clamp(chance, 5, 95), tension: clamp(tension, 5, 97), asymmetry: clamp(asymmetry, 5, 97), change: clamp(change, 5, 90), tone: chance <= 30 ? "red" : chance <= 60 ? "yellow" : "green", badge: p.subheadline || "Analiza relacji", headline: p.headline || "Wynik gotowy.", truth: p.previewLine || "", mirror: p.sections?.[0]?.text || "", summary: p.sections?.[1]?.text || p.sections?.[0]?.text || "", paidTease: p.closing || "Pełny raport idzie znacznie głębiej." } as Preview;
+      const sections: FullReportSection[] = Array.isArray(p.sections) ? p.sections : [];
+      const whatUserKnows = findSectionText(sections, "co uzytkownik sam juz wie", sections[0]?.text || "");
+      const hiddenInsight = findSectionText(sections, "co wynika ale nie zostalo powiedziane wprost", sections[1]?.text || sections[0]?.text || "");
+      const contradiction = findSectionText(sections, "najwieksza sprzecznosc", "Na tym etapie nie chodzi o szukanie winy. Chodzi o sprawdzenie, czy Twoje nadzieje zgadzają się z tym, co regularnie dzieje się między Wami.");
+      const concreteConclusion = findSectionText(sections, "jeden konkretny wniosek", sections[1]?.text || p.previewLine || "");
+      const premiumSpecific = findSectionText(sections, "co dokladnie daje premium", p.closing || "Pełny raport pokaże mechanizm, sprzeczności, koszt emocjonalny i możliwe scenariusze dalszego ciągu.");
+      return {
+        chance: clamp(chance, 5, 95),
+        tension: clamp(tension, 5, 97),
+        asymmetry: clamp(asymmetry, 5, 97),
+        change: clamp(change, 5, 90),
+        tone: chance <= 30 ? "red" : chance <= 60 ? "yellow" : "green",
+        badge: p.subheadline || "Analiza relacji",
+        headline: p.headline || "Wynik gotowy.",
+        truth: p.previewLine || concreteConclusion,
+        mirror: hiddenInsight,
+        summary: concreteConclusion || hiddenInsight || whatUserKnows,
+        paidTease: premiumSpecific,
+        whatUserKnows,
+        hiddenInsight,
+        contradiction,
+        concreteConclusion,
+        tensionMeaning: findSectionText(sections, "metryka napiecie"),
+        asymmetryMeaning: findSectionText(sections, "metryka asymetria"),
+        changeMeaning: findSectionText(sections, "metryka zmiana"),
+        premiumSpecific,
+      } as Preview;
     }
   } catch (e: any) { if (e?.message === "__CRISIS__") throw e; }
   return buildPreview(path, answers, openText);
@@ -1725,7 +1759,7 @@ export default function App() {
                   <div className="hero-kicker">TWOJA RELACJA MA WZORZEC.</div>
                   <h1>Już wiesz, że <span>coś nie gra.</span><br />Tu zobaczysz, co naprawdę się dzieje.</h1>
                   <p style={{ lineHeight: 1.75, color: BRAND.muted, marginBottom: "28px" }}>Nie jesteś tu po potwierdzenie, że wszystko jest okej. Jesteś tu, bo coś nie daje Ci spokoju i chcesz zobaczyć sprawę uczciwie, bez dopowiadania sobie wygodnej wersji.</p>
-                  <div className="hero-proof-line">Nie odpowiadasz na test. W kilku krokach układasz obraz relacji: co ciąży, kto niesie ciężar, gdzie jest nierównowaga i czego nie da się dłużej omijać.</div>
+                  <div className="hero-proof-line">Nie musisz pisać długiej historii. W kilku krokach zaznaczasz, co się dzieje, a na końcu dopisujesz tylko to, czego nie da się kliknąć.</div>
                   <div className="ctms-landing-actions">
                     <PrimaryButton onClick={() => setStage("consent")}>Zobacz swój pierwszy obraz relacji</PrimaryButton>
                   </div>
@@ -1733,7 +1767,7 @@ export default function App() {
                 <div className="hero-side-stack">
                   <Glass className="glass-panel story-panel map-preview-card">
                     <div className="story-kicker">MAPA RELACJI</div>
-                    <h3>Nie quiz. Krótka rekonstrukcja tego, co dzieje się między Wami.</h3>
+                    <h3>Krótko, konkretnie i bez zgadywania. Najpierw zaznaczasz fakty, potem dopowiadasz jedną rzecz od siebie.</h3>
                     <div className="mini-map-board">
                       <div className="mini-map-node main"><span>Największy ciężar</span><strong>Cisza po konflikcie</strong></div>
                       <div className="mini-map-node"><span>Układ sił</span><strong>Ty częściej naprawiasz</strong></div>
@@ -1747,7 +1781,7 @@ export default function App() {
                     </div>
                     <div className="story-lock">
                       <div className="story-lock-icon">◆</div>
-                      <div><strong>Pierwszy obraz sytuacji</strong><span>Najpierw widzisz mechanizm. Pełny raport pokazuje koszt, ryzyko i realność zmiany.</span></div>
+                      <div><strong>Pierwszy obraz sytuacji</strong><span>Najpierw widzisz, co się powtarza. Pełny raport pokazuje koszt, ryzyko i realność zmiany.</span></div>
                     </div>
                   </Glass>
                 </div>
@@ -1764,7 +1798,7 @@ export default function App() {
                       ["Nie test osobowości", "Nie dostajesz typu. Dostajesz obraz konkretnej sytuacji."],
                       ["Nie instrukcja co zrobić", "Wynik pokazuje mechanizm, nie podejmuje decyzji za Ciebie."],
                       ["Nie ocena partnera", "Opisuje układ i zachowania, nie wydaje wyroków."],
-                      ["Nie formularz", "Mapa + doprecyzowanie prowadzą do sedna, nie do odhaczenia pól."]
+                      ["Nie formularz", "Kilka wyborów i krótkie dopowiedzenie. Bez długiego formularza."]
                     ].map(([title, desc]) => (
                       <div key={title} className="not-this-item">
                         <span>•</span>
@@ -1792,7 +1826,7 @@ export default function App() {
                   <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
                   <h3>Pierwszy obraz</h3>
                   <div className="feature-line" />
-                  <p>Dostajesz wstępny wynik: napięcie, asymetrię, szansę zmiany i główny mechanizm, który warto zobaczyć przed decyzją.</p>
+                  <p>Dostajesz pierwszy odczyt: co Cię kosztuje najwięcej, gdzie ciężar nie rozkłada się równo i czy widać realną zmianę.</p>
                 </Glass>
               </section>
 
@@ -2054,7 +2088,7 @@ export default function App() {
                 <div>
                   <div className="eyebrow">MAPA RELACJI · KROK 4 Z 4</div>
                   <h2>Jedno zdanie od Ciebie</h2>
-                  <p>Nie pisz wypracowania. Dopisz tylko to, czego nie dało się kliknąć.</p>
+                  <p>Dopisz jedną rzecz, której nie było w odpowiedziach. Może być jednym zdaniem.</p>
                 </div>
                 <div className="progress-wrap">
                   <span>Ostatni krok</span>
@@ -2097,9 +2131,9 @@ export default function App() {
             <motion.div key={`${path.key}-map-summary`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
                 <div>
-                  <div className="eyebrow">WSTĘPNY OBRAZ UKŁADU</div>
-                  <h2>System już widzi pierwsze sygnały</h2>
-                  <p>To nie jest jeszcze raport. To szybkie spięcie Mapy Relacji, żeby doprecyzowanie było trafne, a nie przypadkowe.</p>
+                  <div className="eyebrow">CO JUŻ WIDAĆ</div>
+                  <h2>Zaczyna się układać pierwszy obraz</h2>
+                  <p>To jeszcze nie jest wynik. Chodzi o to, żeby przed raportem dopytać tylko o to, co naprawdę ma znaczenie.</p>
                 </div>
                 <div className="progress-wrap">
                   <span>Mapa gotowa</span>
@@ -2130,11 +2164,11 @@ export default function App() {
                   <CycleDiagram steps={buildCycleSteps(path.key, burdens, truthCards)} />
                 </div>
                 <div className="map-step-note strong-note">
-                  Teraz zadam {clarificationQuestions.length || 1} {clarificationQuestions.length === 1 ? "pytanie" : clarificationQuestions.length === 2 ? "pytania" : "pytania"} doprecyzowujące. Tylko tam, gdzie sama mapa nie wystarczy do uczciwej interpretacji.
+                  Jeszcze {clarificationQuestions.length || 1} {clarificationQuestions.length === 1 ? "krótka odpowiedź" : clarificationQuestions.length === 2 ? "krótkie odpowiedzi" : "krótkie odpowiedzi"}. To pomoże odróżnić to, co naprawdę się dzieje, od tego, co tylko podobnie wygląda.
                 </div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={goToClarification}>Doprecyzuj wynik →</PrimaryButton>
+                  <PrimaryButton onClick={goToClarification}>Dalej →</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
@@ -2144,7 +2178,7 @@ export default function App() {
             <motion.div key={`${path.key}-clarification-${clarificationIndex}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
                 <div>
-                  <div className="eyebrow">DOPRECYZOWANIE · PYTANIE {clarificationIndex + 1} Z {clarificationQuestions.length}</div>
+                  <div className="eyebrow">DOPYTAMY O JEDNĄ RZECZ {clarificationIndex + 1} Z {clarificationQuestions.length}</div>
                   <h2>{clarificationQuestions[clarificationIndex].signal}</h2>
                   <p>{clarificationQuestions[clarificationIndex].lead}</p>
                 </div>
@@ -2161,10 +2195,10 @@ export default function App() {
                   className="ctms-textarea clarification-textarea"
                   value={clarificationDraft}
                   onChange={(e) => setClarificationDraft(e.target.value)}
-                  placeholder="Odpowiedz konkretnie. Wystarczą 2–4 zdania."
+                  placeholder="Napisz normalnie, jak do kogoś z boku. Wystarczą 2–4 zdania."
                   maxLength={700}
                 />
-                <div className="text-meta"><div>Im bardziej konkretnie, tym mniej ogólny będzie raport.</div><div>{clarificationDraft.length}/700</div></div>
+                <div className="text-meta"><div>Wystarczą konkrety. Nie pisz wypracowania.</div><div>{clarificationDraft.length}/700</div></div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
                   <GhostButton onClick={() => saveClarificationAndNext(true)}>Pomiń</GhostButton>
@@ -2245,14 +2279,14 @@ export default function App() {
                 </div>
                 <PremiumBadge preview={preview} />
                 <div className="preview-disclaimer">
-                  To nie jest diagnoza ani decyzja za Ciebie. To pierwszy obraz wzorca wynikający z Twoich odpowiedzi: napięcia, asymetrii i realności zmiany.
+                  To nie jest diagnoza ani decyzja za Ciebie. To pierwszy odczyt tego, co wynika z odpowiedzi: gdzie jest koszt, gdzie jest nierówność i czy widać realną zmianę.
                 </div>
                 <Glass className="preview-visual-panel">
-                  <div className="eyebrow">WYKRES ODCZYTU</div>
+                  <div className="eyebrow">CO POKAZUJĄ ODPOWIEDZI</div>
                   <VisualBars items={buildPreviewVisualBars(preview)} />
                   {path && (
                     <div className="preview-cycle-wrap">
-                      <div className="eyebrow">MOŻLIWY CYKL</div>
+                      <div className="eyebrow">CO MOŻE SIĘ POWTARZAĆ</div>
                       <CycleDiagram steps={buildCycleSteps(path.key, burdens, truthCards)} />
                     </div>
                   )}
@@ -2262,14 +2296,50 @@ export default function App() {
                     <Glass key={label} className="metric-card"><div className="metric-value">{value}%</div><div className="metric-label">{label}</div></Glass>
                   ))}
                 </div>
+                <Glass className="preview-metrics-explained">
+                  <div className="eyebrow">CO OZNACZAJĄ LICZBY</div>
+                  <div className="metric-explain-grid">
+                    {metricExplanationCards(preview).map((item) => (
+                      <div key={item.label} className="metric-explain-card">
+                        <div className="metric-explain-head"><strong>{item.label}</strong><span>{item.value}%</span></div>
+                        <p>{item.text}</p>
+                      </div>
+                    ))}
+                  </div>
+                </Glass>
+                <Glass className="preview-analysis-panel">
+                  <div className="eyebrow">CO WYNIKA Z ODPOWIEDZI</div>
+                  <div className="preview-analysis-grid">
+                    <div className="preview-analysis-item">
+                      <span>01</span>
+                      <strong>Co już wiesz</strong>
+                      <p>{previewFallbackText(preview, "whatUserKnows", preview.summary)}</p>
+                    </div>
+                    <div className="preview-analysis-item highlight">
+                      <span>02</span>
+                      <strong>Co z tego wynika</strong>
+                      <p>{previewFallbackText(preview, "hiddenInsight", preview.mirror)}</p>
+                    </div>
+                    <div className="preview-analysis-item">
+                      <span>03</span>
+                      <strong>Co się nie klei</strong>
+                      <p>{previewFallbackText(preview, "contradiction", "Sprawdź, czy to, na co liczysz, zgadza się z tym, co rzeczywiście regularnie dzieje się między Wami.")}</p>
+                    </div>
+                    <div className="preview-analysis-item conclusion">
+                      <span>04</span>
+                      <strong>Konkretny wniosek</strong>
+                      <p>{previewFallbackText(preview, "concreteConclusion", preview.summary)}</p>
+                    </div>
+                  </div>
+                </Glass>
                 <div className="preview-grid">
-                  <Glass className="report-section"><div className="eyebrow">CO JUŻ WIDAĆ</div><p>{preview.summary}</p></Glass>
-                  <Glass className="report-section"><div className="eyebrow">MECHANIZM</div><p>{preview.tone === "green" ? "Najmocniej działa tu jeszcze wzajemność i struktura, ale to nie znosi słabszych miejsc." : preview.tone === "yellow" ? "Napięcie miesza się tu z nadzieją, przywiązaniem i pytaniem, czy druga strona niesie relację podobnie." : "Najmocniej pracuje tu mechanizm napięcia, ulgi i powrotu do tego samego miejsca."}</p></Glass>
-                  <Glass className="report-section"><div className="eyebrow">CZEGO PODGLĄD NIE ZAWIERA</div><p>{preview.paidTease}</p></Glass>
+                  <Glass className="report-section"><div className="eyebrow">NAJWAŻNIEJSZY WNIOSEK</div><p>{preview.summary}</p></Glass>
+                  <Glass className="report-section"><div className="eyebrow">CO TO ZMIENIA</div><p>{preview.tone === "green" ? "Ten wynik nie mówi, że wszystko jest idealne. Mówi, że w odpowiedziach widać elementy, na których realnie można się oprzeć." : preview.tone === "yellow" ? "Ten wynik nie rozstrzyga za Ciebie. Pokazuje, że obok nadziei działa też coś, czego nie warto już tłumaczyć przypadkiem." : "Ten wynik nie mówi tylko, że jest trudno. Pokazuje, że trudność zaczęła mieć powtarzalny kształt."}</p></Glass>
+                  <Glass className="report-section"><div className="eyebrow">CO DAJE PEŁNA ANALIZA</div><p>{preview.paidTease}</p></Glass>
                 </div>
                 {path && (
                   <Glass className="preview-map-panel">
-                    <div className="eyebrow">WSTĘPNA MAPA SYTUACJI</div>
+                    <div className="eyebrow">CO JUŻ SIĘ RYSUJE</div>
                     <div className="preview-map-grid">
                       {buildPreviewMap(path, preview).map((item) => (
                         <div key={item.label} className="preview-map-item">
@@ -2282,8 +2352,8 @@ export default function App() {
                 )}
                 {path && (
                   <Glass className="unlock-panel unlock-panel--strong">
-                    <div className="eyebrow">TO TYLKO FRAGMENT</div>
-                    <p className="unlock-copy">Pełny raport nie pokazuje tylko wyniku. Rozbiera tę sytuację na mechanizm, koszt emocjonalny, asymetrię, realność zmiany i miejsca, w których nadzieja może przykrywać fakty.</p>
+                    <div className="eyebrow">CO DOSTAJESZ W PEŁNEJ ANALIZIE</div>
+                    <p className="unlock-copy">Nie chodzi o dłuższą wersję tych samych zdań. Pełny raport pokazuje, gdzie ten układ się zapętla, co daje prawdziwą nadzieję, co tylko ją udaje i jakie są trzy możliwe dalsze scenariusze.</p>
                     <div className="premium-sample-grid">
                       {buildPremiumSamples(path, preview).map((item, index) => (
                         <div key={item.title} className="premium-sample-card">
