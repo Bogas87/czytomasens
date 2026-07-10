@@ -951,7 +951,7 @@ function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): 
   
   if (chance <= 24) return { chance, tension, asymmetry, change, tone: "red", badge: "Dużo napięcia i mało stabilnego gruntu", headline: "To nie wygląda jak coś, co samo się uspokoi.", truth: "Najmocniej widać, że trudne momenty nie kończą się realną naprawą. One raczej zostają w tle i wracają przy kolejnej sytuacji.", mirror: "Uczucie może tu nadal być, ale coraz częściej miesza się z czujnością, czekaniem albo próbą utrzymania czegoś, co nie daje spokoju.", summary: "Ten wynik pojawia się, gdy relacja zaczyna kosztować więcej energii, niż daje oparcia: przez chaos, nierówne starania, brak jasności albo powroty do tego samego problemu.", paidTease: "Pełny raport pokaże, co konkretnie trzyma Cię przy tej relacji, co jest nadzieją, a co realną zmianą po drugiej stronie." };
   if (chance <= 49) return { chance, tension, asymmetry, change, tone: "yellow", badge: "Są dobre momenty, ale nie ma pełnego spokoju", headline: "Coś tu jeszcze trzyma. Ale coś innego wyraźnie męczy.", truth: "Nie chodzi tylko o to, że jest trudno. Chodzi o to, że trudność wraca i zaczyna ustawiać całą relację.", mirror: "Widać przywiązanie, ale obok niego widać też zmęczenie, nierówne starania albo niepewność, która trwa zbyt długo, żeby ją zbyć przypadkiem.", summary: "Ten wynik pojawia się, gdy uczucie nadal ma znaczenie, ale nie wystarcza do tego, żeby dać stabilność, jasność i poczucie wzajemności.", paidTease: "Pełny raport pokaże, co jeszcze działa, co już Cię kosztuje i po czym odróżnić prawdziwą zmianę od chwilowego uspokojenia." };
-  if (chance <= 69) return { chance, tension, asymmetry, change, tone: "yellow", badge: "Jest potencjał, ale wymaga konkretów", headline: "Tu coś jeszcze ma sens. Ale nie na autopilocie.", truth: "Nie wygląda to jak relacja skazana na powtarzanie tego samego. Ale sama dobra wola nie wystarczy, jeśli po trudnych momentach nie pojawia się inny sposób działania.", mirror: "Są miejsca, na których można budować. Są też takie, których nie warto zostawiać bez nazwania, bo z czasem zwykle robią się większe.", summary: "Ten wynik pojawia się, gdy relacja ma jeszcze realny materiał, ale nie obroni się samym sentymentem, przyzwyczajeniem albo obietnicami.", paidTease: "Pełny raport pokaże, co daje podstawy do nadziei, co ją osłabia i jaki konkretny sygnał warto teraz sprawdzić." };
+  if (chance <= 69) return { chance, tension, asymmetry, change, tone: "yellow", badge: "Jest potencjał, ale wymaga konkretów", headline: "Tu coś jeszcze ma sens. Ale nie na autopilocie.", truth: "Są sygnały, że relacja może mieć jeszcze sens, ale tylko wtedy, gdy po trudnych momentach pojawia się konkretny ruch, a nie samo uspokojenie atmosfery.", mirror: "Najważniejsze jest teraz sprawdzić, czy dobre momenty są oparte na realnej zmianie, czy tylko na chwilowej uldze po napięciu.", summary: "Ten wynik pojawia się, gdy relacja ma jeszcze realny materiał, ale nie obroni się samym sentymentem, przyzwyczajeniem albo obietnicami.", paidTease: "Pełny raport pokaże, co daje podstawy do nadziei, co ją osłabia i jaki konkretny sygnał warto teraz sprawdzić." };
   return { chance, tension, asymmetry, change, tone: "green", badge: "Widać stabilniejszy grunt", headline: "Tu jest coś, na czym można budować.", truth: "W odpowiedziach jest więcej spójności niż chaosu. To nie wygląda jak relacja trzymana wyłącznie lękiem albo przyzwyczajeniem.", mirror: "To nie znaczy, że wszystko jest idealne. Znaczy tyle, że obok trudności widać kontakt, wzajemność i zdolność wracania do rozmowy.", summary: "Ten wynik pojawia się, gdy relacja ma nie tylko emocje, ale też pewien grunt: odpowiedzialność, rozmowę, konsekwencję albo wspólny kierunek.", paidTease: "Pełny raport pokaże, skąd bierze się ten potencjał i które słabsze miejsca warto sprawdzić, zanim urosną." };
 }
 
@@ -1998,23 +1998,31 @@ export default function App() {
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <section className="hero-grid hero-grid--clean">
                 <Glass className="glass-panel hero-panel hero-copy hero-panel--clean">
-                  <div className="eyebrow with-line">PRYWATNA ANALIZA KONKRETNEJ RELACJI</div>
-                  <h1>Zobacz, <span>co naprawdę dzieje się między Wami.</span></h1>
-                  <p className="hero-main-copy">CzyToMaSens to prywatny odczyt tej jednej relacji. Nie zgaduje i nie wydaje wyroków. Porządkuje fakty, powtarzające się reakcje i miejsca, w których nadzieja zaczyna mieszać się z domysłami.</p>
-                  <p className="hero-premium-copy">Dostajesz uporządkowany pierwszy wynik: co już widać, co może Cię mylić i które pytanie naprawdę zmienia decyzję.</p>
+                  <div className="eyebrow with-line">PRYWATNY ODCZYT RELACJI</div>
+                  <h1>Zobacz, <span>co naprawdę trzyma Cię w tej relacji.</span></h1>
+                  <p className="hero-main-copy">CzyToMaSens pomaga uporządkować konkretną historię: fakty, reakcje po trudnych momentach, ciężar po obu stronach i miejsca, w których nadzieja zaczyna zastępować jasność.</p>
+                  <p className="hero-premium-copy">Nie dostajesz testowego wyniku. Dostajesz pierwszy, konkretny odczyt sytuacji: co działa, co zaczyna kosztować za dużo i co trzeba sprawdzić, zanim podejmiesz kolejną decyzję.</p>
                   <div className="ctms-landing-actions">
-                    <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij analizę relacji</PrimaryButton>
+                    <PrimaryButton onClick={() => setStage("consent")}>Zacznij prywatny odczyt</PrimaryButton>
                   </div>
                 </Glass>
                 <div className="hero-side-stack">
-                  <Glass className="glass-panel story-panel landing-result-preview">
-                    <div className="story-kicker">CO DOSTAJESZ</div>
-                    <h3>Nie poradę z internetu. Odczyt konkretnej historii.</h3>
-                    <div className="landing-premium-list">
-                      <div><span>01</span><strong>Zobaczysz, co wraca mimo rozmów i obietnic.</strong></div>
-                      <div><span>02</span><strong>Sprawdzisz, czy ciężar kontaktu i naprawy naprawdę jest wspólny.</strong></div>
-                      <div><span>03</span><strong>Oddzielisz realną zmianę w zachowaniu od chwilowej ulgi.</strong></div>
-                      <div><span>04</span><strong>Dostaniesz jeden punkt, którego nie warto już omijać.</strong></div>
+                  <Glass className="glass-panel story-panel landing-result-preview landing-result-preview--premium">
+                    <div className="story-kicker">PRZYKŁAD ODCZYTU</div>
+                    <h3>To ma pokazać nie etykietę, tylko sens sytuacji.</h3>
+                    <div className="landing-sample-report">
+                      <div className="landing-sample-block landing-sample-block--main">
+                        <span>Najmocniejszy sygnał</span>
+                        <strong>Czekasz na jasność, której druga strona nie daje wprost.</strong>
+                      </div>
+                      <div className="landing-sample-block">
+                        <span>Co to zmienia</span>
+                        <strong>Problemem może nie być sama cisza, tylko to, że po niej ciężar wraca do Ciebie.</strong>
+                      </div>
+                      <div className="landing-sample-block">
+                        <span>Co sprawdzić dalej</span>
+                        <strong>Czy po rozmowach zmienia się zachowanie, czy tylko na chwilę poprawia się atmosfera.</strong>
+                      </div>
                     </div>
                   </Glass>
                 </div>
@@ -2024,8 +2032,8 @@ export default function App() {
                 <Glass className="landing-definition-strip">
                   <div>
                     <div className="eyebrow">CZYM JEST CZYTOMASENS</div>
-                    <p>CzyToMaSens jest prywatnym narzędziem do uporządkowania relacji przed rozmową, decyzją albo kolejnym powrotem do tego samego punktu. Prowadzi Cię przez fakty, ciężar emocjonalny, zachowania po konflikcie i jeden konkretny przykład z życia.</p>
-                    <p>Na końcu nie dostajesz etykiety ani wyroku. Dostajesz pierwszy odczyt: gdzie relacja daje oparcie, gdzie zaczyna kosztować za dużo i co musiałoby zmienić się w zachowaniu, żeby nadzieja nie była tylko dopowiedzeniem.</p>
+                    <p>CzyToMaSens jest prywatnym narzędziem do odczytania konkretnej relacji. Nie ocenia partnera i nie mówi za Ciebie, co masz zrobić. Prowadzi przez kilka prostych kroków, żeby zobaczyć, co naprawdę powtarza się między Wami: kto wraca do rozmowy, kto unika, gdzie pojawia się nadzieja, a gdzie fakty zaczynają mówić coś innego.</p>
+                    <p>Na końcu dostajesz uporządkowany wynik w formie raportu: najważniejszy wniosek, miejsca warte sprawdzenia, mapę napięcia i kierunek dalszej decyzji. To nie ma być lista objawów. To ma być konkretny obraz tej jednej sytuacji.</p>
                   </div>
                 </Glass>
               </section>
@@ -2076,7 +2084,7 @@ export default function App() {
           {stage === "questions" && path && currentQuestion && (
             <motion.div key={currentQuestion.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
-                <div className="eyebrow">{path.title.toUpperCase()}</div>
+                <div className="eyebrow">PYTANIE PODSTAWOWE · {path.title.toUpperCase()}</div>
                 <div className="progress-wrap">
                   <span>Pytanie {questionIndex + 1} z {path.questions.length}</span>
                   <div className="progress-track"><div className="progress-fill" style={{ width: `${((questionIndex + 1) / path.questions.length) * 100}%` }} /></div>
@@ -2484,66 +2492,45 @@ export default function App() {
                   <div className="preview-truth-top">{preview.truth}</div>
                   <div className="preview-mirror-top">{preview.mirror}</div>
                 </div>
-                <PremiumBadge preview={preview} />
-                <div className="preview-disclaimer">
-                  To nie jest diagnoza ani decyzja za Ciebie. To pierwszy odczyt tej relacji: co już widać, co może Cię mylić i które miejsce wymaga uczciwego sprawdzenia.
-                </div>
-                <Glass className="preview-visual-panel">
-                  <div className="eyebrow">PIERWSZY OBRAZ W LICZBACH</div>
-                  <VisualBars items={buildPreviewVisualBars(preview)} />
-                  {path && (
-                    <div className="preview-cycle-wrap">
-                      <div className="eyebrow">CO MOŻE SIĘ POWTARZAĆ</div>
-                      <CycleDiagram steps={buildCycleSteps(path.key, burdens, truthCards)} />
-                    </div>
-                  )}
+                <Glass className="preview-core-insight">
+                  <div className="eyebrow">NAJWAŻNIEJSZY ODCZYT</div>
+                  <h3>{preview.summary}</h3>
+                  <p>{previewFallbackText(preview, "hiddenInsight", preview.mirror)}</p>
                 </Glass>
-                <div className="metrics-grid">
-                  {([[preview.tension, "NAPIĘCIE"], [preview.asymmetry, "ASYMETRIA"], [preview.change, "SZANSA ZMIANY"]] as [number, string][]).map(([value, label]) => (
-                    <Glass key={label} className="metric-card"><div className="metric-value">{value}%</div><div className="metric-label">{label}</div></Glass>
-                  ))}
-                </div>
-                <Glass className="preview-metrics-explained">
-                  <div className="eyebrow">CO OZNACZAJĄ TE LICZBY</div>
-                  <div className="metric-explain-grid">
-                    {metricExplanationCards(preview).map((item) => (
-                      <div key={item.label} className="metric-explain-card">
-                        <div className="metric-explain-head"><strong>{item.label}</strong><span>{item.value}%</span></div>
-                        <p>{item.text}</p>
+
+                <div className="preview-two-column">
+                  <Glass className="preview-analysis-panel preview-analysis-panel--premium">
+                    <div className="eyebrow">CO WARTO ZOBACZYĆ</div>
+                    <div className="preview-analysis-grid preview-analysis-grid--stacked">
+                      <div className="preview-analysis-item highlight">
+                        <span>01</span>
+                        <strong>Co może Cię mylić</strong>
+                        <p>{previewFallbackText(preview, "contradiction", "Sprawdź, czy uspokojenie po rozmowie oznacza zmianę zachowania, czy tylko chwilową ulgę.")}</p>
                       </div>
-                    ))}
-                  </div>
-                </Glass>
-                <Glass className="preview-analysis-panel">
-                  <div className="eyebrow">NAJWAŻNIEJSZE Z TEJ CZĘŚCI</div>
-                  <div className="preview-analysis-grid">
-                    <div className="preview-analysis-item">
-                      <span>01</span>
-                      <strong>Fakt, którego nie trzeba już udowadniać</strong>
-                      <p>{previewFallbackText(preview, "whatUserKnows", preview.summary)}</p>
+                      <div className="preview-analysis-item conclusion">
+                        <span>02</span>
+                        <strong>Co zmienia decyzję</strong>
+                        <p>{previewFallbackText(preview, "concreteConclusion", preview.paidTease)}</p>
+                      </div>
                     </div>
-                    <div className="preview-analysis-item highlight">
-                      <span>02</span>
-                      <strong>Co to zmienia</strong>
-                      <p>{previewFallbackText(preview, "hiddenInsight", preview.mirror)}</p>
-                    </div>
-                    <div className="preview-analysis-item">
-                      <span>03</span>
-                      <strong>Co wymaga sprawdzenia</strong>
-                      <p>{previewFallbackText(preview, "contradiction", "Sprawdź, czy to, na co liczysz, zgadza się z tym, co rzeczywiście regularnie dzieje się między Wami.")}</p>
-                    </div>
-                    <div className="preview-analysis-item conclusion">
-                      <span>04</span>
-                      <strong>Konkretny wniosek</strong>
-                      <p>{previewFallbackText(preview, "concreteConclusion", preview.summary)}</p>
-                    </div>
-                  </div>
-                </Glass>
-                <div className="preview-grid">
-                  <Glass className="report-section"><div className="eyebrow">NAJWAŻNIEJSZY WNIOSEK</div><p>{preview.summary}</p></Glass>
-                  <Glass className="report-section"><div className="eyebrow">CO TO ZMIENIA</div><p>{preview.tone === "green" ? "Ten wynik nie mówi, że wszystko jest idealne. Mówi, że w odpowiedziach widać elementy, na których realnie można się oprzeć." : preview.tone === "yellow" ? "Ten wynik nie rozstrzyga za Ciebie. Pokazuje, że obok nadziei działa też coś, czego nie warto już tłumaczyć przypadkiem." : "Ten wynik nie mówi tylko, że jest trudno. Pokazuje, że trudność zaczęła mieć powtarzalny kształt."}</p></Glass>
-                  <Glass className="report-section"><div className="eyebrow">CO DAJE PEŁNA ANALIZA</div><p>{preview.paidTease}</p></Glass>
+                  </Glass>
+                  <Glass className="preview-visual-panel preview-visual-panel--premium">
+                    <div className="eyebrow">MAPA ODCZYTU</div>
+                    <VisualBars items={buildPreviewVisualBars(preview)} />
+                  </Glass>
                 </div>
+
+                {path && (
+                  <Glass className="preview-cycle-panel">
+                    <div className="eyebrow">CO MOŻE WRACAĆ</div>
+                    <CycleDiagram steps={buildCycleSteps(path.key, burdens, truthCards)} />
+                  </Glass>
+                )}
+
+                <Glass className="preview-premium-tease">
+                  <div className="eyebrow">CO DAJE PEŁNY RAPORT</div>
+                  <p>{preview.paidTease}</p>
+                </Glass>
                 {path && (
                   <Glass className="preview-map-panel">
                     <div className="eyebrow">CO JUŻ SIĘ RYSUJE</div>

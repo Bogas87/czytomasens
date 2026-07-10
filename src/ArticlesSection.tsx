@@ -20,7 +20,7 @@ type ArticleBlock =
 type Article = {
   slug: string;
   kicker: string;
-  category: "decyzja" | "sygnaly" | "status" | "wzorzec" | "rokowania" | "diagnostyka";
+  category: "decyzja" | "sygnaly" | "status" | "schemat" | "rokowania" | "diagnostyka";
   title: string;
   seoTitle: string;
   seoDescription: string;
@@ -243,7 +243,7 @@ export const ARTICLES: Article[] = [
   {
     slug: "dlaczego-wracasz-do-tego-samego-partnera",
     kicker: "POWRÓT",
-    category: "wzorzec",
+    category: "schemat",
     title: "Dlaczego wracasz do tego samego partnera",
     seoTitle: "Dlaczego wracasz do tego samego partnera | CzyToMaSens",
     seoDescription: "Nie zawsze wracasz do miłości. Czasem wracasz do znanego napięcia, którego umiesz się spodziewać.",
@@ -344,7 +344,7 @@ const categoryLabels: Record<Article["category"], string> = {
   decyzja: "Decyzja: zostać, wrócić, odpuścić",
   sygnaly: "Sygnały: niejasność, dystans, napięcie",
   status: "Status: bliskość bez nazwy",
-  wzorzec: "Wzorzec: to wraca kolejny raz",
+  schemat: "Schemat: to wraca kolejny raz",
   rokowania: "Przyszłość: czy to ma kierunek",
   diagnostyka: "Kondycja relacji: co robi z Tobą na co dzień",
 };
@@ -466,7 +466,7 @@ export function ArticlesSection({
                 <p className="articles-main-subtitle" style={styles.subtitle}>
                   {indexRoute
                     ? "To nie jest zwykły blog. To mapa najczęstszych sytuacji: niejasność, powroty, brak zaangażowania, mieszane sygnały i moment, w którym zaczynasz pytać, czy to jeszcze ma kierunek."
-                    : "Trzy krótkie teksty, które pomagają złapać wzorzec zanim opiszesz swoją sytuację w analizie."}
+                    : "Trzy krótkie teksty, które pomagają złapać schemat zanim opiszesz swoją sytuację w analizie."}
                 </p>
               </div>
               <div className="article-header-actions" style={styles.headerActions}>
