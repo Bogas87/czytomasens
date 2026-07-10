@@ -1538,7 +1538,7 @@ function setStructuredData(id: string, data: Record<string, unknown>) {
   script.textContent = JSON.stringify(data);
 }
 
-export default function App() {
+function AppInner() {
   const [stage, setStage] = useState<Stage>("landing");
   const [selectedPath, setSelectedPath] = useState<EntryKey | null>(null);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -1601,6 +1601,31 @@ export default function App() {
     const raf = window.requestAnimationFrame(scrollToTop);
     return () => window.cancelAnimationFrame(raf);
   }, [stage, questionIndex, clarificationIndex, isPublicContentRoute]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (stage !== "processing") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const isPaidReturn = params.get("success") === "1" || Boolean(params.get("access_token"));
+    if (isPaidReturn) return;
+
+    const timeout = window.setTimeout(() => {
+      if (!path) {
+        setBusy(false);
+        setStage("landing");
+        return;
+      }
+
+      const finalOpenText = openText || buildCompositeOpenText(clarificationAnswers);
+      const fallback = buildPreview(path, answers, finalOpenText);
+      setPreview((current) => ensurePreview(current || fallback, fallback));
+      setBusy(false);
+      setStage("preview");
+    }, 9000);
+
+    return () => window.clearTimeout(timeout);
+  }, [stage, path, answers, openText, clarificationAnswers]);
 
   useEffect(() => {
     const articleTitle = routeArticle?.seoTitle || (routeArticle ? `${routeArticle.title} | CzyToMaSens` : "");
@@ -2742,16 +2767,21 @@ export default function App() {
                   </div>
                 )}
                 <div className="report-sections">
-                  {(fullReport.sections || []).map((section, i) => (
-                    <Glass key={i} className={`report-section report-section--${section.tone || "normal"}`}>
-                      <div className={`report-section-title ${section.tone || "normal"}`}>{section.title}</div>
+                  {(Array.isArray(fullReport.sections) ? fullReport.sections : []).map((section, i) => {
+                    const tone = section?.tone || "normal";
+                    const title = typeof section?.title === "string" && section.title.trim() ? section.title : `Sekcja ${i + 1}`;
+                    const text = typeof section?.text === "string" ? section.text : String(section?.text || "");
+                    return (
+                    <Glass key={i} className={`report-section report-section--${tone}`}>
+                      <div className={`report-section-title ${tone}`}>{title}</div>
                       <div className="report-section-text">
-                        {section.text.split("\n").filter(Boolean).map((para, pi) => (
+                        {text.split("\n").filter(Boolean).map((para, pi) => (
                           <p key={pi} style={{ margin: "0 0 12px 0", lineHeight: 1.75 }}>{para}</p>
                         ))}
                       </div>
                     </Glass>
-                  ))}
+                    );
+                  })}
                 </div>
                 {fullReport.closing && <div className="report-closing">{fullReport.closing}</div>}
                 <div className="section-actions"><GhostButton onClick={resetAll}>Nowa analiza</GhostButton></div>
@@ -2825,5 +2855,46 @@ export default function App() {
 
       <CookieBanner />
     </div>
+  );
+}
+
+class AppErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: unknown) {
+    console.error("CzyToMaSens render error", error);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="ctms-app ctms-app--error-fallback">
+          <main className="ctms-shell">
+            <div className="ctms-glass question-panel error-panel" style={{ maxWidth: 860, margin: "80px auto", padding: 32 }}>
+              <div className="eyebrow danger">PRZERWANE WYŚWIETLANIE</div>
+              <h2>Strona przerwała odczyt wyniku.</h2>
+              <p className="consent-copy">To błąd wyświetlenia, nie Twoich odpowiedzi. Odśwież stronę i zacznij analizę ponownie. Nie wykonuj płatności ponownie, jeśli była już rozpoczęta.</p>
+              <button className="ctms-btn ctms-btn-primary" onClick={() => { localStorage.removeItem(STORAGE_KEY); window.location.href = "/"; }}>Wróć do początku</button>
+            </div>
+          </main>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export default function App() {
+  return (
+    <AppErrorBoundary>
+      <AppInner />
+    </AppErrorBoundary>
   );
 }
