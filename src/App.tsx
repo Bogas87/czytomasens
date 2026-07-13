@@ -116,7 +116,7 @@ type InterviewState = {
 
 type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string };
 
-const STORAGE_KEY = "ctms_premium_front_v9";
+const STORAGE_KEY = "ctms_premium_front_v12_full_flow_clean";
 
 const ENTRY_CONFIGS: EntryConfig[] = [
   {
