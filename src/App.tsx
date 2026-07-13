@@ -1314,13 +1314,11 @@ function CookieBanner() {
 }
 
 const PROCESSING_MESSAGES = [
-  "Czytam Twoje odpowiedzi",
-  "Sprawdzam, co naprawdę się powtarza",
-  "Oddzielam fakty od dopowiedzeń",
-  "Szukam miejsca, które zmienia odczyt",
-  "Układam wynik prostym językiem",
-  "Sprawdzam, czego nie warto powtarzać",
-  "Kończę pierwszy obraz sytuacji",
+  "Analizuję odpowiedzi i mapę relacji",
+  "Porównuję zachowania z deklaracjami",
+  "Sprawdzam, co wraca po trudnych momentach",
+  "Oddzielam fakty od domysłów i nadziei",
+  "Przygotowuję pierwszy odczyt relacji",
 ];
 
 function ProcessingScreen() {
@@ -1341,7 +1339,7 @@ function ProcessingScreen() {
         </div>
         <h2 style={{ marginBottom: "12px", fontSize: "clamp(20px,4vw,26px)" }}>Przygotowuję wynik</h2>
         <div className="processing-message">{PROCESSING_MESSAGES[msgIndex]}{".".repeat(dots)}</div>
-        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>Nie zamykaj karty. Jeśli analiza nie odpowie na czas, pokażemy pierwszy wynik bez czekania w nieskończoność.</p>
+        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>To może potrwać chwilę. Nie zamykaj karty — wynik zostanie pokazany po zakończeniu odczytu.</p>
         <div className="processing-bar"><div className="processing-bar-fill" /></div>
       </Glass>
     </div>
@@ -1422,6 +1420,7 @@ export default function App() {
   const [fullReport, setFullReport] = useState<FullReport | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [freePreviewPending, setFreePreviewPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, setConsents] = useState<boolean[]>([false, false, false, false]);
   const [legalOpen, setLegalOpen] = useState<LegalKey>(null);
@@ -1723,6 +1722,27 @@ export default function App() {
     return `MAPA RELACJI — dane kliknięte przez użytkownika\n\nUKŁAD SIŁ\n${forceLines}\n\nNAJWIĘKSZE CIĘŻARY\n${burdenLines}\n\nMOMENT PRAWDY\n${truthLines}\n\nDODATKOWA MYŚL UŻYTKOWNIKA\n${note}`;
   };
 
+
+  useEffect(() => {
+    if (!freePreviewPending || stage !== "processing" || preview || !path) return;
+    const timer = window.setTimeout(() => {
+      try {
+        const finalText = openText && openText.trim() ? openText : buildCompositeOpenText();
+        const localPreview = buildPreview(path, answers, finalText);
+        setOpenText(finalText);
+        setPreview(localPreview);
+        setBusy(false);
+        setFreePreviewPending(false);
+        setStage("preview");
+      } catch {
+        setBusy(false);
+        setFreePreviewPending(false);
+        setStage("preview");
+      }
+    }, 18000);
+    return () => window.clearTimeout(timer);
+  }, [freePreviewPending, stage, preview, path, answers, openText, forceMap, burdens, truthCards, relationshipNote]);
+
   const prepareMapSummary = () => {
     if (!path) return;
     const nextQuestions = buildClarificationQuestions(path, forceMap, burdens, truthCards, relationshipNote);
@@ -1856,6 +1876,7 @@ export default function App() {
 
     setOpenText(finalOpenText);
     setBusy(true);
+    setFreePreviewPending(true);
     setError(null);
     setStage("processing");
 
@@ -1889,6 +1910,7 @@ export default function App() {
       setPreview(buildPreview(path, answers, finalOpenText));
       setStage("preview");
     } finally {
+      setFreePreviewPending(false);
       setBusy(false);
     }
   };
@@ -1980,80 +2002,66 @@ export default function App() {
 
           {stage === "landing" && !isPublicContentRoute && (
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <section className="hero-grid">
-                <Glass className="glass-panel hero-panel hero-copy">
-                  <div className="eyebrow with-line">PRYWATNA ANALIZA RELACJI</div>
-                  <div className="hero-kicker">TWOJA RELACJA MA WZORZEC.</div>
-                  <h1>Już wiesz, że <span>coś nie gra.</span><br />Tu zobaczysz, co naprawdę się dzieje.</h1>
-                  <p style={{ lineHeight: 1.75, color: BRAND.muted, marginBottom: "28px" }}>Nie jesteś tu po potwierdzenie, że wszystko jest okej. Jesteś tu, bo coś nie daje Ci spokoju i chcesz zobaczyć sprawę uczciwie, bez dopowiadania sobie wygodnej wersji.</p>
-                  <div className="hero-proof-line">Nie musisz pisać długiej historii. W kilku krokach zaznaczasz, co się dzieje, a na końcu dopisujesz tylko to, czego nie da się kliknąć.</div>
+              <section className="hero-grid premium-landing-grid">
+                <Glass className="glass-panel hero-panel hero-copy premium-hero-copy">
+                  <div className="eyebrow with-line">PRYWATNA ANALIZA KONKRETNEJ RELACJI</div>
+                  <h1>Zobacz, czy walczysz o relację, czy już tylko o własną nadzieję.</h1>
+                  <p className="hero-lead-premium">CzyToMaSens porządkuje fakty, reakcje i powtarzające się sytuacje. Pokazuje, co naprawdę wraca między Wami, gdzie znika jasność i czy za słowami idzie realna zmiana.</p>
+                  <div className="hero-value-box">
+                    <div className="eyebrow">CO OTRZYMUJESZ</div>
+                    <p>Prywatny pierwszy odczyt jednej relacji: bez quizowego tonu, bez oceniania partnera i bez gotowych rad z internetu.</p>
+                  </div>
                   <div className="ctms-landing-actions">
-                    <PrimaryButton onClick={() => setStage("consent")}>Zobacz swój pierwszy obraz relacji</PrimaryButton>
+                    <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij analizę relacji</PrimaryButton>
                   </div>
                 </Glass>
-                <div className="hero-side-stack">
-                  <Glass className="glass-panel story-panel map-preview-card">
-                    <div className="story-kicker">MAPA RELACJI</div>
-                    <h3>Krótko, konkretnie i bez zgadywania. Najpierw zaznaczasz fakty, potem dopowiadasz jedną rzecz od siebie.</h3>
-                    <div className="mini-map-board">
-                      <div className="mini-map-node main"><span>Największy ciężar</span><strong>Cisza po konflikcie</strong></div>
-                      <div className="mini-map-node"><span>Układ sił</span><strong>Ty częściej naprawiasz</strong></div>
-                      <div className="mini-map-node"><span>Moment prawdy</span><strong>Po poprawie wraca to samo</strong></div>
-                      <div className="mini-map-node"><span>Doprecyzowanie</span><strong>Co dzieje się, gdy przestajesz ciągnąć?</strong></div>
+
+                <Glass className="glass-panel hero-report-sample">
+                  <div className="story-kicker">FRAGMENT ODCZYTU</div>
+                  <h3>Nie chodzi o to, co ktoś obiecuje. Chodzi o to, co wraca po rozmowie.</h3>
+                  <div className="sample-report-lines">
+                    <div className="sample-report-line main">
+                      <span>Najmocniejszy sygnał</span>
+                      <strong>nie brakuje emocji, tylko stabilnej jasności.</strong>
                     </div>
-                    <div className="mini-signal-strip">
-                      <div><span>Napięcie</span><strong>85%</strong></div>
-                      <div><span>Asymetria</span><strong>70%</strong></div>
-                      <div><span>Zmiana</span><strong>25%</strong></div>
+                    <div className="sample-report-line">
+                      <span>Co może mylić</span>
+                      <strong>dobre momenty mogą wyglądać jak zmiana, choć po kilku dniach wraca ten sam układ.</strong>
                     </div>
-                    <div className="story-lock">
-                      <div className="story-lock-icon">◆</div>
-                      <div><strong>Pierwszy obraz sytuacji</strong><span>Najpierw widzisz, co się powtarza. Pełny raport pokazuje koszt, ryzyko i realność zmiany.</span></div>
+                    <div className="sample-report-line">
+                      <span>Co sprawdzić</span>
+                      <strong>czy zachowanie zmienia się bez nacisku, czy tylko wtedy, gdy temat robi się niewygodny.</strong>
                     </div>
-                  </Glass>
-                </div>
-              </section>
-              
-              <section className="not-this-section">
-                <Glass className="not-this-strip">
-                  <div className="not-this-head">
-                    <div className="eyebrow">CZYM TO NIE JEST</div>
-                    <p>Krótko: bez typowania ludzi, bez wyroków i bez gotowych rad z internetu.</p>
-                  </div>
-                  <div className="not-this-grid">
-                    {[
-                      ["Nie test osobowości", "Nie dostajesz typu. Dostajesz obraz konkretnej sytuacji."],
-                      ["Nie instrukcja co zrobić", "Wynik pokazuje, co się powtarza i gdzie decyzja wymaga jasności."],
-                      ["Nie ocena partnera", "Opisuje układ i zachowania, nie wydaje wyroków."],
-                      ["Nie formularz", "Kilka wyborów i krótkie dopowiedzenie. Bez długiego formularza."]
-                    ].map(([title, desc]) => (
-                      <div key={title} className="not-this-item">
-                        <span>•</span>
-                        <div><strong>{title}</strong><small>{desc}</small></div>
-                      </div>
-                    ))}
                   </div>
                 </Glass>
               </section>
-              
-              <section className="ctms-feature-editorial-grid process-grid" style={{ marginTop: "24px" }}>
+
+              <section className="product-definition-section">
+                <Glass className="product-definition-card">
+                  <div className="eyebrow">CZYM JEST CZYTOMASENS</div>
+                  <p>CzyToMaSens to prywatny odczyt sytuacji w relacji przed rozmową, decyzją albo kolejnym powrotem do tego samego punktu.</p>
+                  <p>Najpierw zaznaczasz fakty i układ sił, potem dopowiadasz to, czego nie da się kliknąć. Wynik nie ocenia osoby. Pokazuje, co w tej relacji realnie pracuje: kontakt, ciężar, napięcie, nadzieję i zmianę widoczną w zachowaniu.</p>
+                </Glass>
+              </section>
+
+              <section className="ctms-feature-editorial-grid process-grid compact-process-grid">
                 <Glass className="feature-card process-card">
                   <div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div>
                   <h3>Mapa Relacji</h3>
                   <div className="feature-line" />
-                  <p>Wybierasz ciężary, układ sił i Moment prawdy. Bez pisania wypracowania i bez technicznych wykresów.</p>
+                  <p>Wskazujesz, kto częściej inicjuje, naprawia, unika i niesie ciężar emocjonalny.</p>
                 </Glass>
                 <Glass className="feature-card process-card">
                   <div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div>
                   <h3>Doprecyzowanie</h3>
                   <div className="feature-line" />
-                  <p>System dopytuje o 1–3 miejsca, które najbardziej zmieniają interpretację. Nie pyta o wszystko. Pyta o sedno.</p>
+                  <p>System dopytuje o 1–3 miejsca, które najbardziej zmieniają odczyt sytuacji.</p>
                 </Glass>
                 <Glass className="feature-card process-card">
                   <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
-                  <h3>Pierwszy obraz</h3>
+                  <h3>Pierwszy odczyt</h3>
                   <div className="feature-line" />
-                  <p>Dostajesz pierwszy odczyt: co Cię kosztuje najwięcej, gdzie ciężar nie rozkłada się równo i czy widać realną zmianę.</p>
+                  <p>Dostajesz konkretny obraz: co wraca, co może mylić i co warto sprawdzić dalej.</p>
                 </Glass>
               </section>
 
