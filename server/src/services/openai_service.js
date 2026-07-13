@@ -148,29 +148,30 @@ function payloadContextLine(payload) {
 function fallbackSectionText(title, payload, currentText) {
   const base = String(currentText || "").trim();
   const context = payloadContextLine(payload);
-  const contextSentence = context ? `W materiale wejściowym ważne jest to, że ${context}.` : "Materiał wejściowy nie daje pełnej historii, dlatego odczyt trzyma się tylko tego, co zostało zaznaczone i dopowiedziane.";
   const titleLower = String(title || "").toLowerCase();
-  let body = "";
+  const contextSentence = context
+    ? `W tej historii ważne są konkretne tropy: ${context}.`
+    : "Nie ma pełnej historii, więc odczyt musi trzymać się tylko tego, co zostało zaznaczone i dopowiedziane.";
 
+  let body = "";
   if (titleLower.includes("najważniejsze")) {
-    body = "Sedno nie polega na tym, żeby uznać relację za dobrą albo złą. Ważniejsze jest to, czy po trudnych momentach pojawia się zachowanie, które realnie zmienia układ, czy tylko chwilowo zmniejsza napięcie. Ten raport czyta odpowiedzi jako całość: nie pojedyncze kliknięcie, ale kierunek, który powtarza się między kontaktem, odpowiedzialnością i jasnością.\n\n" + contextSentence + " Dlatego wniosek powinien być ostrożny: pokazuje, gdzie jest koszt, gdzie może być zasób i jaki fakt z najbliższych dni mógłby zmienić ocenę sytuacji.";
+    body = "Najważniejsze nie jest to, czy relację da się szybko nazwać dobrą albo złą. Ważniejsze jest to, co wraca po napięciu: czy pojawia się odpowiedzialność, rozmowa i realny ruch, czy tylko chwilowe uspokojenie. Ten odczyt powinien zatrzymać Cię przy faktach, nie przy najgorszym scenariuszu i nie przy życzeniowej wersji sytuacji.\n\n" + contextSentence + " Dlatego pierwszy wniosek musi być ostrożny: zobacz, gdzie jest koszt, gdzie jeszcze są zasoby i jaki jeden fakt z najbliższych dni może naprawdę przesunąć ocenę.";
   } else if (titleLower.includes("druga strona")) {
-    body = "Druga strona nie jest tu oceniana moralnie. Raport patrzy na to, co można odczytać z zachowania: czy jest inicjatywa, czy pojawia się odpowiedzialność po napięciu, czy trudny temat zostaje domknięty, czy tylko odłożony. To istotne, bo deklaracje mogą brzmieć dobrze, a mimo to nie zmieniać codziennego układu.\n\n" + contextSentence + " Jeżeli w odpowiedziach widać dobre sygnały, raport powinien je nazwać. Jeżeli widać unikanie albo nierówny ciężar, też trzeba to pokazać, ale bez przypisywania złych intencji.";
+    body = "Druga strona nie jest tu oceniana moralnie. Liczy się to, co można zobaczyć w zachowaniu: czy wraca do kontaktu, czy bierze odpowiedzialność po napięciu, czy domyka trudny temat, czy tylko przeczeka moment i pozwala, żeby sprawa rozeszła się sama.\n\n" + contextSentence + " Jeśli pojawiają się dobre sygnały, trzeba je nazwać. Jeśli pojawia się unikanie, też trzeba je nazwać, ale bez dopisywania złych intencji tam, gdzie może działać lęk, przeciążenie albo brak umiejętności rozmowy.";
   } else if (titleLower.includes("nadziej")) {
-    body = "Nadzieja sama w sobie nie jest problemem. Problem zaczyna się wtedy, gdy nadzieja ma zastępować fakty: konkretne działanie, powtarzalną zmianę i gotowość obu stron do wracania do rozmowy bez nacisku. W tej sekcji trzeba oddzielić to, co naprawdę daje podstawę do dalszej próby, od tego, co tylko na chwilę uspokaja napięcie.\n\n" + contextSentence + " Dobre momenty mogą być prawdziwe, ale same nie przesądzają kierunku relacji. Znaczenie ma dopiero to, czy po nich zmienia się sposób działania.";
+    body = "Nadzieja nie jest błędem. Problem zaczyna się dopiero wtedy, gdy nadzieja zastępuje obserwację: konkretne działanie, powtarzalną zmianę i udział obu stron w naprawianiu trudnych momentów. W tej części trzeba oddzielić to, co naprawdę daje podstawę do dalszej próby, od tego, co tylko chwilowo uspokaja.\n\n" + contextSentence + " Dobre momenty mogą być prawdziwe i nadal niewystarczające. Znaczenie ma to, czy po nich zmienia się sposób działania, a nie tylko atmosfera.";
   } else if (titleLower.includes("scenariusz")) {
-    body = "Ten scenariusz nie jest przepowiednią. To spokojne pokazanie kierunku, który wynika z obecnego układu, jeśli nic istotnego nie zostanie nazwane albo sprawdzone. W relacjach często nie decyduje jedna rozmowa, tylko to, co wydarza się po rozmowie: czy ktoś wraca do tematu, czy bierze udział w zmianie, czy wszystko znów zostaje po jednej stronie.\n\n" + contextSentence + " Dlatego scenariusz trzeba czytać jako warunek: jeśli zachowania pozostaną takie same, prawdopodobnie ten sam koszt będzie wracał pod inną nazwą.";
+    body = "To nie jest przepowiednia. To opis kierunku, który zwykle powstaje wtedy, gdy obecny układ zostaje bez nazwania. W relacjach rzadko decyduje jedno zdanie; częściej decyduje to, co dzieje się po rozmowie, gdy emocje opadną.\n\n" + contextSentence + " Jeśli zachowania zostaną takie same, podobny koszt prawdopodobnie wróci pod inną nazwą. Jeśli pojawi się realny udział drugiej strony, odczyt może się przesunąć.";
   } else if (titleLower.includes("ruch") || titleLower.includes("zmienić") || titleLower.includes("granica")) {
-    body = "Tu nie chodzi o wielką deklarację ani o kolejną rozmowę prowadzoną tym samym sposobem. Sens ma tylko taki ruch, który pozwala zobaczyć zachowanie po drugiej stronie: bez nacisku, bez ciągłego przypominania i bez ratowania sytuacji za dwie osoby.\n\n" + contextSentence + " Najbardziej sprawdzający fakt to zwykle nie słowo, ale powtarzalne działanie w najbliższych dniach. Jeżeli ono się pojawi, odczyt może się przesunąć. Jeżeli nie, sama nadzieja będzie za słabym dowodem.";
+    body = "Tu nie chodzi o wielką deklarację ani o rozmowę przeprowadzoną po raz kolejny tym samym sposobem. Sens ma tylko taki ruch, który pozwala zobaczyć zachowanie po drugiej stronie: bez nacisku, bez ciągłego przypominania i bez ratowania sytuacji za dwie osoby.\n\n" + contextSentence + " Najbardziej sprawdzający fakt to zwykle nie obietnica, tylko powtarzalne działanie w najbliższych dniach. Jeżeli ono się pojawi, odczyt może się zmienić. Jeżeli nie, sama nadzieja będzie za słabym dowodem.";
   } else if (titleLower.includes("koszt") || titleLower.includes("napięcie")) {
-    body = "Koszt emocjonalny widać nie tylko po sile uczuć, ale po tym, ile miejsca ta relacja zajmuje w głowie. Jeśli po kontakcie pojawia się czujność, analizowanie, czekanie albo potrzeba domyślania się intencji, to nie jest neutralny koszt. Nie oznacza to automatycznie, że relacja jest bez sensu, ale oznacza, że trzeba sprawdzić, skąd ten koszt się bierze.\n\n" + contextSentence + " Raport nie powinien dramatyzować. Ma nazwać, czy napięcie wynika z chwilowej sytuacji, czy z powtarzalnego sposobu funkcjonowania między dwiema osobami.";
+    body = "Koszt emocjonalny widać po tym, ile miejsca relacja zajmuje w głowie. Jeśli po kontakcie pojawia się czujność, analizowanie, czekanie albo potrzeba domyślania się intencji, to nie jest neutralny stan. To nie musi oznaczać, że relacja jest zła, ale oznacza, że coś zabiera spokój.\n\n" + contextSentence + " Taki koszt warto potraktować poważnie, zanim stanie się normalnym tłem. Wtedy człowiek często zaczyna mylić napięcie z bliskością, a ulgę po rozmowie z realną zmianą.";
   } else {
-    body = "Ta część raportu nie powinna być ogólną poradą. Ma przełożyć odpowiedzi na praktyczny odczyt: co w tej relacji wraca, gdzie jest ciężar, co może być zasobem i czego nadal nie da się uczciwie rozstrzygnąć.\n\n" + contextSentence + " Jeśli dane są niejednoznaczne, uczciwy raport nie udaje pewności. Pokazuje, jaki konkretny fakt zmieniłby ocenę i co warto obserwować zamiast dopowiadać sobie sens z samego napięcia.";
+    body = "Ta część ma przełożyć odpowiedzi na konkretny odczyt, nie na ogólną poradę. Trzeba zobaczyć, co wraca, kto niesie większy ciężar, gdzie są zasoby i czego nadal nie da się uczciwie rozstrzygnąć.\n\n" + contextSentence + " Jeśli obraz jest niejednoznaczny, nie trzeba udawać pewności. Uczciwsze jest pokazanie, jaki fakt zmieniłby ocenę i co warto obserwować zamiast dopowiadać sens z samego napięcia.";
   }
 
-  if (!base) return body;
-  if (base.length >= 320 && sentenceCount(base) >= 4) return base;
-  return `${base}\n\n${body}`;
+  if (base && base.length >= 120) return base + "\n\n" + body;
+  return body;
 }
 
 function ensureReportDepth(report, payload) {
@@ -333,6 +334,12 @@ STYL:
 - NIE WOLNO oddać sekcji pustej, jednowersowej ani z samą ogólną poradą. Jeśli brakuje danych, napisz uczciwie: czego nie da się rozstrzygnąć i jaki konkretny fakt zmieniłby odczyt.
 - Raport ma być zrównoważony: pokaż ryzyko, ale pokaż też zasoby i możliwe pozytywne sygnały, jeśli odpowiedzi je wspierają. Nie zakładaj złych intencji drugiej osoby.
 OBOWIĄZKOWO w raporcie pokaż także neutralne albo dobre wyjaśnienia tam, gdzie dane na to pozwalają: zmęczenie, lęk, brak umiejętności rozmowy, chaos sytuacji, przeciążenie, różne tempo decyzji. Nie sprowadzaj wszystkiego do manipulacji, braku uczuć albo złych intencji.
+- Pisz O NIM/O NIEJ I O RELACJI, nie o samym raporcie. W sekcjach nie używaj metajęzyka typu: "ta część raportu", "raport pokazuje", "materiał wejściowy", "pełny obraz". Użytkownik ma czytać o swojej sytuacji, nie o produkcie.
+- Raport ma mieć efekt lustra: czasem ma podnieść człowieka z dołka, jeśli dane pokazują zasoby; czasem ma subtelnie zatrzymać, jeśli wchodzi w bagno; czasem ma uspokoić, że nie musi podejmować decyzji z napięcia.
+- Dobre sygnały pokazuj realnie: kontakt, konsekwencja, gotowość do powrotu do rozmowy, odpowiedzialność, konkretne działanie. Nie udawaj kryzysu, jeśli odpowiedzi pokazują stabilność.
+- Ryzyka pokazuj bez straszenia: koszt emocjonalny, nierówny ciężar, chaos, unikanie, powtarzalność, nadzieja bez potwierdzenia w zachowaniu.
+- Jeśli w danych widać silny kryzys, przemoc, autoagresję, poczucie braku bezpieczeństwa lub stan większy niż sama relacja, spokojnie zasugeruj kontakt ze specjalistą albo zaufaną osobą. Nie rób tego przy zwykłej niepewności.
+- Każda sekcja musi zawierać: (1) obserwację z odpowiedzi, (2) co ona może oznaczać w codziennym zachowaniu, (3) co może być neutralnym wyjaśnieniem, (4) co sprawdzić bez nakręcania się.
 
 METRYKI:
 - tensionPercent: napięcie emocjonalne i koszt psychiczny tej sytuacji, 0–100.
