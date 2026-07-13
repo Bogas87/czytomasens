@@ -959,40 +959,40 @@ export default function App() {
                   </div>
                 </Glass>
                 <div className="hero-side-stack">
-                  <Glass className="glass-panel story-panel visual-story">
-                    <div className="story-kicker">CO ZOBACZYSZ</div>
-                    <h3>To, co trudno zobaczyć od środka</h3>
-                    <div className="story-points">
-                      <div><span>▸</span><p>Co powtarza się między Wami, zanim jeszcze zaczyna się kolejna rozmowa</p></div>
-                      <div><span>▸</span><p>Gdzie nadzieja miesza się z faktami i przez to trudniej podjąć decyzję</p></div>
-                      <div><span>▸</span><p>Który sygnał warto sprawdzić, zanim dasz tej relacji kolejną szansę</p></div>
+                  <Glass className="glass-panel story-panel visual-story report-preview-card">
+                    <div className="story-kicker">FRAGMENT ODCZYTU</div>
+                    <h3>Nie dostajesz ogólnych porad. Dostajesz obraz tej jednej relacji.</h3>
+                    <div className="preview-reading">
+                      <div className="preview-reading-row main">
+                        <span>Najważniejszy sygnał</span>
+                        <p>Nie chodzi tylko o to, czy są emocje. Ważniejsze jest, czy po trudnych momentach naprawdę zmienia się zachowanie.</p>
+                      </div>
+                      <div className="preview-reading-row">
+                        <span>Co może mylić</span>
+                        <p>Dobre chwile mogą dawać ulgę, ale nie zawsze oznaczają, że relacja idzie w inną stronę.</p>
+                      </div>
+                      <div className="preview-reading-row">
+                        <span>Co sprawdzić</span>
+                        <p>Czy druga osoba robi coś inaczej bez nacisku z Twojej strony.</p>
+                      </div>
                     </div>
-                    <div className="story-lock">
-                      <div className="story-lock-icon">🔒</div>
-                      <div><strong>Pełny raport</strong><span>Jednorazowo. Raport generowany indywidualnie na podstawie Twoich odpowiedzi.</span></div>
+                    <div className="story-lock report-lock-clean">
+                      <div><strong>Pełny raport</strong><span>Rozwija ten odczyt o zachowania obu stron, miejsca napięcia i realne scenariusze dalszego ruchu.</span></div>
                     </div>
                   </Glass>
                 </div>
               </section>
               
-              <section style={{ margin: "32px 0 0" }}>
-                <Glass style={{ padding: "36px 40px" }}>
-                  <div className="eyebrow" style={{ marginBottom: "24px" }}>CZYM TO NIE JEST</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px 40px" }}>
-                    {[
-                      ["Nie jest testem osobowości.", "Nie dostaniesz swojego „typu”. Dostaniesz obraz konkretnej sytuacji w której teraz jesteś."],
-                      ["Nie powie Ci co robić.", "Nie ma tu gotowych zaleceń ani tanich rad. Jest analiza i jedno pytanie, którego nie da się zignorować."],
-                      ["Nie oceni Twojego partnera.", "Opisuje mechanizmy, nie wydaje wyroków. Na podstawie Twoich słów, nie cudzych założeń."],
-                      ["Nie jest formularzem do odhaczenia.", "Pytania prowadzą głębiej z każdą odpowiedzią. To nie jest ankieta ani lista pól do kliknięcia."]
-                    ].map(([title, desc]) => (
-                      <div key={title} style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
-                        <span className="text-meta">•</span>
-                        <div>
-                          <strong style={{ color: BRAND.text, fontSize: "15px", display: "block", marginBottom: "4px" }}>{title}</strong>
-                          <span style={{ color: BRAND.muted, fontSize: "15px", lineHeight: "1.65" }}>{desc}</span>
-                        </div>
-                      </div>
-                    ))}
+              <section className="ctms-what-section" style={{ margin: "32px 0 0" }}>
+                <Glass className="ctms-what-panel">
+                  <div className="eyebrow" style={{ marginBottom: "14px" }}>CZYM JEST CZYTOMASENS</div>
+                  <h2>To prywatny odczyt relacji, w której trudno już oddzielić fakty od nadziei.</h2>
+                  <p>Odpowiadasz na pytania o konkretne sytuacje: kontakt, kłótnie, powroty, unikanie, poprawę i to, co dzieje się po trudnych rozmowach. Na tej podstawie dostajesz uporządkowany obraz: co naprawdę się powtarza, co może Cię trzymać i co warto sprawdzić zanim podejmiesz decyzję.</p>
+                  <div className="ctms-what-strip">
+                    <span>jedna relacja</span>
+                    <span>konkretne zachowania</span>
+                    <span>pierwszy odczyt</span>
+                    <span>pełny raport</span>
                   </div>
                 </Glass>
               </section>
@@ -1000,21 +1000,21 @@ export default function App() {
               <section className="ctms-feature-editorial-grid" style={{ marginTop: "24px" }}>
                 <Glass className="feature-card">
                   <div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div>
-                  <h3>Schodzi głębiej niż myślisz</h3>
+                  <h3>Pokazuje, co naprawdę się powtarza</h3>
                   <div className="feature-line" />
-                  <p>Każde pytanie ma prowadzić do sedna sprawy. Nie chodzi o odhaczanie pól, tylko o uchwycenie mechanizmu.</p>
+                  <p>Nie zatrzymuje się na jednym zdarzeniu. Patrzy na to, co wraca po rozmowach, kłótniach, ciszy i chwilowych poprawach.</p>
                 </Glass>
                 <Glass className="feature-card">
                   <div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div>
-                  <h3>Mówi to czego inni nie powiedzą</h3>
+                  <h3>Oddziela zachowanie od deklaracji</h3>
                   <div className="feature-line" />
-                  <p>Nie pocieszenie. Nie ocena. Precyzyjny obraz tego, co widać z zewnątrz, bez zakładania z góry, kto ma rację.</p>
+                  <p>Bo najwięcej widać nie w obietnicach, tylko w tym, co druga strona robi wtedy, gdy nie naciskasz.</p>
                 </Glass>
                 <Glass className="feature-card">
                   <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
-                  <h3>Zostajesz z czymś konkretnym</h3>
+                  <h3>Daje punkt zaczepienia</h3>
                   <div className="feature-line" />
-                  <p>Nie z listą kroków ani motywacją na dziś. Z obrazem mechanizmu i jednym pytaniem, które z niego wynika.</p>
+                  <p>Po pierwszym odczycie masz wiedzieć, co sprawdzić dalej: zmianę, unikanie, ciężar po jednej stronie albo własne dopowiadanie.</p>
                 </Glass>
               </section>
 
