@@ -1025,73 +1025,66 @@ export default function App() {
 
           {stage === "landing" && !isPublicContentRoute && (
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <section className="hero-grid">
-                <Glass className="glass-panel hero-panel hero-copy">
-                  <div className="eyebrow with-line">PRYWATNA ANALIZA RELACJI</div>
-                  <div className="hero-kicker">TWOJA RELACJA MA WZORZEC.</div>
-                  <h1>Już wiesz, że <span>coś nie gra.</span><br />Tu zobaczysz, co naprawdę się dzieje.</h1>
-                  <p style={{ lineHeight: 1.75, color: BRAND.muted, marginBottom: "28px" }}>Nie jesteś tu po potwierdzenie, że wszystko jest okej. Jesteś tu, bo coś nie daje Ci spokoju i chcesz zobaczyć sprawę uczciwie, bez dopowiadania sobie wygodnej wersji. Analiza nie podejmuje decyzji za Ciebie. Pokazuje, czy opierasz ją na faktach, nadziei, lęku, przywiązaniu czy realnej zmianie.</p>
+              <section className="hero-grid ctms-hero-premium">
+                <Glass className="glass-panel hero-panel hero-copy ctms-hero-left">
+                  <div className="eyebrow with-line">PRYWATNY ODCZYT RELACJI</div>
+                  <h1>Uporządkuj sytuację, zanim podejmiesz kolejną decyzję.</h1>
+                  <p className="ctms-hero-lead">CzyToMaSens porządkuje jedną konkretną relację: fakty, zachowania, ciężar po obu stronach, miejsca niejasności i sygnały realnej zmiany. Nie ocenia partnera ani partnerki. Pokazuje, co wynika z Twoich odpowiedzi i czego warto nie pomijać przed rozmową, powrotem albo odpuszczeniem.</p>
+                  <div className="ctms-hero-value">
+                    <div><span>01</span><strong>najpierw fakty</strong><em>bez dopowiadania wygodnej wersji</em></div>
+                    <div><span>02</span><strong>potem układ sił</strong><em>kto niesie ciężar, kto unika, kto wraca</em></div>
+                    <div><span>03</span><strong>na końcu odczyt</strong><em>co można sprawdzić w zachowaniu</em></div>
+                  </div>
                   <div className="ctms-landing-actions">
-                    <PrimaryButton onClick={() => setStage("consent")}>Chcę sprawdzić</PrimaryButton>
+                    <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij analizę relacji</PrimaryButton>
                   </div>
                 </Glass>
                 <div className="hero-side-stack">
-                  <Glass className="glass-panel story-panel visual-story">
-                    <div className="story-kicker">CO ZOBACZYSZ</div>
-                    <h3>To, czego jeszcze nie nazwałeś</h3>
-                    <div className="story-points">
-                      <div><span>▸</span><p>Twój wzorzec w relacjach: jak reagujesz na bliskość i odrzucenie, zanim zdążysz to przemyśleć</p></div>
-                      <div><span>▸</span><p>Dlaczego wracasz do tego samego miejsca i co naprawdę trzyma Cię tam, gdzie nie chcesz być</p></div>
-                      <div><span>▸</span><p>To, czego nie chcesz widzieć, bo właśnie tam zwykle zaczyna się zmiana</p></div>
+                  <Glass className="glass-panel story-panel visual-story ctms-hero-right">
+                    <div className="story-kicker">FRAGMENT ODCZYTU</div>
+                    <h3>Nie chodzi o jedną odpowiedź. Chodzi o to, co się powtarza.</h3>
+                    <div className="ctms-report-sample">
+                      <div><span>Po rozmowie</span><p>czy zachowanie zmienia się bez nacisku, czy tylko na chwilę robi się spokojniej.</p></div>
+                      <div><span>Rozkład ciężaru</span><p>kto częściej inicjuje kontakt, domyka trudne tematy i pilnuje atmosfery.</p></div>
+                      <div><span>Miejsce nadziei</span><p>czy opiera się na faktach, czy głównie na tym, co mogłoby się wydarzyć.</p></div>
                     </div>
-                    <div className="story-lock">
-                      <div className="story-lock-icon">🔒</div>
-                      <div><strong>Pełny raport</strong><span>Jednorazowo. Raport generowany indywidualnie na podstawie Twoich odpowiedzi.</span></div>
+                    <div className="story-lock ctms-premium-note">
+                      <div className="story-lock-icon">◒</div>
+                      <div><strong>Wynik ma być odczytem, nie wyrokiem.</strong><span>Pokazuje napięcia i zasoby. Może zatrzymać, ale może też pokazać, na czym jeszcze da się budować.</span></div>
                     </div>
                   </Glass>
                 </div>
               </section>
               
-              <section style={{ margin: "32px 0 0" }}>
-                <Glass style={{ padding: "36px 40px" }}>
-                  <div className="eyebrow" style={{ marginBottom: "24px" }}>CZYM TO NIE JEST</div>
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px 40px" }}>
-                    {[
-                      ["Nie jest testem osobowości.", "Nie dostaniesz swojego „typu”. Dostaniesz obraz konkretnej sytuacji w której teraz jesteś."],
-                      ["Nie powie Ci co robić.", "Nie ma tu gotowych zaleceń ani tanich rad. Jest analiza i jedno pytanie, którego nie da się zignorować."],
-                      ["Nie oceni Twojego partnera.", "Opisuje mechanizmy, nie wydaje wyroków. Na podstawie Twoich słów, nie cudzych założeń."],
-                      ["Nie jest formularzem do odhaczenia.", "Pytania prowadzą głębiej z każdą odpowiedzią. To nie jest ankieta ani lista pól do kliknięcia."]
-                    ].map(([title, desc]) => (
-                      <div key={title} style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
-                        <span className="text-meta">•</span>
-                        <div>
-                          <strong style={{ color: BRAND.text, fontSize: "15px", display: "block", marginBottom: "4px" }}>{title}</strong>
-                          <span style={{ color: BRAND.muted, fontSize: "15px", lineHeight: "1.65" }}>{desc}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              <section className="ctms-what-panel">
+                <Glass className="ctms-what-inner">
+                  <div className="eyebrow">CZYM JEST CZYTOMASENS</div>
+                  <p>CzyToMaSens to prywatny odczyt sytuacji w relacji. Pomaga oddzielić fakty od nadziei, zmęczenia i domysłów, które zwykle mieszają się wtedy, gdy sprawa trwa za długo.</p>
+                  <p>Najpierw wskazujesz układ sił i najważniejsze ciężary. Potem dopowiadasz jeden konkret z życia. Wynik pokazuje, gdzie relacja traci jasność, co realnie wraca i który punkt warto sprawdzić przed kolejną rozmową.</p>
                 </Glass>
               </section>
               
-              <section className="ctms-feature-editorial-grid" style={{ marginTop: "24px" }}>
-                <Glass className="feature-card">
+              <section className="ctms-feature-editorial-grid ctms-process-grid" style={{ marginTop: "24px" }}>
+                <Glass className="feature-card ctms-process-card">
                   <div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div>
-                  <h3>Schodzi głębiej niż myślisz</h3>
+                  <h3>Mapa relacji</h3>
                   <div className="feature-line" />
-                  <p>Każde pytanie ma prowadzić do sedna sprawy. Nie chodzi o odhaczanie pól, tylko o uchwycenie mechanizmu.</p>
+                  <p>Wskazujesz, jak rozkładają się inicjatywa, odpowiedzialność, unikanie i ciężar emocjonalny. To ustawia punkt startu bez długiego opisywania całej historii.</p>
+                  <div className="ctms-mini-tags"><span>inicjatywa</span><span>odpowiedzialność</span><span>unikanie</span></div>
                 </Glass>
-                <Glass className="feature-card">
+                <Glass className="feature-card ctms-process-card">
                   <div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div>
-                  <h3>Mówi to czego inni nie powiedzą</h3>
+                  <h3>Doprecyzowanie</h3>
                   <div className="feature-line" />
-                  <p>Nie pocieszenie. Nie ocena. Precyzyjny obraz tego, co widać z zewnątrz, bez zakładania z góry, kto ma rację.</p>
+                  <p>System pyta tylko o miejsca, które mogą zmienić odczyt. Nie o wszystko. O konkretny przykład: co dzieje się po rozmowie, po ciszy, po obietnicy albo po wycofaniu.</p>
+                  <div className="ctms-mini-tags"><span>konkret</span><span>zachowanie</span><span>kontekst</span></div>
                 </Glass>
-                <Glass className="feature-card">
+                <Glass className="feature-card ctms-process-card">
                   <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
-                  <h3>Zostajesz z czymś konkretnym</h3>
+                  <h3>Pierwszy odczyt</h3>
                   <div className="feature-line" />
-                  <p>Nie z listą kroków ani motywacją na dziś. Z obrazem mechanizmu i jednym pytaniem, które z niego wynika.</p>
+                  <p>Dostajesz spokojny obraz sytuacji: co wraca, gdzie jest ciężar, co może być zasobem i co warto sprawdzić dalej. Bez gotowej decyzji za Ciebie.</p>
+                  <div className="ctms-mini-tags"><span>wniosek</span><span>zasoby</span><span>następny ruch</span></div>
                 </Glass>
               </section>
 
