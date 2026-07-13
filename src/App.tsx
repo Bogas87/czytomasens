@@ -1162,6 +1162,48 @@ async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: An
 }
 
 
+
+function previewFallbackText(preview: Preview, key: string, fallback = ""): string {
+  const source = preview as any;
+  const value = source?.[key];
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (typeof fallback === "string" && fallback.trim()) return fallback.trim();
+  if (typeof preview.summary === "string" && preview.summary.trim()) return preview.summary.trim();
+  if (typeof preview.mirror === "string" && preview.mirror.trim()) return preview.mirror.trim();
+  if (typeof preview.truth === "string" && preview.truth.trim()) return preview.truth.trim();
+  return "Ten fragment wymaga doprecyzowania w pełnej analizie.";
+}
+
+function metricExplanationCards(preview: Preview): { label: string; value: number; text: string }[] {
+  const source = preview as any;
+  const tensionText = typeof source.tensionMeaning === "string" && source.tensionMeaning.trim()
+    ? source.tensionMeaning.trim()
+    : preview.tension >= 70
+      ? "To pokazuje, że ta relacja prawdopodobnie częściej uruchamia napięcie, czujność albo potrzebę kontrolowania sytuacji niż spokojne poczucie oparcia."
+      : preview.tension >= 45
+        ? "Napięcie jest obecne, ale sam wynik nie mówi jeszcze, czy to chwilowy trudny etap, czy coś, co wraca regularnie."
+        : "Napięcie nie wychodzi na pierwszy plan. W takim układzie ważniejsze może być sprawdzenie jasności, wzajemności i realnego zachowania po trudniejszych momentach.";
+  const asymmetryText = typeof source.asymmetryMeaning === "string" && source.asymmetryMeaning.trim()
+    ? source.asymmetryMeaning.trim()
+    : preview.asymmetry >= 70
+      ? "Widać ryzyko nierównego ciężaru: jedna strona może częściej inicjować, tłumaczyć, naprawiać albo czekać na ruch drugiej osoby."
+      : preview.asymmetry >= 45
+        ? "Ciężar nie jest jeszcze jednoznaczny. Warto sprawdzić, kto realnie wraca do rozmowy i kto zmienia zachowanie bez nacisku."
+        : "Na tym etapie nie widać silnej nierównowagi, ale pełny obraz zależy od tego, co dzieje się po konflikcie, ciszy albo niepewności.";
+  const changeText = typeof source.changeMeaning === "string" && source.changeMeaning.trim()
+    ? source.changeMeaning.trim()
+    : preview.change <= 35
+      ? "Słabiej widać trwałą zmianę. To może oznaczać, że po rozmowach robi się spokojniej, ale później relacja wraca do podobnego punktu."
+      : preview.change <= 58
+        ? "Jest jakaś przestrzeń do zmiany, ale wymaga sprawdzenia w faktach: nie w obietnicach, tylko w powtarzalnym zachowaniu."
+        : "W odpowiedziach widać potencjał do zmiany. Nadal trzeba sprawdzić, czy stoi za tym stałość, odpowiedzialność i udział obu stron.";
+  return [
+    { label: "Napięcie", value: clampScore(preview.tension), text: tensionText },
+    { label: "Asymetria", value: clampScore(preview.asymmetry), text: asymmetryText },
+    { label: "Zmiana", value: clampScore(preview.change), text: changeText },
+  ];
+}
+
 function dominantPreviewAxis(preview: Preview): string {
   const unresolved = 100 - preview.change;
   if (preview.tension >= preview.asymmetry && preview.tension >= unresolved) return "napięcie";
@@ -1299,7 +1341,7 @@ function ProcessingScreen() {
         </div>
         <h2 style={{ marginBottom: "12px", fontSize: "clamp(20px,4vw,26px)" }}>Przygotowuję wynik</h2>
         <div className="processing-message">{PROCESSING_MESSAGES[msgIndex]}{".".repeat(dots)}</div>
-        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>Nie przepisuję Twoich odpowiedzi. Szukam tego, co z nich wynika.<br />Nie zamykaj karty. To zajmie chwilę.</p>
+        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>Nie zamykaj karty. Jeśli analiza nie odpowie na czas, pokażemy pierwszy wynik bez czekania w nieskończoność.</p>
         <div className="processing-bar"><div className="processing-bar-fill" /></div>
       </Glass>
     </div>
