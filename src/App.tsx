@@ -1314,11 +1314,11 @@ function CookieBanner() {
 }
 
 const PROCESSING_MESSAGES = [
-  "Analizuję odpowiedzi i mapę relacji",
-  "Porównuję zachowania z deklaracjami",
-  "Sprawdzam, co wraca po trudnych momentach",
+  "Porządkuję układ odpowiedzi",
+  "Sprawdzam, które sygnały najmocniej zmieniają obraz",
+  "Porównuję deklaracje z zachowaniem",
   "Oddzielam fakty od domysłów i nadziei",
-  "Składam pierwszy odczyt relacji",
+  "Przygotowuję pierwszy odczyt relacji",
 ];
 
 function ProcessingScreen() {
@@ -1339,7 +1339,7 @@ function ProcessingScreen() {
         </div>
         <h2 style={{ marginBottom: "12px", fontSize: "clamp(20px,4vw,26px)" }}>Przygotowuję pierwszy odczyt</h2>
         <div className="processing-message">{PROCESSING_MESSAGES[msgIndex]}{".".repeat(dots)}</div>
-        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>To zwykle trwa chwilę. Nie zamykaj karty.</p>
+        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>Odczyt powstaje na podstawie Twoich odpowiedzi. To może potrwać chwilę.</p>
         <div className="processing-bar"><div className="processing-bar-fill" /></div>
       </Glass>
     </div>
@@ -2005,12 +2005,12 @@ export default function App() {
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <section className="hero-grid premium-landing-grid">
                 <Glass className="glass-panel hero-panel hero-copy premium-hero-copy">
-                  <div className="eyebrow with-line">PRYWATNA ANALIZA KONKRETNEJ RELACJI</div>
-                  <h1>Zobacz, czy walczysz o relację, czy już tylko o własną nadzieję.</h1>
-                  <p className="hero-lead-premium">CzyToMaSens porządkuje fakty, reakcje i powtarzające się sytuacje. Pokazuje, co naprawdę wraca między Wami, gdzie znika jasność i czy za słowami idzie realna zmiana.</p>
+                  <div className="eyebrow with-line">PRYWATNY ODCZYT RELACJI</div>
+                  <h1>Zobacz, co naprawdę powtarza się między Wami.</h1>
+                  <p className="hero-lead-premium">CzyToMaSens porządkuje fakty, reakcje i konkretne sytuacje. Pokazuje, gdzie znika jasność, kto częściej niesie ciężar i czy za słowami idzie realna zmiana.</p>
                   <div className="hero-value-box">
-                    <div className="eyebrow">CO OTRZYMUJESZ</div>
-                    <p>Prywatny pierwszy odczyt jednej relacji: bez quizowego tonu, bez oceniania partnera i bez gotowych rad z internetu.</p>
+                    <div className="eyebrow">CO DAJE ODCZYT</div>
+                    <p>Nie ogólną poradę. Otrzymujesz pierwszy raport z tej jednej relacji: najważniejszy sygnał, możliwe źródło napięcia i punkt, który warto sprawdzić przed rozmową albo decyzją.</p>
                   </div>
                   <div className="ctms-landing-actions">
                     <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij analizę relacji</PrimaryButton>
@@ -2019,19 +2019,19 @@ export default function App() {
 
                 <Glass className="glass-panel hero-report-sample">
                   <div className="story-kicker">FRAGMENT ODCZYTU</div>
-                  <h3>Nie chodzi o to, co ktoś obiecuje. Chodzi o to, co wraca po rozmowie.</h3>
+                  <h3>Nie deklaracje. Zachowanie po rozmowie pokazuje, czy coś naprawdę się zmienia.</h3>
                   <div className="sample-report-lines">
                     <div className="sample-report-line main">
                       <span>Najmocniejszy sygnał</span>
-                      <strong>nie brakuje emocji, tylko stabilnej jasności.</strong>
+                      <strong>dobre momenty nie kasują tego, co wraca po kilku dniach.</strong>
                     </div>
                     <div className="sample-report-line">
                       <span>Co może mylić</span>
-                      <strong>dobre momenty mogą wyglądać jak zmiana, choć po kilku dniach wraca ten sam układ.</strong>
+                      <strong>poprawa atmosfery może wyglądać jak zmiana, choć nie musi zmieniać zachowania.</strong>
                     </div>
                     <div className="sample-report-line">
                       <span>Co sprawdzić</span>
-                      <strong>czy zachowanie zmienia się bez nacisku, czy tylko wtedy, gdy temat robi się niewygodny.</strong>
+                      <strong>co dzieje się wtedy, gdy przestajesz ciągnąć rozmowę i nie domykasz tematu za dwie osoby.</strong>
                     </div>
                   </div>
                 </Glass>
@@ -2040,8 +2040,8 @@ export default function App() {
               <section className="product-definition-section">
                 <Glass className="product-definition-card">
                   <div className="eyebrow">CZYM JEST CZYTOMASENS</div>
-                  <p>CzyToMaSens to prywatny odczyt sytuacji w relacji przed rozmową, decyzją albo kolejnym powrotem do tego samego punktu.</p>
-                  <p>Najpierw zaznaczasz fakty i układ sił, potem dopowiadasz to, czego nie da się kliknąć. Wynik nie ocenia osoby. Pokazuje, co w tej relacji realnie pracuje: kontakt, ciężar, napięcie, nadzieję i zmianę widoczną w zachowaniu.</p>
+                  <p>CzyToMaSens to prywatny odczyt jednej konkretnej relacji. Pomaga uporządkować to, co zwykle miesza się w głowie: fakty, nadzieję, zmęczenie, domysły i zachowania drugiej strony.</p>
+                  <p>Najpierw wskazujesz układ sił i najważniejsze ciężary, potem dopowiadasz jeden konkret z życia. Wynik nie ocenia osoby. Pokazuje, co wraca między Wami, gdzie znika jasność i co warto sprawdzić, zanim znowu wejdziesz w tę samą rozmowę.</p>
                 </Glass>
               </section>
 
