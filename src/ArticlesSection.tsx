@@ -478,20 +478,20 @@ export function ArticlesSection({
   };
 
   return (
-    <section className={`articles-section ${indexRoute ? "articles-index-mode" : "articles-landing-mode"}`} style={styles.section}>
+    <section className="articles-section" style={styles.section}>
       <AnimatePresence mode="wait">
         {!activeSlug && (
           <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
             <div style={styles.header}>
               <div>
-                <span style={styles.eyebrow}>{indexRoute ? "BIBLIOTEKA PORADNIKÓW" : "PORADNIKI RELACYJNE"}</span>
+                <span style={styles.eyebrow}>{indexRoute ? "MAPA SYTUACJI" : "ZANIM WEJDZIESZ W ANALIZĘ"}</span>
                 <h2 className="articles-main-title" style={styles.title}>
-                  {indexRoute ? "Poradniki do zrozumienia trudnych relacji" : "Zanim wejdziesz w analizę, możesz rozpoznać temat"}
+                  {indexRoute ? "Teksty, które pomagają nazwać to, co dzieje się między wami" : "Najpierw nazwij, co naprawdę się dzieje"}
                 </h2>
                 <p className="articles-main-subtitle" style={styles.subtitle}>
                   {indexRoute
-                    ? "Poradniki, które pomagają nazwać problem w relacji i wejść w analizę z większą jasnością."
-                    : "Poradniki, które pomagają nazwać problem w relacji."}
+                    ? "To nie jest zwykły blog. To mapa najczęstszych sytuacji: niejasność, powroty, brak zaangażowania, mieszane sygnały i moment, w którym zaczynasz pytać, czy to jeszcze ma kierunek."
+                    : "Trzy krótkie teksty, które pomagają złapać wzorzec zanim opiszesz swoją sytuację w analizie."}
                 </p>
               </div>
               <div className="article-header-actions" style={styles.headerActions}>
@@ -502,7 +502,7 @@ export function ArticlesSection({
                 )}
                 {!indexRoute && (
                   <button className="article-soft-link" style={styles.softLink} onClick={onNavigateHome}>
-                    Zobacz wszystkie poradniki →
+                    Zobacz pełną mapę tekstów →
                   </button>
                 )}
               </div>
@@ -530,7 +530,7 @@ export function ArticlesSection({
                       <span key={item} className="article-card-insight" style={styles.cardInsightItem}><span>•</span><span>{item}</span></span>
                     ))}
                   </div>
-                  <div className="article-card-arrow" style={styles.cardArrow}>Przeczytaj poradnik →</div>
+                  <div className="article-card-arrow" style={styles.cardArrow}>Przeczytaj tekst →</div>
                 </button>
               ))}
             </div>
