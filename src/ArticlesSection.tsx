@@ -484,14 +484,14 @@ export function ArticlesSection({
           <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
             <div style={styles.header}>
               <div>
-                <span style={styles.eyebrow}>{indexRoute ? "PORADNIKI" : "ARTYKUŁY I PORADNIKI"}</span>
+                <span style={styles.eyebrow}>{indexRoute ? "MAPA SYTUACJI" : "ZANIM WEJDZIESZ W ANALIZĘ"}</span>
                 <h2 className="articles-main-title" style={styles.title}>
-                  {indexRoute ? "Poradniki o relacjach" : "Poradniki o relacjach"}
+                  {indexRoute ? "Teksty, które pomagają nazwać to, co dzieje się między wami" : "Najpierw nazwij, co naprawdę się dzieje"}
                 </h2>
                 <p className="articles-main-subtitle" style={styles.subtitle}>
                   {indexRoute
-                    ? "Poradniki, które pomagają nazwać problem w relacji."
-                    : "Poradniki, które pomagają nazwać problem w relacji."}
+                    ? "To nie jest zwykły blog. To mapa najczęstszych sytuacji: niejasność, powroty, brak zaangażowania, mieszane sygnały i moment, w którym zaczynasz pytać, czy to jeszcze ma kierunek."
+                    : "Trzy krótkie teksty, które pomagają złapać wzorzec zanim opiszesz swoją sytuację w analizie."}
                 </p>
               </div>
               <div className="article-header-actions" style={styles.headerActions}>
