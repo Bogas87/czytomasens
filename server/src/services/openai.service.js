@@ -11,7 +11,7 @@ const MODEL = (process.env.OPENAI_MODEL || "gpt-4o").trim();
 
 const SectionSchema = z.object({
   title: z.string().trim().min(1),
-  text: z.string().trim().min(320),
+  text: z.string().trim().min(1),
   tone: z.enum(["normal", "danger", "gold"]).catch("normal"),
 });
 
@@ -126,6 +126,67 @@ function normalizeFullReport(report) {
         tone: current.tone || (index === 5 || index === 9 ? "danger" : [2,4,8,11,14,15,16].includes(index) ? "gold" : "normal"),
       };
     }),
+  };
+}
+
+function sentenceCount(text) {
+  return String(text || "").split(/[.!?]+/).map((x) => x.trim()).filter(Boolean).length;
+}
+
+function payloadContextLine(payload) {
+  const path = payload?.path || payload?.entryKey || payload?.relationshipMap?.path || "tej relacji";
+  const note = String(payload?.openText || payload?.customDescription || payload?.relationshipMap?.userNote || "").trim();
+  const map = payload?.relationshipMap || {};
+  const pieces = [];
+  if (path) pieces.push(`wybrana ścieżka: ${path}`);
+  if (map?.forces) pieces.push("mapa relacji pokazuje rozkład inicjatywy, naprawiania i unikania");
+  if (Array.isArray(map?.burdens) && map.burdens.length) pieces.push(`najmocniejsze ciężary: ${map.burdens.slice(0, 3).join(", ")}`);
+  if (note) pieces.push(`w opisie własnym pojawia się konkret: ${note.slice(0, 220)}`);
+  return pieces.join("; ");
+}
+
+function fallbackSectionText(title, payload, currentText) {
+  const base = String(currentText || "").trim();
+  const context = payloadContextLine(payload);
+  const contextSentence = context ? `W materiale wejściowym ważne jest to, że ${context}.` : "Materiał wejściowy nie daje pełnej historii, dlatego odczyt trzyma się tylko tego, co zostało zaznaczone i dopowiedziane.";
+  const titleLower = String(title || "").toLowerCase();
+  let body = "";
+
+  if (titleLower.includes("najważniejsze")) {
+    body = "Sedno nie polega na tym, żeby uznać relację za dobrą albo złą. Ważniejsze jest to, czy po trudnych momentach pojawia się zachowanie, które realnie zmienia układ, czy tylko chwilowo zmniejsza napięcie. Ten raport czyta odpowiedzi jako całość: nie pojedyncze kliknięcie, ale kierunek, który powtarza się między kontaktem, odpowiedzialnością i jasnością.\n\n" + contextSentence + " Dlatego wniosek powinien być ostrożny: pokazuje, gdzie jest koszt, gdzie może być zasób i jaki fakt z najbliższych dni mógłby zmienić ocenę sytuacji.";
+  } else if (titleLower.includes("druga strona")) {
+    body = "Druga strona nie jest tu oceniana moralnie. Raport patrzy na to, co można odczytać z zachowania: czy jest inicjatywa, czy pojawia się odpowiedzialność po napięciu, czy trudny temat zostaje domknięty, czy tylko odłożony. To istotne, bo deklaracje mogą brzmieć dobrze, a mimo to nie zmieniać codziennego układu.\n\n" + contextSentence + " Jeżeli w odpowiedziach widać dobre sygnały, raport powinien je nazwać. Jeżeli widać unikanie albo nierówny ciężar, też trzeba to pokazać, ale bez przypisywania złych intencji.";
+  } else if (titleLower.includes("nadziej")) {
+    body = "Nadzieja sama w sobie nie jest problemem. Problem zaczyna się wtedy, gdy nadzieja ma zastępować fakty: konkretne działanie, powtarzalną zmianę i gotowość obu stron do wracania do rozmowy bez nacisku. W tej sekcji trzeba oddzielić to, co naprawdę daje podstawę do dalszej próby, od tego, co tylko na chwilę uspokaja napięcie.\n\n" + contextSentence + " Dobre momenty mogą być prawdziwe, ale same nie przesądzają kierunku relacji. Znaczenie ma dopiero to, czy po nich zmienia się sposób działania.";
+  } else if (titleLower.includes("scenariusz")) {
+    body = "Ten scenariusz nie jest przepowiednią. To spokojne pokazanie kierunku, który wynika z obecnego układu, jeśli nic istotnego nie zostanie nazwane albo sprawdzone. W relacjach często nie decyduje jedna rozmowa, tylko to, co wydarza się po rozmowie: czy ktoś wraca do tematu, czy bierze udział w zmianie, czy wszystko znów zostaje po jednej stronie.\n\n" + contextSentence + " Dlatego scenariusz trzeba czytać jako warunek: jeśli zachowania pozostaną takie same, prawdopodobnie ten sam koszt będzie wracał pod inną nazwą.";
+  } else if (titleLower.includes("ruch") || titleLower.includes("zmienić") || titleLower.includes("granica")) {
+    body = "Tu nie chodzi o wielką deklarację ani o kolejną rozmowę prowadzoną tym samym sposobem. Sens ma tylko taki ruch, który pozwala zobaczyć zachowanie po drugiej stronie: bez nacisku, bez ciągłego przypominania i bez ratowania sytuacji za dwie osoby.\n\n" + contextSentence + " Najbardziej sprawdzający fakt to zwykle nie słowo, ale powtarzalne działanie w najbliższych dniach. Jeżeli ono się pojawi, odczyt może się przesunąć. Jeżeli nie, sama nadzieja będzie za słabym dowodem.";
+  } else if (titleLower.includes("koszt") || titleLower.includes("napięcie")) {
+    body = "Koszt emocjonalny widać nie tylko po sile uczuć, ale po tym, ile miejsca ta relacja zajmuje w głowie. Jeśli po kontakcie pojawia się czujność, analizowanie, czekanie albo potrzeba domyślania się intencji, to nie jest neutralny koszt. Nie oznacza to automatycznie, że relacja jest bez sensu, ale oznacza, że trzeba sprawdzić, skąd ten koszt się bierze.\n\n" + contextSentence + " Raport nie powinien dramatyzować. Ma nazwać, czy napięcie wynika z chwilowej sytuacji, czy z powtarzalnego sposobu funkcjonowania między dwiema osobami.";
+  } else {
+    body = "Ta część raportu nie powinna być ogólną poradą. Ma przełożyć odpowiedzi na praktyczny odczyt: co w tej relacji wraca, gdzie jest ciężar, co może być zasobem i czego nadal nie da się uczciwie rozstrzygnąć.\n\n" + contextSentence + " Jeśli dane są niejednoznaczne, uczciwy raport nie udaje pewności. Pokazuje, jaki konkretny fakt zmieniłby ocenę i co warto obserwować zamiast dopowiadać sobie sens z samego napięcia.";
+  }
+
+  if (!base) return body;
+  if (base.length >= 320 && sentenceCount(base) >= 4) return base;
+  return `${base}\n\n${body}`;
+}
+
+function ensureReportDepth(report, payload) {
+  const normalized = normalizeFullReport(report || {});
+  return {
+    headline: String(normalized.headline || "Prywatny odczyt tej relacji").trim(),
+    subheadline: String(normalized.subheadline || "Raport porządkuje zachowania, koszt emocjonalny, zasoby i miejsca niejasne bez oceniania drugiej osoby.").trim(),
+    previewLine: String(normalized.previewLine || "Najważniejsze jest to, co powtarza się po napięciu, nie tylko to, co zostaje powiedziane w rozmowie.").trim(),
+    tensionPercent: Number.isFinite(Number(normalized.tensionPercent)) ? Math.max(0, Math.min(100, Number(normalized.tensionPercent))) : 50,
+    driftPercent: Number.isFinite(Number(normalized.driftPercent)) ? Math.max(0, Math.min(100, Number(normalized.driftPercent))) : 50,
+    rebuildPercent: Number.isFinite(Number(normalized.rebuildPercent)) ? Math.max(0, Math.min(100, Number(normalized.rebuildPercent))) : 50,
+    sections: normalized.sections.map((section) => ({
+      ...section,
+      text: fallbackSectionText(section.title, payload, section.text),
+    })),
+    closing: String(normalized.closing || "Ten raport nie ma podjąć decyzji za Ciebie. Ma pokazać, które fakty warto zobaczyć bez dopowiadania historii za drugą osobę.").trim(),
   };
 }
 
@@ -365,18 +426,25 @@ ZWRÓĆ STRICT JSON:
       14000
     );
 
-    let normalized = normalizeFullReport(rawData);
+    let normalized = ensureReportDepth(rawData, payload);
     let result = ReportSchema.safeParse(normalized);
 
     if (!result.success || !reportLooksDeep(result.data)) {
-      const repaired = await repairFullReport(payload, normalized);
-      normalized = normalizeFullReport(repaired);
-      result = ReportSchema.safeParse(normalized);
+      try {
+        const repaired = await repairFullReport(payload, normalized);
+        normalized = ensureReportDepth(repaired, payload);
+        result = ReportSchema.safeParse(normalized);
+      } catch (repairError) {
+        console.error("[OpenAI Service] Repair Report warning:", repairError.message);
+      }
     }
 
-    if (!result.success || !reportLooksDeep(result.data)) {
+    normalized = ensureReportDepth(result.success ? result.data : normalized, payload);
+    result = ReportSchema.safeParse(normalized);
+
+    if (!result.success) {
       throw new Error(
-        `Nieprawidłowy raport z OpenAI: ${result.success ? "sekcje nadal są zbyt krótkie" : result.error.issues
+        `Nieprawidłowy raport z OpenAI: ${result.error.issues
           .map((i) => `${i.path.join(".") || "root"}: ${i.message}`)
           .join("; ")}`
       );

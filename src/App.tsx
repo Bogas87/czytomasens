@@ -1955,46 +1955,46 @@ export default function App() {
 
           {stage === "landing" && !isPublicContentRoute && (
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <section className="hero-grid hero-grid--professional">
-                <Glass className="glass-panel hero-panel hero-copy hero-copy--professional">
+              <section className="hero-grid hero-grid--professional hero-grid--clean">
+                <Glass className="glass-panel hero-panel hero-copy hero-copy--professional hero-copy--clean">
                   <div className="eyebrow with-line">PRYWATNY ODCZYT RELACJI</div>
-                  <h1>Uporządkuj fakty, zanim wrócisz do tej samej rozmowy.</h1>
+                  <h1>Zrozum, co dzieje się w tej relacji, zanim podejmiesz kolejną decyzję.</h1>
                   <p className="hero-lead-pro">
-                    CzyToMaSens pomaga zobaczyć jedną konkretną relację bez zgadywania: co regularnie wraca po trudnych momentach, kto niesie większy ciężar i gdzie nadzieja miesza się z tym, co naprawdę dzieje się w zachowaniu.
+                    CzyToMaSens porządkuje jedną konkretną sytuację: fakty, zachowania po napięciu, rozkład ciężaru i miejsca, w których nadzieja zaczyna zastępować jasność.
                   </p>
-                  <div className="hero-proof-line hero-proof-line--professional">
-                    Dostajesz prywatny odczyt sytuacji, nie ocenę partnera. Raport pokazuje także miejsca, na których można budować, jeśli w odpowiedziach widać realny kontakt, odpowiedzialność albo gotowość do zmiany.
-                  </div>
-                  <div className="ctms-landing-actions">
+                  <p className="hero-lead-pro hero-lead-pro--second">
+                    Nie dostajesz oceny partnera ani gotowej decyzji. Dostajesz pierwszy odczyt tego, co w tej relacji wraca, co może być zasobem i co warto sprawdzić, zanim znowu wejdziesz w tę samą rozmowę.
+                  </p>
+                  <div className="ctms-landing-actions ctms-landing-actions--clean">
                     <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij analizę relacji</PrimaryButton>
                   </div>
                 </Glass>
 
-                <Glass className="glass-panel story-panel professional-report-preview">
-                  <div className="story-kicker">FRAGMENT ODCZYTU</div>
-                  <h3>Raport czyta zachowania po napięciu, a nie same deklaracje.</h3>
-                  <div className="report-preview-lines">
+                <Glass className="glass-panel story-panel professional-report-preview professional-report-preview--clean">
+                  <div className="story-kicker">PODGLĄD ODCZYTU</div>
+                  <h3>Raport pokazuje, co wraca w zachowaniu, nie tylko to, co zostało powiedziane.</h3>
+                  <div className="report-preview-lines report-preview-lines--clean">
                     <div>
                       <span>Po rozmowie</span>
-                      <strong>czy pojawia się spokojna zmiana w zachowaniu, czy tylko kilka dni ciszy i ulgi.</strong>
+                      <strong>Czy po napięciu pojawia się trwała zmiana, czy tylko chwilowe uspokojenie.</strong>
                     </div>
                     <div>
-                      <span>Rozkład ciężaru</span>
-                      <strong>kto częściej inicjuje kontakt, wraca do trudnych tematów i pilnuje, żeby relacja się nie rozpadła.</strong>
+                      <span>Ciężar relacji</span>
+                      <strong>Kto wraca do kontaktu, kto domyka trudne tematy i kto najczęściej zostaje z odpowiedzialnością.</strong>
                     </div>
                     <div>
-                      <span>Miejsce nadziei</span>
-                      <strong>czy nadzieja ma oparcie w faktach, czy głównie w tym, że czasem znowu robi się dobrze.</strong>
+                      <span>Granica odczytu</span>
+                      <strong>Jaki konkretny fakt z najbliższych dni może zmienić ocenę sytuacji.</strong>
                     </div>
                   </div>
                 </Glass>
               </section>
 
-              <section className="ctms-what-section">
-                <Glass className="ctms-what-panel">
+              <section className="ctms-what-section ctms-what-section--clean">
+                <Glass className="ctms-what-panel ctms-what-panel--clean">
                   <div className="eyebrow">CZYM JEST CZYTOMASENS</div>
                   <p>
-                    To prywatny odczyt jednej konkretnej relacji. Najpierw wskazujesz układ sił i najważniejsze ciężary, potem dopowiadasz jeden konkret z życia. Wynik nie ma wydać wyroku ani podjąć decyzji za Ciebie. Ma uporządkować to, co w relacji wraca, co może być zasobem, co wymaga sprawdzenia i gdzie ocena sytuacji może być zniekształcona przez zmęczenie, lęk, nadzieję albo brak jasności.
+                    To prywatny odczyt jednej relacji przed rozmową, decyzją albo kolejnym powrotem do tego samego punktu. Najpierw wskazujesz układ sił i najważniejsze ciężary, potem dopowiadasz konkretną sytuację z życia. Wynik nie ma nikogo osądzać. Ma pokazać, co się powtarza, gdzie znika jasność i czy w odpowiedziach widać realny ruch, a nie tylko chwilową ulgę.
                   </p>
                 </Glass>
               </section>
@@ -2499,7 +2499,7 @@ export default function App() {
                   <Glass className="unlock-panel unlock-panel--strong unlock-panel--reading">
                     <div className="eyebrow">CO DAJE PEŁNA ANALIZA</div>
                     <p className="unlock-copy">
-                      Pełny raport rozwija pierwszy odczyt w konkretach: pokazuje zachowania obu stron, koszt emocjonalny, zasoby relacji, miejsca niejasne i scenariusze dalszego ruchu. Nie ma powtarzać tego samego dłużej, tylko rozdzielić to, co widać w faktach, od tego, co dopowiada napięcie albo nadzieja.
+                      Pełny raport rozwija pierwszy odczyt w konkretach: pokazuje zachowania obu stron, koszt emocjonalny, zasoby relacji, miejsca niejasne i scenariusze dalszego ruchu. Nie powtarza darmowego wyniku dłuższymi zdaniami. Ma rozdzielić fakty od domysłów, wskazać co może być do uratowania i gdzie kończy się nadzieja bez potwierdzenia w zachowaniu.
                     </p>
                     <div className="premium-sample-grid premium-sample-grid--reading">
                       {buildPremiumValueCards(preview).map(([title, text], index) => (
@@ -2510,7 +2510,7 @@ export default function App() {
                         </div>
                       ))}
                     </div>
-                    <div className="unlock-fineprint">Raport premium jest generowany indywidualnie z Twojej mapy relacji, odpowiedzi doprecyzowujących i opisu własnego. Nie jest diagnozą ani terapią.</div>
+                    <div className="unlock-fineprint">Raport powstaje z Twojej mapy relacji, doprecyzowań i opisu własnego. Nie jest diagnozą ani terapią.</div>
                     <div className="unlock-form">
                       <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Twój adres e-mail" />
                       <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Pokaż pełny raport"}</PrimaryButton>
