@@ -94,7 +94,7 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     duration: "ok. 7 minut",
     questions: [
       { id: "b1", lead: "Przeprosiny to słowa. Odpowiedzialność to zachowanie.", text: "Czy ta osoba wzięła realną odpowiedzialność – nie tylko przeprosiła, ale zmieniła coś konkretnego w tym co robi na co dzień?", options: [{ id: "a", label: "Głównie słowa. W zachowaniu nic się nie zmieniło.", score: 3 }, { id: "b", label: "Zmieniła się, ale tylko gdy czuje że patrzę.", score: 2 }, { id: "c", label: "Stara się, widać wysiłek, choć nie zawsze skuteczny.", score: 1 }, { id: "d", label: "Tak. Zmiana jest widoczna i trwała.", score: 0 }] },
-      { id: "b2", lead: "Ciągłe sprawdzanie rzadko daje spokój. Częściej pokazuje, że zaufanie nie wróciło.", text: "Czy dziś masz w głowie stały monitoring (telefon, godziny, spójność historii) i to stało się Twoim normalem?", options: [{ id: "a", label: "Tak. Nie umiem już inaczej i to mnie wyczerpuje.", score: 3 }, { id: "b", label: "Wpadam w to regularnie, choć walczę z tym.", score: 2 }, { id: "c", label: "Zdarza się rzadko, przy konkretnych sytuacjach.", score: 1 }, { id: "d", label: "Nie. Nie czuję już tej potrzeby.", score: 0 }] },
+      { id: "b2", lead: "Żyć w ciągłym trybie sprawdzania to nie ostrożność. To wyrok.", text: "Czy dziś masz w głowie stały monitoring (telefon, godziny, spójność historii) i to stało się Twoim normalem?", options: [{ id: "a", label: "Tak. Nie umiem już inaczej i to mnie wyczerpuje.", score: 3 }, { id: "b", label: "Wpadam w to regularnie, choć walczę z tym.", score: 2 }, { id: "c", label: "Zdarza się rzadko, przy konkretnych sytuacjach.", score: 1 }, { id: "d", label: "Nie. Nie czuję już tej potrzeby.", score: 0 }] },
       { id: "b3", lead: "To jak ktoś reaguje gdy wracasz do bólu, mówi wszystko o tym czy naprawdę zrozumiał.", text: "Kiedy wracasz do tego co się stało, ta osoba jest cierpliwa i obecna, czy daje Ci do zrozumienia że już za długo to ciągniesz?", options: [{ id: "a", label: "Ucina temat, irytuje się albo mówi żebym przestał.", score: 3 }, { id: "b", label: "Słucha, ale czuję że ma tego dość.", score: 2 }, { id: "c", label: "Słucha, choć widać że to dla niej trudne.", score: 1 }, { id: "d", label: "Jest przy mnie. Cierpliwa. Nie spieszy się.", score: 0 }] },
       { id: "b4", lead: "Jest jedno pytanie którego się boisz zadać wprost.", text: "Gdybyś zapytał dziś tej osoby: „Czy mam się bać że to się powtórzy?”, byłbyś w stanie uwierzyć w odpowiedź?", options: [{ id: "a", label: "Nie. I to mówi mi więcej niż cokolwiek.", score: 3 }, { id: "b", label: "Chciałbym wierzyć, ale coś we mnie blokuje.", score: 2 }, { id: "c", label: "Częściowo. Wierzę, ale z rezerwą.", score: 1 }, { id: "d", label: "Tak. Uwierzyłbym bez wahania.", score: 0 }] },
       { id: "b5", lead: "Intymność po zdradzie to jeden z najtrudniejszych testów.", text: "Jak wygląda między Wami bliskość fizyczna i emocjonalna od kiedy to się stało?", options: [{ id: "a", label: "Jest dystans. Trudno mi być blisko jak wcześniej.", score: 3 }, { id: "b", label: "Bywa różnie, raz lepiej, raz gorzej.", score: 2 }, { id: "c", label: "Powoli wracamy, czuję że próbujemy.", score: 1 }, { id: "d", label: "Jest bliskość. Może nawet głębsza niż przed.", score: 0 }] },
@@ -190,7 +190,7 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     title: "Wracamy do siebie w kółko",
     subtitle: "Odchodzicie. Wracacie. I za każdym razem mówisz sobie że tym razem będzie inaczej.",
     quote: `„Rozstajemy się od trzech lat. Nigdy nie wychodzi nam to na stałe."`,
-    intro: "Sprawdzisz, czy wracacie do siebie z realnej więzi, czy głównie dlatego, że napięcie na chwilę ustępuje i znów pojawia się ulga.",
+    intro: "Dowiesz się czy to co Was trzyma razem to miłość, czy mechanizm napięcie-ulga, który wygląda jak miłość ale nią nie jest.",
     duration: "ok. 7 minut",
     questions: [
       { id: "l1", lead: "Jest pytanie które warto zadać sobie uczciwie.", text: "Czy najsilniejsze uczucie do tej osoby pojawia się głównie wtedy gdy coś się sypie, ktoś odchodzi albo jest ryzyko utraty?", options: [{ id: "a", label: "Tak. Wtedy jest najmocniej. W spokoju jakoś mdło.", score: 3 }, { id: "b", label: "Częściej tak niż nie, choć nie zawsze.", score: 2 }, { id: "c", label: "Zdarza się, ale intensywność jest też w spokojnych momentach.", score: 1 }, { id: "d", label: "Nie. Bliskość nie zależy u nas od napięcia.", score: 0 }] },
@@ -257,9 +257,9 @@ function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): 
   const asymmetry = safeNumber(Math.round(24 + intensity * 62), 12, 97);
   const change = safeNumber(Math.round(74 - intensity * 48), 8, 84);
   
-  if (chance <= 24) return { chance, tension, asymmetry, change, tone: "red", badge: "Wysokie napięcie w relacji", headline: "To nie wygląda jak kryzys do przeczekania.", truth: "W tym, co opisujesz, widać coś więcej niż pojedynczy trudny moment. Ten sam układ może wracać pod różnymi pretekstami.", mirror: "Napięcie i przywiązanie mogą tu mieszać się ze sobą tak mocno, że chwilowa ulga zaczyna wyglądać jak poprawa.", summary: "Taki wynik pojawia się wtedy, gdy obok uczuć widać też chaos, nierówny wysiłek, brak jasności albo powrót do tych samych reakcji.", paidTease: "Pełny raport pokazuje, które zachowania realnie budują relację, a które tylko podtrzymują nadzieję." };
-  if (chance <= 49) return { chance, tension, asymmetry, change, tone: "yellow", badge: "Układ chwiejny", headline: "Coś tu jeszcze działa, ale nie wszystko daje oparcie.", truth: "To może być relacja z potencjałem, ale dziś nie daje pełnej stabilności.", mirror: "Widać przywiązanie, ale też zmęczenie, nierówny wysiłek albo niepewność, której nie da się już tłumaczyć jednym gorszym okresem.", summary: "Taki wynik pojawia się wtedy, gdy uczucie nadal jest ważne, ale codzienne zachowania nie dają równie jasnego potwierdzenia.", paidTease: "Pełny raport pokazuje, które elementy są jeszcze do odbudowania, a które wymagają jasnej decyzji." };
-  if (chance <= 69) return { chance, tension, asymmetry, change, tone: "yellow", badge: "Jest potencjał, ale nie bez zastrzeżeń", headline: "Tu coś jeszcze ma sens. Ale nie na autopilocie.", truth: "To nie jest relacja skazana na powtarzanie tego samego. Ale sama dobra wola i nadzieja to za mało.", mirror: "Widać miejsca które wymagają pracy – nie dlatego że coś jest nie do naprawienia, ale dlatego że zostawione same sobie się pogłębią.", summary: "Taki wynik pojawia się gdy relacja ma realny materiał, ale nie obroni się samym sentymentem ani przyzwyczajeniem.", paidTease: "Pełna analiza pokazuje, co rzeczywiście daje podstawy do dalszej pracy, a co tylko brzmi jak poprawa." };
+  if (chance <= 24) return { chance, tension, asymmetry, change, tone: "red", badge: "Wzorzec wysokiego ryzyka", headline: "To nie wygląda jak kryzys do przeczekania.", truth: "W tym co opisujesz widać coś więcej niż trudny moment. Widać mechanizm który się powtarza.", mirror: "Napięcie i przywiązanie zaczęły tu robić za spoiwo. To nie jest spokojny grunt, to balansowanie na krawędzi która stała się normą.", summary: "Taki wynik pojawia się gdy w relacji obok uczucia działa już coś innego – chaos, nierówność, chroniczny brak jasności albo cykl który się nie kończy.", paidTease: "Pełny raport pokaże co konkretnie trzyma Cię w tym układzie, i dlaczego samo uczucie tego nie wyjaśnia." };
+  if (chance <= 49) return { chance, tension, asymmetry, change, tone: "yellow", badge: "Układ chwiejny", headline: "Coś tu jeszcze trzyma. Ale obok tego jest coś co ciągnie w dół.", truth: "To nie jest relacja która jest po prostu trudna. To relacja która mogłaby być stabilna, ale nie jest.", mirror: "Widać tu przywiązanie. Ale widać też nierówność, zmęczenie albo niepewność która trwa za długo żeby była przypadkowa.", summary: "Taki wynik pojawia się gdy obok realnego uczucia mocno pracują już też inne siły: niejasność, różne poziomy zaangażowania, trudność z podjęciem decyzji.", paidTease: "Pełny raport rozłoży to na warstwy: co jeszcze działa, co się już rozjechało i gdzie leży największe ryzyko." };
+  if (chance <= 69) return { chance, tension, asymmetry, change, tone: "yellow", badge: "Jest potencjał, ale nie bez zastrzeżeń", headline: "Tu coś jeszcze ma sens. Ale nie na autopilocie.", truth: "To nie jest relacja skazana na powtarzanie tego samego. Ale sama dobra wola i nadzieja to za mało.", mirror: "Widać miejsca które wymagają pracy – nie dlatego że coś jest nie do naprawienia, ale dlatego że zostawione same sobie się pogłębią.", summary: "Taki wynik pojawia się gdy relacja ma realny materiał, ale nie obroni się samym sentymentem ani przyzwyczajeniem.", paidTease: "Pełna analiza pokaże co daje nadzieję, co ją podcina i które wzorce są tu kluczowe." };
   return { chance, tension, asymmetry, change, tone: "green", badge: "Układ z realnym potencjałem", headline: "Tu widać grunt. Nie tylko emocje.", truth: "W odpowiedziach jest więcej spójności niż chaosu. To nie jest relacja napędzana wyłącznie lękiem ani nawykiem.", mirror: "To nie znaczy że nie ma słabszych punktów. Znaczy tyle że jest na czym budować, jeśli będziesz to widział.", summary: "Taki wynik pojawia się gdy obok napięcia nadal istnieje realna struktura – kontakt, wzajemność, zdolność do rozmowy.", paidTease: "Pełna analiza pokaże z czego dokładnie bierze się ten potencjał i gdzie mimo wszystko są jego słabsze miejsca." };
 }
 
@@ -391,7 +391,7 @@ async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: An
       const change = typeof p.rebuildPercent === "number" ? p.rebuildPercent : 50;
       const chance = Math.round(100 - tension * 0.5 - asymmetry * 0.3 + change * 0.2);
       const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-      return { chance: clamp(chance, 5, 95), tension: clamp(tension, 5, 97), asymmetry: clamp(asymmetry, 5, 97), change: clamp(change, 5, 90), tone: chance <= 30 ? "red" : chance <= 60 ? "yellow" : "green", badge: p.subheadline || "Analiza relacji", headline: p.headline || "Wynik gotowy.", truth: p.previewLine || "", mirror: p.sections?.[0]?.text || "", summary: p.sections?.[1]?.text || p.sections?.[0]?.text || "", paidTease: p.closing || "Pełny raport pokazuje więcej konkretów." } as Preview;
+      return { chance: clamp(chance, 5, 95), tension: clamp(tension, 5, 97), asymmetry: clamp(asymmetry, 5, 97), change: clamp(change, 5, 90), tone: chance <= 30 ? "red" : chance <= 60 ? "yellow" : "green", badge: p.subheadline || "Analiza relacji", headline: p.headline || "Wynik gotowy.", truth: p.previewLine || "", mirror: p.sections?.[0]?.text || "", summary: p.sections?.[1]?.text || p.sections?.[0]?.text || "", paidTease: p.closing || "Pełny raport idzie znacznie głębiej." } as Preview;
     }
   } catch (e: any) { if (e?.message === "__CRISIS__") throw e; }
   return buildPreview(path, answers, openText);
@@ -423,7 +423,7 @@ function GhostButton({ children, onClick }: { children: React.ReactNode; onClick
 
 function PremiumBadge({ preview }: { preview: Preview }) {
   const color = preview.tone === "red" ? BRAND.danger : preview.tone === "green" ? BRAND.success : BRAND.goldSoft;
-  const scoreExplanation = `To nie jest ocena osoby. Te wartości pokazują, ile w tej historii widać napięcia, nierównego wysiłku i miejsca na zmianę potwierdzoną zachowaniem.`;
+  const scoreExplanation = `Wynik pochodzi z trzech osi: napięcie w relacji (${preview.tension}%), asymetria zaangażowania (${preview.asymmetry}%), realność zmiany (${preview.change}%). Im wyższe napięcie i asymetria, tym niższy wynik końcowy.`;
   return (
     <Glass className="ctms-preview-badge">
       <div className="ctms-kicker">NA ILE TO MA SENS</div>
@@ -434,68 +434,6 @@ function PremiumBadge({ preview }: { preview: Preview }) {
       <div className="ctms-score-explanation">{scoreExplanation}</div>
     </Glass>
   );
-}
-
-
-function getFreeReportCards(preview: Preview) {
-  if (preview.tone === "green") {
-    return [
-      { no: "01", title: "Gdzie jest realny grunt", text: "W odpowiedziach widać elementy, które nie opierają się wyłącznie na napięciu: kontakt, zdolność do rozmowy albo gotowość do zobaczenia własnej części." },
-      { no: "02", title: "Co nadal trzeba sprawdzić", text: "Dobry kierunek nie wystarczy, jeśli po trudnym momencie wszystko wraca do starych reakcji. Liczy się powtarzalność zachowania, nie nastrój po jednej rozmowie." },
-      { no: "03", title: "Gdzie obraz może być niespójny", text: "Dobra rozmowa jest ważna, ale sama nie wystarczy. Liczy się to, czy po niej zachowanie zmienia się także wtedy, gdy przestajesz przypominać, tłumaczyć i pilnować tematu." },
-      { no: "04", title: "Co sprawdzić teraz", text: "Przez kilka najbliższych sytuacji patrz nie na deklaracje, tylko na zachowanie po napięciu: kto wraca do rozmowy, kto bierze odpowiedzialność i czy naprawa pojawia się bez ciągnięcia tematu przez Ciebie." },
-    ];
-  }
-  if (preview.tone === "red") {
-    return [
-      { no: "01", title: "Najmocniejszy sygnał", text: "To nie wygląda jak jednorazowy kryzys. Widać układ, który wraca i kosztuje Cię coraz więcej spokoju, nawet jeśli między tym pojawiają się lepsze momenty." },
-      { no: "02", title: "Gdzie nadzieja nie zgadza się z zachowaniem", text: "Pojedynczy dobry gest może dawać ulgę. Ważniejsze jest jednak to, co dzieje się później: czy zachowanie naprawdę się zmienia, czy tylko na chwilę robi się spokojniej." },
-      { no: "03", title: "Co może Cię mylić", text: "Najbardziej mylące bywają dobre momenty po okresie dystansu. Dają ulgę, ale nie muszą oznaczać zmiany, jeśli po kilku dniach wraca ten sam chłód albo brak jasnej rozmowy." },
-      { no: "04", title: "Co sprawdzić teraz", text: "Nie zaczynaj kolejnej rozmowy od całej historii od początku. Nazwij jeden konkretny fakt: co wraca po każdej poprawie i czego druga strona nadal nie zmienia w zachowaniu." },
-    ];
-  }
-  return [
-    { no: "01", title: "Co jeszcze trzyma tę relację", text: "Widać przywiązanie i dobre momenty. Jednocześnie pojawia się napięcie, które może sprawiać, że relacja daje ulgę, ale nie zawsze daje oparcie." },
-    { no: "02", title: "Gdzie obraz nie jest spójny", text: "Może być tak, że po rozmowie robi się spokojniej, ale później wraca ten sam sposób działania. Wtedy poprawia się atmosfera, niekoniecznie sama relacja." },
-    { no: "03", title: "Co widać po zachowaniu", text: "Najważniejsze nie jest to, co ktoś deklaruje w emocjach. Ważne jest, kto później wraca do rozmowy, kto naprawia kontakt i kto bierze odpowiedzialność bez nacisku." },
-    { no: "04", title: "Co sprawdzić teraz", text: "Przez najbliższe dwa dni oddziel fakty od dopowiedzeń. Zapisz tylko: co ta osoba zrobiła, czego nie zrobiła, co obiecała i co faktycznie zmieniło się później." },
-  ];
-}
-
-function getFreeReportLoop(preview: Preview) {
-  if (preview.tone === "green") {
-    return [
-      { step: "01", title: "trudny moment", text: "pojawia się napięcie albo różnica potrzeb" },
-      { step: "02", title: "rozmowa", text: "jest próba nazwania tematu, nie tylko ucieczka" },
-      { step: "03", title: "sprawdzenie", text: "czas pokazuje, czy za słowami idzie zachowanie" },
-      { step: "04", title: "wniosek", text: "sens ma ta zmiana, która utrzymuje się także po opadnięciu emocji" },
-    ];
-  }
-  if (preview.tone === "red") {
-    return [
-      { step: "01", title: "napięcie", text: "coś wraca i uruchamia czujność" },
-      { step: "02", title: "ulga", text: "po rozmowie albo geście przez chwilę robi się spokojniej" },
-      { step: "03", title: "powrót", text: "po czasie wraca ten sam brak jasności albo ten sam dystans" },
-      { step: "04", title: "koszt", text: "zaczynasz analizować więcej niż realnie dostajesz" },
-    ];
-  }
-  return [
-    { step: "01", title: "kontakt", text: "jest coś, co nadal daje poczucie więzi" },
-    { step: "02", title: "niejasność", text: "brakuje stabilnego potwierdzenia kierunku" },
-    { step: "03", title: "nadzieja", text: "pojawia się myśl, że tym razem może być inaczej" },
-    { step: "04", title: "test faktów", text: "decyduje nie obietnica, tylko powtarzalne zachowanie" },
-  ];
-}
-
-function getPremiumSpecifics() {
-  return [
-    "gdzie nadzieja nie zgadza się z zachowaniem",
-    "co druga strona robi z własnej inicjatywy",
-    "czy rozmowy zmieniają zachowanie, czy tylko na chwilę uspokajają sytuację",
-    "co możesz sprawdzić, żeby nie wracać w głowie do tych samych pytań",
-    "po czym odróżnić realną zmianę od chwilowego uspokojenia",
-    "jakie są możliwe dalsze scenariusze i z czym każdy z nich się wiąże",
-  ];
 }
 
 function CookieBanner() {
@@ -521,11 +459,13 @@ function CookieBanner() {
 }
 
 const PROCESSING_MESSAGES = [
-  "Porządkuję odpowiedzi...",
-  "Sprawdzam, gdzie zachowanie nie zgadza się z oczekiwaniem...",
-  "Patrzę na zachowania, nie same deklaracje...",
-  "Szukam tego, co może wracać po rozmowach...",
-  "Układam pierwszy odczyt...",
+  "Analizuję wzorzec relacyjny...",
+  "Identyfikuję mechanizmy obronne...",
+  "Mapuję dynamikę zaangażowania...",
+  "Szukam sprzeczności w odpowiedziach...",
+  "Buduję profil przywiązania...",
+  "Przygotowuję sekcję lustrzaną...",
+  "Finalizuję raport...",
 ];
 
 function ProcessingScreen() {
@@ -675,10 +615,10 @@ export default function App() {
     const description = routeArticle
       ? articleDescription
       : routePath === "/artykuly"
-        ? "Artykuły o relacjach, powrotach, niezdrowych związkach, napięciu, bliskości i decyzjach, które trudno podjąć od środka."
+        ? "Artykuły o relacjach, powrotach, niezdrowych związkach, napięciu, bliskości i mechanizmach, których często nie widać od środka."
         : routeLegalKey
           ? legalDescription
-          : "Prywatna analiza relacji. Zobacz, co się powtarza, gdzie znika jasność i czy za słowami idzie realne zachowanie.";
+          : "Prywatna analiza relacji. Zobacz wzorce, napięcia, asymetrię i mechanizmy, które mogą decydować o tym, czy Twoja relacja ma sens.";
 
     document.title = title;
     setMetaName("description", description);
@@ -1021,11 +961,11 @@ export default function App() {
                 <div className="hero-side-stack">
                   <Glass className="glass-panel story-panel visual-story">
                     <div className="story-kicker">CO ZOBACZYSZ</div>
-                    <h3>To, czego jeszcze nie nazwałeś</h3>
+                    <h3>To, co trudno zobaczyć od środka</h3>
                     <div className="story-points">
-                      <div><span>▸</span><p>Twój wzorzec w relacjach: jak reagujesz na bliskość i odrzucenie, zanim zdążysz to przemyśleć</p></div>
-                      <div><span>▸</span><p>Dlaczego wracasz do tego samego miejsca i co naprawdę trzyma Cię tam, gdzie nie chcesz być</p></div>
-                      <div><span>▸</span><p>To, czego nie chcesz widzieć, bo właśnie tam zwykle zaczyna się zmiana</p></div>
+                      <div><span>▸</span><p>Co powtarza się między Wami, zanim jeszcze zaczyna się kolejna rozmowa</p></div>
+                      <div><span>▸</span><p>Gdzie nadzieja miesza się z faktami i przez to trudniej podjąć decyzję</p></div>
+                      <div><span>▸</span><p>Który sygnał warto sprawdzić, zanim dasz tej relacji kolejną szansę</p></div>
                     </div>
                     <div className="story-lock">
                       <div className="story-lock-icon">🔒</div>
@@ -1042,7 +982,7 @@ export default function App() {
                     {[
                       ["Nie jest testem osobowości.", "Nie dostaniesz swojego „typu”. Dostaniesz obraz konkretnej sytuacji w której teraz jesteś."],
                       ["Nie powie Ci co robić.", "Nie ma tu gotowych zaleceń ani tanich rad. Jest analiza i jedno pytanie, którego nie da się zignorować."],
-                      ["Nie oceni Twojego partnera.", "Opisuje zachowania i powtarzające się sytuacje. Na podstawie Twoich słów, nie cudzych założeń."],
+                      ["Nie oceni Twojego partnera.", "Opisuje mechanizmy, nie wydaje wyroków. Na podstawie Twoich słów, nie cudzych założeń."],
                       ["Nie jest formularzem do odhaczenia.", "Pytania prowadzą głębiej z każdą odpowiedzią. To nie jest ankieta ani lista pól do kliknięcia."]
                     ].map(([title, desc]) => (
                       <div key={title} style={{ display: "flex", gap: "14px", alignItems: "flex-start" }}>
@@ -1062,7 +1002,7 @@ export default function App() {
                   <div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div>
                   <h3>Schodzi głębiej niż myślisz</h3>
                   <div className="feature-line" />
-                  <p>Każde pytanie ma prowadzić do sedna sprawy. Nie chodzi o odhaczanie pól, tylko o zobaczenie, co realnie dzieje się między Wami.</p>
+                  <p>Każde pytanie ma prowadzić do sedna sprawy. Nie chodzi o odhaczanie pól, tylko o uchwycenie mechanizmu.</p>
                 </Glass>
                 <Glass className="feature-card">
                   <div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div>
@@ -1074,7 +1014,7 @@ export default function App() {
                   <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
                   <h3>Zostajesz z czymś konkretnym</h3>
                   <div className="feature-line" />
-                  <p>Nie z listą motywacyjnych kroków. Z konkretnym odczytem sytuacji i pytaniem, którego nie warto już omijać.</p>
+                  <p>Nie z listą kroków ani motywacją na dziś. Z obrazem mechanizmu i jednym pytaniem, które z niego wynika.</p>
                 </Glass>
               </section>
 
@@ -1088,7 +1028,7 @@ export default function App() {
                 <div className="eyebrow">ZANIM WEJDZIESZ</div>
                 <h2>Przeczytaj to. Serio.</h2>
                 <p className="consent-copy">To narzędzie nie ma Cię straszyć ani pocieszać na siłę. Ma pokazać, co wynika z Twoich odpowiedzi: ryzyka, potencjał i miejsce, w którym warto przestać udawać, że wszystko jest jasne.</p>
-                <div className="analysis-boundary">To nie jest diagnoza psychologiczna ani gotowa decyzja. To prywatny odczyt relacji zbudowany wyłącznie na podstawie Twoich odpowiedzi.</div>
+                <div className="analysis-boundary">To nie jest diagnoza psychologiczna ani gotowa decyzja. To prywatny obraz wzorca relacji zbudowany wyłącznie na podstawie Twoich odpowiedzi.</div>
                 <div className="consent-note">
                   Korzystając dalej, potwierdzasz, że zapoznałeś się z Regulaminem oraz Polityką prywatności i RODO. Pełny raport jest treścią cyfrową przygotowywaną po płatności na podstawie Twoich odpowiedzi. W wyjątkowych sytuacjach technicznych raport może zostać udostępniony w terminie do 14 dni.
                 </div>
@@ -1192,7 +1132,7 @@ export default function App() {
               <Glass className="question-panel">
                 <div className="eyebrow">OSTATNIA WARSTWA</div>
                 <div className="question-copy">
-                  <h3>{interviewState?.finished ? "Jest coś, czego jeszcze nie nazwałeś, a co może być kluczowe?" : path.openPrompt}</h3>
+                  <h3>{interviewState?.finished ? "Jest coś, czego nie udało się jeszcze nazwać, a co może być kluczowe?" : path.openPrompt}</h3>
                   <p style={{ color: BRAND.muted, fontSize: "14px", marginTop: "10px", lineHeight: 1.65 }}>Napisz naturalnie, jak do kogoś, kto ma zobaczyć sens w chaosie.</p>
                 </div>
                 <textarea className="ctms-textarea" value={openText} onChange={(e) => setOpenText(e.target.value)} placeholder="Co konkretnie się dzieje? Opisz fakty..." maxLength={3000} />
@@ -1232,57 +1172,34 @@ export default function App() {
                 </div>
                 <PremiumBadge preview={preview} />
                 <div className="preview-disclaimer">
-                  Ten odczyt nie ocenia osoby. Pokazuje, gdzie w tej historii pojawia się napięcie, co może Cię mylić i jaki konkretny fakt warto sprawdzić przed kolejną decyzją.
+                  To nie jest diagnoza ani decyzja za Ciebie. To pierwszy obraz wzorca wynikający z Twoich odpowiedzi: napięcia, asymetrii i realności zmiany.
                 </div>
-
-                <div className="free-report-insight-grid">
-                  {getFreeReportCards(preview).map((card) => (
-                    <Glass key={card.no} className="free-insight-card">
-                      <div className="free-insight-no">{card.no}</div>
-                      <h3>{card.title}</h3>
-                      <p>{card.text}</p>
-                    </Glass>
+                <div className="metrics-grid">
+                  {([[preview.tension, "NAPIĘCIE"], [preview.asymmetry, "ASYMETRIA"], [preview.change, "SZANSA ZMIANY"]] as [number, string][]).map(([value, label]) => (
+                    <Glass key={label} className="metric-card"><div className="metric-value">{value}%</div><div className="metric-label">{label}</div></Glass>
                   ))}
                 </div>
-
-                <Glass className="free-loop-panel">
-                  <div className="eyebrow">JAKI CYKL MOŻE SIĘ POWTARZAĆ</div>
-                  <div className="free-loop-grid">
-                    {getFreeReportLoop(preview).map((item) => (
-                      <div key={item.step} className="free-loop-item">
-                        <span>{item.step}</span>
-                        <strong>{item.title}</strong>
-                        <p>{item.text}</p>
-                      </div>
-                    ))}
-                  </div>
-                </Glass>
-
-                <Glass className="free-metrics-panel">
-                  <div>
-                    <div className="eyebrow">MAPA ODCZYTU</div>
-                    <p className="free-metrics-intro">Procenty są tylko mapą pomocniczą. Najważniejsze jest to, co widać w zachowaniu: co wraca, co się zmienia i czego nie warto dopowiadać za drugą osobę.</p>
-                  </div>
-                  <div className="free-metric-list">
-                    {([[preview.tension, "Napięcie", "ile kosztuje Cię ta sytuacja"], [preview.asymmetry, "Asymetria", "czy ciężar rozkłada się równo"], [preview.change, "Zmiana", "czy widać zachowanie, nie tylko deklarację"]] as [number, string, string][]).map(([value, label, desc]) => (
-                      <div key={label} className="free-metric-row">
-                        <div className="free-metric-head"><strong>{label}</strong><span>{value}%</span></div>
-                        <div className="free-metric-track"><div style={{ width: `${Math.max(6, Math.min(100, value))}%` }} /></div>
-                        <p>{desc}</p>
-                      </div>
-                    ))}
-                  </div>
-                </Glass>
-
-                <Glass className="unlock-panel unlock-panel-premium">
-                  <div className="eyebrow">CO DOSTAJESZ W PEŁNYM RAPORCIE</div>
-                  <p className="unlock-copy">Pełny raport rozwija ten odczyt: pokazuje zachowania obu stron, koszt emocjonalny, miejsca do rozmowy i granicę między realną zmianą a chwilową ulgą.</p>
-                  <div className="unlock-benefits premium-specifics">
-                    {getPremiumSpecifics().map((item) => (
+                <div className="preview-grid">
+                  <Glass className="report-section"><div className="eyebrow">CO JUŻ WIDAĆ</div><p>{preview.summary}</p></Glass>
+                  <Glass className="report-section"><div className="eyebrow">MECHANIZM</div><p>{preview.tone === "green" ? "Najmocniej działa tu jeszcze wzajemność i struktura." : preview.tone === "yellow" ? "Napięcie miesza się tu z nadzieją i przywiązaniem." : "Najmocniej pracuje tu mechanizm ulgi po napięciu i lęk przed stratą."}</p></Glass>
+                  <Glass className="report-section"><div className="eyebrow">CZEGO PODGLĄD NIE ZAWIERA</div><p>{preview.paidTease}</p></Glass>
+                </div>
+                <Glass className="unlock-panel">
+                  <div className="eyebrow">TO TYLKO FRAGMENT</div>
+                  <p className="unlock-copy">Pełny raport pokazuje nie tylko wynik, ale cały mechanizm tej historii. Bez diagnozowania, bez oceniania partnera/partnerki i bez gotowej decyzji za Ciebie.</p>
+                  <div className="unlock-benefits">
+                    {[
+                      "co naprawdę trzyma Cię w tej relacji",
+                      "gdzie jest największe napięcie i koszt emocjonalny",
+                      "czy problemem jest kryzys, schemat czy asymetria",
+                      "co daje realną nadzieję, a co tylko ją podtrzymuje",
+                      "jaki wzorzec wraca po rozmowach, obietnicach i chwilach ulgi",
+                      "jedno pytanie graniczne przed decyzją"
+                    ].map((item) => (
                       <div key={item} className="unlock-benefit"><span>•</span><span>{item}</span></div>
                     ))}
                   </div>
-                  <div className="unlock-fineprint">Raport jest generowany indywidualnie na podstawie Twoich odpowiedzi. Nie jest diagnozą ani terapią. Ma pomóc zobaczyć sytuację spokojniej, zanim znów zaczniesz dopowiadać za drugą osobę.</div>
+                  <div className="unlock-fineprint">Pełny raport ma 17 sekcji generowanych indywidualnie na podstawie Twoich odpowiedzi. Nie jest opinią specjalisty, diagnozą ani terapią. Jest prywatnym lustrem sytuacji.</div>
                   <div className="unlock-form">
                     <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Twój adres e-mail." />
                     <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Odblokuj pełny raport"}</PrimaryButton>
