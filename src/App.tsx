@@ -1871,49 +1871,47 @@ export default function App() {
 
   const buildPreviewAndGo = async (clarificationsOverride?: ClarificationAnswerMap) => {
     if (!path) return;
+
     const relationshipMap = relationshipMapPayload(clarificationsOverride);
     const finalOpenText = buildCompositeOpenText(clarificationsOverride);
-    if (hasCrisisContent(finalOpenText)) { setStage("crisis"); return; }
+
+    if (hasCrisisContent(finalOpenText)) {
+      setStage("crisis");
+      return;
+    }
+
+    const localPreview = buildPreview(path, answers, finalOpenText);
 
     setOpenText(finalOpenText);
-    setBusy(true);
-    setFreePreviewPending(true);
+    setPreview(localPreview);
     setError(null);
+    setBusy(true);
+    setFreePreviewPending(false);
     setStage("processing");
 
-    try {
-      let token = sessionToken || "";
-      try {
-        token = await withTimeout(ensureSession(path.key), 4500, "session_timeout");
-      } catch {
-        token = "";
-      }
-
-      let previewData: Preview;
-      try {
-        previewData = token
-          ? await withTimeout(fetchPreviewFromAPI(token, path, answers, finalOpenText, relationshipMap), 12000, "preview_timeout")
-          : buildPreview(path, answers, finalOpenText);
-      } catch (e: any) {
-        if (e?.message === "__CRISIS__") { setStage("crisis"); return; }
-        previewData = buildPreview(path, answers, finalOpenText);
-      }
-
-      setPreview(previewData);
-
-      if (token) {
-        updateSession({ token, path: path.key, answers, openText: finalOpenText, relationshipMap, preview: previewData, stage: "preview" })
-          .catch(() => {});
-      }
-
-      setStage("preview");
-    } catch (e: any) {
-      setPreview(buildPreview(path, answers, finalOpenText));
-      setStage("preview");
-    } finally {
-      setFreePreviewPending(false);
+    window.setTimeout(() => {
       setBusy(false);
-    }
+      setStage("preview");
+    }, 700);
+
+    // Raport free nie może zależeć od AI ani od odpowiedzi backendu.
+    // Backend zapisujemy w tle wyłącznie po to, żeby płatny raport miał pełny kontekst.
+    void (async () => {
+      try {
+        const token = sessionToken || await withTimeout(ensureSession(path.key), 4500, "session_timeout").catch(() => "");
+        if (!token) return;
+
+        updateSession({
+          token,
+          path: path.key,
+          answers,
+          openText: finalOpenText,
+          relationshipMap,
+          preview: localPreview,
+          stage: "preview",
+        }).catch(() => {});
+      } catch {}
+    })();
   };
 
   const pay = async () => {
@@ -2006,11 +2004,11 @@ export default function App() {
               <section className="hero-grid premium-landing-grid">
                 <Glass className="glass-panel hero-panel hero-copy premium-hero-copy">
                   <div className="eyebrow with-line">PRYWATNY ODCZYT RELACJI</div>
-                  <h1>Zobacz, co naprawdę powtarza się między Wami.</h1>
-                  <p className="hero-lead-premium">CzyToMaSens porządkuje fakty, reakcje i konkretne sytuacje. Pokazuje, gdzie znika jasność, kto częściej niesie ciężar i czy za słowami idzie realna zmiana.</p>
+                  <h1>Uporządkuj relację, zanim znowu wejdziesz w tę samą rozmowę.</h1>
+                  <p className="hero-lead-premium">CzyToMaSens zamienia odpowiedzi o jednej konkretnej relacji w uporządkowany odczyt: co się powtarza, gdzie słowa rozmijają się z zachowaniem, kto niesie ciężar i czy widać zmianę, której można zaufać.</p>
                   <div className="hero-value-box">
-                    <div className="eyebrow">CO DAJE ODCZYT</div>
-                    <p>Nie ogólną poradę. Otrzymujesz pierwszy raport z tej jednej relacji: najważniejszy sygnał, możliwe źródło napięcia i punkt, który warto sprawdzić przed rozmową albo decyzją.</p>
+                    <div className="eyebrow">CO OTRZYMUJESZ</div>
+                    <p>Pierwszy raport sytuacji: główny wniosek, miejsca ryzyka i jeden konkretny punkt do sprawdzenia przed rozmową albo decyzją. Bez oceniania drugiej osoby i bez gotowych porad z internetu.</p>
                   </div>
                   <div className="ctms-landing-actions">
                     <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij analizę relacji</PrimaryButton>
@@ -2018,20 +2016,20 @@ export default function App() {
                 </Glass>
 
                 <Glass className="glass-panel hero-report-sample">
-                  <div className="story-kicker">FRAGMENT ODCZYTU</div>
-                  <h3>Nie deklaracje. Zachowanie po rozmowie pokazuje, czy coś naprawdę się zmienia.</h3>
+                  <div className="story-kicker">PRZYKŁAD ODCZYTU</div>
+                  <h3>Raport pokazuje nie obietnice, tylko układ zachowań po napięciu.</h3>
                   <div className="sample-report-lines">
                     <div className="sample-report-line main">
-                      <span>Najmocniejszy sygnał</span>
-                      <strong>dobre momenty nie kasują tego, co wraca po kilku dniach.</strong>
+                      <span>Co już widać</span>
+                      <strong>po rozmowie pojawia się uspokojenie, ale nie wiadomo jeszcze, czy zmienia się stały sposób działania.</strong>
                     </div>
                     <div className="sample-report-line">
-                      <span>Co może mylić</span>
-                      <strong>poprawa atmosfery może wyglądać jak zmiana, choć nie musi zmieniać zachowania.</strong>
+                      <span>Co wymaga sprawdzenia</span>
+                      <strong>kto wraca do tematu bez nacisku i kto bierze odpowiedzialność, gdy emocje opadną.</strong>
                     </div>
                     <div className="sample-report-line">
-                      <span>Co sprawdzić</span>
-                      <strong>co dzieje się wtedy, gdy przestajesz ciągnąć rozmowę i nie domykasz tematu za dwie osoby.</strong>
+                      <span>Co daje pełny raport</span>
+                      <strong>rozdziela nadzieję, fakty i możliwe scenariusze, żeby decyzja nie opierała się tylko na chwilowej poprawie.</strong>
                     </div>
                   </div>
                 </Glass>
@@ -2040,8 +2038,8 @@ export default function App() {
               <section className="product-definition-section">
                 <Glass className="product-definition-card">
                   <div className="eyebrow">CZYM JEST CZYTOMASENS</div>
-                  <p>CzyToMaSens to prywatny odczyt jednej konkretnej relacji. Pomaga uporządkować to, co zwykle miesza się w głowie: fakty, nadzieję, zmęczenie, domysły i zachowania drugiej strony.</p>
-                  <p>Najpierw wskazujesz układ sił i najważniejsze ciężary, potem dopowiadasz jeden konkret z życia. Wynik nie ocenia osoby. Pokazuje, co wraca między Wami, gdzie znika jasność i co warto sprawdzić, zanim znowu wejdziesz w tę samą rozmowę.</p>
+                  <p>CzyToMaSens to prywatny odczyt jednej konkretnej relacji. Pomaga oddzielić fakty od nadziei, zmęczenia i domysłów, które zwykle mieszają się wtedy, gdy sytuacja trwa za długo.</p>
+                  <p>Najpierw wskazujesz układ sił i najważniejsze ciężary, potem dopowiadasz jeden konkret z życia. Wynik nie ocenia partnera ani nie podejmuje decyzji za Ciebie. Pokazuje, gdzie relacja traci jasność, co realnie wraca i który punkt warto sprawdzić przed kolejną rozmową.</p>
                 </Glass>
               </section>
 
@@ -2050,19 +2048,19 @@ export default function App() {
                   <div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div>
                   <h3>Mapa Relacji</h3>
                   <div className="feature-line" />
-                  <p>Wskazujesz, kto częściej inicjuje, naprawia, unika i niesie ciężar emocjonalny.</p>
+                  <p>Wskazujesz, jak rozkładają się inicjatywa, odpowiedzialność, unikanie i ciężar emocjonalny.</p>
                 </Glass>
                 <Glass className="feature-card process-card">
                   <div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div>
                   <h3>Doprecyzowanie</h3>
                   <div className="feature-line" />
-                  <p>System dopytuje o 1–3 miejsca, które najbardziej zmieniają odczyt sytuacji.</p>
+                  <p>Dopowiadasz 1–3 konkretne sytuacje, które najbardziej zmieniają interpretację wyniku.</p>
                 </Glass>
                 <Glass className="feature-card process-card">
                   <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
                   <h3>Pierwszy odczyt</h3>
                   <div className="feature-line" />
-                  <p>Dostajesz konkretny obraz: co wraca, co może mylić i co warto sprawdzić dalej.</p>
+                  <p>Dostajesz pierwszy raport: główny wniosek, miejsca ryzyka i punkt do sprawdzenia dalej.</p>
                 </Glass>
               </section>
 

@@ -486,7 +486,7 @@ export function ArticlesSection({
               <div>
                 <span style={styles.eyebrow}>PORADNIKI</span>
                 <h2 className="articles-main-title" style={styles.title}>
-                  {indexRoute ? "Mapa poradników o relacjach" : "Poradniki o relacjach"}
+                  {indexRoute ? "Mapa poradników o relacjach" : "Artykuły i poradniki o relacjach"}
                 </h2>
                 <p className="articles-main-subtitle" style={styles.subtitle}>
                   {indexRoute
