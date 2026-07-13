@@ -1318,7 +1318,7 @@ const PROCESSING_MESSAGES = [
   "Porównuję zachowania z deklaracjami",
   "Sprawdzam, co wraca po trudnych momentach",
   "Oddzielam fakty od domysłów i nadziei",
-  "Przygotowuję pierwszy odczyt relacji",
+  "Składam pierwszy odczyt relacji",
 ];
 
 function ProcessingScreen() {
@@ -1337,9 +1337,9 @@ function ProcessingScreen() {
           <div className="processing-ring processing-ring--2" />
           <div className="processing-dot" />
         </div>
-        <h2 style={{ marginBottom: "12px", fontSize: "clamp(20px,4vw,26px)" }}>Przygotowuję wynik</h2>
+        <h2 style={{ marginBottom: "12px", fontSize: "clamp(20px,4vw,26px)" }}>Przygotowuję pierwszy odczyt</h2>
         <div className="processing-message">{PROCESSING_MESSAGES[msgIndex]}{".".repeat(dots)}</div>
-        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>To może potrwać chwilę. Nie zamykaj karty — wynik zostanie pokazany po zakończeniu odczytu.</p>
+        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>To zwykle trwa chwilę. Nie zamykaj karty.</p>
         <div className="processing-bar"><div className="processing-bar-fill" /></div>
       </Glass>
     </div>
@@ -1724,11 +1724,12 @@ export default function App() {
 
 
   useEffect(() => {
-    if (!freePreviewPending || stage !== "processing" || preview || !path) return;
+    if (!freePreviewPending || stage !== "processing" || preview) return;
+    const safePath = path || ENTRY_CONFIGS.find((x) => x.key === selectedPath) || ENTRY_CONFIGS[0];
     const timer = window.setTimeout(() => {
       try {
         const finalText = openText && openText.trim() ? openText : buildCompositeOpenText();
-        const localPreview = buildPreview(path, answers, finalText);
+        const localPreview = buildPreview(safePath, answers, finalText);
         setOpenText(finalText);
         setPreview(localPreview);
         setBusy(false);
@@ -1739,9 +1740,9 @@ export default function App() {
         setFreePreviewPending(false);
         setStage("preview");
       }
-    }, 18000);
+    }, 12000);
     return () => window.clearTimeout(timer);
-  }, [freePreviewPending, stage, preview, path, answers, openText, forceMap, burdens, truthCards, relationshipNote]);
+  }, [freePreviewPending, stage, preview, path, selectedPath, answers, openText, forceMap, burdens, truthCards, relationshipNote]);
 
   const prepareMapSummary = () => {
     if (!path) return;
@@ -1883,7 +1884,7 @@ export default function App() {
     try {
       let token = sessionToken || "";
       try {
-        token = await ensureSession(path.key);
+        token = await withTimeout(ensureSession(path.key), 4500, "session_timeout");
       } catch {
         token = "";
       }
@@ -1891,7 +1892,7 @@ export default function App() {
       let previewData: Preview;
       try {
         previewData = token
-          ? await withTimeout(fetchPreviewFromAPI(token, path, answers, finalOpenText, relationshipMap), 15000, "preview_timeout")
+          ? await withTimeout(fetchPreviewFromAPI(token, path, answers, finalOpenText, relationshipMap), 12000, "preview_timeout")
           : buildPreview(path, answers, finalOpenText);
       } catch (e: any) {
         if (e?.message === "__CRISIS__") { setStage("crisis"); return; }
