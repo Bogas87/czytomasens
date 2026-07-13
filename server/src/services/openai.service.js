@@ -174,7 +174,7 @@ function jaccard(a = "", b = "") {
 }
 
 function hasBadReportLanguage(text = "") {
-  return /ta część raportu|materiał wejściowy|pełny obraz|raport pokazuje|raport ma przełożyć|ogólna porada|w wybranej ścieżce|ścieżka: tej relacji|w tej historii ważne są konkretne tropy/i.test(text);
+  return /ta część raportu|materiał wejściowy|pełny obraz|raport pokazuje|raport ma przełożyć|ogólna porada|w wybranej ścieżce|ścieżka: tej relacji|w tej historii ważne są konkretne tropy|tu nie chodzi o wielką deklarację|najbardziej sprawdzający fakt|jeżeli ono się pojawi|odczyt może się zmienić/i.test(text);
 }
 
 function reportNeedsRepair(report) {
@@ -280,6 +280,60 @@ ${structure}
 ZWRÓĆ WYŁĄCZNIE STRICT JSON w tym samym schemacie.`;
 }
 
+
+function summarizePayload(payload = {}) {
+  const path = String(payload.path || payload.entryKey || payload.mode || "tej relacji");
+  const map = payload.relationshipMap || {};
+  const burdens = Array.isArray(map.burdens) ? map.burdens.map((b) => b.label || b).filter(Boolean) : [];
+  const truths = Array.isArray(map.truthCards) ? map.truthCards.filter(Boolean) : [];
+  const clar = Array.isArray(map.clarificationAnswers) ? map.clarificationAnswers.filter((x) => x && x.answer) : [];
+  const openText = String(payload.openText || payload.customDescription || "");
+  const topBurden = burdens[0] || "brak jasności co do dalszego kierunku";
+  return { path, map, burdens, truths, clar, openText, topBurden };
+}
+
+function buildEmergencyPremiumReport(payload = {}, weak = {}) {
+  const ctx = summarizePayload(payload);
+  const base = alignReportShape(weak || {});
+  const tension = Math.max(35, Math.min(88, Number(base.tensionPercent || 58)));
+  const drift = Math.max(25, Math.min(88, Number(base.driftPercent || 55)));
+  const rebuild = Math.max(18, Math.min(82, Number(base.rebuildPercent || 48)));
+  const hasResources = rebuild >= 55;
+  const topBurden = ctx.topBurden;
+  const truth = ctx.truths[0] || "najważniejsze jest teraz sprawdzić zachowanie, nie tylko słowa";
+  const open = ctx.openText ? " W opisie własnym pojawia się dodatkowy kontekst, którego nie da się uczciwie zamknąć jednym wskaźnikiem." : " Brak dłuższego opisu własnego oznacza, że najuczciwiej trzymać się mapy relacji i zaznaczonych ciężarów.";
+  const variants = [
+    `Na start widać, że ta sytuacja nie powinna być sprowadzana do prostego pytania: zostać czy odejść. Najpierw trzeba zobaczyć, co naprawdę wraca. Najmocniej wybija się temat: ${topBurden}. To nie musi oznaczać złej woli drugiej strony, ale oznacza, że samymi deklaracjami nie da się już uspokoić całego napięcia.\n\nWażne jest też to, że w Twoich odpowiedziach nie ma tylko jednego zdarzenia. Jest układ: ktoś coś niesie, czegoś oczekuje, czegoś się boi albo próbuje nie nazwać.${open} Dlatego najlepszy pierwszy ruch to nie wielka decyzja, tylko spokojne sprawdzenie, co dzieje się po rozmowie, kiedy opadną emocje.`,
+    `Najbardziej może Cię trzymać nie tylko uczucie, ale też potrzeba domknięcia. Kiedy relacja długo miesza bliskość z napięciem, człowiek zaczyna szukać jednego znaku, który wreszcie wszystko wyjaśni. Taki znak rzadko przychodzi. Zwykle bardziej mówi powtarzalne zachowanie niż jedna rozmowa.\n\nJeśli w tej historii pojawia się zdanie: „${truth}”, to warto potraktować je jak trop, nie jak wyrok. Ono pokazuje miejsce, w którym nadzieja może być prawdziwa, ale może też pracować za fakty. Różnica jest prosta: prawdziwa nadzieja ma po drugiej stronie ruch, konsekwencję i odpowiedzialność.`,
+    `Po Twojej stronie widać próbę uporządkowania sytuacji. To już samo w sobie jest ważne, bo nie każda osoba w napięciu potrafi zatrzymać się i rozdzielić fakty od domysłów. Jednocześnie trzeba uważać, żeby analizowanie nie stało się kolejną formą czekania.\n\nJeśli to Ty częściej wracasz do tematu, inicjujesz rozmowę albo pilnujesz atmosfery, łatwo pomylić własny wysiłek z realnym ruchem relacji. To nie znaczy, że Twoje staranie jest błędem. Znaczy, że nie może być jedynym silnikiem zmiany.`,
+    `Po drugiej stronie nie trzeba od razu zakładać złych intencji. Czasem ktoś unika rozmowy z lęku, przeciążenia, braku dojrzałości albo dlatego, że nie umie nazwać własnych emocji. Problem zaczyna się wtedy, gdy skutek dla Ciebie pozostaje ten sam: brak jasności, powrót napięcia albo poczucie, że naprawa znowu leży po Twojej stronie.\n\nNajuczciwiej patrzeć nie na to, co ta osoba obiecuje w momencie rozmowy, ale na to, co robi później bez przypominania. Jeżeli zachowanie zmienia się tylko pod presją, to nie jest jeszcze stabilna zmiana.`,
+    `Największy rozjazd zwykle pojawia się między tym, na co liczysz, a tym, co regularnie widzisz. Nadzieja nie jest problemem sama w sobie. Problemem staje się dopiero wtedy, gdy musi zasłaniać powtarzalne fakty.\n\nW tej sytuacji warto zapytać prosto: czy dobre momenty są początkiem innego sposobu bycia ze sobą, czy tylko chwilową ulgą po napięciu. To pytanie nie odbiera relacji szansy. Ono chroni Cię przed wkładaniem energii tam, gdzie druga strona nie wykonuje własnej części ruchu.`,
+    `Ciężar relacji nie zawsze widać po wielkich gestach. Częściej widać go po tym, kto zaczyna rozmowę, kto wraca po konflikcie, kto łagodzi atmosferę i kto zostaje z myślami po wszystkim. Jeśli jedna osoba stale niesie więcej, z czasem nawet uczucie zaczyna męczyć.\n\nNie chodzi o księgowanie każdej wiadomości. Chodzi o proporcję. Zdrowa relacja może mieć okresy nierówności, ale nie powinna opierać się na stałym założeniu, że jedna strona będzie czekać, tłumaczyć i naprawiać za dwoje.`,
+    `Zasobem może być to, że nadal chcesz zobaczyć sprawę uczciwie, a nie tylko wygrać własną tezę. Zasobem może być też kontakt, dobra reakcja po spokojnej rozmowie, gotowość do uznania błędu albo fakt, że nie wszystko między Wami jest martwe.\n\nNie warto odbierać znaczenia temu, co działa. Trzeba tylko oddzielić zasób od usprawiedliwienia. Zasób daje możliwość ruchu. Usprawiedliwienie każe stać w miejscu i nazywać to cierpliwością.`,
+    `Wypalać może nie sam konflikt, ale ciągłe życie w trybie sprawdzania. Czy ta rozmowa coś zmieniła? Czy ta osoba naprawdę zrozumiała? Czy tym razem będzie inaczej? Taki stan zabiera spokój nawet wtedy, gdy na zewnątrz nie dzieje się nic dramatycznego.\n\nJeżeli po kontakcie z tą osobą długo analizujesz każde słowo, to warto potraktować to jako informację. Ciało i głowa często szybciej wiedzą, że układ kosztuje za dużo, niż człowiek potrafi to nazwać.`,
+    `To może być kryzys, schemat albo zwykłe przeciążenie. Różnica jest w powtarzalności. Kryzys ma przyczynę i kierunek wyjścia. Przeciążenie można odciążyć. Schemat wraca nawet po rozmowach, przeprosinach i dobrych momentach.\n\nDlatego przez najbliższy czas nie oceniaj relacji po intensywności emocji. Oceń ją po tym, czy po nazwaniu problemu pojawia się inny sposób działania. Jeśli nie, to nie jest już tylko brak rozmowy. To utrwalony rytm.`,
+    `Realną zmianę poznaje się po zachowaniu, które pojawia się również wtedy, gdy nie naciskasz. Nie po obietnicy. Nie po chwilowej czułości. Nie po tym, że ktoś na moment robi się bardziej dostępny, gdy czuje, że możesz się odsunąć.\n\nJeżeli zmiana jest prawdziwa, powinna być widoczna w małych, powtarzalnych rzeczach: w inicjatywie, w domykaniu tematów, w braniu odpowiedzialności, w gotowości do rozmowy bez obrony i zrzucania wszystkiego na Ciebie.`,
+    `Zmianą może udawać się poprawa atmosfery. Po trudnej rozmowie robi się spokojniej, jest cieplej, pojawia się bliskość i człowiek chce uwierzyć, że sprawa ruszyła. To ludzkie. Ale spokój po napięciu nie zawsze oznacza naprawę.\n\nNajprostszy test brzmi: co zostaje po kilku dniach. Jeśli wraca ten sam dystans, ta sama cisza, ta sama nierówność albo ten sam brak jasności, to poprawa była ulgą, nie zmianą.`,
+    `Kiedy czyta się Twoje odpowiedzi razem, ważne jest nie tylko to, co zaznaczasz, ale też kierunek całości. Widać próbę złapania gruntu. Widać też pytanie, czy ta relacja daje Ci oparcie, czy raczej każe ciągle szukać dowodów, że jeszcze warto.\n\nTo nie jest powód do paniki. To powód do zatrzymania automatu. Zamiast kolejny raz tłumaczyć wszystko emocjami, sprawdź powtarzalność: co wraca, kto reaguje i czy po rozmowie jest mniej ciężaru, czy tylko mniej hałasu.`,
+    `Sens najłatwiej dopisać tam, gdzie było dużo emocji. Im więcej dałeś z siebie, tym trudniej przyjąć, że coś może nie iść w stronę, której potrzebujesz. Wtedy człowiek zaczyna bronić nie tylko relacji, ale też własnej inwestycji.\n\nTo nie znaczy, że masz wszystko przekreślić. Znaczy, że warto zapytać: czy bronisz człowieka i realnego kontaktu, czy bronisz wersji historii, która miała się wreszcie dobrze skończyć.`,
+    `Jeśli chcesz poprawić relację, nie zaczynaj od wielkiej rozmowy o wszystkim. Zacznij od jednego konkretu: co ma wyglądać inaczej po następnym trudnym momencie. Nie „bądźmy bliżej”, tylko: kto wraca do rozmowy, kiedy wraca i co robi inaczej niż zwykle.\n\nDobra rozmowa nie kończy się ulgą. Dobra rozmowa kończy się obserwowalnym ruchem. Jeśli druga strona naprawdę chce uczestniczyć w zmianie, będzie w stanie nazwać własny krok, a nie tylko uspokoić Twoje emocje na chwilę.`,
+    `Żeby odzyskać spokój, przestań przez chwilę rozstrzygać całą relację w głowie. Zapisz tylko fakty z najbliższych kilku dni: kto inicjuje kontakt, kto domyka temat, co dzieje się po napięciu, czy druga strona robi coś bez Twojego prowadzenia.\n\nTo proste ćwiczenie często daje więcej niż kolejna noc analizowania. Nie odbiera uczuć. Ono oddziela uczucia od faktów, żebyś nie musiał podejmować decyzji z samego lęku albo samej tęsknoty.`,
+    `Wsparcia warto szukać wtedy, gdy relacja zaczyna zabierać poczucie bezpieczeństwa, sen, zdolność normalnego funkcjonowania albo gdy pojawia się przemoc, kontrola, groźby, upokarzanie czy myśli o zrobieniu sobie krzywdy. Wtedy standardowa analiza relacji nie wystarcza.\n\nJeżeli to dotyczy Ciebie, nie traktuj tego jako porażki. To jest moment, w którym człowiek nie powinien zostać sam z napięciem. Rozmowa ze specjalistą albo zaufaną osobą może być pierwszym krokiem do odzyskania gruntu.`,
+    `Jedno pytanie na koniec brzmi: co musiałoby się wydarzyć w zachowaniu drugiej strony, żebyś nie musiał już zgadywać, tylko mógł spokojnie zobaczyć zmianę. Nie w słowach. W zachowaniu. W powtarzalności. W odpowiedzialności.\n\nJeżeli potrafisz odpowiedzieć konkretnie, masz punkt sprawdzenia. Jeżeli nie potrafisz, to znaczy, że najpierw trzeba nazwać własną granicę. Bez niej każda poprawa może wyglądać jak przełom, nawet jeśli prowadzi z powrotem w to samo miejsce.`
+  ];
+  const sections = FULL_REPORT_SECTIONS.map((spec, index) => ({ title: spec.title, tone: spec.tone, text: variants[index] }));
+  return {
+    headline: hasResources ? "W tej relacji widać zasoby, ale potrzebujesz faktów, nie tylko nadziei." : "Najpierw odzyskaj jasność. Dopiero potem decyduj, ile jeszcze w to wkładać.",
+    subheadline: `Najmocniej wraca temat: ${topBurden}. Ten odczyt nie ocenia drugiej osoby. Pokazuje, co dzieje się z Tobą i z układem między Wami.`,
+    previewLine: "Najważniejsze jest teraz sprawdzić zachowanie po rozmowie, a nie samą obietnicę poprawy.",
+    tensionPercent: tension,
+    driftPercent: drift,
+    rebuildPercent: rebuild,
+    sections,
+    closing: "Nie musisz dziś rozstrzygać całej historii. Wystarczy zrobić jedną rzecz uczciwie: przestać dopowiadać sens tam, gdzie potrzebujesz faktów, i sprawdzić, czy druga strona naprawdę uczestniczy w zmianie.",
+  };
+}
+
 exports.generateFullReport = async (payload) => {
   try {
     const firstRaw = await callOpenAI(buildFullReportPrompt(), payload, 12000);
@@ -297,11 +351,12 @@ exports.generateFullReport = async (payload) => {
     }
 
     if (!report) {
-      throw new Error("Nie udało się zbudować poprawnego raportu premium.");
+      return buildEmergencyPremiumReport(payload, firstRaw);
     }
 
     if (reportNeedsRepair(report)) {
-      console.warn("[OpenAI Service] Raport premium wymagałby dalszej redakcji, ale został zwrócony bez powielania fallbacku.");
+      console.warn("[OpenAI Service] Raport premium nadal był zbyt słaby po naprawie. Zwracam bezpieczną wersję redakcyjną bez powtórzeń.");
+      return buildEmergencyPremiumReport(payload, report);
     }
 
     return report;

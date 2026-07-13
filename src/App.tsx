@@ -116,7 +116,7 @@ type InterviewState = {
 
 type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string };
 
-const STORAGE_KEY = "ctms_full_map_premium_front_v14";
+const STORAGE_KEY = "ctms_one_person_map_stable_v18";
 
 const ENTRY_CONFIGS: EntryConfig[] = [
   {
@@ -947,6 +947,72 @@ function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): 
   return { chance, tension, asymmetry, change, tone: "green", badge: "Widać stabilniejszy grunt", headline: "Tu jest coś, na czym można budować.", truth: "W odpowiedziach jest więcej spójności niż chaosu. To nie wygląda jak relacja trzymana wyłącznie lękiem albo przyzwyczajeniem.", mirror: "To nie znaczy, że wszystko jest idealne. Znaczy tyle, że obok trudności widać kontakt, wzajemność i zdolność wracania do rozmowy.", summary: "Ten wynik pojawia się, gdy relacja ma nie tylko emocje, ale też pewien grunt: odpowiedzialność, rozmowę, konsekwencję albo wspólny kierunek.", paidTease: "Pełny raport pokaże, skąd bierze się ten potencjał i które słabsze miejsca warto sprawdzić, zanim urosną." };
 }
 
+
+function localTone(chance: number): "red" | "yellow" | "green" {
+  return chance <= 34 ? "red" : chance <= 64 ? "yellow" : "green";
+}
+
+function buildMapBasedPreview(path: EntryConfig, map: RelationshipMapPayload, finalOpenText: string): Preview {
+  const fm = map.forceMap || {};
+  const burdensList = map.burdens || [];
+  const truths = map.truthCards || [];
+  const meLoad = FORCE_MAP_ITEMS.filter((item) => isMeHeavy(fm[item.key])).length;
+  const otherLoad = FORCE_MAP_ITEMS.filter((item) => isOtherHeavy(fm[item.key])).length;
+  const topBurden = burdensList[0]?.label || "brak jednego dominującego ciężaru";
+  const hasLoop = truths.some((t) => /wracamy|nadziei|czekam|starać|zgasła/i.test(t));
+  const hasClarity = hasBurden(burdensList, "brak jasności") || path.key === "uncertain";
+  const hasThird = hasBurden(burdensList, "ktoś trzeci") || path.key === "triangle";
+  const hasBetrayal = hasBurden(burdensList, "zdrada") || path.key === "betrayal";
+  const hasConflict = hasBurden(burdensList, "kłótnie") || path.key === "conflict";
+  const hasResource = fm.contactInitiative === "balanced" || fm.repairAfterConflict === "balanced" || otherLoad >= 2;
+  const tension = clampScore(30 + burdensList.length * 10 + truths.length * 9 + (hasConflict ? 10 : 0) + (hasBetrayal ? 10 : 0));
+  const asymmetry = clampScore(28 + Math.max(meLoad, otherLoad) * 12 + (meLoad >= 3 || otherLoad >= 3 ? 18 : 0));
+  const change = clampScore(76 - tension * 0.24 - asymmetry * 0.18 - (hasLoop ? 14 : 0) + (hasResource ? 14 : 0));
+  const chance = clampScore(38 + change * 0.46 - tension * 0.24 - asymmetry * 0.16 + (hasResource ? 12 : 0));
+  const meText = meLoad >= 3
+    ? "Najmocniej widać, że sporo odpowiedzialności zbiera się po Twojej stronie: inicjowanie, wracanie do tematu, pilnowanie atmosfery albo czekanie na jasność."
+    : otherLoad >= 3
+      ? "W odczycie widać, że druga strona nie jest całkiem bierna, ale nadal trzeba sprawdzić, czy jej ruch jest stały, czy pojawia się głównie wtedy, gdy sytuacja robi się niewygodna."
+      : "Układ nie wygląda jednostronnie w prosty sposób. Właśnie dlatego najważniejsze jest sprawdzić, które zachowania są stałe, a które pojawiają się tylko po napięciu.";
+  const resourceText = hasResource
+    ? "To ważne: w odpowiedziach są też zasoby. Nie wszystko trzeba czytać jako złą wolę albo koniec relacji. Jest coś, na czym można budować, jeśli za słowami pójdzie powtarzalne zachowanie."
+    : "Na tym etapie zasoby nie są jeszcze wystarczająco mocne, żeby oprzeć na nich decyzję. To nie znaczy, że ich nie ma. Znaczy, że trzeba je zobaczyć w działaniu, nie w deklaracji.";
+  const specificRisk = hasThird
+    ? "Obecność osoby trzeciej może wyostrzać braki, które istniały wcześniej. Nie chodzi tylko o tę osobę, ale o to, co przy niej zaczęło być bardziej widoczne."
+    : hasClarity
+      ? "Najbardziej ryzykowny jest brak jasności. Człowiek zaczyna wtedy dopowiadać sens, łagodzić fakty i czekać na odpowiedź, która powinna pojawić się w zachowaniu."
+      : hasLoop
+        ? "Najbardziej ryzykowne jest mylenie ulgi po poprawie z realną zmianą. Jeśli po kilku dniach wraca ten sam układ, sama intensywność nie jest dowodem naprawy."
+        : "Najważniejsze jest teraz nie szukać winnego, tylko sprawdzić, czy po rozmowie zmienia się zachowanie po obu stronach.";
+  const headline = chance >= 70
+    ? "Widać tu coś, na czym można budować — ale nie warto pomijać słabszych miejsc."
+    : chance >= 45
+      ? "Ta relacja nie jest jednoznaczna. Widać i przywiązanie, i koszt."
+      : "Tu nie chodzi już tylko o emocje. Widać układ, który zaczyna kosztować.";
+  const badge = chance >= 70 ? "są zasoby i punkt do rozmowy" : chance >= 45 ? "potencjał wymaga sprawdzenia w zachowaniu" : "najpierw trzeba odzyskać jasność i bezpieczeństwo decyzji";
+  return {
+    chance,
+    tension,
+    asymmetry,
+    change,
+    tone: localTone(chance),
+    badge,
+    headline,
+    truth: meText,
+    mirror: specificRisk,
+    summary: `${meText} ${resourceText}`,
+    paidTease: "Pełna analiza nie dopisuje dramatu. Rozdziela zasoby, ryzyko, koszt emocjonalny i konkretny ruch, który ma sens w tej jednej relacji.",
+    whatUserKnows: `${topBurden !== "brak jednego dominującego ciężaru" ? `Najmocniej wraca temat: ${topBurden}. ` : "Nie ma jednego prostego winnego. "}${meText}`,
+    hiddenInsight: specificRisk,
+    contradiction: hasResource ? "Możliwe, że obok realnych zasobów działa też napięcie, które każe zbyt szybko uznać chwilową poprawę za trwałą zmianę." : "Możliwe, że największy rozjazd jest między tym, czego potrzebujesz, a tym, co regularnie dostajesz bez proszenia i pilnowania.",
+    concreteConclusion: chance >= 70 ? "Nie podejmuj decyzji z lęku. Sprawdź spokojnie, czy dobre elementy są powtarzalne i obustronne." : chance >= 45 ? "Nie rozstrzygaj tego jednym procentem. Przez najbliższe dni patrz na zachowanie po rozmowie, nie na samą rozmowę." : "Najpierw przestań ratować sytuację za dwie osoby. Dopiero wtedy zobaczysz, czy druga strona naprawdę uczestniczy w zmianie.",
+    tensionMeaning: "To nie ocena miłości. To koszt psychiczny: ile czujności, czekania i analizowania uruchamia ta relacja.",
+    asymmetryMeaning: "To rozkład ciężaru: kto częściej inicjuje, wraca, naprawia i pilnuje, żeby sprawa się nie rozsypała.",
+    changeMeaning: "To pytanie, czy zmiana jest widoczna w zachowaniu bez nacisku, czy tylko pojawia się po rozmowie i presji.",
+    premiumSpecific: "Pełny raport pokazuje osobno: co jest zasobem, co Cię wkręca, gdzie można próbować naprawy, a gdzie potrzebne jest zatrzymanie i ochrona siebie.",
+  };
+}
+
 async function createSession(entryKey: EntryKey): Promise<SessionCreateResponse> {
   const res = await fetch(`${API_BASE}/api/session/create`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ entryKey }) });
   const data = await res.json().catch(() => ({}));
@@ -1259,13 +1325,11 @@ function CookieBanner() {
 }
 
 const PROCESSING_MESSAGES = [
-  "Czytam Twoje odpowiedzi",
-  "Sprawdzam, co naprawdę się powtarza",
-  "Oddzielam fakty od dopowiedzeń",
-  "Szukam miejsca, które zmienia odczyt",
-  "Układam wynik prostym językiem",
-  "Sprawdzam, czego nie warto powtarzać",
-  "Kończę pierwszy obraz sytuacji",
+  "Porządkuję mapę relacji",
+  "Sprawdzam, co wraca po napięciu",
+  "Oddzielam deklaracje od zachowania",
+  "Szukam zasobów i miejsc ryzyka",
+  "Przygotowuję pierwszy odczyt",
 ];
 
 function ProcessingScreen() {
@@ -1286,7 +1350,7 @@ function ProcessingScreen() {
         </div>
         <h2 style={{ marginBottom: "12px", fontSize: "clamp(20px,4vw,26px)" }}>Przygotowuję wynik</h2>
         <div className="processing-message">{PROCESSING_MESSAGES[msgIndex]}{".".repeat(dots)}</div>
-        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>Nie przepisuję Twoich odpowiedzi. Szukam tego, co z nich wynika.<br />Nie zamykaj karty. To zajmie chwilę.</p>
+        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>To zajmuje chwilę. Nie zamykaj karty.</p>
         <div className="processing-bar"><div className="processing-bar-fill" /></div>
       </Glass>
     </div>
@@ -1590,15 +1654,31 @@ export default function App() {
   };
 
   const startPath = async (key: EntryKey) => {
-    setBusy(true); setError(null);
-    try {
-      const data = await createSession(key);
-      const token = data?.token || data?.sessionId || null;
-      if (!token) throw new Error("Brak tokenu sesji.");
-      setSessionToken(token); setSelectedPath(key); setQuestionIndex(0); setAnswers({}); setOpenText(""); setPreview(null); setFullReport(null); setInterviewState(null); setForceMap({}); setBurdens([]); setTruthCards([]); setRelationshipNote(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft("");
-      setStage("force_map");
-    } catch (e: any) { setError(friendlyError(e, "Nie udało się rozpocząć analizy.")); setStage("error"); }
-    finally { setBusy(false); }
+    setBusy(false);
+    setError(null);
+    setSelectedPath(key);
+    setQuestionIndex(0);
+    setAnswers({});
+    setOpenText("");
+    setPreview(null);
+    setFullReport(null);
+    setInterviewState(null);
+    setForceMap({});
+    setBurdens([]);
+    setTruthCards([]);
+    setRelationshipNote("");
+    setClarificationQuestions([]);
+    setClarificationAnswers({});
+    setClarificationIndex(0);
+    setClarificationDraft("");
+    setStage("force_map");
+
+    createSession(key)
+      .then((data) => {
+        const token = data?.token || data?.sessionId || null;
+        if (token) setSessionToken(token);
+      })
+      .catch(() => {});
   };
 
   const answerQuestion = (qid: string, optionId: string) => {
@@ -1804,38 +1884,28 @@ export default function App() {
     setError(null);
     setStage("processing");
 
-    try {
-      let token = sessionToken || "";
-      try {
-        token = await ensureSession(path.key);
-      } catch {
-        token = "";
-      }
+    const previewData = buildMapBasedPreview(path, relationshipMap, finalOpenText);
+    setPreview(previewData);
 
-      let previewData: Preview;
-      try {
-        previewData = token
-          ? await fetchPreviewFromAPI(token, path, answers, finalOpenText, relationshipMap)
-          : buildPreview(path, answers, finalOpenText);
-      } catch (e: any) {
-        if (e?.message === "__CRISIS__") { setStage("crisis"); return; }
-        previewData = buildPreview(path, answers, finalOpenText);
-      }
-
-      setPreview(previewData);
-
-      if (token) {
-        updateSession({ token, path: path.key, answers, openText: finalOpenText, relationshipMap, preview: previewData, stage: "preview" })
-          .catch(() => {});
-      }
-
+    window.setTimeout(() => {
       setStage("preview");
-    } catch (e: any) {
-      setPreview(buildPreview(path, answers, finalOpenText));
-      setStage("preview");
-    } finally {
       setBusy(false);
-    }
+    }, 850);
+
+    const persist = async () => {
+      try {
+        let token = sessionToken || "";
+        if (!token) {
+          const data = await createSession(path.key);
+          token = data?.token || data?.sessionId || "";
+          if (token) setSessionToken(token);
+        }
+        if (token) {
+          await updateSession({ token, path: path.key, answers, openText: finalOpenText, relationshipMap, preview: previewData, stage: "preview" });
+        }
+      } catch {}
+    };
+    persist();
   };
 
   const pay = async () => {
@@ -1876,6 +1946,32 @@ export default function App() {
       setBusy(false);
     }
   };
+
+  const downloadPremiumReport = () => {
+    if (!fullReport) return;
+    const safe = (value?: string) => String(value || "").replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch] || ch));
+    const body = (fullReport.sections || []).map((section, index) => `
+      <section>
+        <div class="no">${String(index + 1).padStart(2, "0")}</div>
+        <h2>${safe(section.title)}</h2>
+        ${safe(section.text).split("\n").filter(Boolean).map((p) => `<p>${p}</p>`).join("")}
+      </section>`).join("\n");
+    const html = `<!doctype html><html lang="pl"><head><meta charset="utf-8"><title>Raport CzyToMaSens</title><style>
+      body{margin:0;background:#080808;color:#f4efe7;font-family:Georgia,'Times New Roman',serif;padding:48px;line-height:1.7}main{max-width:920px;margin:0 auto}h1{font-size:44px;line-height:1.05;margin:0 0 14px}h2{font-size:26px;margin:0 0 14px}.lead{color:#cfc6bb;font-family:Arial,sans-serif;font-size:18px}section{border:1px solid rgba(197,160,89,.35);border-radius:22px;padding:28px;margin:22px 0;background:linear-gradient(135deg,rgba(197,160,89,.08),rgba(255,255,255,.02))}.no{color:#d7b978;letter-spacing:.35em;font-family:Arial,sans-serif;font-size:12px;margin-bottom:10px}p{font-family:Arial,sans-serif;color:#ddd4ca;font-size:16px}.closing{border-top:1px solid rgba(197,160,89,.35);margin-top:32px;padding-top:24px;color:#d7b978}
+    </style></head><body><main><h1>${safe(fullReport.headline || "Raport CzyToMaSens")}</h1><p class="lead">${safe(fullReport.subheadline || "")}</p>${body}<div class="closing">${safe(fullReport.closing || "")}</div></main></body></html>`;
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "raport-czytomasens.html";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const printPremiumReport = () => window.print();
+
 
   const renderPublicContentRoute = () => {
     if (routeLegalKey) {
@@ -2421,90 +2517,60 @@ export default function App() {
 
           {stage === "preview" && preview && (
             <motion.div key="preview" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <Glass className="preview-card">
-                <div className="preview-hero">
-                  <div className="eyebrow">PIERWSZY OBRAZ SYTUACJI</div>
-                  <h2>{preview.headline}</h2>
-                  <div className="preview-truth-top">{preview.truth}</div>
-                  <div className="preview-mirror-top">{preview.mirror}</div>
-                </div>
-                <PremiumBadge preview={preview} />
-                <div className="preview-disclaimer">
-                  To nie jest diagnoza ani decyzja za Ciebie. To pierwszy odczyt tego, co wynika z odpowiedzi: gdzie jest koszt, gdzie jest nierówność i czy widać realną zmianę.
-                </div>
-                <Glass className="preview-visual-panel">
-                  <div className="eyebrow">CO POKAZUJĄ ODPOWIEDZI</div>
-                  <VisualBars items={buildPreviewVisualBars(preview)} />
-                  {path && (
-                    <div className="preview-cycle-wrap">
-                      <div className="eyebrow">CO MOŻE SIĘ POWTARZAĆ</div>
-                      <CycleDiagram steps={buildCycleSteps(path.key, burdens, truthCards)} />
-                    </div>
-                  )}
-                </Glass>
-                <div className="metrics-grid">
-                  {([[preview.tension, "NAPIĘCIE"], [preview.asymmetry, "ASYMETRIA"], [preview.change, "SZANSA ZMIANY"]] as [number, string][]).map(([value, label]) => (
-                    <Glass key={label} className="metric-card"><div className="metric-value">{value}%</div><div className="metric-label">{label}</div></Glass>
-                  ))}
-                </div>
-                <Glass className="preview-metrics-explained">
-                  <div className="eyebrow">CO OZNACZAJĄ LICZBY</div>
-                  <div className="metric-explain-grid">
-                    {metricExplanationCards(preview).map((item) => (
-                      <div key={item.label} className="metric-explain-card">
-                        <div className="metric-explain-head"><strong>{item.label}</strong><span>{item.value}%</span></div>
-                        <p>{item.text}</p>
-                      </div>
-                    ))}
+              <Glass className="preview-card preview-card--editorial">
+                <div className="preview-hero preview-hero--no-score">
+                  <div>
+                    <div className="eyebrow">PIERWSZY ODCZYT SYTUACJI</div>
+                    <h2>{preview.headline}</h2>
+                    <p className="preview-lead">{preview.truth}</p>
+                    <p className="preview-muted">{preview.mirror}</p>
                   </div>
-                </Glass>
-                <Glass className="preview-analysis-panel">
-                  <div className="eyebrow">CO WYNIKA Z ODPOWIEDZI</div>
+                </div>
+
+                <Glass className="preview-analysis-panel preview-analysis-panel--strong">
+                  <div className="eyebrow">CO WIDAĆ Z TWOICH ODPOWIEDZI</div>
                   <div className="preview-analysis-grid">
-                    <div className="preview-analysis-item">
-                      <span>01</span>
-                      <strong>Co już wiesz</strong>
-                      <p>{previewFallbackText(preview, "whatUserKnows", preview.summary)}</p>
-                    </div>
                     <div className="preview-analysis-item highlight">
+                      <span>01</span>
+                      <strong>Co jest najważniejsze na start</strong>
+                      <p>{preview.whatUserKnows || preview.summary}</p>
+                    </div>
+                    <div className="preview-analysis-item">
                       <span>02</span>
-                      <strong>Co z tego wynika</strong>
-                      <p>{previewFallbackText(preview, "hiddenInsight", preview.mirror)}</p>
+                      <strong>Co może zniekształcać ocenę</strong>
+                      <p>{preview.contradiction || "Sprawdź, czy nadzieja, zmęczenie albo ostatnia rozmowa nie nadają sytuacji większej pewności, niż naprawdę ma."}</p>
                     </div>
                     <div className="preview-analysis-item">
                       <span>03</span>
-                      <strong>Co się nie klei</strong>
-                      <p>{previewFallbackText(preview, "contradiction", "Sprawdź, czy to, na co liczysz, zgadza się z tym, co rzeczywiście regularnie dzieje się między Wami.")}</p>
+                      <strong>Co jest zasobem</strong>
+                      <p>{preview.tone === "green" ? "W odpowiedziach widać elementy kontaktu i wzajemności. To nie znaczy, że wszystko jest proste, ale daje punkt, od którego można zacząć spokojniejszą rozmowę." : "Zasób nie zawsze oznacza komfort. Czasem zasobem jest samo to, że potrafisz nazwać ciężar i przestać udawać, że wszystko rozwiąże się samo."}</p>
                     </div>
                     <div className="preview-analysis-item conclusion">
                       <span>04</span>
-                      <strong>Konkretny wniosek</strong>
-                      <p>{previewFallbackText(preview, "concreteConclusion", preview.summary)}</p>
+                      <strong>Następny konkretny ruch</strong>
+                      <p>{preview.concreteConclusion || "Przez kilka dni patrz nie na deklaracje, tylko na to, co zmienia się bez Twojego ciągnięcia tematu."}</p>
                     </div>
                   </div>
                 </Glass>
-                <div className="preview-grid">
-                  <Glass className="report-section"><div className="eyebrow">NAJWAŻNIEJSZY WNIOSEK</div><p>{preview.summary}</p></Glass>
-                  <Glass className="report-section"><div className="eyebrow">CO TO ZMIENIA</div><p>{preview.tone === "green" ? "Ten wynik nie mówi, że wszystko jest idealne. Mówi, że w odpowiedziach widać elementy, na których realnie można się oprzeć." : preview.tone === "yellow" ? "Ten wynik nie rozstrzyga za Ciebie. Pokazuje, że obok nadziei działa też coś, czego nie warto już tłumaczyć przypadkiem." : "Ten wynik nie mówi tylko, że jest trudno. Pokazuje, że trudność zaczęła mieć powtarzalny kształt."}</p></Glass>
-                  <Glass className="report-section"><div className="eyebrow">CO DAJE PEŁNA ANALIZA</div><p>{preview.paidTease}</p></Glass>
-                </div>
+
                 {path && (
-                  <Glass className="preview-map-panel">
-                    <div className="eyebrow">CO JUŻ SIĘ RYSUJE</div>
+                  <Glass className="preview-map-panel preview-map-panel--quiet">
+                    <div className="eyebrow">MAPA POMOCNICZA — NIE WYROK</div>
                     <div className="preview-map-grid">
                       {buildPreviewMap(path, preview).map((item) => (
                         <div key={item.label} className="preview-map-item">
-                          <strong>{item.label}</strong>
-                          <span>{item.text}</span>
+                          <span>{item.label}</span>
+                          <p>{item.text}</p>
                         </div>
                       ))}
                     </div>
                   </Glass>
                 )}
+
                 {path && (
                   <Glass className="unlock-panel unlock-panel--strong">
-                    <div className="eyebrow">CO DOSTAJESZ W PEŁNEJ ANALIZIE</div>
-                    <p className="unlock-copy">Nie chodzi o dłuższą wersję tych samych zdań. Pełny raport pokazuje, gdzie ten układ się zapętla, co daje prawdziwą nadzieję, co tylko ją udaje i jakie są trzy możliwe dalsze scenariusze.</p>
+                    <div className="eyebrow">PEŁNA ANALIZA</div>
+                    <p className="unlock-copy">Pełny raport rozwija ten odczyt w 17 sekcjach: bez procentowego wyroku, bez oceniania partnera, z pokazaniem zasobów, ryzyk, kosztu emocjonalnego i ruchu, który ma sens teraz.</p>
                     <div className="premium-sample-grid">
                       {buildPremiumSamples(path, preview).map((item, index) => (
                         <div key={item.title} className="premium-sample-card">
@@ -2514,23 +2580,11 @@ export default function App() {
                         </div>
                       ))}
                     </div>
-                    <div className="unlock-benefits">
-                      {[
-                        "co naprawdę trzyma Cię w tej relacji",
-                        "gdzie jest największe napięcie i koszt emocjonalny",
-                        "czy problem wraca, czy da się go realnie zatrzymać",
-                        "co daje realną nadzieję, a co tylko ją podtrzymuje",
-                        "jaki wzorzec wraca po rozmowach, obietnicach i chwilach ulgi",
-                        "jedno pytanie graniczne przed decyzją"
-                      ].map((item) => (
-                        <div key={item} className="unlock-benefit"><span>•</span><span>{item}</span></div>
-                      ))}
-                    </div>
-                    <div className="unlock-fineprint">Pełny raport ma 17 sekcji generowanych indywidualnie na podstawie Twoich odpowiedzi. Nie jest opinią specjalisty, diagnozą ani terapią. Jest prywatnym lustrem sytuacji.</div>
                     <div className="unlock-form">
                       <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Twój adres e-mail." />
                       <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Pokaż pełną analizę tej relacji"}</PrimaryButton>
                     </div>
+                    <div className="unlock-fineprint">To nie jest diagnoza, terapia ani decyzja za Ciebie. To prywatny odczyt jednej perspektywy.</div>
                   </Glass>
                 )}
                 {error && <div className="error-line">{error}</div>}
@@ -2547,32 +2601,47 @@ export default function App() {
 
           {stage === "paid" && fullReport && (
             <motion.div key="paid" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <Glass className="preview-card">
-                <div className="eyebrow">RAPORT PREMIUM</div>
-                <div className="report-head">
-                  <h2>{fullReport.headline || "Ta relacja daje Ci kontakt, ale nie daje Ci oparcia."}</h2>
-                  <p>{fullReport.subheadline || "Największy problem nie leży w jednym zdarzeniu..."}</p>
+              <Glass className="preview-card premium-report-card">
+                <div className="premium-report-toolbar">
+                  <div className="eyebrow">PEŁNY ODCZYT RELACJI</div>
+                  <div className="premium-report-actions">
+                    <GhostButton onClick={printPremiumReport}>Drukuj / zapisz PDF</GhostButton>
+                    <PrimaryButton onClick={downloadPremiumReport}>Pobierz raport</PrimaryButton>
+                  </div>
                 </div>
-                {typeof fullReport.rebuildPercent === "number" && (
-                  <div className="metrics-grid">
-                    {([[fullReport.rebuildPercent, "NA ILE TO MA SENS"], [fullReport.tensionPercent || 0, "NAPIĘCIE"], [fullReport.driftPercent || 0, "ASYMETRIA"]] as [number, string][]).map(([value, label]) => (
-                      <Glass key={label} className="metric-card"><div className="metric-value">{value}%</div><div className="metric-label">{label}</div></Glass>
+                <div className="premium-report-head">
+                  <h2>{fullReport.headline || "Pełny raport relacji"}</h2>
+                  <p>{fullReport.subheadline || fullReport.previewLine || "Poniżej znajdziesz odczyt Twojej sytuacji podzielony na konkretne obszary."}</p>
+                </div>
+                {(typeof fullReport.tensionPercent === "number" || typeof fullReport.driftPercent === "number" || typeof fullReport.rebuildPercent === "number") && (
+                  <div className="premium-indicator-strip">
+                    {([
+                      [fullReport.tensionPercent || 0, "Napięcie", "ile kosztu emocjonalnego niesie ta sytuacja"],
+                      [fullReport.driftPercent || 0, "Rozjazd", "na ile deklaracje, zachowania i potrzeby nie idą razem"],
+                      [fullReport.rebuildPercent || 0, "Realna zmiana", "czy widać podstawy do ruchu, nie tylko nadzieję"],
+                    ] as [number, string, string][]).map(([value, label, desc]) => (
+                      <div key={label} className="premium-indicator">
+                        <strong>{label}</strong>
+                        <span>{desc}</span>
+                        <div className="premium-indicator-bar"><i style={{ width: `${Math.max(5, Math.min(95, value))}%` }} /></div>
+                      </div>
                     ))}
                   </div>
                 )}
-                <div className="report-sections">
+                <div className="report-sections premium-report-sections">
                   {(fullReport.sections || []).map((section, i) => (
-                    <Glass key={i} className={`report-section report-section--${section.tone || "normal"}`}>
+                    <Glass key={i} className={`report-section premium-report-section report-section--${section.tone || "normal"}`}>
+                      <div className="premium-section-no">{String(i + 1).padStart(2, "0")}</div>
                       <div className={`report-section-title ${section.tone || "normal"}`}>{section.title}</div>
                       <div className="report-section-text">
-                        {section.text.split("\n").filter(Boolean).map((para, pi) => (
-                          <p key={pi} style={{ margin: "0 0 12px 0", lineHeight: 1.75 }}>{para}</p>
+                        {String(section.text || "").split("\n").filter(Boolean).map((para, pi) => (
+                          <p key={pi}>{para}</p>
                         ))}
                       </div>
                     </Glass>
                   ))}
                 </div>
-                {fullReport.closing && <div className="report-closing">{fullReport.closing}</div>}
+                {fullReport.closing && <div className="report-closing premium-closing">{fullReport.closing}</div>}
                 <div className="section-actions"><GhostButton onClick={resetAll}>Nowa analiza</GhostButton></div>
               </Glass>
             </motion.div>
