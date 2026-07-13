@@ -484,12 +484,14 @@ export function ArticlesSection({
           <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
             <div style={styles.header}>
               <div>
-                <span style={styles.eyebrow}>{indexRoute ? "PORADNIKI" : "PORADNIKI"}</span>
+                <span style={styles.eyebrow}>{indexRoute ? "PORADNIKI" : "ARTYKUŁY I PORADNIKI"}</span>
                 <h2 className="articles-main-title" style={styles.title}>
                   {indexRoute ? "Artykuły i poradniki o relacjach" : "Artykuły i poradniki o relacjach"}
                 </h2>
                 <p className="articles-main-subtitle" style={styles.subtitle}>
-                  "Poradniki, które pomagają nazwać problem w relacji."
+                  {indexRoute
+                    ? "Poradniki, które pomagają nazwać problem w relacji."
+                    : "Poradniki, które pomagają nazwać problem w relacji."}
                 </p>
               </div>
               <div className="article-header-actions" style={styles.headerActions}>
