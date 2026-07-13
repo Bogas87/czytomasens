@@ -2655,3 +2655,49 @@ button { cursor: pointer; }
     left: 18px;
   }
 }
+
+
+/* CTMS final: poradniki label must not be clipped */
+.articles-section.articles-landing-mode {
+  overflow: visible !important;
+  padding-top: clamp(46px, 4.5vw, 66px) !important;
+}
+
+.articles-section.articles-landing-mode::before {
+  top: 18px !important;
+  left: clamp(28px, 4vw, 50px) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  max-width: calc(100% - 56px) !important;
+  height: auto !important;
+  min-height: 26px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+  letter-spacing: .14em !important;
+  z-index: 2 !important;
+}
+
+.articles-section.articles-landing-mode > div {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+@media (max-width: 760px) {
+  .articles-section.articles-landing-mode {
+    padding-top: 48px !important;
+    overflow: visible !important;
+  }
+
+  .articles-section.articles-landing-mode::before {
+    top: 16px !important;
+    left: 18px !important;
+    max-width: calc(100% - 36px) !important;
+    font-size: 10px !important;
+    letter-spacing: .12em !important;
+    padding: 7px 12px !important;
+  }
+}
