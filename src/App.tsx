@@ -116,7 +116,7 @@ type InterviewState = {
 
 type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string };
 
-const STORAGE_KEY = "ctms_premium_front_v12_full_flow_clean";
+const STORAGE_KEY = "ctms_full_flow_stable_20260713_clean_v1";
 
 const ENTRY_CONFIGS: EntryConfig[] = [
   {
@@ -972,19 +972,6 @@ function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function withTimeout<T>(promise: Promise<T>, ms: number, fallbackMessage = "timeout"): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = window.setTimeout(() => reject(new Error(fallbackMessage)), ms);
-    promise.then((value) => {
-      window.clearTimeout(timer);
-      resolve(value);
-    }).catch((error) => {
-      window.clearTimeout(timer);
-      reject(error);
-    });
-  });
-}
-
 function isTemporaryReportStatus(status: number): boolean {
   // 202 = raport w kolejce / processing
   // 402 = webhook Stripe jeszcze nie oznaczył sesji jako PAID
@@ -1162,48 +1149,6 @@ async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: An
 }
 
 
-
-function previewFallbackText(preview: Preview, key: string, fallback = ""): string {
-  const source = preview as any;
-  const value = source?.[key];
-  if (typeof value === "string" && value.trim()) return value.trim();
-  if (typeof fallback === "string" && fallback.trim()) return fallback.trim();
-  if (typeof preview.summary === "string" && preview.summary.trim()) return preview.summary.trim();
-  if (typeof preview.mirror === "string" && preview.mirror.trim()) return preview.mirror.trim();
-  if (typeof preview.truth === "string" && preview.truth.trim()) return preview.truth.trim();
-  return "Ten fragment wymaga doprecyzowania w pełnej analizie.";
-}
-
-function metricExplanationCards(preview: Preview): { label: string; value: number; text: string }[] {
-  const source = preview as any;
-  const tensionText = typeof source.tensionMeaning === "string" && source.tensionMeaning.trim()
-    ? source.tensionMeaning.trim()
-    : preview.tension >= 70
-      ? "To pokazuje, że ta relacja prawdopodobnie częściej uruchamia napięcie, czujność albo potrzebę kontrolowania sytuacji niż spokojne poczucie oparcia."
-      : preview.tension >= 45
-        ? "Napięcie jest obecne, ale sam wynik nie mówi jeszcze, czy to chwilowy trudny etap, czy coś, co wraca regularnie."
-        : "Napięcie nie wychodzi na pierwszy plan. W takim układzie ważniejsze może być sprawdzenie jasności, wzajemności i realnego zachowania po trudniejszych momentach.";
-  const asymmetryText = typeof source.asymmetryMeaning === "string" && source.asymmetryMeaning.trim()
-    ? source.asymmetryMeaning.trim()
-    : preview.asymmetry >= 70
-      ? "Widać ryzyko nierównego ciężaru: jedna strona może częściej inicjować, tłumaczyć, naprawiać albo czekać na ruch drugiej osoby."
-      : preview.asymmetry >= 45
-        ? "Ciężar nie jest jeszcze jednoznaczny. Warto sprawdzić, kto realnie wraca do rozmowy i kto zmienia zachowanie bez nacisku."
-        : "Na tym etapie nie widać silnej nierównowagi, ale pełny obraz zależy od tego, co dzieje się po konflikcie, ciszy albo niepewności.";
-  const changeText = typeof source.changeMeaning === "string" && source.changeMeaning.trim()
-    ? source.changeMeaning.trim()
-    : preview.change <= 35
-      ? "Słabiej widać trwałą zmianę. To może oznaczać, że po rozmowach robi się spokojniej, ale później relacja wraca do podobnego punktu."
-      : preview.change <= 58
-        ? "Jest jakaś przestrzeń do zmiany, ale wymaga sprawdzenia w faktach: nie w obietnicach, tylko w powtarzalnym zachowaniu."
-        : "W odpowiedziach widać potencjał do zmiany. Nadal trzeba sprawdzić, czy stoi za tym stałość, odpowiedzialność i udział obu stron.";
-  return [
-    { label: "Napięcie", value: clampScore(preview.tension), text: tensionText },
-    { label: "Asymetria", value: clampScore(preview.asymmetry), text: asymmetryText },
-    { label: "Zmiana", value: clampScore(preview.change), text: changeText },
-  ];
-}
-
 function dominantPreviewAxis(preview: Preview): string {
   const unresolved = 100 - preview.change;
   if (preview.tension >= preview.asymmetry && preview.tension >= unresolved) return "napięcie";
@@ -1278,7 +1223,7 @@ function GhostButton({ children, onClick }: { children: React.ReactNode; onClick
 
 function PremiumBadge({ preview }: { preview: Preview }) {
   const color = preview.tone === "red" ? BRAND.danger : preview.tone === "green" ? BRAND.success : BRAND.goldSoft;
-  const scoreExplanation = `To pierwszy odczyt sytuacji, nie wyrok. Liczby pomagają zobaczyć proporcje: ile jest napięcia, ile nierównowagi i czy w odpowiedziach widać miejsce na realną zmianę.`;
+  const scoreExplanation = `Wynik pochodzi z trzech osi: napięcie w relacji (${preview.tension}%), asymetria zaangażowania (${preview.asymmetry}%), realność zmiany (${preview.change}%). Im wyższe napięcie i asymetria, tym niższy wynik końcowy.`;
   return (
     <Glass className="ctms-preview-badge">
       <div className="ctms-kicker">NA ILE TO MA SENS</div>
@@ -1314,9 +1259,9 @@ function CookieBanner() {
 }
 
 const PROCESSING_MESSAGES = [
-  "Porządkuję układ odpowiedzi",
-  "Sprawdzam, które sygnały najmocniej zmieniają obraz",
-  "Porównuję deklaracje z zachowaniem",
+  "Analizuję odpowiedzi i mapę relacji",
+  "Porównuję zachowania z deklaracjami",
+  "Sprawdzam, co wraca po trudnych momentach",
   "Oddzielam fakty od domysłów i nadziei",
   "Przygotowuję pierwszy odczyt relacji",
 ];
@@ -1339,7 +1284,7 @@ function ProcessingScreen() {
         </div>
         <h2 style={{ marginBottom: "12px", fontSize: "clamp(20px,4vw,26px)" }}>Przygotowuję pierwszy odczyt</h2>
         <div className="processing-message">{PROCESSING_MESSAGES[msgIndex]}{".".repeat(dots)}</div>
-        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>Odczyt powstaje na podstawie Twoich odpowiedzi. To może potrwać chwilę.</p>
+        <p style={{ marginTop: "24px", fontSize: "14px", color: "var(--muted)", lineHeight: 1.6 }}>Nie zamykaj karty. Za chwilę pokażemy pierwszy odczyt sytuacji.</p>
         <div className="processing-bar"><div className="processing-bar-fill" /></div>
       </Glass>
     </div>
@@ -1420,7 +1365,6 @@ export default function App() {
   const [fullReport, setFullReport] = useState<FullReport | null>(null);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [freePreviewPending, setFreePreviewPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, setConsents] = useState<boolean[]>([false, false, false, false]);
   const [legalOpen, setLegalOpen] = useState<LegalKey>(null);
@@ -1722,28 +1666,6 @@ export default function App() {
     return `MAPA RELACJI — dane kliknięte przez użytkownika\n\nUKŁAD SIŁ\n${forceLines}\n\nNAJWIĘKSZE CIĘŻARY\n${burdenLines}\n\nMOMENT PRAWDY\n${truthLines}\n\nDODATKOWA MYŚL UŻYTKOWNIKA\n${note}`;
   };
 
-
-  useEffect(() => {
-    if (!freePreviewPending || stage !== "processing" || preview) return;
-    const safePath = path || ENTRY_CONFIGS.find((x) => x.key === selectedPath) || ENTRY_CONFIGS[0];
-    const timer = window.setTimeout(() => {
-      try {
-        const finalText = openText && openText.trim() ? openText : buildCompositeOpenText();
-        const localPreview = buildPreview(safePath, answers, finalText);
-        setOpenText(finalText);
-        setPreview(localPreview);
-        setBusy(false);
-        setFreePreviewPending(false);
-        setStage("preview");
-      } catch {
-        setBusy(false);
-        setFreePreviewPending(false);
-        setStage("preview");
-      }
-    }, 12000);
-    return () => window.clearTimeout(timer);
-  }, [freePreviewPending, stage, preview, path, selectedPath, answers, openText, forceMap, burdens, truthCards, relationshipNote]);
-
   const prepareMapSummary = () => {
     if (!path) return;
     const nextQuestions = buildClarificationQuestions(path, forceMap, burdens, truthCards, relationshipNote);
@@ -1871,37 +1793,28 @@ export default function App() {
 
   const buildPreviewAndGo = async (clarificationsOverride?: ClarificationAnswerMap) => {
     if (!path) return;
-
     const relationshipMap = relationshipMapPayload(clarificationsOverride);
     const finalOpenText = buildCompositeOpenText(clarificationsOverride);
-
-    if (hasCrisisContent(finalOpenText)) {
-      setStage("crisis");
-      return;
-    }
+    if (hasCrisisContent(finalOpenText)) { setStage("crisis"); return; }
 
     const localPreview = buildPreview(path, answers, finalOpenText);
-
     setOpenText(finalOpenText);
     setPreview(localPreview);
-    setError(null);
     setBusy(true);
-    setFreePreviewPending(false);
+    setError(null);
     setStage("processing");
 
+    // Darmowy raport nie może zależeć od AI, kolejki ani backendu.
+    // Pokazujemy pierwszy odczyt lokalnie, a zapis sesji robimy w tle pod raport premium.
     window.setTimeout(() => {
-      setBusy(false);
       setStage("preview");
-    }, 700);
+      setBusy(false);
+    }, 900);
 
-    // Raport free nie może zależeć od AI ani od odpowiedzi backendu.
-    // Backend zapisujemy w tle wyłącznie po to, żeby płatny raport miał pełny kontekst.
-    void (async () => {
+    (async () => {
       try {
-        const token = sessionToken || await withTimeout(ensureSession(path.key), 4500, "session_timeout").catch(() => "");
-        if (!token) return;
-
-        updateSession({
+        const token = await ensureSession(path.key);
+        await updateSession({
           token,
           path: path.key,
           answers,
@@ -1909,7 +1822,15 @@ export default function App() {
           relationshipMap,
           preview: localPreview,
           stage: "preview",
-        }).catch(() => {});
+        });
+
+        try {
+          const apiPreview = await fetchPreviewFromAPI(token, path, answers, finalOpenText, relationshipMap);
+          if (apiPreview) {
+            setPreview(apiPreview);
+            await updateSession({ token, path: path.key, answers, openText: finalOpenText, relationshipMap, preview: apiPreview, stage: "preview" });
+          }
+        } catch {}
       } catch {}
     })();
   };
@@ -2001,54 +1922,45 @@ export default function App() {
 
           {stage === "landing" && !isPublicContentRoute && (
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <section className="hero-grid premium-landing-grid">
-                <Glass className="glass-panel hero-panel hero-copy premium-hero-copy">
+              <section className="hero-grid hero-grid--clean">
+                <Glass className="glass-panel hero-panel hero-copy hero-copy--professional">
                   <div className="eyebrow with-line">PRYWATNY ODCZYT RELACJI</div>
                   <h1>Uporządkuj relację, zanim znowu wejdziesz w tę samą rozmowę.</h1>
-                  <p className="hero-lead-premium">CzyToMaSens zamienia odpowiedzi o jednej konkretnej relacji w uporządkowany odczyt: co się powtarza, gdzie słowa rozmijają się z zachowaniem, kto niesie ciężar i czy widać zmianę, której można zaufać.</p>
-                  <div className="hero-value-box">
-                    <div className="eyebrow">CO OTRZYMUJESZ</div>
-                    <p>Pierwszy raport sytuacji: główny wniosek, miejsca ryzyka i jeden konkretny punkt do sprawdzenia przed rozmową albo decyzją. Bez oceniania drugiej osoby i bez gotowych porad z internetu.</p>
+                  <p style={{ lineHeight: 1.75, color: BRAND.muted, marginBottom: "24px" }}>
+                    CzyToMaSens pomaga oddzielić fakty od nadziei, zmęczenia i domysłów. Pokazuje, co naprawdę wraca między Wami, gdzie znika jasność i czy za słowami idzie zmiana w zachowaniu.
+                  </p>
+                  <div className="hero-proof-line hero-proof-line--clean">
+                    Otrzymujesz pierwszy odczyt tej jednej relacji: główny wniosek, miejsca ryzyka i punkt, który warto sprawdzić przed kolejną rozmową albo decyzją.
                   </div>
                   <div className="ctms-landing-actions">
                     <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij analizę relacji</PrimaryButton>
                   </div>
                 </Glass>
-
-                <Glass className="glass-panel hero-report-sample">
-                  <div className="story-kicker">PRZYKŁAD ODCZYTU</div>
-                  <h3>Raport pokazuje nie obietnice, tylko układ zachowań po napięciu.</h3>
-                  <div className="sample-report-lines">
-                    <div className="sample-report-line main">
-                      <span>Co już widać</span>
-                      <strong>po rozmowie pojawia się uspokojenie, ale nie wiadomo jeszcze, czy zmienia się stały sposób działania.</strong>
-                    </div>
-                    <div className="sample-report-line">
-                      <span>Co wymaga sprawdzenia</span>
-                      <strong>kto wraca do tematu bez nacisku i kto bierze odpowiedzialność, gdy emocje opadną.</strong>
-                    </div>
-                    <div className="sample-report-line">
-                      <span>Co daje pełny raport</span>
-                      <strong>rozdziela nadzieję, fakty i możliwe scenariusze, żeby decyzja nie opierała się tylko na chwilowej poprawie.</strong>
-                    </div>
+                <Glass className="glass-panel hero-panel hero-report-preview">
+                  <div className="eyebrow with-line">FRAGMENT ODCZYTU</div>
+                  <h2>Raport nie ocenia osoby. Pokazuje układ, który tworzy się między Wami.</h2>
+                  <div className="hero-report-list">
+                    <div><span>01</span><strong>Co naprawdę wraca</strong><p>czy problem jest jednorazowy, czy pojawia się po kolejnych rozmowach w podobnym miejscu.</p></div>
+                    <div><span>02</span><strong>Gdzie znika jasność</strong><p>czy brak odpowiedzi jest chwilowy, czy stał się sposobem utrzymywania sytuacji bez decyzji.</p></div>
+                    <div><span>03</span><strong>Co sprawdzić dalej</strong><p>czy po napięciu zmienia się zachowanie, czy tylko na kilka dni poprawia się atmosfera.</p></div>
                   </div>
                 </Glass>
               </section>
 
-              <section className="product-definition-section">
-                <Glass className="product-definition-card">
+              <section className="what-is-section">
+                <Glass className="what-is-panel">
                   <div className="eyebrow">CZYM JEST CZYTOMASENS</div>
-                  <p>CzyToMaSens to prywatny odczyt jednej konkretnej relacji. Pomaga oddzielić fakty od nadziei, zmęczenia i domysłów, które zwykle mieszają się wtedy, gdy sytuacja trwa za długo.</p>
-                  <p>Najpierw wskazujesz układ sił i najważniejsze ciężary, potem dopowiadasz jeden konkret z życia. Wynik nie ocenia partnera ani nie podejmuje decyzji za Ciebie. Pokazuje, gdzie relacja traci jasność, co realnie wraca i który punkt warto sprawdzić przed kolejną rozmową.</p>
+                  <p><strong>CzyToMaSens to prywatny odczyt jednej konkretnej relacji.</strong> Najpierw wskazujesz układ sił, ciężary i momenty, które najbardziej zmieniają obraz sytuacji. Potem dopowiadasz jeden konkret z życia, którego nie da się zamknąć w kafelku.</p>
+                  <p>Wynik nie rozstrzyga za Ciebie i nie zakłada złych intencji. Pokazuje, co w odpowiedziach jest spójne, co wymaga sprawdzenia i gdzie nadzieja może rozmijać się z tym, co faktycznie dzieje się po trudnych rozmowach.</p>
                 </Glass>
               </section>
 
-              <section className="ctms-feature-editorial-grid process-grid compact-process-grid">
+              <section className="ctms-feature-editorial-grid process-grid process-grid--clean" style={{ marginTop: "24px" }}>
                 <Glass className="feature-card process-card">
                   <div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div>
                   <h3>Mapa Relacji</h3>
                   <div className="feature-line" />
-                  <p>Wskazujesz, jak rozkładają się inicjatywa, odpowiedzialność, unikanie i ciężar emocjonalny.</p>
+                  <p>Wskazujesz, jak rozkłada się inicjatywa, odpowiedzialność, unikanie i ciężar emocjonalny.</p>
                 </Glass>
                 <Glass className="feature-card process-card">
                   <div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div>
@@ -2060,7 +1972,7 @@ export default function App() {
                   <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
                   <h3>Pierwszy odczyt</h3>
                   <div className="feature-line" />
-                  <p>Dostajesz pierwszy raport: główny wniosek, miejsca ryzyka i punkt do sprawdzenia dalej.</p>
+                  <p>Dostajesz obraz: co wraca, co jest niejasne, co może być potencjałem i co warto sprawdzić dalej.</p>
                 </Glass>
               </section>
 
@@ -2504,115 +2416,74 @@ export default function App() {
 
           {stage === "preview" && preview && (
             <motion.div key="preview" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <Glass className="preview-card">
-                <div className="preview-hero">
-                  <div className="eyebrow">PIERWSZY OBRAZ SYTUACJI</div>
+              <Glass className="preview-card preview-card--report">
+                <div className="preview-hero preview-hero--textual">
+                  <div className="eyebrow">PIERWSZY ODCZYT SYTUACJI</div>
                   <h2>{preview.headline}</h2>
-                  <div className="preview-truth-top">{preview.truth}</div>
-                  <div className="preview-mirror-top">{preview.mirror}</div>
+                  <p className="preview-lead-strong">{preview.truth}</p>
+                  <p className="preview-lead-muted">{preview.mirror}</p>
                 </div>
-                <PremiumBadge preview={preview} />
-                <div className="preview-disclaimer">
-                  To nie jest diagnoza ani decyzja za Ciebie. To pierwszy odczyt tego, co wynika z odpowiedzi: gdzie jest koszt, gdzie jest nierówność i czy widać realną zmianę.
-                </div>
-                <Glass className="preview-visual-panel">
-                  <div className="eyebrow">CO POKAZUJĄ ODPOWIEDZI</div>
-                  <VisualBars items={buildPreviewVisualBars(preview)} />
-                  {path && (
-                    <div className="preview-cycle-wrap">
-                      <div className="eyebrow">CO MOŻE SIĘ POWTARZAĆ</div>
-                      <CycleDiagram steps={buildCycleSteps(path.key, burdens, truthCards)} />
-                    </div>
-                  )}
-                </Glass>
-                <div className="metrics-grid">
-                  {([[preview.tension, "NAPIĘCIE"], [preview.asymmetry, "ASYMETRIA"], [preview.change, "SZANSA ZMIANY"]] as [number, string][]).map(([value, label]) => (
-                    <Glass key={label} className="metric-card"><div className="metric-value">{value}%</div><div className="metric-label">{label}</div></Glass>
-                  ))}
-                </div>
-                <Glass className="preview-metrics-explained">
-                  <div className="eyebrow">CO OZNACZAJĄ LICZBY</div>
-                  <div className="metric-explain-grid">
-                    {metricExplanationCards(preview).map((item) => (
-                      <div key={item.label} className="metric-explain-card">
-                        <div className="metric-explain-head"><strong>{item.label}</strong><span>{item.value}%</span></div>
-                        <p>{item.text}</p>
-                      </div>
-                    ))}
-                  </div>
-                </Glass>
-                <Glass className="preview-analysis-panel">
-                  <div className="eyebrow">CO WYNIKA Z ODPOWIEDZI</div>
-                  <div className="preview-analysis-grid">
-                    <div className="preview-analysis-item">
+
+                <Glass className="free-report-panel">
+                  <div className="eyebrow">CO WIDAĆ Z ODPOWIEDZI</div>
+                  <div className="free-report-grid">
+                    <div className="free-report-card main">
                       <span>01</span>
-                      <strong>Co już wiesz</strong>
-                      <p>{previewFallbackText(preview, "whatUserKnows", preview.summary)}</p>
+                      <strong>Główny obraz</strong>
+                      <p>{preview.summary}</p>
                     </div>
-                    <div className="preview-analysis-item highlight">
+                    <div className="free-report-card">
                       <span>02</span>
-                      <strong>Co z tego wynika</strong>
-                      <p>{previewFallbackText(preview, "hiddenInsight", preview.mirror)}</p>
+                      <strong>Co może być spójne</strong>
+                      <p>{preview.tone === "green" ? "W odpowiedziach widać elementy, na których można się oprzeć: kontakt, gotowość wracania do rozmowy albo większą zgodność między tym, co ktoś mówi, a tym, co robi." : "Nawet przy napięciu mogą istnieć dobre momenty. Ważne jest jednak, czy są one częścią stałego zachowania, czy tylko chwilową ulgą po trudnym czasie."}</p>
                     </div>
-                    <div className="preview-analysis-item">
+                    <div className="free-report-card">
                       <span>03</span>
-                      <strong>Co się nie klei</strong>
-                      <p>{previewFallbackText(preview, "contradiction", "Sprawdź, czy to, na co liczysz, zgadza się z tym, co rzeczywiście regularnie dzieje się między Wami.")}</p>
+                      <strong>Co wymaga sprawdzenia</strong>
+                      <p>{preview.tone === "red" ? "Sprawdź, czy po rozmowach realnie zmienia się zachowanie, czy wraca ten sam koszt, ta sama niepewność i ta sama potrzeba tłumaczenia sytuacji." : "Sprawdź, czy zmiana utrzymuje się bez nacisku z Twojej strony. To odróżnia realny ruch od chwilowego uspokojenia."}</p>
                     </div>
-                    <div className="preview-analysis-item conclusion">
+                    <div className="free-report-card conclusion">
                       <span>04</span>
-                      <strong>Konkretny wniosek</strong>
-                      <p>{previewFallbackText(preview, "concreteConclusion", preview.summary)}</p>
+                      <strong>Następny konkretny ruch</strong>
+                      <p>Przez kilka dni patrz nie na deklaracje, tylko na powtarzalne zachowanie: kto wraca do kontaktu, kto naprawia napięcie i czy po rozmowie coś naprawdę zostaje zrobione inaczej.</p>
                     </div>
                   </div>
                 </Glass>
-                <div className="preview-grid">
-                  <Glass className="report-section"><div className="eyebrow">NAJWAŻNIEJSZY WNIOSEK</div><p>{preview.summary}</p></Glass>
-                  <Glass className="report-section"><div className="eyebrow">CO TO ZMIENIA</div><p>{preview.tone === "green" ? "Ten wynik nie mówi, że wszystko jest idealne. Mówi, że w odpowiedziach widać elementy, na których realnie można się oprzeć." : preview.tone === "yellow" ? "Ten wynik nie rozstrzyga za Ciebie. Pokazuje, że obok nadziei działa też coś, czego nie warto już tłumaczyć przypadkiem." : "Ten wynik nie mówi tylko, że jest trudno. Pokazuje, że trudność zaczęła mieć powtarzalny kształt."}</p></Glass>
-                  <Glass className="report-section"><div className="eyebrow">CO DAJE PEŁNA ANALIZA</div><p>{preview.paidTease}</p></Glass>
-                </div>
+
                 {path && (
-                  <Glass className="preview-map-panel">
-                    <div className="eyebrow">CO JUŻ SIĘ RYSUJE</div>
-                    <div className="preview-map-grid">
-                      {buildPreviewMap(path, preview).map((item) => (
-                        <div key={item.label} className="preview-map-item">
-                          <strong>{item.label}</strong>
-                          <span>{item.text}</span>
+                  <Glass className="free-report-panel">
+                    <div className="eyebrow">CO MOŻE WRACAĆ</div>
+                    <div className="cycle-readable-grid">
+                      {buildCycleSteps(path.key, burdens, truthCards).map((step, index) => (
+                        <div className="cycle-readable-card" key={`${step.title}-${index}`}>
+                          <span>0{index + 1}</span>
+                          <strong>{step.title}</strong>
+                          <p>{step.text}</p>
                         </div>
                       ))}
                     </div>
                   </Glass>
                 )}
+
+                <Glass className="free-report-panel metrics-as-context">
+                  <div className="eyebrow">MAPA ODCZYTU</div>
+                  <p className="metrics-context-copy">Liczby są tylko orientacją. Najważniejsze jest to, co za nimi stoi: napięcie, nierównowaga, jasność i widoczność realnej zmiany.</p>
+                  <VisualBars items={buildPreviewVisualBars(preview)} />
+                </Glass>
+
                 {path && (
-                  <Glass className="unlock-panel unlock-panel--strong">
+                  <Glass className="unlock-panel unlock-panel--strong unlock-panel--professional">
                     <div className="eyebrow">CO DOSTAJESZ W PEŁNEJ ANALIZIE</div>
-                    <p className="unlock-copy">Nie chodzi o dłuższą wersję tych samych zdań. Pełny raport pokazuje, gdzie ten układ się zapętla, co daje prawdziwą nadzieję, co tylko ją udaje i jakie są trzy możliwe dalsze scenariusze.</p>
+                    <p className="unlock-copy">Pełny raport rozwija pierwszy odczyt w konkretną analizę: skąd bierze się napięcie, co podtrzymuje układ, co daje realną nadzieję i po czym odróżnić zmianę od chwilowej poprawy atmosfery.</p>
                     <div className="premium-sample-grid">
-                      {buildPremiumSamples(path, preview).map((item, index) => (
-                        <div key={item.title} className="premium-sample-card">
-                          <div className="premium-sample-no">0{index + 1}</div>
-                          <strong>{item.title}</strong>
-                          <span>{item.text}</span>
-                        </div>
-                      ))}
+                      <div className="premium-sample-card"><div className="premium-sample-no">01</div><strong>Układ zachowań</strong><span>kto inicjuje, kto wraca do rozmowy, kto unika i kto bierze odpowiedzialność po napięciu</span></div>
+                      <div className="premium-sample-card"><div className="premium-sample-no">02</div><strong>Rozjazd między nadzieją a faktami</strong><span>gdzie dobra chwila może przykrywać brak trwałej zmiany</span></div>
+                      <div className="premium-sample-card"><div className="premium-sample-no">03</div><strong>Scenariusze dalszego ruchu</strong><span>co ma sens sprawdzić, zanim wrócisz do tej samej rozmowy albo decyzji</span></div>
                     </div>
-                    <div className="unlock-benefits">
-                      {[
-                        "co naprawdę trzyma Cię w tej relacji",
-                        "gdzie jest największe napięcie i koszt emocjonalny",
-                        "czy problem wraca, czy da się go realnie zatrzymać",
-                        "co daje realną nadzieję, a co tylko ją podtrzymuje",
-                        "jaki wzorzec wraca po rozmowach, obietnicach i chwilach ulgi",
-                        "jedno pytanie graniczne przed decyzją"
-                      ].map((item) => (
-                        <div key={item} className="unlock-benefit"><span>•</span><span>{item}</span></div>
-                      ))}
-                    </div>
-                    <div className="unlock-fineprint">Pełny raport ma 17 sekcji generowanych indywidualnie na podstawie Twoich odpowiedzi. Nie jest opinią specjalisty, diagnozą ani terapią. Jest prywatnym lustrem sytuacji.</div>
+                    <div className="unlock-fineprint">Pełny raport jest generowany indywidualnie na podstawie Twoich odpowiedzi. Nie jest diagnozą, terapią ani oceną drugiej osoby.</div>
                     <div className="unlock-form">
-                      <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Twój adres e-mail." />
-                      <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Pokaż pełną analizę tej relacji"}</PrimaryButton>
+                      <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Twój adres e-mail" />
+                      <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Pokaż pełny raport"}</PrimaryButton>
                     </div>
                   </Glass>
                 )}

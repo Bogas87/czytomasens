@@ -387,13 +387,13 @@ const articleInsights: Record<string, string[]> = {
 };
 
 const styles: Record<string, React.CSSProperties> = {
-  section: { marginTop: "72px", padding: "clamp(26px, 4vw, 42px)", border: "1px solid rgba(197,160,89,.24)", borderRadius: "28px", background: "linear-gradient(135deg, rgba(197,160,89,.08), rgba(255,255,255,.018) 42%, rgba(0,0,0,.18))", boxShadow: "0 26px 90px rgba(0,0,0,.32)", position: "relative" },
-  header: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", alignItems: "end", gap: "24px", marginBottom: "24px", paddingBottom: "22px", borderBottom: `1px solid rgba(197,160,89,0.18)` },
-  eyebrow: { fontSize: "11px", letterSpacing: "0.22em", color: BRAND.gold, fontWeight: 900, textTransform: "uppercase", display: "inline-flex", padding: "8px 12px", border: "1px solid rgba(197,160,89,.32)", borderRadius: "999px", background: "rgba(197,160,89,.07)", marginBottom: "14px" },
-  title: { fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "clamp(32px, 3.4vw, 48px)", lineHeight: 1.02, letterSpacing: "-0.045em", color: BRAND.text, margin: "10px 0 0", maxWidth: "820px" },
+  section: { marginTop: "52px", paddingBottom: "8px" },
+  header: { display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto", alignItems: "end", gap: "24px", marginBottom: "24px", paddingBottom: "22px", borderBottom: `1px solid rgba(255,255,255,0.06)` },
+  eyebrow: { fontSize: "11px", letterSpacing: "0.16em", color: BRAND.gold, fontWeight: 700, textTransform: "uppercase" },
+  title: { fontFamily: 'Georgia, "Times New Roman", serif', fontSize: "clamp(32px, 4vw, 56px)", lineHeight: 1.02, letterSpacing: "-0.045em", color: BRAND.text, margin: "10px 0 0", maxWidth: "900px" },
   subtitle: { color: BRAND.muted, lineHeight: 1.75, fontSize: "16px", maxWidth: "760px", margin: "12px 0 0" },
   grid: { display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "16px" },
-  card: { background: "linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.018))", border: `1px solid rgba(197,160,89,.18)`, borderRadius: "20px", padding: "28px", cursor: "pointer", transition: "border-color .2s, background .2s, transform .2s", display: "flex", flexDirection: "column", minHeight: "330px", textAlign: "left", boxShadow: "0 18px 54px rgba(0,0,0,.2)" },
+  card: { background: BRAND.panel, border: `1px solid ${BRAND.border}`, borderRadius: "18px", padding: "28px", cursor: "pointer", transition: "border-color .2s, background .2s, transform .2s", display: "flex", flexDirection: "column", minHeight: "330px", textAlign: "left" },
   cardHovered: { background: BRAND.panelStrong, borderColor: "rgba(197,160,89,0.42)", transform: "translateY(-2px)" },
   cardMeta: { display: "flex", justifyContent: "space-between", gap: "14px", marginBottom: "22px", alignItems: "center" },
   cardKicker: { fontSize: "10px", letterSpacing: "0.18em", color: BRAND.gold, fontWeight: 700, textTransform: "uppercase", opacity: 0.9 },
@@ -484,14 +484,12 @@ export function ArticlesSection({
           <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
             <div style={styles.header}>
               <div>
-                <span style={styles.eyebrow}>PORADNIKI</span>
+                <span style={styles.eyebrow}>{indexRoute ? "PORADNIKI" : "PORADNIKI"}</span>
                 <h2 className="articles-main-title" style={styles.title}>
-                  {indexRoute ? "Mapa poradników o relacjach" : "Artykuły i poradniki o relacjach"}
+                  {indexRoute ? "Artykuły i poradniki o relacjach" : "Artykuły i poradniki o relacjach"}
                 </h2>
                 <p className="articles-main-subtitle" style={styles.subtitle}>
-                  {indexRoute
-                    ? "Teksty o niejasności, powrotach, braku zaangażowania, mieszanych sygnałach i decyzjach, które wracają po każdej rozmowie."
-                    : "Poradniki, które pomagają nazwać problem w relacji."}
+                  "Poradniki, które pomagają nazwać problem w relacji."
                 </p>
               </div>
               <div className="article-header-actions" style={styles.headerActions}>
