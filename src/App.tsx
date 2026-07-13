@@ -972,6 +972,19 @@ function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number, fallbackMessage = "timeout"): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => reject(new Error(fallbackMessage)), ms);
+    promise.then((value) => {
+      window.clearTimeout(timer);
+      resolve(value);
+    }).catch((error) => {
+      window.clearTimeout(timer);
+      reject(error);
+    });
+  });
+}
+
 function isTemporaryReportStatus(status: number): boolean {
   // 202 = raport w kolejce / processing
   // 402 = webhook Stripe jeszcze nie oznaczył sesji jako PAID
@@ -1223,7 +1236,7 @@ function GhostButton({ children, onClick }: { children: React.ReactNode; onClick
 
 function PremiumBadge({ preview }: { preview: Preview }) {
   const color = preview.tone === "red" ? BRAND.danger : preview.tone === "green" ? BRAND.success : BRAND.goldSoft;
-  const scoreExplanation = `Wynik pochodzi z trzech osi: napięcie w relacji (${preview.tension}%), asymetria zaangażowania (${preview.asymmetry}%), realność zmiany (${preview.change}%). Im wyższe napięcie i asymetria, tym niższy wynik końcowy.`;
+  const scoreExplanation = `To pierwszy odczyt sytuacji, nie wyrok. Liczby pomagają zobaczyć proporcje: ile jest napięcia, ile nierównowagi i czy w odpowiedziach widać miejsce na realną zmianę.`;
   return (
     <Glass className="ctms-preview-badge">
       <div className="ctms-kicker">NA ILE TO MA SENS</div>
@@ -1815,7 +1828,7 @@ export default function App() {
       let previewData: Preview;
       try {
         previewData = token
-          ? await fetchPreviewFromAPI(token, path, answers, finalOpenText, relationshipMap)
+          ? await withTimeout(fetchPreviewFromAPI(token, path, answers, finalOpenText, relationshipMap), 15000, "preview_timeout")
           : buildPreview(path, answers, finalOpenText);
       } catch (e: any) {
         if (e?.message === "__CRISIS__") { setStage("crisis"); return; }

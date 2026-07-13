@@ -4297,3 +4297,16 @@ select {
     font-size: 14px;
   }
 }
+
+
+/* CTMS safety visual fixes */
+.articles-section { position: relative; }
+.articles-main-subtitle { max-width: 760px; }
+@media (max-width: 720px) {
+  .ctms-topbar { gap: 14px; align-items: flex-start; }
+  .ctms-logo { max-width: calc(100vw - 150px); }
+  .ctms-logo-title { font-size: clamp(34px, 12vw, 54px); line-height: .92; }
+  .top-actions { flex-shrink: 0; }
+}
+.preview-map-item, .metric-row, .preview-analysis-item, .report-section { overflow-wrap: anywhere; word-break: normal; }
+.preview-visual-panel p, .preview-map-panel p, .report-section p { overflow-wrap: anywhere; }
