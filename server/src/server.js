@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const Stripe = require("stripe");
 const routes = require("./api/routes.js");
+const followupRoutes = require("./routes/followup.routes.js");
 const { PrismaClient } = require("@prisma/client");
 
 const app = express();
@@ -65,6 +66,9 @@ app.post(
         const token = session?.metadata?.token || null;
         const email = session?.metadata?.email || session?.customer_email || null;
 
+        // POPRAWKA: sprawdź czy ten event Stripe był już przetworzony
+        // Stripe może wysłać ten sam event kilka razy — bez tego
+        // użytkownik mógłby dostać dwa raporty i dwa maile
         try {
           const alreadyProcessed = await prisma.processedStripeEvent.findUnique({
             where: { event_id: event.id },
@@ -75,6 +79,7 @@ app.post(
             return res.status(200).json({ ok: true });
           }
 
+          // Zapisz event jako przetworzony
           await prisma.processedStripeEvent.create({
             data: {
               event_id: event.id,
@@ -83,6 +88,8 @@ app.post(
             },
           });
         } catch (dedupErr) {
+          // Jeśli zapis się nie powiódł (np. race condition — dwa requesty jednocześnie),
+          // bezpieczniej jest zignorować ten event niż przetworzyć go podwójnie
           console.error("[WEBHOOK] Błąd deduplicacji eventu:", dedupErr.message);
           return res.status(200).json({ ok: true });
         }
@@ -137,24 +144,8 @@ app.post(
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// SEO — sitemap i robots
-app.get("/sitemap.xml", (req, res) => {
-  res.header("Content-Type", "application/xml");
-  res.send(`<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://www.czytomasens.pl/</loc>
-    <lastmod>2026-06-03</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>1.0</priority>
-  </url>
-</urlset>`);
-});
-
-app.get("/robots.txt", (req, res) => {
-  res.header("Content-Type", "text/plain");
-  res.send(`User-agent: *\nAllow: /\n\nSitemap: https://www.czytomasens.pl/sitemap.xml`);
-});
+// Anonimowy powrót, przypomnienia i ponowny odczyt — bez kont użytkowników.
+app.use("/api/followup", followupRoutes);
 
 app.use("/api", routes);
 

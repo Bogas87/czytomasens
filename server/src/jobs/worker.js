@@ -7,6 +7,13 @@ const { Resend } = require("resend");
 
 const prisma = require("../db/prisma");
 const openaiService = require("../services/openai.service");
+const {
+  ensureFollowupSchema,
+  dueReminders,
+  markReminderSent,
+  issueRecoveryTokenForProfile,
+  publicUrl,
+} = require("../services/followup.service.js");
 
 const redisUrl = process.env.REDIS_URL;
 
@@ -216,6 +223,75 @@ async function sendReportEmail({ token, email }) {
 
 console.log("Worker uruchomiony. Oczekuję na zadania...");
 
+
+function buildFollowupEmailHtml(recoveryUrl) {
+  const safeUrl = escapeHtml(recoveryUrl);
+  return `
+<!doctype html>
+<html lang="pl">
+  <body style="margin:0;padding:0;background:#0b0b0b;color:#f5f1ea;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0b0b0b;padding:32px 16px;">
+      <tr><td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#151515;border:1px solid rgba(255,255,255,0.10);border-radius:22px;overflow:hidden;">
+          <tr><td style="padding:34px 30px 14px;font-family:Georgia,serif;font-size:34px;font-weight:800;">
+            CzyToMaSens<span style="color:#c5a059">.</span>
+          </td></tr>
+          <tr><td style="padding:0 30px 10px;font-size:22px;font-weight:800;line-height:1.35;">
+            Minęło trochę czasu. Co naprawdę się zmieniło?
+          </td></tr>
+          <tr><td style="padding:0 30px 20px;color:#c9c1b8;line-height:1.7;font-size:15px;">
+            To dobry moment, żeby sprawdzić nie sam nastrój, lecz zachowanie:
+            czy druga strona zrobiła coś bez nacisku, czy problem wrócił
+            i czy masz dziś więcej jasności.
+          </td></tr>
+          <tr><td style="padding:4px 30px 30px;">
+            <a href="${safeUrl}" style="display:inline-block;padding:14px 22px;background:#c5a059;color:#111;text-decoration:none;border-radius:999px;font-weight:800;">
+              Zrób ponowny odczyt
+            </a>
+          </td></tr>
+          <tr><td style="padding:0 30px 30px;color:#837b72;font-size:12px;line-height:1.6;">
+            Link otwiera prywatną analizę bez konta i hasła. Nie przesyłaj go innym osobom.
+          </td></tr>
+        </table>
+      </td></tr>
+    </table>
+  </body>
+</html>`;
+}
+
+async function processFollowupReminders() {
+  if (!resend) {
+    console.log("[FollowUp] Brak konfiguracji Resend — przypomnienia oczekują.");
+    return;
+  }
+
+  try {
+    await ensureFollowupSchema();
+    const due = await dueReminders(100);
+
+    for (const item of due) {
+      try {
+        const token = await issueRecoveryTokenForProfile(item.id);
+        const recoveryUrl = publicUrl(token);
+
+        await resend.emails.send({
+          from: resendFromEmail,
+          to: item.email,
+          subject: "Minęło trochę czasu. Co naprawdę się zmieniło?",
+          html: buildFollowupEmailHtml(recoveryUrl),
+        });
+
+        await markReminderSent(item.id);
+        console.log(`[FollowUp] Przypomnienie wysłane: ${item.id}`);
+      } catch (error) {
+        console.error(`[FollowUp] Błąd przypomnienia ${item.id}:`, error.message);
+      }
+    }
+  } catch (error) {
+    console.error("[FollowUp] Błąd cyklu przypomnień:", error.message);
+  }
+}
+
 const reportWorker = new Worker(
   "reports",
   async (job) => {
@@ -374,10 +450,17 @@ reportWorker.on("completed", (job) => {
   console.log(`[BullMQ Worker] Job completed ${job.id}`);
 });
 
+// Ten sam istniejący worker obsługuje również przypomnienia.
+// Nie trzeba tworzyć nowej usługi Railway.
+processFollowupReminders();
+const followupTimer = setInterval(processFollowupReminders, 60 * 60 * 1000);
+
+
 async function shutdown(signal) {
   console.log(`\n[Worker] Otrzymano ${signal}. Zamykanie procesu...`);
 
   try {
+    clearInterval(followupTimer);
     await reportWorker.close();
     console.log("[Worker] Worker zamknięty.");
 

@@ -99,6 +99,30 @@ type Preview = {
 };
 
 type FullReportSection = { title: string; text: string; tone?: "normal" | "gold" | "danger" };
+
+type FollowUpOption = { id: string; label: string; score: number };
+type FollowUpQuestion = { id: string; lead: string; text: string; options?: FollowUpOption[]; open?: boolean };
+type FollowUpAnswerMap = Record<string, string>;
+type FollowUpResult = {
+  trend: "improved" | "stable" | "worse";
+  elapsedDays: number;
+  headline: string;
+  summary: string;
+  improved: string[];
+  unchanged: string[];
+  warning: string[];
+  current: { tension: number; drift: number; rebuild: number };
+  delta: { tension: number; drift: number; rebuild: number };
+  note?: string;
+};
+type AnonymousProfile = {
+  recoveryToken: string;
+  recoveryUrl?: string;
+  createdAt?: string;
+  dueAt?: string;
+  email?: string;
+};
+
 type FullReport = {
   headline?: string; subheadline?: string; previewLine?: string;
   tensionPercent?: number; driftPercent?: number; rebuildPercent?: number;
@@ -118,6 +142,179 @@ type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string 
 
 const STORAGE_KEY = "ctms_one_person_deep_premium_v21";
 const FOLLOWUP_KEY = "ctms_followup_after_7_days";
+const ANON_PROFILE_KEY = "ctms_anonymous_profile_v1";
+const FOLLOWUP_RESULT_KEY = "ctms_followup_result_v1";
+
+
+const FOLLOWUP_QUESTIONS: FollowUpQuestion[] = [
+  {
+    id: "behavior_change",
+    lead: "Najpierw oddzielmy rozmowę od tego, co wydarzyło się później.",
+    text: "Czy od pierwszego odczytu pojawiła się konkretna zmiana zachowania, która utrzymała się bez Twojego przypominania?",
+    options: [
+      { id: "clear", label: "Tak. Zmiana jest konkretna i powtarzalna.", score: 0 },
+      { id: "some", label: "Trochę. Widać ruch, ale jeszcze niestabilny.", score: 1 },
+      { id: "brief", label: "Była poprawa, ale szybko wrócił dawny układ.", score: 2 },
+      { id: "none", label: "Nie. Zmieniły się głównie słowa albo atmosfera.", score: 3 },
+    ],
+  },
+  {
+    id: "initiative",
+    lead: "Sprawdźmy, kto uruchomił ten ruch.",
+    text: "Czy druga strona sama zainicjowała rozmowę, naprawę albo konkretny krok?",
+    options: [
+      { id: "yes", label: "Tak, bez nacisku i bez prowadzenia jej za rękę.", score: 0 },
+      { id: "partial", label: "Częściowo. Potrzebowała sygnału, ale potem działała.", score: 1 },
+      { id: "prompted", label: "Dopiero po moim przypomnieniu albo nacisku.", score: 2 },
+      { id: "no", label: "Nie. Nadal głównie ja uruchamiam zmianę.", score: 3 },
+    ],
+  },
+  {
+    id: "tension_now",
+    lead: "Nie oceniaj tylko relacji. Zobacz, co dzieje się z Tobą.",
+    text: "Jak zmieniło się Twoje napięcie od poprzedniej analizy?",
+    options: [
+      { id: "lower", label: "Wyraźnie spadło i mam więcej spokoju.", score: 0 },
+      { id: "slightly_lower", label: "Trochę spadło, ale nadal wraca.", score: 1 },
+      { id: "same", label: "Jest podobne jak wcześniej.", score: 2 },
+      { id: "higher", label: "Wzrosło albo doszły nowe powody do niepokoju.", score: 3 },
+    ],
+  },
+  {
+    id: "clarity_now",
+    lead: "Jasność poznaje się po tym, że jest mniej zgadywania.",
+    text: "Czy dziś lepiej wiesz, na czym stoisz i czego możesz spodziewać się po drugiej stronie?",
+    options: [
+      { id: "clear", label: "Tak. Jest więcej konkretu i mniej zgadywania.", score: 0 },
+      { id: "some", label: "Trochę, ale część spraw nadal jest otwarta.", score: 1 },
+      { id: "unclear", label: "Niewiele się zmieniło. Nadal analizuję i czekam.", score: 2 },
+      { id: "worse", label: "Jest jeszcze mniej jasno niż wcześniej.", score: 3 },
+    ],
+  },
+  {
+    id: "pattern_return",
+    lead: "Teraz najważniejsza jest powtarzalność.",
+    text: "Czy wrócił ten sam problem, który uruchomił pierwszą analizę?",
+    options: [
+      { id: "no", label: "Nie wrócił, a sposób reagowania rzeczywiście się zmienił.", score: 0 },
+      { id: "smaller", label: "Wrócił słabiej i został lepiej domknięty.", score: 1 },
+      { id: "same", label: "Wrócił praktycznie w tej samej formie.", score: 2 },
+      { id: "stronger", label: "Wrócił mocniej albo doszły kolejne podobne sytuacje.", score: 3 },
+    ],
+  },
+  {
+    id: "safety",
+    lead: "Jedno pytanie dotyczy nie jakości relacji, ale bezpieczeństwa.",
+    text: "Czy od ostatniej analizy pojawiła się kontrola, groźby, upokarzanie, izolowanie, użycie siły albo realny lęk przed reakcją tej osoby?",
+    options: [
+      { id: "no", label: "Nie.", score: 0 },
+      { id: "uncertain", label: "Nie jestem pewien/pewna, ale coś mnie niepokoi.", score: 1 },
+      { id: "psych", label: "Tak — kontrola, presja, groźby albo upokarzanie.", score: 3 },
+      { id: "physical", label: "Tak — użycie siły albo obawa o bezpieczeństwo.", score: 3 },
+    ],
+  },
+  {
+    id: "event_note",
+    lead: "Na końcu potrzebny jest jeden fakt, nie cała historia.",
+    text: "Co wydarzyło się od poprzedniej analizy i najmocniej zmieniło Twój odbiór sytuacji?",
+    open: true,
+  },
+];
+
+function followUpScore(answers: FollowUpAnswerMap, questionId: string): number {
+  const question = FOLLOWUP_QUESTIONS.find((item) => item.id === questionId);
+  const option = question?.options?.find((item) => item.id === answers[questionId]);
+  return option?.score ?? 1;
+}
+
+function clampPercent(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function daysBetween(from?: string, to = new Date()): number {
+  if (!from) return 0;
+  const date = new Date(from);
+  if (Number.isNaN(date.getTime())) return 0;
+  return Math.max(0, Math.floor((to.getTime() - date.getTime()) / 86400000));
+}
+
+function buildFollowUpResult(
+  answers: FollowUpAnswerMap,
+  baseline: FullReport | null,
+  createdAt?: string,
+): FollowUpResult {
+  const behavior = followUpScore(answers, "behavior_change");
+  const initiative = followUpScore(answers, "initiative");
+  const tensionNow = followUpScore(answers, "tension_now");
+  const clarity = followUpScore(answers, "clarity_now");
+  const pattern = followUpScore(answers, "pattern_return");
+  const safety = followUpScore(answers, "safety");
+
+  const currentTension = clampPercent(((tensionNow + pattern + safety) / 9) * 100);
+  const currentDrift = clampPercent(((behavior + initiative + clarity + pattern) / 12) * 100);
+  const currentRebuild = clampPercent(100 - ((behavior + initiative + pattern) / 9) * 100);
+
+  const baselineTension = Number(baseline?.tensionPercent ?? 50);
+  const baselineDrift = Number(baseline?.driftPercent ?? 50);
+  const baselineRebuild = Number(baseline?.rebuildPercent ?? 50);
+
+  const delta = {
+    tension: currentTension - baselineTension,
+    drift: currentDrift - baselineDrift,
+    rebuild: currentRebuild - baselineRebuild,
+  };
+  const composite = (-delta.tension - delta.drift + delta.rebuild) / 3;
+  const trend: FollowUpResult["trend"] = composite >= 9 ? "improved" : composite <= -9 ? "worse" : "stable";
+
+  const improved: string[] = [];
+  const unchanged: string[] = [];
+  const warning: string[] = [];
+
+  if (behavior <= 1) improved.push("Po rozmowie pojawił się ruch widoczny w zachowaniu, nie tylko w słowach.");
+  else warning.push("Poprawa nie utrzymała się albo nie wyszła poza deklaracje.");
+
+  if (initiative <= 1) improved.push("Druga strona przejęła część inicjatywy i odpowiedzialności.");
+  else unchanged.push("Ciężar uruchamiania zmiany nadal w dużej mierze pozostaje po Twojej stronie.");
+
+  if (tensionNow <= 1) improved.push("Masz więcej spokoju i mniej potrzeby ciągłego sprawdzania.");
+  else if (tensionNow >= 3) warning.push("Napięcie wzrosło zamiast opaść.");
+
+  if (clarity <= 1) improved.push("Jest więcej jasności co do kierunku i oczekiwań.");
+  else unchanged.push("Nadal pozostaje dużo zgadywania i niepewności.");
+
+  if (pattern <= 1) improved.push("Pierwotny problem nie wrócił w tej samej formie albo został lepiej domknięty.");
+  else warning.push("Ten sam mechanizm wrócił mimo wcześniejszych rozmów.");
+
+  if (safety >= 3) warning.unshift("Pojawił się sygnał dotyczący bezpieczeństwa. Tego nie należy traktować jak zwykłego kryzysu relacji.");
+
+  const headline =
+    trend === "improved"
+      ? "Widać ruch, ale sprawdź, czy utrzyma się bez nacisku."
+      : trend === "worse"
+        ? "Minęło kilka dni, a układ nie odpuścił. To ważniejszy sygnał niż kolejna obietnica."
+        : "Zmiana jest jeszcze niejednoznaczna. Część rzeczy drgnęła, część wraca.";
+
+  const summary =
+    trend === "improved"
+      ? "W porównaniu z pierwszym odczytem jest więcej zachowania, które może dawać realny grunt. Nie trzeba tego umniejszać, ale warto obserwować, czy inicjatywa i odpowiedzialność utrzymają się także wtedy, gdy nie prowadzisz całego procesu."
+      : trend === "worse"
+        ? "Porównanie nie pokazuje zwykłego gorszego dnia. Najwięcej waży powrót tego samego mechanizmu, brak samodzielnej inicjatywy albo wzrost napięcia. To moment, żeby nie dokładać nadziei tam, gdzie nadal brakuje zachowania."
+        : "Na tym etapie nie ma uczciwych podstaw ani do ogłoszenia przełomu, ani do przekreślenia relacji. Najbardziej rozstrzygające będzie to, co wydarzy się bez kolejnego nacisku, przypominania i ratowania atmosfery.";
+
+  return {
+    trend,
+    elapsedDays: daysBetween(createdAt),
+    headline,
+    summary,
+    improved,
+    unchanged,
+    warning,
+    current: { tension: currentTension, drift: currentDrift, rebuild: currentRebuild },
+    delta,
+    note: answers.event_note || "",
+  };
+}
+
 
 const ENTRY_CONFIGS: EntryConfig[] = [
   {
@@ -1187,6 +1384,51 @@ async function updateSession(payload: any): Promise<any> {
   return data;
 }
 
+
+async function createAnonymousProfile(payload: any): Promise<AnonymousProfile> {
+  const res = await fetch(`${API_BASE}/api/followup/profile`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || "Nie udało się zapisać anonimowego profilu.");
+  return data;
+}
+
+async function recoverAnonymousProfile(token: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/followup/recover/${encodeURIComponent(token)}`, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || "Link powrotu jest nieprawidłowy albo wygasł.");
+  return data;
+}
+
+async function scheduleAnonymousReminder(payload: any): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/followup/reminder`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || "Nie udało się ustawić przypomnienia.");
+  return data;
+}
+
+async function saveFollowUpCheckin(payload: any): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/followup/checkin`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || "Nie udało się zapisać ponownego odczytu.");
+  return data;
+}
+
+
 async function createCheckout(token: string, email: string, consentAcceptedAt: string): Promise<{ url: string }> {
   const res = await fetch(`${API_BASE}/api/create-checkout`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, email, consentAcceptedAt }) });
   const data = await res.json().catch(() => ({}));
@@ -1583,6 +1825,22 @@ function setStructuredData(id: string, data: Record<string, unknown>) {
 export default function App() {
   const [stage, setStage] = useState<Stage>("landing");
   const [followUpDueAt, setFollowUpDueAt] = useState<string>(() => { try { return JSON.parse(localStorage.getItem(FOLLOWUP_KEY) || "{}")?.dueAt || ""; } catch { return ""; } });
+
+  const [anonymousProfile, setAnonymousProfile] = useState<AnonymousProfile | null>(() => {
+    try { return JSON.parse(localStorage.getItem(ANON_PROFILE_KEY) || "null"); } catch { return null; }
+  });
+  const [followUpOpen, setFollowUpOpen] = useState(false);
+  const [followUpIndex, setFollowUpIndex] = useState(0);
+  const [followUpAnswers, setFollowUpAnswers] = useState<FollowUpAnswerMap>({});
+  const [followUpDraft, setFollowUpDraft] = useState("");
+  const [followUpResult, setFollowUpResult] = useState<FollowUpResult | null>(() => {
+    try { return JSON.parse(localStorage.getItem(FOLLOWUP_RESULT_KEY) || "null"); } catch { return null; }
+  });
+  const [followUpDays, setFollowUpDays] = useState(7);
+  const [followUpEmail, setFollowUpEmail] = useState("");
+  const [followUpMessage, setFollowUpMessage] = useState("");
+  const [followUpSaving, setFollowUpSaving] = useState(false);
+
   const [selectedPath, setSelectedPath] = useState<EntryKey | null>(null);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<AnswerMap>({});
@@ -1722,11 +1980,48 @@ export default function App() {
           setClarificationAnswers(parsed.clarificationAnswers || {});
           setClarificationIndex(parsed.clarificationIndex || 0);
           setClarificationDraft(parsed.clarificationDraft || "");
+          if (parsed.followUpResult) setFollowUpResult(parsed.followUpResult);
         }
       } catch {}
     }
 
     const params = new URLSearchParams(window.location.search);
+    const recovery = params.get("recovery");
+    if (recovery) {
+      setBusy(true);
+      setError(null);
+      recoverAnonymousProfile(recovery)
+        .then((data) => {
+          if (data?.profile?.fullReport) setFullReport(data.profile.fullReport);
+          if (data?.profile?.sessionToken) setSessionToken(data.profile.sessionToken);
+          if (data?.profile?.selectedPath) setSelectedPath(data.profile.selectedPath);
+          if (data?.profile?.email) {
+            setEmail(data.profile.email);
+            setFollowUpEmail(data.profile.email);
+          }
+          const profile = {
+            recoveryToken: recovery,
+            recoveryUrl: `${window.location.origin}/?recovery=${encodeURIComponent(recovery)}`,
+            createdAt: data?.profile?.createdAt,
+            dueAt: data?.profile?.reminderDueAt,
+            email: data?.profile?.email,
+          };
+          setAnonymousProfile(profile);
+          try { localStorage.setItem(ANON_PROFILE_KEY, JSON.stringify(profile)); } catch {}
+          setStage("paid");
+          setFollowUpOpen(true);
+        })
+        .catch((e: any) => {
+          setStage("error");
+          setError(friendlyError(e, "Nie udało się przywrócić analizy z linku."));
+        })
+        .finally(() => {
+          setBusy(false);
+          window.history.replaceState({}, "", window.location.pathname);
+        });
+      return;
+    }
+
     const success = params.get("success");
     const token = params.get("token");
     const cancel = params.get("cancel") || params.get("cancelled") || params.get("canceled");
@@ -1796,7 +2091,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, forceMap, burdens, truthCards, relationshipNote, clarificationQuestions, clarificationAnswers, clarificationIndex, clarificationDraft }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, forceMap, burdens, truthCards, relationshipNote, clarificationQuestions, clarificationAnswers, clarificationIndex, clarificationDraft, followUpResult }));
   }, [stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, forceMap, burdens, truthCards, relationshipNote, clarificationQuestions, clarificationAnswers, clarificationIndex, clarificationDraft]);
 
   const ensureSession = async (entryKey: EntryKey): Promise<string> => {
@@ -1808,48 +2103,177 @@ export default function App() {
   };
 
 
-  const scheduleFollowUp = () => {
-    const due = new Date();
-    due.setDate(due.getDate() + 7);
-    const dueAt = due.toISOString();
-    const payload = {
-      dueAt,
-      createdAt: new Date().toISOString(),
-      sessionToken,
-      selectedPath,
-      headline: fullReport?.headline || preview?.headline || "",
-    };
-    try { localStorage.setItem(FOLLOWUP_KEY, JSON.stringify(payload)); } catch {}
-    setFollowUpDueAt(dueAt);
 
-    const start = due.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
-    const endDate = new Date(due.getTime() + 30 * 60 * 1000);
-    const end = endDate.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
-    const ics = [
-      "BEGIN:VCALENDAR",
-      "VERSION:2.0",
-      "PRODID:-//CzyToMaSens//Ponowny odczyt//PL",
-      "BEGIN:VEVENT",
-      `DTSTART:${start}`,
-      `DTEND:${end}`,
-      "SUMMARY:Ponowny odczyt relacji — CzyToMaSens",
-      "DESCRIPTION:Wróć do zapisanej analizy i sprawdź, co realnie zmieniło się przez 7 dni.",
-      "URL:https://www.czytomasens.pl",
-      "END:VEVENT",
-      "END:VCALENDAR",
-    ].join("\\r\\n");
-    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "czytomasens-powrot-za-7-dni.ics";
-    a.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  useEffect(() => {
+    if (stage !== "paid" || !fullReport || !sessionToken) return;
+    if (anonymousProfile?.recoveryToken) return;
+
+    const localId = (() => {
+      try {
+        const existing = localStorage.getItem("ctms_local_anonymous_id");
+        if (existing) return existing;
+        const next = typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `ctms_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+        localStorage.setItem("ctms_local_anonymous_id", next);
+        return next;
+      } catch {
+        return `ctms_${Date.now()}`;
+      }
+    })();
+
+    createAnonymousProfile({
+      sessionToken,
+      localId,
+      email: email || null,
+      selectedPath,
+      createdAt: new Date().toISOString(),
+      baseline: {
+        tensionPercent: fullReport.tensionPercent,
+        driftPercent: fullReport.driftPercent,
+        rebuildPercent: fullReport.rebuildPercent,
+      },
+      fullReport,
+    })
+      .then((profile) => {
+        setAnonymousProfile(profile);
+        if (profile.email) setFollowUpEmail(profile.email);
+        try { localStorage.setItem(ANON_PROFILE_KEY, JSON.stringify(profile)); } catch {}
+      })
+      .catch(() => {
+        // Zapis lokalny nadal działa. Backend może być chwilowo niedostępny.
+      });
+  }, [stage, fullReport, sessionToken, anonymousProfile?.recoveryToken, email, selectedPath]);
+
+  const scheduleFollowUp = async () => {
+    const due = new Date();
+    due.setDate(due.getDate() + followUpDays);
+    const dueAt = due.toISOString();
+    setFollowUpSaving(true);
+    setFollowUpMessage("");
+
+    try {
+      let profile = anonymousProfile;
+      if (!profile?.recoveryToken && sessionToken && fullReport) {
+        profile = await createAnonymousProfile({
+          sessionToken,
+          email: followUpEmail || email || null,
+          selectedPath,
+          createdAt: new Date().toISOString(),
+          baseline: {
+            tensionPercent: fullReport.tensionPercent,
+            driftPercent: fullReport.driftPercent,
+            rebuildPercent: fullReport.rebuildPercent,
+          },
+          fullReport,
+        });
+        setAnonymousProfile(profile);
+        try { localStorage.setItem(ANON_PROFILE_KEY, JSON.stringify(profile)); } catch {}
+      }
+
+      if (profile?.recoveryToken && (followUpEmail || email)) {
+        await scheduleAnonymousReminder({
+          recoveryToken: profile.recoveryToken,
+          email: followUpEmail || email,
+          days: followUpDays,
+        });
+      }
+
+      const payload = {
+        dueAt,
+        createdAt: anonymousProfile?.createdAt || new Date().toISOString(),
+        sessionToken,
+        selectedPath,
+        headline: fullReport?.headline || preview?.headline || "",
+        recoveryToken: profile?.recoveryToken || null,
+      };
+      try { localStorage.setItem(FOLLOWUP_KEY, JSON.stringify(payload)); } catch {}
+      setFollowUpDueAt(dueAt);
+
+      const start = due.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+      const endDate = new Date(due.getTime() + 30 * 60 * 1000);
+      const end = endDate.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+      const recoveryUrl = profile?.recoveryUrl || (profile?.recoveryToken ? `${window.location.origin}/?recovery=${encodeURIComponent(profile.recoveryToken)}` : window.location.origin);
+      const ics = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//CzyToMaSens//Ponowny odczyt//PL",
+        "BEGIN:VEVENT",
+        `DTSTART:${start}`,
+        `DTEND:${end}`,
+        "SUMMARY:Ponowny odczyt relacji — CzyToMaSens",
+        `DESCRIPTION:Wróć do zapisanej analizy po ${followUpDays} dniach i sprawdź, co realnie zmieniło się w zachowaniu.`,
+        `URL:${recoveryUrl}`,
+        "END:VEVENT",
+        "END:VCALENDAR",
+      ].join("\r\n");
+      const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `czytomasens-powrot-za-${followUpDays}-dni.ics`;
+      a.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+      setFollowUpMessage(
+        followUpEmail || email
+          ? `Gotowe. Przypomnienie wyślemy po ${followUpDays} dniach, a link pozwoli otworzyć analizę także na innym urządzeniu.`
+          : `Termin zapisany. Dodaj e-mail, aby dostać link działający także na innym urządzeniu.`
+      );
+    } catch (e: any) {
+      setFollowUpMessage(friendlyError(e, "Nie udało się ustawić przypomnienia. Zapis na tym urządzeniu nadal pozostaje aktywny."));
+    } finally {
+      setFollowUpSaving(false);
+    }
   };
+
+  const startFollowUpNow = () => {
+    setFollowUpOpen(true);
+    setFollowUpIndex(0);
+    setFollowUpAnswers({});
+    setFollowUpDraft("");
+    setFollowUpResult(null);
+    setFollowUpMessage("");
+    window.setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }), 50);
+  };
+
+  const answerFollowUp = async (value?: string) => {
+    const question = FOLLOWUP_QUESTIONS[followUpIndex];
+    if (!question) return;
+    const answerValue = question.open ? followUpDraft.trim() : String(value || "");
+    if (!answerValue) return;
+
+    const nextAnswers = { ...followUpAnswers, [question.id]: answerValue };
+    setFollowUpAnswers(nextAnswers);
+    setFollowUpDraft("");
+
+    if (followUpIndex < FOLLOWUP_QUESTIONS.length - 1) {
+      setFollowUpIndex((index) => index + 1);
+      return;
+    }
+
+    const createdAt = anonymousProfile?.createdAt || (() => {
+      try { return JSON.parse(localStorage.getItem(FOLLOWUP_KEY) || "{}")?.createdAt; } catch { return undefined; }
+    })();
+    const result = buildFollowUpResult(nextAnswers, fullReport, createdAt);
+    setFollowUpResult(result);
+    setFollowUpOpen(false);
+    try { localStorage.setItem(FOLLOWUP_RESULT_KEY, JSON.stringify(result)); } catch {}
+
+    if (anonymousProfile?.recoveryToken) {
+      saveFollowUpCheckin({
+        recoveryToken: anonymousProfile.recoveryToken,
+        elapsedDays: result.elapsedDays,
+        answers: nextAnswers,
+        result,
+      }).catch(() => {});
+    }
+  };
+
 
   const resetAll = () => {
     localStorage.removeItem(STORAGE_KEY);
-    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setConsents([false, false, false, false]); setLegalOpen(null); setInterviewState(null); setInterviewAnswer(""); setForceMap({}); setBurdens([]); setTruthCards([]); setRelationshipNote(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft("");
+    localStorage.removeItem(FOLLOWUP_KEY);
+    localStorage.removeItem(FOLLOWUP_RESULT_KEY);
+    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setConsents([false, false, false, false]); setLegalOpen(null); setInterviewState(null); setInterviewAnswer(""); setForceMap({}); setBurdens([]); setTruthCards([]); setRelationshipNote(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft(""); setFollowUpOpen(false); setFollowUpIndex(0); setFollowUpAnswers({}); setFollowUpDraft(""); setFollowUpResult(null); setFollowUpDueAt(""); setFollowUpMessage("");
     window.history.replaceState({}, "", "/");
     setRoutePath("/");
   };
@@ -2031,8 +2455,8 @@ ${finalOwnText}`;
     if (interviewState.source === "local") {
       const maxDepth = 5;
       if (currentExchangeCount < maxDepth) {
-        const path = ENTRY_CONFIGS.find((item) => item.key === interviewState.path) || selectedPathConfig;
-        const nextQuestion = buildAdaptiveLocalQuestion(path, interviewAnswer.trim(), updatedHistory, currentExchangeCount + 1);
+        const pathConfig = ENTRY_CONFIGS.find((item) => item.key === interviewState.path) || ENTRY_CONFIGS[0];
+        const nextQuestion = buildAdaptiveLocalQuestion(pathConfig, interviewAnswer.trim(), updatedHistory, currentExchangeCount + 1);
         setInterviewState({
           ...interviewState,
           history: updatedHistory,
@@ -2196,49 +2620,134 @@ ${finalOwnText}`;
   const buildPrintableReportHtml = () => {
     if (!fullReport) return "";
     const safe = (value?: string) => String(value || "").replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch] || ch));
+    const paragraphs = (value?: string) => safe(value).split(/\n+/).filter(Boolean).map((p) => `<p>${p}</p>`).join("");
+    const generatedAt = new Date().toLocaleDateString("pl-PL", { year: "numeric", month: "long", day: "numeric" });
+    const reportId = String(sessionToken || anonymousProfile?.recoveryToken || "prywatny").slice(0, 10).toUpperCase();
+
     const sections = (fullReport.sections || []).map((section, index) => `
-      <section class="report-section">
-        <div class="section-no">${String(index + 1).padStart(2, "0")}</div>
-        <h2>${safe(section.title)}</h2>
-        ${safe(section.text).split("\n").filter(Boolean).map((p) => `<p>${p}</p>`).join("")}
+      <section class="report-section tone-${safe(section.tone || "normal")}">
+        <div class="section-heading">
+          <div class="section-no">${String(index + 1).padStart(2, "0")}</div>
+          <h2>${safe(section.title)}</h2>
+        </div>
+        <div class="section-body">${paragraphs(section.text)}</div>
       </section>`).join("\n");
-    const indicators = [
-      [fullReport.tensionPercent, "Napięcie", "ile kosztu emocjonalnego niesie sytuacja"],
-      [fullReport.driftPercent, "Rozjazd", "na ile deklaracje i zachowania nie idą razem"],
-      [fullReport.rebuildPercent, "Realna zmiana", "czy widać podstawy do ruchu"],
+
+    const metrics = [
+      [fullReport.tensionPercent, "Napięcie", "koszt emocjonalny"],
+      [fullReport.driftPercent, "Rozjazd", "słowa kontra zachowanie"],
+      [fullReport.rebuildPercent, "Realna zmiana", "grunt do odbudowy"],
     ].filter(([value]) => typeof value === "number").map(([value, label, desc]) => `
-      <div class="metric"><strong>${safe(String(label))}</strong><span>${safe(String(desc))}</span><i style="width:${Math.max(5, Math.min(95, Number(value)))}%"></i></div>
-    `).join("");
-    return `<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Raport CzyToMaSens</title><style>
-      @page{size:A4;margin:16mm 14mm}*{box-sizing:border-box}body{margin:0;background:#fff;color:#191714;font-family:Arial,Helvetica,sans-serif;line-height:1.62}.page{max-width:190mm;margin:0 auto;padding:0}.brand{border-bottom:1px solid #d8c7a2;padding:0 0 14px;margin:0 0 20px}.logo{font-family:Georgia,'Times New Roman',serif;font-weight:900;font-size:30px;letter-spacing:-.04em}.logo span{color:#b79145}.sub{font-size:9px;letter-spacing:.35em;color:#9d7a36;text-transform:uppercase;margin-top:3px}.hero{border:1px solid #d8c7a2;border-radius:18px;padding:24px;margin:0 0 18px;background:#fbf8f1}.hero h1{font-family:Georgia,'Times New Roman',serif;font-size:34px;line-height:1.05;margin:0 0 12px;color:#17130e}.hero p{font-size:13.5px;margin:0;color:#4a443c}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 18px}.metric{border:1px solid #e2d6bd;border-radius:14px;padding:12px;background:#fff}.metric strong{display:block;font-size:12px}.metric span{display:block;font-size:10.5px;color:#6b6258;margin:4px 0 8px}.metric i{display:block;height:4px;border-radius:99px;background:#b79145}.report-grid{display:block}.report-section{break-inside:avoid;page-break-inside:avoid;border:1px solid #e2d6bd;border-radius:16px;padding:18px 18px 16px;margin:0 0 14px;background:#fff}.section-no{font-size:9px;letter-spacing:.28em;color:#9d7a36;font-weight:800;margin-bottom:7px}h2{font-family:Georgia,'Times New Roman',serif;font-size:21px;line-height:1.18;margin:0 0 10px;color:#1d1914}p{font-size:12.6px;margin:0 0 9px;color:#29241e}.closing{break-inside:avoid;border:1px solid #d8c7a2;border-radius:16px;padding:18px;margin:18px 0 0;background:#fbf8f1;color:#2a2114;font-weight:700}.footer{font-size:9px;color:#776f67;border-top:1px solid #eee;margin-top:18px;padding-top:10px}@media print{body{background:#fff}.page{max-width:none}.hero{background:#fbf8f1!important}.report-section{box-shadow:none!important}}
-    </style></head><body><main class="page"><header class="brand"><div class="logo">CzyToMaSens<span>.</span></div><div class="sub">prywatny raport relacji</div></header><div class="hero"><h1>${safe(fullReport.headline || "Raport CzyToMaSens")}</h1><p>${safe(fullReport.subheadline || fullReport.previewLine || "Poniżej znajdziesz prywatny odczyt sytuacji podzielony na konkretne obszary.")}</p></div>${indicators ? `<div class="metrics">${indicators}</div>` : ""}<div class="report-grid">${sections}</div>${fullReport.closing ? `<div class="closing">${safe(fullReport.closing)}</div>` : ""}<div class="footer">Raport jest prywatnym odczytem jednej perspektywy. Nie jest diagnozą, terapią ani decyzją za użytkownika.</div></main></body></html>`;
+      <div class="metric">
+        <div class="metric-value">${Math.round(Number(value))}</div>
+        <div><strong>${safe(String(label))}</strong><span>${safe(String(desc))}</span></div>
+        <div class="metric-track"><i style="width:${Math.max(4, Math.min(100, Number(value)))}%"></i></div>
+      </div>`).join("");
+
+    const followup = followUpResult ? `
+      <section class="followup-summary">
+        <div class="section-no">POWRÓT</div>
+        <h2>${safe(followUpResult.headline)}</h2>
+        <p>${safe(followUpResult.summary)}</p>
+        ${followUpResult.note ? `<div class="followup-note"><strong>Najważniejszy fakt od pierwszego odczytu:</strong> ${safe(followUpResult.note)}</div>` : ""}
+      </section>` : "";
+
+    return `<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pełny odczyt relacji — CzyToMaSens</title>
+<style>
+@page{size:A4;margin:11mm 12mm 13mm}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#ece9e2;color:#171513;font-family:Arial,Helvetica,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{font-size:11.2pt;line-height:1.56}
+.page{width:100%;max-width:186mm;margin:0 auto;background:#fff}
+.cover{min-height:273mm;padding:17mm 15mm 14mm;background:
+radial-gradient(circle at 12% 8%,rgba(197,160,89,.22),transparent 28%),
+linear-gradient(145deg,#0a0908,#16130f 66%,#0a0908);color:#f7f1e7;display:flex;flex-direction:column;page-break-after:always}
+.brand{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid rgba(215,185,120,.32);padding-bottom:8mm}
+.logo{font-family:Georgia,'Times New Roman',serif;font-size:29pt;font-weight:900;letter-spacing:-.045em}.logo span{color:#d4ad5b}
+.meta{text-align:right;font-size:7.5pt;line-height:1.7;letter-spacing:.16em;text-transform:uppercase;color:#c8b994}
+.kicker{margin-top:22mm;font-size:8pt;letter-spacing:.36em;color:#d4ad5b;text-transform:uppercase}
+.cover h1{font-family:Georgia,'Times New Roman',serif;font-size:35pt;line-height:1.02;letter-spacing:-.035em;margin:5mm 0 5mm;max-width:150mm}
+.cover-lead{font-size:13pt;line-height:1.55;color:#ddd5c9;max-width:145mm;margin:0}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;margin-top:13mm}
+.metric{border:1px solid rgba(215,185,120,.28);border-radius:4mm;padding:4mm;background:rgba(255,255,255,.035)}
+.metric-value{font-family:Georgia,'Times New Roman',serif;font-size:23pt;color:#d4ad5b;line-height:1}
+.metric strong{display:block;margin-top:2mm;font-size:9pt}.metric span{display:block;color:#aea69b;font-size:7.5pt;margin-top:.8mm}
+.metric-track{height:1.2mm;background:rgba(255,255,255,.1);border-radius:99px;margin-top:3mm;overflow:hidden}.metric-track i{display:block;height:100%;background:#d4ad5b}
+.cover-bottom{margin-top:auto;display:grid;grid-template-columns:1.2fr .8fr;gap:8mm;border-top:1px solid rgba(215,185,120,.25);padding-top:7mm}
+.cover-bottom h3{font-family:Georgia,'Times New Roman',serif;font-size:15pt;margin:0 0 2mm}.cover-bottom p{font-size:9pt;line-height:1.6;color:#c9c0b4;margin:0}
+.confidential{border-left:2px solid #d4ad5b;padding-left:5mm}
+.content{padding:0}
+.content-header{display:flex;justify-content:space-between;align-items:end;padding:0 0 5mm;border-bottom:1px solid #cdbd9b;margin:0 0 7mm}
+.content-header .logo{font-size:18pt;color:#171513}.content-header small{font-size:7pt;letter-spacing:.14em;text-transform:uppercase;color:#8a7853}
+.report-section{position:relative;margin:0 0 7mm;padding:0 0 6mm 7mm;border-bottom:1px solid #e4ded2;break-inside:auto;page-break-inside:auto}
+.report-section:before{content:"";position:absolute;left:0;top:0;bottom:6mm;width:1.2mm;border-radius:99px;background:#c5a059}
+.report-section.tone-danger:before{background:#b66f6f}.report-section.tone-gold:before{background:#c5a059}
+.section-heading{display:grid;grid-template-columns:12mm 1fr;gap:2mm;align-items:start;margin-bottom:3mm;break-after:avoid;page-break-after:avoid}
+.section-no{font-size:7.5pt;letter-spacing:.24em;color:#9b7b3e;font-weight:800;padding-top:1.2mm}
+h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;letter-spacing:-.02em;margin:0;color:#1c1813}
+.section-body p{font-size:10.7pt;line-height:1.62;margin:0 0 3mm;color:#332e28;orphans:3;widows:3}
+.closing,.followup-summary{margin:9mm 0 0;border:1px solid #cdbd9b;background:#f8f4eb;padding:7mm;border-radius:4mm;break-inside:avoid;page-break-inside:avoid}
+.closing{font-family:Georgia,'Times New Roman',serif;font-size:15pt;line-height:1.45;color:#2b2115}
+.followup-summary h2{margin:1mm 0 3mm}.followup-summary p{margin:0;color:#3d362e}
+.followup-note{margin-top:4mm;padding-top:4mm;border-top:1px solid #dfd3bc}
+.footer{margin-top:9mm;padding-top:4mm;border-top:1px solid #e6e0d6;display:flex;justify-content:space-between;font-size:7pt;color:#81796f}
+@media screen{body{padding:20px}.page{box-shadow:0 25px 80px rgba(0,0,0,.18)}.content{padding:12mm}}
+@media print{
+  html,body{background:#fff}
+  .page{max-width:none}
+  .content{padding:0}
+  .cover{margin:-11mm -12mm -13mm;min-height:297mm;padding:18mm 16mm 15mm}
+  .report-section{box-shadow:none}
+}
+</style>
+</head>
+<body>
+<main class="page">
+<section class="cover">
+  <header class="brand">
+    <div><div class="logo">CzyToMaSens<span>.</span></div><div class="kicker" style="margin-top:2mm">prywatny odczyt jednej relacji</div></div>
+    <div class="meta">Raport ${safe(reportId)}<br>${safe(generatedAt)}</div>
+  </header>
+  <div class="kicker">Najważniejsze na początku</div>
+  <h1>${safe(fullReport.headline || "Pełny odczyt relacji")}</h1>
+  <p class="cover-lead">${safe(fullReport.subheadline || fullReport.previewLine || "Prywatny odczyt sytuacji oparty na odpowiedziach, zachowaniach i powtarzających się sygnałach.")}</p>
+  ${metrics ? `<div class="metrics">${metrics}</div>` : ""}
+  <div class="cover-bottom">
+    <div><h3>Jak czytać ten dokument</h3><p>Nie szukaj jednego procentu ani jednego zdania, które podejmie decyzję za Ciebie. Najwięcej mówi układ: co wraca, kto bierze odpowiedzialność i czy po rozmowie zmienia się zachowanie.</p></div>
+    <div class="confidential"><h3>Tylko dla Ciebie</h3><p>To prywatny odczyt jednej perspektywy. Nie jest diagnozą ani oceną drugiej osoby.</p></div>
+  </div>
+</section>
+<section class="content">
+  <header class="content-header"><div class="logo">CzyToMaSens<span>.</span></div><small>pełny odczyt relacji</small></header>
+  ${sections}
+  ${followup}
+  ${fullReport.closing ? `<div class="closing">${safe(fullReport.closing)}</div>` : ""}
+  <footer class="footer"><span>kontakt.czytomasens@gmail.com</span><span>Dokument prywatny — nie jest diagnozą ani terapią</span></footer>
+</section>
+</main>
+</body>
+</html>`;
   };
 
-  const downloadPremiumReport = () => {
+  const openPremiumPdf = () => {
     const html = buildPrintableReportHtml();
     if (!html) return;
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "raport-czytomasens-do-druku.html";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  };
-
-  const printPremiumReport = () => {
-    const html = buildPrintableReportHtml();
-    if (!html) return;
-    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=980,height=900");
+    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=1080,height=920");
     if (!printWindow) { window.print(); return; }
     printWindow.document.open();
     printWindow.document.write(html);
     printWindow.document.close();
     printWindow.focus();
-    setTimeout(() => printWindow.print(), 350);
+    setTimeout(() => printWindow.print(), 650);
   };
+
+  const downloadPremiumReport = openPremiumPdf;
+  const printPremiumReport = openPremiumPdf;
 
 
   const renderPublicContentRoute = () => {
@@ -2882,7 +3391,7 @@ ${finalOwnText}`;
                   <div className="eyebrow">PEŁNY ODCZYT RELACJI</div>
                   <div className="premium-report-actions">
                     <GhostButton onClick={printPremiumReport}>Drukuj / zapisz PDF</GhostButton>
-                    <PrimaryButton onClick={downloadPremiumReport}>Pobierz raport</PrimaryButton>
+                    <PrimaryButton onClick={downloadPremiumReport}>Pobierz PDF</PrimaryButton>
                   </div>
                 </div>
                 <div className="premium-report-head">
@@ -2921,23 +3430,89 @@ ${finalOwnText}`;
 
                 <Glass className="pulse-upsell-panel followup-panel">
                   <div>
-                    <div className="eyebrow">NIE KOŃCZ NA JEDNYM DNIU</div>
-                    <h3>Ponowny odczyt po 7 dniach</h3>
-                    <p>Relacja jest procesem. Wróć po tygodniu i sprawdź, czy po rozmowach pojawiła się realna zmiana, czy tylko chwilowa ulga. Twoja analiza pozostaje zapisana na tym urządzeniu, bez konta i bez rejestracji.</p>
+                    <div className="eyebrow">SPRAWDŹ, CO ZMIENIŁO SIĘ NAPRAWDĘ</div>
+                    <h3>Ponowny odczyt relacji</h3>
+                    <p>Możesz wrócić po jednym, trzech, pięciu albo dziewięciu dniach — wtedy, kiedy wydarzy się coś ważnego. System porówna nowe zachowania z pierwszym odczytem, zamiast kazać Ci robić całą analizę od początku.</p>
                     <div className="pulse-upsell-grid">
-                      <span>krótsze pytania kontrolne</span>
-                      <span>porównanie zachowania z pierwszym odczytem</span>
-                      <span>bez zakładania konta</span>
+                      <span>7 krótkich pytań kontrolnych</span>
+                      <span>porównanie z pierwszym raportem</span>
+                      <span>powrót bez konta i hasła</span>
+                    </div>
+                    <div className="followup-actions-row">
+                      <button type="button" className="pulse-cta" onClick={startFollowUpNow}>Sprawdź zmianę teraz</button>
+                      {anonymousProfile?.recoveryUrl && (
+                        <button type="button" className="ctms-btn ctms-btn-ghost followup-copy-link" onClick={() => {
+                          navigator.clipboard?.writeText(anonymousProfile.recoveryUrl || "");
+                          setFollowUpMessage("Link do prywatnego powrotu został skopiowany.");
+                        }}>Kopiuj link powrotu</button>
+                      )}
                     </div>
                   </div>
-                  <div className="pulse-price-card">
-                    <strong>{followUpDueAt ? `Powrót: ${new Date(followUpDueAt).toLocaleDateString("pl-PL")}` : "Za 7 dni"}</strong>
-                    <span>{followUpDueAt ? "Termin zapisany na tym urządzeniu i dodany do kalendarza." : "Ustaw bezpłatne przypomnienie i wróć do tej samej analizy."}</span>
-                    <button type="button" className="pulse-cta" onClick={scheduleFollowUp}>
-                      {followUpDueAt ? "Ustaw ponownie" : "Ustaw powrót za 7 dni"}
+                  <div className="pulse-price-card followup-reminder-card">
+                    <strong>{followUpDueAt ? `Ustawiono: ${new Date(followUpDueAt).toLocaleDateString("pl-PL")}` : "Przypomnienie bez konta"}</strong>
+                    <label className="followup-label">Kiedy przypomnieć?</label>
+                    <select value={followUpDays} onChange={(event) => setFollowUpDays(Number(event.target.value))} className="followup-select">
+                      {[1,3,4,5,7,9,14].map((days) => <option key={days} value={days}>za {days} {days === 1 ? "dzień" : "dni"}</option>)}
+                    </select>
+                    <label className="followup-label">E-mail do prywatnego linku</label>
+                    <input type="email" value={followUpEmail || email} onChange={(event) => setFollowUpEmail(event.target.value)} placeholder="Twój adres e-mail" className="followup-email" />
+                    <button type="button" className="pulse-cta" onClick={scheduleFollowUp} disabled={followUpSaving}>
+                      {followUpSaving ? "Zapisuję…" : "Ustaw przypomnienie"}
                     </button>
+                    {followUpMessage && <span className="followup-message">{followUpMessage}</span>}
                   </div>
                 </Glass>
+
+                {followUpOpen && (
+                  <Glass className="followup-checkin-panel">
+                    <div className="section-head">
+                      <div>
+                        <div className="eyebrow">PONOWNY ODCZYT</div>
+                        <h2>{FOLLOWUP_QUESTIONS[followUpIndex]?.lead}</h2>
+                        <p>{FOLLOWUP_QUESTIONS[followUpIndex]?.text}</p>
+                      </div>
+                      <div className="progress-wrap">
+                        <span>{followUpIndex + 1} / {FOLLOWUP_QUESTIONS.length}</span>
+                        <div className="progress-track"><div className="progress-fill" style={{ width: `${((followUpIndex + 1) / FOLLOWUP_QUESTIONS.length) * 100}%` }} /></div>
+                      </div>
+                    </div>
+                    {FOLLOWUP_QUESTIONS[followUpIndex]?.open ? (
+                      <>
+                        <textarea className="open-textarea" value={followUpDraft} onChange={(event) => setFollowUpDraft(event.target.value)} placeholder="Jedna konkretna sytuacja wystarczy…" rows={6} />
+                        <div className="section-actions">
+                          <GhostButton onClick={() => setFollowUpOpen(false)}>Wróć do raportu</GhostButton>
+                          <PrimaryButton onClick={() => answerFollowUp()} disabled={!followUpDraft.trim()}>Zobacz porównanie</PrimaryButton>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="answers-grid">
+                        {(FOLLOWUP_QUESTIONS[followUpIndex]?.options || []).map((option) => (
+                          <button key={option.id} type="button" className="answer-card" onClick={() => answerFollowUp(option.id)}>
+                            <span>{option.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </Glass>
+                )}
+
+                {followUpResult && (
+                  <Glass className={`followup-result followup-result--${followUpResult.trend}`}>
+                    <div className="eyebrow">PORÓWNANIE Z PIERWSZYM ODCZYTEM</div>
+                    <h3>{followUpResult.headline}</h3>
+                    <p className="followup-result-summary">{followUpResult.summary}</p>
+                    <div className="followup-comparison-grid">
+                      <div><strong>Co się poprawiło</strong>{followUpResult.improved.length ? followUpResult.improved.map((item) => <p key={item}>• {item}</p>) : <p>Brak jeszcze wystarczająco mocnego sygnału trwałej poprawy.</p>}</div>
+                      <div><strong>Co pozostaje bez zmian</strong>{followUpResult.unchanged.length ? followUpResult.unchanged.map((item) => <p key={item}>• {item}</p>) : <p>Nie widać istotnego obszaru, który pozostał dokładnie w tym samym miejscu.</p>}</div>
+                      <div><strong>Na co uważać</strong>{followUpResult.warning.length ? followUpResult.warning.map((item) => <p key={item}>• {item}</p>) : <p>Nie pojawił się nowy mocny sygnał ostrzegawczy.</p>}</div>
+                    </div>
+                    {followUpResult.note && <div className="followup-fact"><strong>Fakt, który zmienił odbiór:</strong> {followUpResult.note}</div>}
+                    <div className="section-actions">
+                      <PrimaryButton onClick={openPremiumPdf}>Pobierz raport z porównaniem</PrimaryButton>
+                      <GhostButton onClick={startFollowUpNow}>Sprawdź ponownie później</GhostButton>
+                    </div>
+                  </Glass>
+                )}
                 <div className="section-actions"><GhostButton onClick={resetAll}>Nowa analiza</GhostButton></div>
               </Glass>
             </motion.div>
