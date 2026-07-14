@@ -217,11 +217,25 @@ function jaccard(a = "", b = "") {
 }
 
 function hasBadReportLanguage(text = "") {
-  return /ta część raportu|materiał wejściowy|pełny obraz|raport pokazuje|raport ma przełożyć|ogólna porada|w wybranej ścieżce|ścieżka: tej relacji|w tej historii ważne są konkretne tropy|tu nie chodzi o wielką deklarację|najbardziej sprawdzający fakt|jeżeli ono się pojawi|odczyt może się zmienić/i.test(text);
+  return /ta część raportu|materiał wejściowy|pełny obraz|raport pokazuje|raport ma przełożyć|ogólna porada|w wybranej ścieżce|ścieżka: tej relacji|w tej historii ważne są konkretne tropy|tu nie chodzi o wielką deklarację|najbardziej sprawdzający fakt|jeżeli ono się pojawi|odczyt może się zmienić|ktoś coś niesie, czegoś oczekuje|każda relacja jest inna|wszystko będzie dobrze/i.test(text);
+}
+
+function quotedFragments(text = "") {
+  const matches = String(text).match(/[„\"]([^„”\"]+)[”\"]/g) || [];
+  return matches.map((item) => item.replace(/^[„\"]|[”\"]$/g, "").trim()).filter(Boolean);
+}
+
+function reportOverusesQuotes(report) {
+  const all = [report?.headline, report?.subheadline, report?.previewLine, ...(report?.sections || []).map((s) => s?.text), report?.closing]
+    .filter(Boolean)
+    .flatMap(quotedFragments);
+  if (all.length > 2) return true;
+  return all.some((quote) => wordCount(quote) > 18);
 }
 
 function reportNeedsRepair(report) {
   if (!report || !Array.isArray(report.sections) || report.sections.length !== 17) return true;
+  if (reportOverusesQuotes(report)) return true;
   for (const section of report.sections) {
     if (!section?.title || !section?.text) return true;
     if (wordCount(section.text) < 95) return true;
@@ -281,7 +295,11 @@ WYMAGANIA JAKOŚCI:
 - Dokładnie 17 sekcji.
 - Każda sekcja ma mieć 2–4 akapity.
 - Każda sekcja minimum 110 słów.
-- W każdej sekcji odnieś się do konkretnego typu danych: odpowiedzi zamkniętych, mapy relacji, ciężarów, momentu prawdy, doprecyzowań albo opisu własnego. Nie cytuj mechanicznie. Wyciągaj wnioski.
+- Zanim zaczniesz pisać, wewnętrznie wyodrębnij co najmniej 8 kotwic personalizacyjnych z odpowiedzi użytkownika: konkretne zachowania, rozkład inicjatywy, wskazane ciężary, moment prawdy, sprzeczności, odpowiedzi otwarte, doprecyzowania oraz sygnały zasobów. Nie wypisuj tej listy w JSON.
+- Rozłóż te kotwice między sekcjami. Co najmniej 12 z 17 sekcji musi opierać swój główny wniosek na innym, konkretnym elemencie odpowiedzi użytkownika.
+- W każdej sekcji odnieś się do konkretnego typu danych: odpowiedzi zamkniętych, mapy relacji, ciężarów, momentu prawdy, doprecyzowań albo opisu własnego. Najpierw wniosek, potem jego znaczenie. Nie przepisuj formularza.
+- Cytowanie użytkownika jest wyłącznie krótkim punktem zaczepienia, nigdy główną treścią. W całym raporcie wolno użyć maksymalnie 2 krótkich cytatów z odpowiedzi otwartych, każdy do 18 słów. Cytat może pojawić się tylko wtedy, gdy odsłania ważny mechanizm; resztę zawsze parafrazuj i interpretuj.
+- Nie zaczynaj kolejnych sekcji od tych samych formuł typu "w Twoich odpowiedziach widać". Zmieniaj sposób wejścia: konkret, napięcie, rozjazd, zachowanie, zasób, konsekwencja.
 - W sekcjach praktycznych daj realny ruch, nie pustą radę "porozmawiaj".
 - Obowiązkowo szukaj: sprzeczności między deklaracją i zachowaniem, możliwego efektu potwierdzenia, jednostronności danych, toksycznych wzorców, przemocy psychicznej/fizycznej/ekonomicznej, ale NIE zakładaj ich bez danych.
 - Jeżeli dane są dobre albo mieszane, pokaż optymistyczny, realistyczny kierunek: co można odbudować, co chronić, gdzie jest zasób i jak nie zepsuć tego lękiem.
@@ -318,6 +336,8 @@ WYMAGANIA:
 - Dokładnie 17 sekcji.
 - Każda sekcja minimum 130 słów.
 - Każda sekcja ma inny sens i nie może być parafrazą poprzedniej.
+- Oprzyj co najmniej 12 sekcji na odmiennych, konkretnych kotwicach z odpowiedzi użytkownika. Nie wolno zastępować personalizacji uniwersalnymi zdaniami o relacjach.
+- Cytaty są dodatkiem: maksymalnie 2 w całym raporcie, każdy do 18 słów. Nie cytuj, gdy wystarczy precyzyjna parafraza.
 - Pisz o użytkowniku, jego zachowaniu, odpowiedziach i relacji.
 - Dodaj równowagę: zasoby, ryzyka, neutralne wyjaśnienia, konkret do obserwacji.
 
