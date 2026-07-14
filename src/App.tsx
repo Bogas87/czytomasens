@@ -82,7 +82,9 @@ type InterviewState = {
 
 type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string };
 
-const STORAGE_KEY = "ctms_premium_front_v9";
+const STORAGE_KEY = "ctms_private_progress_v1";
+const STORAGE_VERSION = 1;
+const STORAGE_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 const ENTRY_CONFIGS: EntryConfig[] = [
   {
@@ -574,6 +576,8 @@ export default function App() {
   const [interviewAnswer, setInterviewAnswer] = useState("");
   const [interviewBusy, setInterviewBusy] = useState(false);
   const [routePath, setRoutePath] = useState(() => normalizePath(typeof window !== "undefined" ? window.location.pathname : "/"));
+  const [storageReady, setStorageReady] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
 
   const articleSlugFromRoute = routePath.startsWith("/artykuly/") ? decodeURIComponent(routePath.replace("/artykuly/", "")) : null;
   const routeArticle = articleSlugFromRoute ? ARTICLES.find((article) => article.slug === articleSlugFromRoute) : null;
@@ -655,21 +659,31 @@ export default function App() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
-          const restoredStage: Stage = parsed.stage === "processing" ? (parsed.preview ? "preview" : "landing") : (parsed.stage || "landing");
-          setStage(restoredStage);
-          setSelectedPath(parsed.selectedPath || null);
-          setQuestionIndex(parsed.questionIndex || 0);
-          setAnswers(parsed.answers || {});
-          setOpenText(parsed.openText || "");
-          setEmail(parsed.email || "");
-          setPreview(parsed.preview || null);
-          setFullReport(parsed.fullReport || null);
-          setSessionToken(parsed.sessionToken || null);
-          setConsents(parsed.consents || [false, false, false, false]);
-          setInterviewState(parsed.interviewState || null);
+          const isValid = parsed?.version === STORAGE_VERSION && Number(parsed?.expiresAt || 0) > Date.now();
+          if (!isValid) {
+            localStorage.removeItem(STORAGE_KEY);
+          } else {
+            const restoredStage: Stage = parsed.stage === "processing" ? (parsed.preview ? "preview" : "landing") : (parsed.stage || "landing");
+            setStage(restoredStage);
+            setSelectedPath(parsed.selectedPath || null);
+            setQuestionIndex(parsed.questionIndex || 0);
+            setAnswers(parsed.answers || {});
+            setOpenText(parsed.openText || "");
+            setEmail(parsed.email || "");
+            setPreview(parsed.preview || null);
+            setFullReport(parsed.fullReport || null);
+            setSessionToken(parsed.sessionToken || null);
+            setConsents(parsed.consents || [false, false, false, false]);
+            setInterviewState(parsed.interviewState || null);
+            setInterviewAnswer(parsed.interviewAnswer || "");
+            setSaveState("saved");
+          }
         }
-      } catch {}
+      } catch {
+        localStorage.removeItem(STORAGE_KEY);
+      }
     }
+    setStorageReady(true);
 
     const params = new URLSearchParams(window.location.search);
     const success = params.get("success");
@@ -741,8 +755,25 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState }));
-  }, [stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState]);
+    if (!storageReady || isPublicContentRoute) return;
+    setSaveState("saving");
+    const timer = window.setTimeout(() => {
+      try {
+        const now = Date.now();
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          version: STORAGE_VERSION,
+          savedAt: now,
+          expiresAt: now + STORAGE_TTL_MS,
+          stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport,
+          sessionToken, interviewState, interviewAnswer,
+        }));
+        setSaveState("saved");
+      } catch {
+        setSaveState("idle");
+      }
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [storageReady, isPublicContentRoute, stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, interviewAnswer]);
 
   const ensureSession = async (entryKey: EntryKey): Promise<string> => {
     if (sessionToken) return sessionToken;
@@ -754,6 +785,7 @@ export default function App() {
 
   const resetAll = () => {
     localStorage.removeItem(STORAGE_KEY);
+    setSaveState("idle");
     setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setConsents([false, false, false, false]); setLegalOpen(null); setInterviewState(null); setInterviewAnswer("");
     window.history.replaceState({}, "", "/");
     setRoutePath("/");
@@ -938,7 +970,15 @@ export default function App() {
       <div className="ctms-noise" />
       <div className="ctms-topbar">
         <LogoBlock />
-        {stage !== "landing" && !isPublicContentRoute && <GhostButton onClick={resetAll}>Od początku</GhostButton>}
+        {stage !== "landing" && !isPublicContentRoute && (
+          <div className="ctms-progress-tools">
+            <div className={`ctms-save-badge ${saveState}`}>
+              <span className="ctms-save-dot" />
+              {saveState === "saving" ? "Zapisuję postęp…" : "Postęp zapisany na tym urządzeniu"}
+            </div>
+            <GhostButton onClick={resetAll}>Od początku</GhostButton>
+          </div>
+        )}
       </div>
 
       <main className={`ctms-main ${(["consent","questions","checkpoint","interview","open_text","preview","paid","error","crisis"].includes(stage) || Boolean(routeLegalKey)) ? "narrow" : ""}`}>
@@ -969,7 +1009,7 @@ export default function App() {
                     </div>
                     <div className="story-lock">
                       <div className="story-lock-icon">🔒</div>
-                      <div><strong>Pełny raport</strong><span>Jednorazowo. Raport generowany indywidualnie na podstawie Twoich odpowiedzi.</span></div>
+                      <div><strong>Bez konta i rejestracji</strong><span>Postęp zapisuje się prywatnie w tej przeglądarce przez 30 dni. Możesz wrócić później albo usunąć zapis jednym kliknięciem.</span></div>
                     </div>
                   </Glass>
                 </div>
