@@ -436,12 +436,18 @@ function buildCycleSteps(pathKey?: EntryKey, burdens: BurdenItem[] = [], truthCa
   return ["sygnał", "napięcie", "doprecyzowanie", "wniosek"];
 }
 
+function visualLevelLabel(value: number) {
+  if (value >= 70) return "wysoki";
+  if (value >= 45) return "średni";
+  return "niski";
+}
+
 function VisualBars({ items }: { items: VisualBar[] }) {
   return (
     <div className="visual-bars">
       {items.map((item) => (
         <div key={item.label} className={`visual-bar-item ${item.tone || "normal"}`}>
-          <div className="visual-bar-head"><strong>{item.label}</strong><span>{item.value}%</span></div>
+          <div className="visual-bar-head"><strong>{item.label}</strong><span>poziom {visualLevelLabel(item.value)}</span></div>
           <div className="visual-bar-track"><div className="visual-bar-fill" style={{ width: `${item.value}%` }} /></div>
           <div className="visual-bar-text">{item.text}</div>
         </div>
@@ -1691,7 +1697,7 @@ export default function App() {
     setClarificationAnswers({});
     setClarificationIndex(0);
     setClarificationDraft("");
-    setStage("force_map");
+    setStage("questions");
 
     createSession(key)
       .then((data) => {
@@ -2012,30 +2018,52 @@ ${finalOwnText}`;
     }
   };
 
-  const downloadPremiumReport = () => {
-    if (!fullReport) return;
+  const buildPrintableReportHtml = () => {
+    if (!fullReport) return "";
     const safe = (value?: string) => String(value || "").replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch] || ch));
-    const body = (fullReport.sections || []).map((section, index) => `
-      <section>
-        <div class="no">${String(index + 1).padStart(2, "0")}</div>
+    const sections = (fullReport.sections || []).map((section, index) => `
+      <section class="report-section">
+        <div class="section-no">${String(index + 1).padStart(2, "0")}</div>
         <h2>${safe(section.title)}</h2>
         ${safe(section.text).split("\n").filter(Boolean).map((p) => `<p>${p}</p>`).join("")}
       </section>`).join("\n");
-    const html = `<!doctype html><html lang="pl"><head><meta charset="utf-8"><title>Raport CzyToMaSens</title><style>
-      body{margin:0;background:#080808;color:#f4efe7;font-family:Georgia,'Times New Roman',serif;padding:48px;line-height:1.7}main{max-width:920px;margin:0 auto}h1{font-size:44px;line-height:1.05;margin:0 0 14px}h2{font-size:26px;margin:0 0 14px}.lead{color:#cfc6bb;font-family:Arial,sans-serif;font-size:18px}section{border:1px solid rgba(197,160,89,.35);border-radius:22px;padding:28px;margin:22px 0;background:linear-gradient(135deg,rgba(197,160,89,.08),rgba(255,255,255,.02))}.no{color:#d7b978;letter-spacing:.35em;font-family:Arial,sans-serif;font-size:12px;margin-bottom:10px}p{font-family:Arial,sans-serif;color:#ddd4ca;font-size:16px}.closing{border-top:1px solid rgba(197,160,89,.35);margin-top:32px;padding-top:24px;color:#d7b978}
-    </style></head><body><main><h1>${safe(fullReport.headline || "Raport CzyToMaSens")}</h1><p class="lead">${safe(fullReport.subheadline || "")}</p>${body}<div class="closing">${safe(fullReport.closing || "")}</div></main></body></html>`;
+    const indicators = [
+      [fullReport.tensionPercent, "Napięcie", "ile kosztu emocjonalnego niesie sytuacja"],
+      [fullReport.driftPercent, "Rozjazd", "na ile deklaracje i zachowania nie idą razem"],
+      [fullReport.rebuildPercent, "Realna zmiana", "czy widać podstawy do ruchu"],
+    ].filter(([value]) => typeof value === "number").map(([value, label, desc]) => `
+      <div class="metric"><strong>${safe(String(label))}</strong><span>${safe(String(desc))}</span><i style="width:${Math.max(5, Math.min(95, Number(value)))}%"></i></div>
+    `).join("");
+    return `<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Raport CzyToMaSens</title><style>
+      @page{size:A4;margin:16mm 14mm}*{box-sizing:border-box}body{margin:0;background:#fff;color:#191714;font-family:Arial,Helvetica,sans-serif;line-height:1.62}.page{max-width:190mm;margin:0 auto;padding:0}.brand{border-bottom:1px solid #d8c7a2;padding:0 0 14px;margin:0 0 20px}.logo{font-family:Georgia,'Times New Roman',serif;font-weight:900;font-size:30px;letter-spacing:-.04em}.logo span{color:#b79145}.sub{font-size:9px;letter-spacing:.35em;color:#9d7a36;text-transform:uppercase;margin-top:3px}.hero{border:1px solid #d8c7a2;border-radius:18px;padding:24px;margin:0 0 18px;background:#fbf8f1}.hero h1{font-family:Georgia,'Times New Roman',serif;font-size:34px;line-height:1.05;margin:0 0 12px;color:#17130e}.hero p{font-size:13.5px;margin:0;color:#4a443c}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 18px}.metric{border:1px solid #e2d6bd;border-radius:14px;padding:12px;background:#fff}.metric strong{display:block;font-size:12px}.metric span{display:block;font-size:10.5px;color:#6b6258;margin:4px 0 8px}.metric i{display:block;height:4px;border-radius:99px;background:#b79145}.report-grid{display:block}.report-section{break-inside:avoid;page-break-inside:avoid;border:1px solid #e2d6bd;border-radius:16px;padding:18px 18px 16px;margin:0 0 14px;background:#fff}.section-no{font-size:9px;letter-spacing:.28em;color:#9d7a36;font-weight:800;margin-bottom:7px}h2{font-family:Georgia,'Times New Roman',serif;font-size:21px;line-height:1.18;margin:0 0 10px;color:#1d1914}p{font-size:12.6px;margin:0 0 9px;color:#29241e}.closing{break-inside:avoid;border:1px solid #d8c7a2;border-radius:16px;padding:18px;margin:18px 0 0;background:#fbf8f1;color:#2a2114;font-weight:700}.footer{font-size:9px;color:#776f67;border-top:1px solid #eee;margin-top:18px;padding-top:10px}@media print{body{background:#fff}.page{max-width:none}.hero{background:#fbf8f1!important}.report-section{box-shadow:none!important}}
+    </style></head><body><main class="page"><header class="brand"><div class="logo">CzyToMaSens<span>.</span></div><div class="sub">prywatny raport relacji</div></header><div class="hero"><h1>${safe(fullReport.headline || "Raport CzyToMaSens")}</h1><p>${safe(fullReport.subheadline || fullReport.previewLine || "Poniżej znajdziesz prywatny odczyt sytuacji podzielony na konkretne obszary.")}</p></div>${indicators ? `<div class="metrics">${indicators}</div>` : ""}<div class="report-grid">${sections}</div>${fullReport.closing ? `<div class="closing">${safe(fullReport.closing)}</div>` : ""}<div class="footer">Raport jest prywatnym odczytem jednej perspektywy. Nie jest diagnozą, terapią ani decyzją za użytkownika.</div></main></body></html>`;
+  };
+
+  const downloadPremiumReport = () => {
+    const html = buildPrintableReportHtml();
+    if (!html) return;
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "raport-czytomasens.html";
+    a.download = "raport-czytomasens-do-druku.html";
     document.body.appendChild(a);
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
   };
 
-  const printPremiumReport = () => window.print();
+  const printPremiumReport = () => {
+    const html = buildPrintableReportHtml();
+    if (!html) return;
+    const printWindow = window.open("", "_blank", "noopener,noreferrer,width=980,height=900");
+    if (!printWindow) { window.print(); return; }
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => printWindow.print(), 350);
+  };
 
 
   const renderPublicContentRoute = () => {
@@ -2089,13 +2117,16 @@ ${finalOwnText}`;
               <section className="hero-grid hero-grid--premium">
                 <Glass className="glass-panel hero-panel hero-copy hero-copy--clean">
                   <div className="eyebrow with-line">DYSKRETNY ODCZYT JEDNEJ RELACJI</div>
-                  <h1>Uporządkuj to, zanim znów wejdziesz w tę samą rozmowę.</h1>
+                  <h1>Uporządkuj sytuację, zanim znów wejdziesz w tę samą rozmowę.</h1>
                   <p className="hero-lead">CzyToMaSens czyta Twoją perspektywę szerzej niż zwykły test: najpierw mapuje układ sił, potem dopytuje o konkretne sytuacje i dopiero na końcu składa pierwszy odczyt relacji.</p>
                   <p className="hero-lead hero-lead--soft">Nie udajemy, że znamy drugą stronę. Pokazujemy, co z Twoich odpowiedzi wygląda na fakt, co może być nadzieją, co może być lękiem, a co nadal ma w sobie realny potencjał.</p>
                   <div className="hero-trust-row" aria-label="cechy analizy">
-                    <span>tylko dla Twoich oczu</span>
-                    <span>bez procentowego wyroku</span>
-                    <span>z pytaniami otwartymi</span>
+                    <span>poufna analiza jednej perspektywy</span>
+                    <span>odczyt sytuacji, nie wyrok</span>
+                    <span>z pytaniami zamkniętymi i otwartymi</span>
+                  </div>
+                  <div className="hero-privacy-note">
+                    <strong>Prywatnie i bezpiecznie.</strong> Odpowiedzi służą wyłącznie do przygotowania Twojej analizy. Nie publikujemy ich, nie sprzedajemy i nie budujemy z nich publicznego profilu. Dostęp do analizy masz tylko Ty, chyba że samodzielnie zdecydujesz inaczej.
                   </div>
                   <div className="ctms-landing-actions">
                     <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij prywatną analizę</PrimaryButton>
@@ -2126,24 +2157,24 @@ ${finalOwnText}`;
               <section className="ctms-feature-editorial-grid process-grid" style={{ marginTop: "24px" }}>
                 <Glass className="feature-card process-card">
                   <div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div>
-                  <h3>Mapa relacji</h3>
+                  <h3>Pierwszy filtr</h3>
                   <div className="feature-line" />
-                  <p>Nie zaczynasz od suchego testu. Najpierw wskazujesz, gdzie w relacji leży inicjatywa, odpowiedzialność, unikanie, ciężar emocjonalny i realny wpływ na naprawę. To porządkuje Twoją perspektywę, ale nie zamienia jej w wyrok.</p>
-                  <div className="process-tags"><span>inicjatywa</span><span>ciężar</span><span>odpowiedzialność</span></div>
+                  <p>Na starcie odpowiadasz na kilka pytań zamkniętych. One nie rozstrzygają relacji, tylko ustawiają kontekst: napięcie, zaufanie, powtarzalność problemu, poczucie bezpieczeństwa i gotowość drugiej strony do realnego ruchu.</p>
+                  <div className="process-tags"><span>kontekst</span><span>sygnały</span><span>bezpieczeństwo</span></div>
                 </Glass>
                 <Glass className="feature-card process-card">
                   <div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div>
-                  <h3>Pytania otwarte</h3>
+                  <h3>Mapa relacji</h3>
                   <div className="feature-line" />
-                  <p>Po mapie system dopytuje o konkretne sytuacje. Nie wystarczy kliknąć odpowiedzi, które pasują do nastroju. Trzeba opisać przykład: co się wydarzyło, kto wrócił do rozmowy, co zmieniło się później i co nadal zostaje bez nazwy.</p>
-                  <div className="process-tags"><span>przykład z życia</span><span>kontekst</span><span>spójność</span></div>
+                  <p>Potem wskazujesz, gdzie w relacji leży inicjatywa, odpowiedzialność, unikanie, ciężar emocjonalny i realny wpływ na naprawę. To porządkuje Twoją perspektywę, ale nie zamienia jej w wyrok.</p>
+                  <div className="process-tags"><span>inicjatywa</span><span>ciężar</span><span>odpowiedzialność</span></div>
                 </Glass>
                 <Glass className="feature-card process-card">
                   <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
-                  <h3>Pierwszy odczyt</h3>
+                  <h3>Doprecyzowanie</h3>
                   <div className="feature-line" />
-                  <p>Raport nie ma przestraszyć ani pocieszyć na siłę. Ma pokazać, co widać po Twojej stronie, co może dziać się po drugiej stronie, gdzie są zasoby, gdzie koszt emocjonalny i jaki jeden fakt warto teraz sprawdzić zamiast znów analizować wszystko naraz.</p>
-                  <div className="process-tags"><span>zasoby</span><span>ryzyka</span><span>następny ruch</span></div>
+                  <p>Na końcu dochodzą pytania otwarte o konkretną sytuację z życia. Dzięki temu analiza nie opiera się wyłącznie na kliknięciach, tylko sprawdza, co naprawdę wraca, gdzie są zasoby i jaki fakt może zmienić ocenę.</p>
+                  <div className="process-tags"><span>pytania otwarte</span><span>fakty</span><span>następny ruch</span></div>
                 </Glass>
               </section>
 
@@ -2249,7 +2280,7 @@ ${finalOwnText}`;
                   <p>Nie przesuwasz suwaków. Po prostu zaznaczasz, po której stronie częściej leży ciężar danego elementu.</p>
                 </div>
                 <div className="progress-wrap">
-                  <span>{mapCompletion(forceMap, burdens, truthCards)}%</span>
+                  <span>Mapa relacji</span>
                   <div className="progress-track"><div className="progress-fill" style={{ width: `${mapCompletion(forceMap, burdens, truthCards)}%` }} /></div>
                 </div>
               </div>
@@ -2640,7 +2671,7 @@ ${finalOwnText}`;
                 {path && (
                   <Glass className="unlock-panel unlock-panel--strong">
                     <div className="eyebrow">PEŁNA ANALIZA</div>
-                    <p className="unlock-copy">Pełny raport rozwija ten odczyt w 17 sekcjach: bez procentowego wyroku, bez oceniania partnera, z pokazaniem zasobów, ryzyk, kosztu emocjonalnego i ruchu, który ma sens teraz.</p>
+                    <p className="unlock-copy">Pełny raport rozwija ten odczyt w 17 sekcjach: z pomocniczymi wskaźnikami, bez sprowadzania relacji do jednego wyniku, z pokazaniem zasobów, ryzyk, kosztu emocjonalnego i ruchu, który ma sens teraz.</p>
                     <div className="premium-sample-grid">
                       {buildPremiumSamples(path, preview).map((item, index) => (
                         <div key={item.title} className="premium-sample-card">
@@ -2721,12 +2752,13 @@ ${finalOwnText}`;
                     <div className="pulse-upsell-grid">
                       <span>5 pytań raz w tygodniu</span>
                       <span>trend komunikacji, zaufania i bliskości</span>
-                      <span>bez pokazywania odpowiedzi partnerowi</span>
+                      <span>prywatny rytm obserwacji</span>
                     </div>
                   </div>
                   <div className="pulse-price-card">
                     <strong>9,99 zł / miesiąc</strong>
-                    <span>Opcjonalnie po raporcie. Dla jednej osoby, prywatnie.</span>
+                    <span>Opcjonalnie po raporcie. Bez zobowiązania.</span>
+                    <button type="button" className="pulse-cta" onClick={() => { try { localStorage.setItem("ctms_pulse_interest", "1"); } catch {} window.location.href = "mailto:kontakt@czytomasens.pl?subject=Kardiogram%20Relacji&body=Chc%C4%99%20otrzyma%C4%87%20informacj%C4%99%20o%20starcie%20Kardiogramu%20Relacji."; }}>Dołącz do listy</button>
                   </div>
                 </Glass>
                 <div className="section-actions"><GhostButton onClick={resetAll}>Nowa analiza</GhostButton></div>
