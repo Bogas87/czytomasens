@@ -116,7 +116,7 @@ type InterviewState = {
 
 type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string };
 
-const STORAGE_KEY = "ctms_one_person_map_stable_v18";
+const STORAGE_KEY = "ctms_one_person_deep_premium_v21";
 
 const ENTRY_CONFIGS: EntryConfig[] = [
   {
@@ -821,8 +821,7 @@ function buildClarificationQuestions(path: EntryConfig, forceMap: ForceMap, burd
 
   const unique = uniqueClarifications(candidates);
   const strongSignals = burdens.length + truthCards.length + (meLoad >= 3 ? 1 : 0) + (note.trim().length < 40 ? 1 : 0);
-  const limit = strongSignals >= 5 ? 3 : strongSignals >= 3 ? 2 : 1;
-  return unique.slice(0, limit);
+  return unique.slice(0, 3);
 }
 
 const LOCAL_INTERVIEW_QUESTIONS: Record<EntryKey, LocalInterviewQuestion[]> = {
@@ -873,8 +872,29 @@ const LOCAL_INTERVIEW_QUESTIONS: Record<EntryKey, LocalInterviewQuestion[]> = {
   ],
 };
 
+function universalDeepeningQuestions(path: EntryConfig): LocalInterviewQuestion[] {
+  const pathName = path.title.toLowerCase();
+  return [
+    {
+      lead: "Teraz potrzebny jest fakt, który zmienia odczyt.",
+      question: `Jaki jeden konkretny fakt z tej historii najbardziej zmieniłby ocenę osoby z zewnątrz, gdyby znała tylko Twoją perspektywę?`,
+      observation: "Ten punkt chroni wynik przed prostym potwierdzeniem nastroju z danego dnia."
+    },
+    {
+      lead: "Sprawdźmy, czy jest tu zasób, którego nie wolno zgubić.",
+      question: `Co w tej relacji nadal działa albo kiedy ostatnio poczułeś/poczułaś: „tu jest coś prawdziwego”?`,
+      observation: "Dobry odczyt nie szuka problemu na siłę. Jeśli są zasoby, trzeba je nazwać równie uczciwie jak ryzyka."
+    },
+    {
+      lead: "Na koniec nie decyzja, tylko najbliższy ruch.",
+      question: `Gdybyś przez najbliższe 7 dni miał/miała sprawdzić tylko jedną rzecz w zachowaniu tej osoby, co dokładnie powinno się wydarzyć?`,
+      observation: "To zmienia analizę w konkretną obserwację, a nie kolejne kręcenie się w głowie."
+    }
+  ];
+}
+
 function createLocalInterviewState(path: EntryConfig): InterviewState {
-  const localQuestions = LOCAL_INTERVIEW_QUESTIONS[path.key];
+  const localQuestions = [...(LOCAL_INTERVIEW_QUESTIONS[path.key] || []), ...universalDeepeningQuestions(path)].slice(0, 6);
   const first = localQuestions[0];
   return {
     path: path.key,
@@ -1735,6 +1755,7 @@ export default function App() {
   };
 
   const buildCompositeOpenText = (clarificationsOverride?: ClarificationAnswerMap): string => {
+    const answersSource = clarificationsOverride || clarificationAnswers;
     const forceLines = FORCE_MAP_ITEMS
       .map((item) => `- ${item.title}: ${forceLabel(forceMap[item.key])}`)
       .join("\n");
@@ -1745,7 +1766,35 @@ export default function App() {
       ? truthCards.map((item) => `- ${item}`).join("\n")
       : "Brak wybranych zdań prawdy.";
     const note = relationshipNote.trim() || "Brak dodatkowej notatki.";
-    return `MAPA RELACJI — dane kliknięte przez użytkownika\n\nUKŁAD SIŁ\n${forceLines}\n\nNAJWIĘKSZE CIĘŻARY\n${burdenLines}\n\nMOMENT PRAWDY\n${truthLines}\n\nDODATKOWA MYŚL UŻYTKOWNIKA\n${note}`;
+    const interviewLines = interviewState?.history?.length
+      ? interviewState.history.map((e, index) => `Pytanie otwarte ${index + 1}: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n")
+      : "Brak dodatkowego wywiadu otwartego.";
+    const clarificationLines = clarificationQuestions.length
+      ? clarificationQuestions.map((q, index) => `Doprecyzowanie ${index + 1}: ${q.text}\nOdpowiedź: ${(answersSource[q.id] || "").trim() || "pominięte"}`).join("\n\n")
+      : "Brak doprecyzowań.";
+    const finalOwnText = openText.trim() && !openText.includes("Pytanie:") ? openText.trim() : "Brak dodatkowego opisu końcowego.";
+    return `MAPA RELACJI — dane kliknięte przez użytkownika
+
+UKŁAD SIŁ
+${forceLines}
+
+NAJWIĘKSZE CIĘŻARY
+${burdenLines}
+
+MOMENT PRAWDY
+${truthLines}
+
+DODATKOWA MYŚL UŻYTKOWNIKA
+${note}
+
+WYWIAD OTWARTY
+${interviewLines}
+
+DOPRECYZOWANIA
+${clarificationLines}
+
+DODATKOWY OPIS KOŃCOWY
+${finalOwnText}`;
   };
 
   const prepareMapSummary = () => {
@@ -1755,7 +1804,17 @@ export default function App() {
     setClarificationAnswers({});
     setClarificationIndex(0);
     setClarificationDraft("");
+    setInterviewState(createLocalInterviewState(path));
+    setInterviewAnswer("");
     setStage("map_summary");
+  };
+
+  const startOpenInterview = () => {
+    if (!path) return;
+    setInterviewState(createLocalInterviewState(path));
+    setInterviewAnswer("");
+    setError(null);
+    setStage("interview");
   };
 
   const goToClarification = () => {
@@ -1783,7 +1842,7 @@ export default function App() {
   };
 
   const sendInterviewAnswer = async () => {
-    if (!interviewState || !sessionToken || !interviewAnswer.trim()) return;
+    if (!interviewState || !interviewAnswer.trim()) return;
     if (hasCrisisContent(interviewAnswer)) { setStage("crisis"); return; }
     const currentExchangeCount = interviewState.history.length + 1;
     const updatedHistory: InterviewExchange[] = [...interviewState.history, { ai: interviewState.currentQuestion, user: interviewAnswer.trim(), lead: interviewState.currentLead, observation: interviewState.currentObservation }];
@@ -1809,8 +1868,14 @@ export default function App() {
       const transcript = updatedHistory.map((e) => `Pytanie: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n");
       setInterviewState({ ...interviewState, history: updatedHistory, finished: true });
       setOpenText(transcript);
-      setStage("open_text");
       setInterviewAnswer("");
+      if (clarificationQuestions.length) {
+        setClarificationIndex(0);
+        setClarificationDraft(clarificationAnswers[clarificationQuestions[0].id] || "");
+        setStage("clarification");
+      } else {
+        window.setTimeout(() => buildPreviewAndGo({}), 0);
+      }
       return;
     }
     
@@ -1866,7 +1931,7 @@ export default function App() {
       }
       setStage("map_summary"); return;
     }
-    if (stage === "interview") { setStage("checkpoint"); return; }
+    if (stage === "interview") { setStage("map_summary"); return; }
     if (stage === "open_text") { if (interviewState && interviewState.history.length > 0) { setStage("interview"); return; } setStage("truth_cards"); return; }
     if (stage === "preview") { setStage(clarificationQuestions.length ? "clarification" : "map_summary"); return; }
     if (stage === "consent") { setStage("landing"); return; }
@@ -2023,24 +2088,29 @@ export default function App() {
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <section className="hero-grid hero-grid--premium">
                 <Glass className="glass-panel hero-panel hero-copy hero-copy--clean">
-                  <div className="eyebrow with-line">PRYWATNY ODCZYT RELACJI</div>
-                  <h1>Zobacz, co naprawdę układa się między Wami.</h1>
-                  <p className="hero-lead">CzyToMaSens porządkuje jedną konkretną sytuację: kto niesie ciężar, gdzie znika jasność, co wraca po rozmowach i czy za deklaracjami idzie zachowanie.</p>
-                  <p className="hero-lead hero-lead--soft">To nie jest wyrok ani diagnoza. To uporządkowany odczyt Twojej perspektywy, który pomaga oddzielić fakty od nadziei, zmęczenia i domysłów.</p>
+                  <div className="eyebrow with-line">DYSKRETNY ODCZYT JEDNEJ RELACJI</div>
+                  <h1>Uporządkuj to, zanim znów wejdziesz w tę samą rozmowę.</h1>
+                  <p className="hero-lead">CzyToMaSens czyta Twoją perspektywę szerzej niż zwykły test: najpierw mapuje układ sił, potem dopytuje o konkretne sytuacje i dopiero na końcu składa pierwszy odczyt relacji.</p>
+                  <p className="hero-lead hero-lead--soft">Nie udajemy, że znamy drugą stronę. Pokazujemy, co z Twoich odpowiedzi wygląda na fakt, co może być nadzieją, co może być lękiem, a co nadal ma w sobie realny potencjał.</p>
+                  <div className="hero-trust-row" aria-label="cechy analizy">
+                    <span>tylko dla Twoich oczu</span>
+                    <span>bez procentowego wyroku</span>
+                    <span>z pytaniami otwartymi</span>
+                  </div>
                   <div className="ctms-landing-actions">
-                    <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij analizę relacji</PrimaryButton>
+                    <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij prywatną analizę</PrimaryButton>
                   </div>
                 </Glass>
                 <div className="hero-side-stack hero-side-stack--premium">
                   <Glass className="glass-panel story-panel map-preview-card hero-reading-card">
-                    <div className="story-kicker">JAK CZYTANY JEST WYNIK</div>
-                    <h3>Nie jedna odpowiedź. Układ zachowań, który wraca.</h3>
-                    <div className="reading-lines">
-                      <div><span>Po rozmowie</span><strong>czy zachowanie się zmienia, czy tylko przez chwilę robi się spokojniej</strong></div>
-                      <div><span>Rozkład ciężaru</span><strong>kto inicjuje kontakt, wraca do trudnych tematów i pilnuje atmosfery</strong></div>
-                      <div><span>Miejsce nadziei</span><strong>czy opiera się na faktach, czy głównie na tym, co mogłoby się wydarzyć</strong></div>
+                    <div className="story-kicker">FRAGMENT SPOSOBU ODCZYTU</div>
+                    <h3>Najważniejsze nie jest to, co czujesz w napięciu. Najważniejsze jest to, co wraca po nim.</h3>
+                    <div className="reading-lines reading-lines--substantial">
+                      <div><span>01</span><strong>Co dzieje się po trudnej rozmowie: realna zmiana zachowania, chwilowe uspokojenie czy powrót do tego samego miejsca.</strong></div>
+                      <div><span>02</span><strong>Kto niesie ciężar relacji wtedy, gdy nie ma już wielkich słów: inicjatywa, naprawa, cisza, unikanie, odpowiedzialność.</strong></div>
+                      <div><span>03</span><strong>Co można jeszcze budować, a czego nie warto już przykrywać nadzieją, samotnością albo dobrym wspomnieniem.</strong></div>
                     </div>
-                    <div className="reading-boundary">Odczyt jest silny wtedy, gdy przykłady z życia potwierdzają wybory zaznaczone w mapie relacji.</div>
+                    <div className="reading-boundary">To jest odczyt jednej perspektywy. Dlatego wynik nie ma być wyrokiem, tylko uporządkowanym lustrem: co widać, czego nie wiemy i co warto sprawdzić w zachowaniu.</div>
                   </Glass>
                 </div>
               </section>
@@ -2058,22 +2128,22 @@ export default function App() {
                   <div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div>
                   <h3>Mapa relacji</h3>
                   <div className="feature-line" />
-                  <p>Wskazujesz, jak rozkłada się inicjatywa, odpowiedzialność, unikanie i ciężar emocjonalny. Nie chodzi o punktację, tylko o zobaczenie układu, który zwykle gubi się w emocjach.</p>
-                  <div className="process-tags"><span>inicjatywa</span><span>ciężar</span><span>unikanie</span></div>
+                  <p>Nie zaczynasz od suchego testu. Najpierw wskazujesz, gdzie w relacji leży inicjatywa, odpowiedzialność, unikanie, ciężar emocjonalny i realny wpływ na naprawę. To porządkuje Twoją perspektywę, ale nie zamienia jej w wyrok.</p>
+                  <div className="process-tags"><span>inicjatywa</span><span>ciężar</span><span>odpowiedzialność</span></div>
                 </Glass>
                 <Glass className="feature-card process-card">
                   <div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div>
-                  <h3>Doprecyzowanie</h3>
+                  <h3>Pytania otwarte</h3>
                   <div className="feature-line" />
-                  <p>Po mapie dostajesz krótkie pytania o konkretną sytuację z życia. To zabezpiecza wynik przed zgadywaniem i przed prostym potwierdzaniem nastroju z danego dnia.</p>
-                  <div className="process-tags"><span>konkret</span><span>przykład</span><span>kontekst</span></div>
+                  <p>Po mapie system dopytuje o konkretne sytuacje. Nie wystarczy kliknąć odpowiedzi, które pasują do nastroju. Trzeba opisać przykład: co się wydarzyło, kto wrócił do rozmowy, co zmieniło się później i co nadal zostaje bez nazwy.</p>
+                  <div className="process-tags"><span>przykład z życia</span><span>kontekst</span><span>spójność</span></div>
                 </Glass>
                 <Glass className="feature-card process-card">
                   <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
                   <h3>Pierwszy odczyt</h3>
                   <div className="feature-line" />
-                  <p>Wynik pokazuje nie tylko ryzyka, ale też miejsca, na których można budować. Oddziela to, co widać już teraz, od tego, czego jedna ankieta uczciwie nie może rozstrzygnąć.</p>
-                  <div className="process-tags"><span>wniosek</span><span>zasoby</span><span>granice</span></div>
+                  <p>Raport nie ma przestraszyć ani pocieszyć na siłę. Ma pokazać, co widać po Twojej stronie, co może dziać się po drugiej stronie, gdzie są zasoby, gdzie koszt emocjonalny i jaki jeden fakt warto teraz sprawdzić zamiast znów analizować wszystko naraz.</p>
+                  <div className="process-tags"><span>zasoby</span><span>ryzyka</span><span>następny ruch</span></div>
                 </Glass>
               </section>
 
@@ -2379,8 +2449,8 @@ export default function App() {
               <div className="section-head compact">
                 <div>
                   <div className="eyebrow">PRZED WYNIKIEM</div>
-                  <h2>Nie zgadujemy. Dopytamy o konkret</h2>
-                  <p>Wybory pokazały kierunek. Teraz potrzebny jest przykład z życia, żeby raport nie powtórzył tylko tego, co zostało kliknięte.</p>
+                  <h2>Teraz potrzebny jest konkret z życia</h2>
+                  <p>Mapa pokazuje układ. Następne pytania otwarte mają sprawdzić, jak ten układ wygląda w realnych sytuacjach, nie tylko w kliknięciach.</p>
                 </div>
                 <div className="progress-wrap">
                   <span>Mapa gotowa</span>
@@ -2415,7 +2485,7 @@ export default function App() {
                 </div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={goToClarification}>Dalej →</PrimaryButton>
+                  <PrimaryButton onClick={startOpenInterview}>Dalej do pytań otwartych →</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
@@ -2460,8 +2530,8 @@ export default function App() {
               <div className="section-head compact">
                 <div className="eyebrow">{(ENTRY_CONFIGS.find((x) => x.key === selectedPath)?.title || "").toUpperCase()}</div>
                 <div className="progress-wrap">
-                  <span>Głębokość {interviewState.depth} z 5</span>
-                  <div className="progress-track"><div className="progress-fill" style={{ width: `${(interviewState.depth / 5) * 100}%` }} /></div>
+                  <span>Pytanie otwarte {interviewState.depth} z {interviewState.localQuestions?.length || 3}</span>
+                  <div className="progress-track"><div className="progress-fill" style={{ width: `${(interviewState.depth / (interviewState.localQuestions?.length || 3)) * 100}%` }} /></div>
                 </div>
               </div>
               <Glass className="question-panel">
@@ -2642,6 +2712,23 @@ export default function App() {
                   ))}
                 </div>
                 {fullReport.closing && <div className="report-closing premium-closing">{fullReport.closing}</div>}
+
+                <Glass className="pulse-upsell-panel">
+                  <div>
+                    <div className="eyebrow">CO DALEJ?</div>
+                    <h3>Kardiogram Relacji</h3>
+                    <p>Masz już pełny odczyt. Ale relacja nie stoi w miejscu. Przez kolejne tygodnie możesz sprawdzać, czy po rozmowach naprawdę zmienia się zachowanie, czy tylko na chwilę robi się spokojniej.</p>
+                    <div className="pulse-upsell-grid">
+                      <span>5 pytań raz w tygodniu</span>
+                      <span>trend komunikacji, zaufania i bliskości</span>
+                      <span>bez pokazywania odpowiedzi partnerowi</span>
+                    </div>
+                  </div>
+                  <div className="pulse-price-card">
+                    <strong>9,99 zł / miesiąc</strong>
+                    <span>Opcjonalnie po raporcie. Dla jednej osoby, prywatnie.</span>
+                  </div>
+                </Glass>
                 <div className="section-actions"><GhostButton onClick={resetAll}>Nowa analiza</GhostButton></div>
               </Glass>
             </motion.div>

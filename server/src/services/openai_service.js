@@ -132,23 +132,66 @@ Zwróć STRICT JSON: {"title":"","insight":"","question":""}`,
 
 const FULL_REPORT_SECTIONS = [
   { title: "WERDYKT WSTĘPNY", tone: "normal" },
-  { title: "CO W TEJ HISTORII NAJBARDZIEJ CIĘ TRZYMA", tone: "gold" },
+  { title: "CO W TEJ HISTORII NAPRAWDĘ DZIAŁA", tone: "gold" },
+  { title: "CO CIĘ TRZYMA", tone: "gold" },
+  { title: "CO KOSZTUJE CIĘ NAJWIĘCEJ", tone: "danger" },
   { title: "CO WIDAĆ PO TWOJEJ STRONIE", tone: "normal" },
-  { title: "CO WIDAĆ PO DRUGIEJ STRONIE — BEZ OCENIANIA", tone: "normal" },
-  { title: "GDZIE ROZCHODZĄ SIĘ NADZIEJA I FAKTY", tone: "gold" },
-  { title: "KTO NIESIE WIĘKSZY CIĘŻAR", tone: "gold" },
-  { title: "CO JEST ZASOBEM, A NIE PROBLEMEM", tone: "gold" },
-  { title: "CO MOŻE CIĘ WYPALAĆ", tone: "danger" },
-  { title: "KRYZYS, SCHEMAT CZY ZWYKŁE PRZECIĄŻENIE", tone: "normal" },
+  { title: "CO MOŻE DZIAĆ SIĘ PO DRUGIEJ STRONIE", tone: "normal" },
+  { title: "GDZIE NADZIEJA ROZMIJA SIĘ Z FAKTAMI", tone: "gold" },
+  { title: "CZY TO KRYZYS, SCHEMAT CZY PRZEMOC", tone: "danger" },
+  { title: "TOKSYCZNE SYGNAŁY — JEŚLI SĄ W DANYCH", tone: "danger" },
   { title: "CZY WIDAĆ REALNĄ ZMIANĘ", tone: "normal" },
-  { title: "CO MOŻE WYGLĄDAĆ JAK ZMIANA, ALE NIĄ NIE BYĆ", tone: "danger" },
-  { title: "CO MÓWIĄ TWOJE ODPOWIEDZI, KIEDY CZYTA SIĘ JE RAZEM", tone: "normal" },
-  { title: "MIEJSCE, W KTÓRYM MOŻESZ DOPISYWAĆ SENS", tone: "gold" },
-  { title: "CO MOŻESZ ZROBIĆ, ŻEBY POPRAWIĆ RELACJĘ", tone: "gold" },
-  { title: "CO MOŻESZ ZROBIĆ, ŻEBY ODZYSKAĆ SPOKÓJ", tone: "normal" },
-  { title: "KIEDY WARTO SIĘ ZATRZYMAĆ I POSZUKAĆ WSPARCIA", tone: "danger" },
+  { title: "CO UDAJE ZMIANĘ, ALE NIĄ NIE JEST", tone: "danger" },
+  { title: "JAK ODZYSKAĆ GRUNT EMOCJONALNY", tone: "normal" },
+  { title: "JAK ROZMAWIAĆ BEZ POWROTU DO TEGO SAMEGO", tone: "gold" },
+  { title: "NASTĘPNY KONKRETNY RUCH", tone: "gold" },
+  { title: "KIEDY ODPUSZCZENIE JEST OCHRONĄ", tone: "normal" },
+  { title: "KIEDY POTRZEBNE JEST WSPARCIE Z ZEWNĄTRZ", tone: "danger" },
   { title: "JEDNO PYTANIE NA KONIEC", tone: "gold" },
 ];
+
+
+function detectBlindspot(payload = {}) {
+  const map = payload.relationshipMap || {};
+  const force = map.forceMap || {};
+  const burdens = Array.isArray(map.burdens) ? map.burdens.map((b) => String(b?.label || b).toLowerCase()) : [];
+  const truths = Array.isArray(map.truthCards) ? map.truthCards.map((x) => String(x).toLowerCase()) : [];
+  const clar = Array.isArray(map.clarificationAnswers) ? map.clarificationAnswers.map((x) => String(x?.answer || '').toLowerCase()).join(' ') : '';
+  const note = String(map.userNote || payload.openText || '').toLowerCase();
+  const text = `${burdens.join(' ')} ${truths.join(' ')} ${clar} ${note}`;
+  const hasControl = /kontrol|zazdro|telefon|sprawdza|zakaz|wolno/i.test(text);
+  const claimsFreedom = /mam wolno[śs][ćc]|pełn[aą] swobod[ęe]|nie ogranicza|mog[ęe] robi[ćc]/i.test(text);
+  const hasThird = /kto[śs] trzeci|trzecia osoba|inna osoba|kto[śs] inny/i.test(text);
+  const saysStable = /wszystko jest dobrze|jest stabilnie|nie ma problemu|jest okej/i.test(text);
+  const meCarries = ['definitely_me','mostly_me'].includes(force.emotionalLabor) || ['definitely_me','mostly_me'].includes(force.repairAfterConflict);
+  const otherAvoids = ['definitely_other','mostly_other'].includes(force.avoidance);
+  const loop = truths.some((t) => t.includes('wracamy w to samo') || t.includes('najlepsze momenty zasłaniają'));
+
+  if ((hasControl && claimsFreedom) || (hasThird && saysStable) || (meCarries && otherAvoids) || loop) {
+    return {
+      blindspot_detected: true,
+      title: 'ANALIZA MECHANIZMÓW OBRONNYCH',
+      text: `W Twojej historii pojawia się miejsce, które warto potraktować ostrożnie: część odpowiedzi próbuje utrzymać obraz relacji jako możliwej do spokojnego uporządkowania, ale inne sygnały pokazują napięcie, które wraca mimo rozmów albo mimo dobrych momentów. To nie znaczy, że oszukujesz siebie celowo. Częściej działa tu zwykły mechanizm ochronny: człowiek próbuje nie zobaczyć wszystkiego naraz, bo wtedy musiałby szybciej podjąć decyzję albo nazwać stratę.
+
+Najważniejsze jest teraz nie szukać winnego, tylko sprawdzić fakt, którego nie da się zagadać. Czy po rozmowie zmienia się zachowanie bez Twojego nacisku. Czy ciężar rozkłada się choć trochę inaczej. Czy spokój trwa dłużej niż kilka dni. Jeśli nie, to nie jest jeszcze dowód na koniec relacji, ale jest sygnał, że sama nadzieja zaczęła pracować mocniej niż obserwacja.`
+    };
+  }
+  return { blindspot_detected: false };
+}
+
+function appendBlindspotSection(report, payload) {
+  const blindspot = detectBlindspot(payload);
+  if (!blindspot.blindspot_detected) return report;
+  const exists = Array.isArray(report.sections) && report.sections.some((s) => String(s?.title || '').toUpperCase().includes('MECHANIZMÓW OBRONNYCH'));
+  if (exists) return report;
+  return {
+    ...report,
+    sections: [
+      ...(report.sections || []),
+      { title: blindspot.title, tone: 'gold', text: blindspot.text }
+    ]
+  };
+}
 
 function wordCount(text = "") {
   return String(text).trim().split(/\s+/).filter(Boolean).length;
@@ -221,7 +264,7 @@ function buildFullReportPrompt() {
 
 NAJWAŻNIEJSZE:
 - Nie piszesz o raporcie. Piszesz o tej osobie i jej relacji.
-- Nie używasz sformułowań: "ta część raportu", "materiał wejściowy", "pełny obraz", "raport pokazuje", "ogólna porada", "w wybranej ścieżce".
+- Nie używasz sformułowań: "ta część raportu", "materiał wejściowy", "pełny obraz", "raport pokazuje", "raport wyjściowy", "ogólna porada", "w wybranej ścieżce", "na podstawie danych wejściowych".
 - Nie powtarzasz tych samych zdań między sekcjami. Każda sekcja ma mieć własną funkcję, własny kąt patrzenia i własny wniosek.
 - Nie robisz listy banałów. Użytkownik ma poczuć: "ktoś zrozumiał mój układ".
 - Nie zakładasz złych intencji drugiej strony. Pokazujesz możliwe neutralne wyjaśnienia: przeciążenie, lęk, brak umiejętności rozmowy, różne tempo decyzji, chaos, niedojrzałość, ale też realny kontakt i zasoby, jeśli dane to wspierają.
@@ -240,6 +283,10 @@ WYMAGANIA JAKOŚCI:
 - Każda sekcja minimum 110 słów.
 - W każdej sekcji odnieś się do konkretnego typu danych: odpowiedzi zamkniętych, mapy relacji, ciężarów, momentu prawdy, doprecyzowań albo opisu własnego. Nie cytuj mechanicznie. Wyciągaj wnioski.
 - W sekcjach praktycznych daj realny ruch, nie pustą radę "porozmawiaj".
+- Obowiązkowo szukaj: sprzeczności między deklaracją i zachowaniem, możliwego efektu potwierdzenia, jednostronności danych, toksycznych wzorców, przemocy psychicznej/fizycznej/ekonomicznej, ale NIE zakładaj ich bez danych.
+- Jeżeli dane są dobre albo mieszane, pokaż optymistyczny, realistyczny kierunek: co można odbudować, co chronić, gdzie jest zasób i jak nie zepsuć tego lękiem.
+- Jeżeli dane są ciężkie, zatrzymaj użytkownika subtelnie: nie strasz, ale nazwij koszt, powtarzalność i granicę bezpieczeństwa.
+- Każda sekcja musi brzmieć jak do konkretnej osoby, nie jak generowany poradnik. Mów: "w tej historii", "u Ciebie", "między Wami", ale bez sztucznej poufałości.
 - Używaj zdań prostych, ale nie prymitywnych. Profesjonalnie, ludzko, bez coachingowego tonu.
 
 STRUKTURA — dokładnie te tytuły i kolejność:
@@ -351,15 +398,15 @@ exports.generateFullReport = async (payload) => {
     }
 
     if (!report) {
-      return buildEmergencyPremiumReport(payload, firstRaw);
+      return appendBlindspotSection(buildEmergencyPremiumReport(payload, firstRaw), payload);
     }
 
     if (reportNeedsRepair(report)) {
       console.warn("[OpenAI Service] Raport premium nadal był zbyt słaby po naprawie. Zwracam bezpieczną wersję redakcyjną bez powtórzeń.");
-      return buildEmergencyPremiumReport(payload, report);
+      return appendBlindspotSection(buildEmergencyPremiumReport(payload, report), payload);
     }
 
-    return report;
+    return appendBlindspotSection(report, payload);
   } catch (error) {
     console.error("[OpenAI Service] Full Report error:", error.message);
     throw error;
