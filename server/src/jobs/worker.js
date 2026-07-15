@@ -7,6 +7,7 @@ const { Resend } = require("resend");
 
 const prisma = require("../db/prisma");
 const openaiService = require("../services/openai.service");
+const { historyByRecoveryToken, saveCheckin } = require("../services/followup.service.js");
 const {
   ensureFollowupSchema,
   dueReminders,
@@ -375,10 +376,28 @@ const reportWorker = new Worker(
       const payload = safeJson(session.payload, {});
       const patterns = safeJson(session.patterns, []);
 
-      const fullReport = await openaiService.generateFullReport({
-        ...payload,
-        patterns,
-      });
+      let fullReport;
+      if (payload?.reportKind === "followup" && payload?.recoveryToken) {
+        const historyContext = await historyByRecoveryToken(payload.recoveryToken);
+        if (!historyContext) throw new Error("Nie znaleziono historii dla raportu porównawczego.");
+        fullReport = await openaiService.generateComparativeReport({
+          history: historyContext,
+          latestConversation: payload.followUpHistory || [],
+          elapsedDays: payload.elapsedDays || 0,
+          patterns,
+        });
+        await saveCheckin(
+          payload.recoveryToken,
+          payload.elapsedDays || 0,
+          payload.followUpHistory || [],
+          fullReport
+        );
+      } else {
+        fullReport = await openaiService.generateFullReport({
+          ...payload,
+          patterns,
+        });
+      }
 
       await prisma.session.update({
         where: { id: token },

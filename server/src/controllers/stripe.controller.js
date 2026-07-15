@@ -1,0 +1,84 @@
+"use strict";
+
+const Stripe = require("stripe");
+
+const stripe = new Stripe((process.env.STRIPE_SECRET_KEY || "").trim(), {
+  apiVersion: "2024-06-20",
+});
+
+function normalizeText(value) {
+  return String(value || "").trim();
+}
+
+exports.createCheckout = async (req, res) => {
+  try {
+    const token = normalizeText(req.body?.token || req.body?.sessionToken || "");
+    const email = normalizeText(req.body?.email || "");
+    const consentAcceptedAt = normalizeText(req.body?.consentAcceptedAt || new Date().toISOString());
+    const payload = req.body?.payload || {};
+    const kind = normalizeText(req.body?.kind || payload?.reportKind || "initial") === "followup" ? "followup" : "initial";
+
+    if (!token) {
+      return res.status(400).json({ ok: false, error: "Brak tokenu sesji." });
+    }
+    if (!email || !email.includes("@")) {
+      return res.status(400).json({ ok: false, error: "Nieprawidłowy adres e-mail." });
+    }
+
+    const ipAddress = normalizeText(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim()
+      || normalizeText(req.ip || "");
+    const userAgent = normalizeText(req.headers["user-agent"] || "");
+
+    // Cena z env — łatwa zmiana bez dotykania kodu
+    const firstPriceAmountGr = parseInt(process.env.PRICE_AMOUNT_GR || "2900", 10);
+    const followupPriceAmountGr = parseInt(process.env.FOLLOWUP_PRICE_AMOUNT_GR || "999", 10);
+    const priceAmountGr = kind === "followup" ? followupPriceAmountGr : firstPriceAmountGr;
+
+    const successUrl = `${process.env.CLIENT_URL}?success=1&token=${encodeURIComponent(token)}`;
+    const cancelUrl = `${process.env.CLIENT_URL}?cancel=1`;
+
+    const session = await stripe.checkout.sessions.create({
+      mode: "payment",
+      customer_email: email,
+      // BLIK i Przelewy24 dla Polski + karta
+      payment_method_types: ["card", "blik"],
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: "pln",
+            unit_amount: priceAmountGr,
+            product_data: {
+              name: kind === "followup" ? "CzyToMaSens — raport porównawczy" : "CzyToMaSens — pełny raport premium",
+              description: kind === "followup"
+                ? "Porównanie zmian z całą historią wcześniejszych odczytów."
+                : "Indywidualny raport analityczny przygotowany na podstawie Twoich odpowiedzi.",
+            },
+          },
+        },
+      ],
+      metadata: {
+        token,
+        email,
+        consentAcceptedAt,
+        ipAddress: ipAddress.slice(0, 200),
+        userAgent: userAgent.slice(0, 500),
+        entryKey: normalizeText(payload?.entryKey || ""),
+        reportKind: kind,
+      },
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+    });
+
+    return res.json({
+      ok: true,
+      url: session.url,
+      checkoutUrl: session.url,
+      sessionId: session.id,
+      token,
+    });
+  } catch (error) {
+    console.error("POST /api/create-checkout error:", error);
+    return res.status(500).json({ ok: false, error: "Błąd inicjalizacji płatności." });
+  }
+};

@@ -1,33 +1,44 @@
 {
-  "name": "czytomasens-server",
-  "version": "1.0.0",
+  "name": "czytomasens",
+  "version": "0.0.2",
   "private": true,
-  "main": "src/server.js",
+  "type": "module",
   "scripts": {
-    "start": "node src/server.js",
-    "dev:api": "nodemon src/server.js",
-    "dev:worker": "nodemon src/jobs/worker.js",
-    "start:api": "node src/server.js",
-    "start:worker": "node src/jobs/worker.js",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy"
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "@prisma/client": "^6.6.0",
+    "@prisma/client": "^7.7.0",
     "bullmq": "^5.73.5",
     "cors": "^2.8.6",
-    "dotenv": "^16.6.1",
-    "express": "^4.22.1",
-    "express-rate-limit": "^7.5.1",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.3.2",
+    "framer-motion": "^11.18.2",
+    "html2canvas": "^1.4.1",
     "ioredis": "^5.10.1",
-    "openai": "^4.104.0",
-    "resend": "^4.8.0",
-    "stripe": "^17.7.0",
-    "zod": "^3.25.76"
+    "jspdf": "^2.5.2",
+    "openai": "^6.34.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "resend": "^6.11.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^6.0.1",
+    "stripe": "^22.0.1",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@types/node": "^25.9.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
     "nodemon": "^3.1.14",
-    "prisma": "^6.6.0"
+    "prisma": "^7.7.0",
+    "typescript": "^5.5.4",
+    "vite": "^5.3.4"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }

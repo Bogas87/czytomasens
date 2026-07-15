@@ -6,7 +6,9 @@ const {
   profileByRecoveryToken,
   scheduleReminder,
   saveCheckin,
+  historyByRecoveryToken,
 } = require("../services/followup.service.js");
+const openaiService = require("../services/openai.service.js");
 
 const router = express.Router();
 
@@ -65,6 +67,38 @@ router.post("/checkin", async (req, res) => {
   } catch (error) {
     console.error("[FollowUp] checkin:", error);
     return res.status(500).json({ error: "Nie udało się zapisać porównania." });
+  }
+});
+
+
+router.post("/start", async (req, res) => {
+  try {
+    const { recoveryToken } = req.body || {};
+    if (!recoveryToken) return res.status(400).json({ error: "Brak tokenu powrotu." });
+    const context = await historyByRecoveryToken(recoveryToken);
+    if (!context) return res.status(404).json({ error: "Nie znaleziono historii analizy." });
+    const elapsedDays = Math.max(0, Number(context.elapsedDays || 0));
+    const question = await openaiService.generateDynamicFollowup({ context: { ...context, elapsedDays }, conversation: [], step: 1 });
+    const referenceLabel = context.checkins?.length ? "poprzedniego odczytu" : "pierwszego odczytu";
+    return res.json({ ok: true, elapsedDays, intro: `Minęło ${elapsedDays} dni od ${referenceLabel}. Nie zaczynamy od zera — sprawdzamy, co wydarzyło się od tamtej pory.`, ...question });
+  } catch (error) {
+    console.error("[FollowUp] start:", error);
+    return res.status(500).json({ error: "Nie udało się rozpocząć ponownego odczytu." });
+  }
+});
+
+router.post("/next", async (req, res) => {
+  try {
+    const { recoveryToken, conversation, latestAnswer } = req.body || {};
+    if (!recoveryToken) return res.status(400).json({ error: "Brak tokenu powrotu." });
+    const context = await historyByRecoveryToken(recoveryToken);
+    if (!context) return res.status(404).json({ error: "Nie znaleziono historii analizy." });
+    const safeConversation = Array.isArray(conversation) ? conversation.slice(0, 12) : [];
+    const result = await openaiService.generateDynamicFollowup({ context, conversation: safeConversation, latestAnswer, step: safeConversation.length + 1 });
+    return res.json({ ok: true, ...result });
+  } catch (error) {
+    console.error("[FollowUp] next:", error);
+    return res.status(500).json({ error: "Nie udało się wygenerować kolejnego pytania." });
   }
 });
 

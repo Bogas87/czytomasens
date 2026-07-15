@@ -214,6 +214,47 @@ async function issueRecoveryTokenForProfile(id) {
   return token;
 }
 
+
+async function historyByRecoveryToken(token) {
+  await ensureFollowupSchema();
+  const profile = await profileByRecoveryToken(token);
+  if (!profile) return null;
+
+  const checkins = await prisma.$queryRawUnsafe(
+    `
+      SELECT elapsed_days, answers, result, created_at
+      FROM ctms_followup_checkins
+      WHERE profile_id=$1
+      ORDER BY created_at ASC
+      LIMIT 50
+    `,
+    profile.id
+  );
+
+  const safeCheckins = checkins || [];
+  const lastCheckin = safeCheckins.length ? safeCheckins[safeCheckins.length - 1] : null;
+  const lastActivityAt = lastCheckin?.created_at || profile.created_at;
+  const elapsedDays = Math.max(
+    0,
+    Math.floor((Date.now() - new Date(lastActivityAt).getTime()) / 86400000)
+  );
+
+  return {
+    profile: {
+      id: profile.id,
+      sessionToken: profile.session_token,
+      email: profile.email,
+      selectedPath: profile.selected_path,
+      baseline: profile.baseline || {},
+      fullReport: profile.full_report || {},
+      createdAt: profile.created_at,
+    },
+    checkins: safeCheckins,
+    lastActivityAt,
+    elapsedDays,
+  };
+}
+
 module.exports = {
   ensureFollowupSchema,
   upsertProfile,
@@ -224,4 +265,5 @@ module.exports = {
   markReminderSent,
   issueRecoveryTokenForProfile,
   publicUrl,
+  historyByRecoveryToken,
 };

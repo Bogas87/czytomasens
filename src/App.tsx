@@ -115,6 +115,20 @@ type FollowUpResult = {
   delta: { tension: number; drift: number; rebuild: number };
   note?: string;
 };
+
+type DynamicFollowUpQuestion = {
+  lead: string;
+  question: string;
+  open: boolean;
+  options: Array<{ id: string; label: string }>;
+  finished?: boolean;
+  teaser?: string;
+};
+
+type DynamicFollowUpExchange = {
+  question: string;
+  answer: string;
+};
 type AnonymousProfile = {
   recoveryToken: string;
   recoveryUrl?: string;
@@ -1429,8 +1443,22 @@ async function saveFollowUpCheckin(payload: any): Promise<any> {
 }
 
 
-async function createCheckout(token: string, email: string, consentAcceptedAt: string): Promise<{ url: string }> {
-  const res = await fetch(`${API_BASE}/api/create-checkout`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, email, consentAcceptedAt }) });
+async function startDynamicFollowUp(recoveryToken: string): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/followup/start`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ recoveryToken }) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || "Nie udało się rozpocząć ponownego odczytu.");
+  return data;
+}
+
+async function nextDynamicFollowUp(payload: any): Promise<any> {
+  const res = await fetch(`${API_BASE}/api/followup/next`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || "Nie udało się wygenerować kolejnego pytania.");
+  return data;
+}
+
+async function createCheckout(token: string, email: string, consentAcceptedAt: string, kind: "initial" | "followup" = "initial", payload: any = {}): Promise<{ url: string }> {
+  const res = await fetch(`${API_BASE}/api/create-checkout`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, email, consentAcceptedAt, kind, payload }) });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data?.url) throw new Error(data?.error || "Błąd inicjalizacji płatności.");
   return { url: data.url };
@@ -1840,6 +1868,11 @@ export default function App() {
   const [followUpEmail, setFollowUpEmail] = useState("");
   const [followUpMessage, setFollowUpMessage] = useState("");
   const [followUpSaving, setFollowUpSaving] = useState(false);
+  const [dynamicFollowUpQuestion, setDynamicFollowUpQuestion] = useState<DynamicFollowUpQuestion | null>(null);
+  const [dynamicFollowUpHistory, setDynamicFollowUpHistory] = useState<DynamicFollowUpExchange[]>([]);
+  const [dynamicFollowUpTeaser, setDynamicFollowUpTeaser] = useState("");
+  const [dynamicFollowUpElapsedDays, setDynamicFollowUpElapsedDays] = useState(0);
+  const [followUpCheckoutBusy, setFollowUpCheckoutBusy] = useState(false);
 
   const [selectedPath, setSelectedPath] = useState<EntryKey | null>(null);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -2225,46 +2258,101 @@ export default function App() {
     }
   };
 
-  const startFollowUpNow = () => {
-    setFollowUpOpen(true);
-    setFollowUpIndex(0);
-    setFollowUpAnswers({});
-    setFollowUpDraft("");
-    setFollowUpResult(null);
+  const ensureAnonymousProfileForFollowUp = async () => {
+    if (anonymousProfile?.recoveryToken) return anonymousProfile;
+    if (!sessionToken || !fullReport) throw new Error("Brak zapisanej analizy do porównania.");
+    const profile = await createAnonymousProfile({
+      sessionToken,
+      email: followUpEmail || email || null,
+      selectedPath,
+      createdAt: new Date().toISOString(),
+      baseline: {
+        tensionPercent: fullReport.tensionPercent,
+        driftPercent: fullReport.driftPercent,
+        rebuildPercent: fullReport.rebuildPercent,
+      },
+      fullReport,
+    });
+    setAnonymousProfile(profile);
+    try { localStorage.setItem(ANON_PROFILE_KEY, JSON.stringify(profile)); } catch {}
+    return profile;
+  };
+
+  const startFollowUpNow = async () => {
+    setFollowUpSaving(true);
     setFollowUpMessage("");
-    window.setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }), 50);
+    setDynamicFollowUpTeaser("");
+    setDynamicFollowUpHistory([]);
+    try {
+      const profile = await ensureAnonymousProfileForFollowUp();
+      const data = await startDynamicFollowUp(profile.recoveryToken);
+      setDynamicFollowUpElapsedDays(Number(data.elapsedDays || 0));
+      setDynamicFollowUpQuestion({ lead: data.lead, question: data.question, open: Boolean(data.open), options: data.options || [], finished: false });
+      setFollowUpDraft("");
+      setFollowUpOpen(true);
+      window.setTimeout(() => window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }), 50);
+    } catch (e: any) {
+      setFollowUpMessage(friendlyError(e, "Nie udało się rozpocząć ponownego odczytu."));
+    } finally {
+      setFollowUpSaving(false);
+    }
   };
 
   const answerFollowUp = async (value?: string) => {
-    const question = FOLLOWUP_QUESTIONS[followUpIndex];
+    const question = dynamicFollowUpQuestion;
     if (!question) return;
     const answerValue = question.open ? followUpDraft.trim() : String(value || "");
     if (!answerValue) return;
-
-    const nextAnswers = { ...followUpAnswers, [question.id]: answerValue };
-    setFollowUpAnswers(nextAnswers);
+    const answerLabel = question.open
+      ? answerValue
+      : question.options.find((option) => option.id === answerValue)?.label || answerValue;
+    const nextHistory = [...dynamicFollowUpHistory, { question: question.question, answer: answerLabel }];
+    setDynamicFollowUpHistory(nextHistory);
     setFollowUpDraft("");
+    setFollowUpSaving(true);
+    try {
+      const profile = await ensureAnonymousProfileForFollowUp();
+      const data = await nextDynamicFollowUp({ recoveryToken: profile.recoveryToken, conversation: nextHistory, latestAnswer: answerLabel });
+      if (data.finished) {
+        setDynamicFollowUpTeaser(data.teaser || "Od poprzedniego odczytu pojawiły się sygnały, które wymagają ponownego porównania całej historii.");
+        setDynamicFollowUpQuestion(null);
+        setFollowUpOpen(false);
+      } else {
+        setDynamicFollowUpQuestion({ lead: data.lead, question: data.question, open: Boolean(data.open), options: data.options || [], finished: false });
+      }
+    } catch (e: any) {
+      setFollowUpMessage(friendlyError(e, "Nie udało się przejść do kolejnego pytania."));
+    } finally {
+      setFollowUpSaving(false);
+    }
+  };
 
-    if (followUpIndex < FOLLOWUP_QUESTIONS.length - 1) {
-      setFollowUpIndex((index) => index + 1);
+  const buyFollowUpReport = async () => {
+    const checkoutEmail = (followUpEmail || email || anonymousProfile?.email || "").trim();
+    if (!checkoutEmail || !checkoutEmail.includes("@")) {
+      setFollowUpMessage("Podaj poprawny adres e-mail, aby otrzymać dostęp do raportu porównawczego.");
       return;
     }
-
-    const createdAt = anonymousProfile?.createdAt || (() => {
-      try { return JSON.parse(localStorage.getItem(FOLLOWUP_KEY) || "{}")?.createdAt; } catch { return undefined; }
-    })();
-    const result = buildFollowUpResult(nextAnswers, fullReport, createdAt);
-    setFollowUpResult(result);
-    setFollowUpOpen(false);
-    try { localStorage.setItem(FOLLOWUP_RESULT_KEY, JSON.stringify(result)); } catch {}
-
-    if (anonymousProfile?.recoveryToken) {
-      saveFollowUpCheckin({
-        recoveryToken: anonymousProfile.recoveryToken,
-        elapsedDays: result.elapsedDays,
-        answers: nextAnswers,
-        result,
-      }).catch(() => {});
+    setFollowUpCheckoutBusy(true);
+    setFollowUpMessage("");
+    try {
+      const profile = await ensureAnonymousProfileForFollowUp();
+      const session = await createSession((selectedPath || "uncertain") as EntryKey);
+      const token = session.token || session.sessionId;
+      if (!token) throw new Error("Nie udało się utworzyć sesji płatności.");
+      const payload = {
+        reportKind: "followup",
+        recoveryToken: profile.recoveryToken,
+        followUpHistory: dynamicFollowUpHistory,
+        elapsedDays: dynamicFollowUpElapsedDays,
+        entryKey: selectedPath,
+      };
+      await updateSession({ token, payload, email: checkoutEmail });
+      const checkout = await createCheckout(token, checkoutEmail, new Date().toISOString(), "followup", payload);
+      window.location.href = checkout.url;
+    } catch (e: any) {
+      setFollowUpMessage(friendlyError(e, "Nie udało się rozpocząć płatności za raport porównawczy."));
+      setFollowUpCheckoutBusy(false);
     }
   };
 
@@ -2273,7 +2361,7 @@ export default function App() {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(FOLLOWUP_KEY);
     localStorage.removeItem(FOLLOWUP_RESULT_KEY);
-    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setConsents([false, false, false, false]); setLegalOpen(null); setInterviewState(null); setInterviewAnswer(""); setForceMap({}); setBurdens([]); setTruthCards([]); setRelationshipNote(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft(""); setFollowUpOpen(false); setFollowUpIndex(0); setFollowUpAnswers({}); setFollowUpDraft(""); setFollowUpResult(null); setFollowUpDueAt(""); setFollowUpMessage("");
+    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setConsents([false, false, false, false]); setLegalOpen(null); setInterviewState(null); setInterviewAnswer(""); setForceMap({}); setBurdens([]); setTruthCards([]); setRelationshipNote(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft(""); setFollowUpOpen(false); setFollowUpIndex(0); setFollowUpAnswers({}); setFollowUpDraft(""); setFollowUpResult(null); setFollowUpDueAt(""); setFollowUpMessage(""); setDynamicFollowUpQuestion(null); setDynamicFollowUpHistory([]); setDynamicFollowUpTeaser(""); setDynamicFollowUpElapsedDays(0); setFollowUpCheckoutBusy(false);
     window.history.replaceState({}, "", "/");
     setRoutePath("/");
   };
@@ -3434,7 +3522,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                     <h3>Ponowny odczyt relacji</h3>
                     <p>Możesz wrócić po jednym, trzech, pięciu albo dziewięciu dniach — wtedy, kiedy wydarzy się coś ważnego. System porówna nowe zachowania z pierwszym odczytem, zamiast kazać Ci robić całą analizę od początku.</p>
                     <div className="pulse-upsell-grid">
-                      <span>7 krótkich pytań kontrolnych</span>
+                      <span>dynamiczne pytania zależne od Twojej historii</span>
                       <span>porównanie z pierwszym raportem</span>
                       <span>powrót bez konta i hasła</span>
                     </div>
@@ -3463,31 +3551,28 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                   </div>
                 </Glass>
 
-                {followUpOpen && (
+                {followUpOpen && dynamicFollowUpQuestion && (
                   <Glass className="followup-checkin-panel">
                     <div className="section-head">
                       <div>
-                        <div className="eyebrow">PONOWNY ODCZYT</div>
-                        <h2>{FOLLOWUP_QUESTIONS[followUpIndex]?.lead}</h2>
-                        <p>{FOLLOWUP_QUESTIONS[followUpIndex]?.text}</p>
+                        <div className="eyebrow">PONOWNY ODCZYT — HISTORIA JEST PAMIĘTANA</div>
+                        <h2>{dynamicFollowUpQuestion.lead}</h2>
+                        <p>{dynamicFollowUpQuestion.question}</p>
                       </div>
-                      <div className="progress-wrap">
-                        <span>{followUpIndex + 1} / {FOLLOWUP_QUESTIONS.length}</span>
-                        <div className="progress-track"><div className="progress-fill" style={{ width: `${((followUpIndex + 1) / FOLLOWUP_QUESTIONS.length) * 100}%` }} /></div>
-                      </div>
+                      <div className="progress-wrap"><span>{Math.min(dynamicFollowUpHistory.length + 1, 6)} / max 6</span></div>
                     </div>
-                    {FOLLOWUP_QUESTIONS[followUpIndex]?.open ? (
+                    {dynamicFollowUpQuestion.open ? (
                       <>
-                        <textarea className="open-textarea" value={followUpDraft} onChange={(event) => setFollowUpDraft(event.target.value)} placeholder="Jedna konkretna sytuacja wystarczy…" rows={6} />
+                        <textarea className="open-textarea" value={followUpDraft} onChange={(event) => setFollowUpDraft(event.target.value)} placeholder="Opisz jeden konkretny fakt albo sytuację…" rows={6} />
                         <div className="section-actions">
                           <GhostButton onClick={() => setFollowUpOpen(false)}>Wróć do raportu</GhostButton>
-                          <PrimaryButton onClick={() => answerFollowUp()} disabled={!followUpDraft.trim()}>Zobacz porównanie</PrimaryButton>
+                          <PrimaryButton onClick={() => answerFollowUp()} disabled={!followUpDraft.trim() || followUpSaving}>{followUpSaving ? "Analizuję…" : "Dalej"}</PrimaryButton>
                         </div>
                       </>
                     ) : (
                       <div className="answers-grid">
-                        {(FOLLOWUP_QUESTIONS[followUpIndex]?.options || []).map((option) => (
-                          <button key={option.id} type="button" className="answer-card" onClick={() => answerFollowUp(option.id)}>
+                        {(dynamicFollowUpQuestion.options || []).map((option) => (
+                          <button key={option.id} type="button" className="answer-card" onClick={() => answerFollowUp(option.id)} disabled={followUpSaving}>
                             <span>{option.label}</span>
                           </button>
                         ))}
@@ -3496,20 +3581,19 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                   </Glass>
                 )}
 
-                {followUpResult && (
-                  <Glass className={`followup-result followup-result--${followUpResult.trend}`}>
-                    <div className="eyebrow">PORÓWNANIE Z PIERWSZYM ODCZYTEM</div>
-                    <h3>{followUpResult.headline}</h3>
-                    <p className="followup-result-summary">{followUpResult.summary}</p>
-                    <div className="followup-comparison-grid">
-                      <div><strong>Co się poprawiło</strong>{followUpResult.improved.length ? followUpResult.improved.map((item) => <p key={item}>• {item}</p>) : <p>Brak jeszcze wystarczająco mocnego sygnału trwałej poprawy.</p>}</div>
-                      <div><strong>Co pozostaje bez zmian</strong>{followUpResult.unchanged.length ? followUpResult.unchanged.map((item) => <p key={item}>• {item}</p>) : <p>Nie widać istotnego obszaru, który pozostał dokładnie w tym samym miejscu.</p>}</div>
-                      <div><strong>Na co uważać</strong>{followUpResult.warning.length ? followUpResult.warning.map((item) => <p key={item}>• {item}</p>) : <p>Nie pojawił się nowy mocny sygnał ostrzegawczy.</p>}</div>
+                {dynamicFollowUpTeaser && (
+                  <Glass className="followup-result followup-result--stable">
+                    <div className="eyebrow">WSTĘPNY SYGNAŁ ZMIANY</div>
+                    <h3>To nie jest już ten sam punkt, co przy pierwszym odczycie.</h3>
+                    <p className="followup-result-summary">{dynamicFollowUpTeaser}</p>
+                    <p>Pełny raport porówna wszystkie wcześniejsze wnioski z nowymi faktami i pokaże, co jest trwałą zmianą, co tylko chwilową ulgą oraz co sprawdzić dalej.</p>
+                    <div className="followup-reminder-card" style={{ marginTop: 18 }}>
+                      <label className="followup-label">E-mail do odbioru raportu</label>
+                      <input type="email" value={followUpEmail || email} onChange={(event) => setFollowUpEmail(event.target.value)} placeholder="Twój adres e-mail" className="followup-email" />
                     </div>
-                    {followUpResult.note && <div className="followup-fact"><strong>Fakt, który zmienił odbiór:</strong> {followUpResult.note}</div>}
                     <div className="section-actions">
-                      <PrimaryButton onClick={openPremiumPdf}>Pobierz raport z porównaniem</PrimaryButton>
-                      <GhostButton onClick={startFollowUpNow}>Sprawdź ponownie później</GhostButton>
+                      <PrimaryButton onClick={buyFollowUpReport} disabled={followUpCheckoutBusy}>{followUpCheckoutBusy ? "Przekierowuję…" : "Odbierz pełne porównanie — 9,99 zł"}</PrimaryButton>
+                      <GhostButton onClick={startFollowUpNow}>Zacznij od nowa ten powrót</GhostButton>
                     </div>
                   </Glass>
                 )}

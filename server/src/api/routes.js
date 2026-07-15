@@ -2,9 +2,9 @@
 
 const { Router } = require("express");
 const rateLimit = require("express-rate-limit");
-const analyzeController = require("./analyze.controller.js");
-const stripeController = require("./stripe.controller.js");
-const interviewController = require("./interview_controller.js");
+const analyzeController = require("../controllers/analyze.controller.js");
+const stripeController = require("../controllers/stripe.controller.js");
+const interviewController = require("../controllers/interview_controller.js");
 
 const router = Router();
 

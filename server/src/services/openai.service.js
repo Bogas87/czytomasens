@@ -241,6 +241,10 @@ function anchorCount(report, payload = {}) {
 
 function reportNeedsRepair(report, payload = {}) {
   if (!report || !Array.isArray(report.sections) || report.sections.length !== 17) return true;
+  if (quoteCount(report) > 2) return true;
+  // Twarda kontrola obecności kilku różnych kotwic z danych. Prompt wymaga minimum 8;
+  // walidator ma nie odrzucać dobrej parafrazy tylko dlatego, że zmieniła odmianę słowa.
+  if (anchorCount(report, payload) < 6) return true;
   for (const section of report.sections) {
     if (!section?.title || !section?.text) return true;
     if (wordCount(section.text) < 95) return true;
@@ -289,6 +293,23 @@ NAJWAŻNIEJSZE:
 - Nie zakładasz złych intencji drugiej strony. Pokazujesz możliwe neutralne wyjaśnienia: przeciążenie, lęk, brak umiejętności rozmowy, różne tempo decyzji, chaos, niedojrzałość, ale też realny kontakt i zasoby, jeśli dane to wspierają.
 - Masz pisać jak człowiek, który dobrze rozumie mechanizmy relacyjne: przywiązanie, lęk przed stratą, asymetrię wysiłku, cykl napięcie-ulga, nadzieję opartą na pojedynczych dobrych momentach, ucieczkę w analizowanie, potrzebę domknięcia.
 - To nie jest terapia, diagnoza ani wyrok. To profesjonalne lustro sytuacji.
+
+SILNIK ROZUMOWANIA — WYKONAJ WEWNĘTRZNIE PRZED PISANIEM:
+- najważniejsze fakty,
+- główne hipotezy,
+- alternatywne hipotezy,
+- sprzeczności i pozorne sprzeczności,
+- kontrsygnały,
+- dominujący mechanizm,
+- mechanizm po stronie użytkownika,
+- obserwowalne zachowania drugiej strony,
+- mechanizm między nimi,
+- największy koszt i największy zasób,
+- sygnały ryzyka i potencjału,
+- co może zmienić ocenę,
+- poziom pewności każdego mocnego wniosku.
+
+Logika każdej ważnej tezy: SYGNAŁ → WZORZEC → KONTRSYGNAŁ → ALTERNATYWNE WYJAŚNIENIE → WNIOSEK → PEWNOŚĆ WNIOSKU. Nie potwierdzaj automatycznie aktualnej emocji użytkownika.
 
 JAK MA DZIAŁAĆ RAPORT:
 - Jeśli odpowiedzi pokazują zasoby, nazwij je i podnieś użytkownika: pokaż, że nie wszystko jest stracone.
@@ -436,6 +457,293 @@ exports.generateFullReport = async (payload) => {
   }
 };
 
+
+
+const COMPARATIVE_REPORT_SECTIONS = [
+  { title: "CO ZMIENIŁO SIĘ OD POPRZEDNIEGO ODCZYTU", tone: "gold", minWords: 70 },
+  { title: "CO SIĘ POPRAWIŁO", tone: "normal", minWords: 55 },
+  { title: "CO SIĘ NIE ZMIENIŁO", tone: "normal", minWords: 55 },
+  { title: "CO SIĘ POGORSZYŁO", tone: "danger", minWords: 55 },
+  { title: "KTÓRE WCZEŚNIEJSZE WNIOSKI SIĘ POTWIERDZIŁY", tone: "normal", minWords: 65 },
+  { title: "KTÓRE WYMAGAJĄ KOREKTY", tone: "gold", minWords: 65 },
+  { title: "CO BYŁO TYLKO CHWILOWĄ ULGĄ", tone: "normal", minWords: 55 },
+  { title: "CO WYGLĄDA NA TRWAŁĄ ZMIANĘ", tone: "gold", minWords: 55 },
+  { title: "CO ROBISZ TY", tone: "normal", minWords: 60 },
+  { title: "CO ROBI DRUGA STRONA", tone: "normal", minWords: 60 },
+  { title: "CO POWSTAJE MIĘDZY WAMI", tone: "gold", minWords: 65 },
+  { title: "CO MOGŁOBY ZMIENIĆ TEN ODCZYT", tone: "normal", minWords: 55 },
+  { title: "JEDEN KONKRETNY RUCH", tone: "gold", minWords: 45 },
+  { title: "GOTOWE KOMUNIKATY DO ROZMOWY", tone: "normal", minWords: 35 },
+  { title: "ARKUSZ OBSERWACJI", tone: "normal", minWords: 18 },
+];
+
+function alignComparativeReportShape(report) {
+  const source = report && typeof report === "object" ? report : {};
+  const sections = Array.isArray(source.sections) ? source.sections : [];
+
+  const aligned = COMPARATIVE_REPORT_SECTIONS.map((spec, index) => {
+    const byTitle = sections.find(
+      (section) => String(section?.title || "").trim().toUpperCase() === spec.title
+    );
+    const incoming = byTitle || sections[index] || {};
+    return {
+      title: spec.title,
+      tone: ["normal", "gold", "danger"].includes(incoming.tone) ? incoming.tone : spec.tone,
+      text: String(incoming.text || "").trim(),
+    };
+  });
+
+  return {
+    headline: String(source.headline || "").trim(),
+    subheadline: String(source.subheadline || "").trim(),
+    previewLine: String(source.previewLine || "").trim(),
+    tensionPercent: Math.max(0, Math.min(100, Number(source.tensionPercent ?? 50))),
+    driftPercent: Math.max(0, Math.min(100, Number(source.driftPercent ?? 50))),
+    rebuildPercent: Math.max(0, Math.min(100, Number(source.rebuildPercent ?? 50))),
+    sections: aligned,
+    closing: String(source.closing || "").trim(),
+  };
+}
+
+function comparativeReportNeedsRepair(report) {
+  if (!report || !Array.isArray(report.sections)) return true;
+  if (report.sections.length !== COMPARATIVE_REPORT_SECTIONS.length) return true;
+  if (wordCount(report.headline) < 4 || wordCount(report.subheadline) < 10 || wordCount(report.previewLine) < 7) return true;
+  if (wordCount(report.closing) < 18) return true;
+  if (quoteCount(report) > 2) return true;
+
+  for (let index = 0; index < COMPARATIVE_REPORT_SECTIONS.length; index++) {
+    const spec = COMPARATIVE_REPORT_SECTIONS[index];
+    const section = report.sections[index];
+    if (!section || section.title !== spec.title || !section.text) return true;
+    if (wordCount(section.text) < spec.minWords) return true;
+    if (hasBadReportLanguage(section.text)) return true;
+  }
+
+  for (let i = 0; i < report.sections.length; i++) {
+    for (let j = i + 1; j < report.sections.length; j++) {
+      if (jaccard(report.sections[i].text, report.sections[j].text) > 0.52) return true;
+    }
+  }
+
+  return false;
+}
+
+function buildComparativeReportPrompt() {
+  const structure = COMPARATIVE_REPORT_SECTIONS
+    .map((section, index) => `${index + 1}. ${section.title} [tone: ${section.tone}]`)
+    .join("\n");
+
+  return `Tworzysz płatny raport porównawczy CzyToMaSens po polsku. Analizujesz CAŁĄ historię jednej relacji: pierwszy raport, wszystkie wcześniejsze powroty i najnowsze odpowiedzi. Nie zaczynasz od zera i nie piszesz nowej wersji pierwszego raportu.
+
+NAJPIERW WEWNĘTRZNIE ZBUDUJ:
+- fakty z poprzednich odczytów,
+- wcześniejsze hipotezy i to, co miało je potwierdzić albo obalić,
+- nowe fakty,
+- co się poprawiło, nie zmieniło i pogorszyło,
+- które wcześniejsze wnioski się potwierdziły,
+- które wymagają korekty,
+- co było chwilową ulgą, a co trwałą zmianą,
+- czy pojawił się nowy mechanizm,
+- zachowanie użytkownika, obserwowalne zachowanie drugiej strony i mechanizm między nimi,
+- kontrsygnały oraz poziom pewności.
+
+WYMAGANIA JAKOŚCI:
+- Użyj minimum 6 konkretnych kotwic z historii tej osoby: wcześniejszego wniosku, konkretnej odpowiedzi, zachowania, sekwencji po konflikcie, inicjatywy, ciężaru albo faktu, który miał zostać sprawdzony.
+- Nie używaj ogólników, które pasują do każdej relacji.
+- Nie wymyślaj poprawy ani pogorszenia. Jeśli w danym obszarze brakuje dowodów, napisz to wprost i wyjaśnij, czego brakuje.
+- Rozdziel odpowiedzialność: „Co robisz Ty”, „Co robi druga strona”, „Co powstaje między Wami”.
+- Dodaj „Co mogłoby zmienić ten odczyt”, jeden konkretny ruch i 1–3 gotowe komunikaty do rozmowy.
+- Dodaj arkusz obserwacji do dalszego śledzenia zmian.
+- Maksymalnie 2 krótkie cytaty użytkownika w całym raporcie.
+- Nie diagnozuj drugiej osoby. Przy przemocy, groźbach, kontroli lub realnym lęku priorytetem jest bezpieczeństwo.
+- Metryki tensionPercent, driftPercent i rebuildPercent oznaczają AKTUALNY stan, a nie prostą szansę uratowania związku.
+- Każda sekcja ma mieć własną funkcję i nie może być parafrazą innej.
+- Sekcje analityczne: zwykle 70–140 słów. Sekcje praktyczne mogą być krótsze, ale nadal konkretne.
+- Sekcja „ARKUSZ OBSERWACJI” ma zawierać krótką instrukcję i dokładnie te pola:
+  Data | co się wydarzyło | kto wykonał pierwszy ruch | co zmieniło się później | koszt emocjonalny 1-10 | poprawa bez nacisku? | utrzymała się? | problem wrócił?
+
+STRUKTURA — dokładnie te tytuły i kolejność:
+${structure}
+
+ZWRÓĆ WYŁĄCZNIE STRICT JSON:
+{"headline":"","subheadline":"","previewLine":"","tensionPercent":0,"driftPercent":0,"rebuildPercent":0,"sections":[{"title":"CO ZMIENIŁO SIĘ OD POPRZEDNIEGO ODCZYTU","text":"","tone":"gold"}],"closing":""}`;
+}
+
+function buildComparativeRepairPrompt() {
+  const structure = COMPARATIVE_REPORT_SECTIONS
+    .map((section, index) => `${index + 1}. ${section.title} [tone: ${section.tone}]`)
+    .join("\n");
+
+  return `Poprawiasz płatny raport porównawczy CzyToMaSens. Poprzednia wersja nie przeszła kontroli jakości: była zbyt krótka, niepełna, powtarzalna albo zbyt ogólna.
+
+Napisz raport od nowa na podstawie CAŁEJ przekazanej historii. Nie streszczaj słabej wersji.
+
+BEZWZGLĘDNE WYMAGANIA:
+- Dokładnie ${COMPARATIVE_REPORT_SECTIONS.length} sekcji i dokładnie podane niżej tytuły.
+- Minimum 6 konkretnych kotwic z historii użytkownika.
+- Nie wymyślaj zmiany, której nie potwierdzają dane.
+- Gdy nie ma podstaw do stwierdzenia poprawy lub pogorszenia, nazwij brak dowodu i wskaż konkretny fakt do sprawdzenia.
+- Każda sekcja ma inny cel i własny wniosek.
+- Maksymalnie 2 krótkie cytaty.
+- Bez języka o „raporcie”, „materiale wejściowym” i bez coachingowych klisz.
+- Sekcje analityczne mają mieć przynajmniej 70 słów; praktyczne mogą być krótsze, ale muszą zawierać konkret.
+- „GOTOWE KOMUNIKATY DO ROZMOWY” zawierają 1–3 zdania dopasowane do tej historii.
+- „ARKUSZ OBSERWACJI” zawiera instrukcję i pola:
+  Data | co się wydarzyło | kto wykonał pierwszy ruch | co zmieniło się później | koszt emocjonalny 1-10 | poprawa bez nacisku? | utrzymała się? | problem wrócił?
+
+STRUKTURA:
+${structure}
+
+ZWRÓĆ WYŁĄCZNIE STRICT JSON w schemacie raportu.`;
+}
+
+function buildEmergencyComparativeReport(payload = {}) {
+  const history = payload?.history || {};
+  const profile = history?.profile || {};
+  const previous = profile?.fullReport || {};
+  const latestConversation = Array.isArray(payload?.latestConversation) ? payload.latestConversation : [];
+  const latestFacts = latestConversation
+    .map((item) => String(item?.answer || item?.user || item?.text || "").trim())
+    .filter(Boolean)
+    .slice(-4);
+  const previousHeadline = String(previous?.headline || "poprzedni odczyt nie miał jednego dominującego wniosku");
+  const elapsedDays = Math.max(0, Number(payload?.elapsedDays || history?.elapsedDays || 0));
+  const factText = latestFacts.length
+    ? latestFacts.map((fact, index) => `${index + 1}) ${fact}`).join(" ")
+    : "W najnowszym powrocie nie zapisano wystarczająco wielu konkretnych odpowiedzi, dlatego część wniosków musi pozostać ostrożna.";
+
+  const base = `Punktem odniesienia jest wcześniejszy wniosek: ${previousHeadline}. Od ostatniego punktu porównania minęło około ${elapsedDays} dni. Najnowsze fakty zapisane przez użytkownika to: ${factText}`;
+  const noInvent = "Tam, gdzie brakuje obserwowalnego zachowania albo powtarzalności, nie ma podstaw do stawiania mocnego wniosku. Trzeba oddzielić zmianę w słowach i atmosferze od zmiany, która utrzymuje się bez przypominania i nacisku.";
+
+  const texts = [
+    `${base} Najważniejsza różnica względem poprzedniego odczytu polega na tym, że mamy już nie tylko deklarację i pierwszy obraz relacji, ale również późniejsze zachowanie do porównania. ${noInvent} Ten odczyt traktuje więc najnowsze odpowiedzi jako test wcześniejszych hipotez, a nie jako nową historię zaczynaną od zera.`,
+    `${base} Na podstawie danych awaryjnych nie ma bezpiecznej podstawy, aby automatycznie ogłosić trwałą poprawę. Za poprawę można uznać dopiero taki ruch, który pojawił się z własnej inicjatywy, został powtórzony i zmniejszył wcześniejszy koszt bez ciągłego pilnowania. ${noInvent} Jeżeli taki fakt znajduje się w Twoich odpowiedziach, potraktuj go jako kontrsygnał wobec wcześniejszego problemu, ale nadal sprawdzaj jego trwałość.`,
+    `${base} Elementy, które nadal wymagają uwagi, to przede wszystkim te wcześniejsze mechanizmy, dla których w nowych danych nie pojawił się wyraźny kontrsygnał. Brak nowego konfliktu nie zawsze oznacza rozwiązanie problemu; czasem oznacza tylko, że nie pojawiła się sytuacja, która go uruchamia. ${noInvent} Najuczciwszym testem pozostaje zachowanie po kolejnym realnym napięciu.`,
+    `${base} Nie ma podstaw, aby dopisywać pogorszenie, którego użytkownik nie opisał. Jednocześnie wzrost niepewności, konieczność ponownego uruchamiania rozmów albo powrót tego samego problemu w podobnej sekwencji byłyby realnym pogorszeniem. ${noInvent} W najbliższym czasie warto zapisywać nie intensywność jednego dnia, lecz powtarzalność całego cyklu.`,
+    `${base} Wcześniejsze wnioski można uznać za potwierdzone tylko wtedy, gdy najnowsze zachowania powtórzyły ten sam kierunek: ten sam rozkład inicjatywy, ten sam sposób domykania konfliktu albo ten sam koszt emocjonalny. ${noInvent} Jeśli nowe fakty pokazują przeciwny, powtarzalny wzorzec, wcześniejszy wniosek powinien zostać osłabiony zamiast broniony na siłę.`,
+    `${base} Korekty wymagają te wcześniejsze tezy, dla których pojawił się realny kontrsygnał. Jedna dobra rozmowa może być ważna, ale nie wystarcza do zmiany oceny całego wzorca. Znacznie mocniejszym dowodem jest samodzielna inicjatywa drugiej strony, powrót do tematu bez przypomnienia i utrzymanie zmiany w czasie. ${noInvent} Odczyt powinien zmieniać się razem z faktami, a nie bronić wcześniejszego werdyktu.`,
+    `${base} Chwilową ulgą jest poprawa, która kończy napięcie, ale nie zmienia następnego podobnego zdarzenia. Może to być dobra rozmowa, przeprosiny, kilka spokojnych dni albo większa bliskość bez zmiany sposobu reagowania na problem. ${noInvent} O trwałości decyduje to, co dzieje się później, gdy nie ma już presji chwili i nikt nie przypomina o wcześniejszych ustaleniach.`,
+    `${base} Trwała zmiana wygląda mniej spektakularnie niż przełomowa rozmowa. Jest widoczna w powtarzalności: ktoś robi to, czego wcześniej nie robił, robi to sam i utrzymuje ten kierunek również wtedy, gdy nie ma kryzysu. ${noInvent} Jeżeli takie zachowanie pojawiło się kilka razy, jest ważniejszym dowodem niż pojedyncza deklaracja. Jeśli nie, ocena powinna pozostać ostrożna.`,
+    `${base} Po Twojej stronie najważniejsze jest teraz pilnowanie różnicy między obserwacją a interpretacją. Sam fakt, że wracasz do analizy, może oznaczać potrzebę sprawdzenia zmiany, ale nie powinien automatycznie oznaczać, że sytuacja jest zła. ${noInvent} Twoim zadaniem nie jest wywoływać zmianę za dwie osoby, tylko zobaczyć, czy pojawia się także bez Twojego prowadzenia.`,
+    `${base} Po stronie drugiej osoby można uczciwie opisywać wyłącznie zachowania. Liczy się to, czy inicjuje kontakt, wraca do trudnego tematu, bierze odpowiedzialność za własną część i utrzymuje zmianę bez presji. ${noInvent} Motywów nie da się rozstrzygnąć samym wynikiem relacji; można natomiast sprawdzić, czy zachowanie daje Ci więcej jasności czy zmusza do dalszego zgadywania.`,
+    `${base} Mechanizm między Wami najlepiej widać w sekwencji. Jeśli brak jasności uruchamia po Twojej stronie większe szukanie odpowiedzi, a to z kolei zwiększa wycofanie albo defensywność drugiej strony, cykl może utrzymywać się nawet przy dobrych intencjach. ${noInvent} Jeżeli natomiast inicjatywa i odpowiedzialność zaczęły się rozkładać bardziej równomiernie, to realnie zmienia strukturę relacji.`,
+    `${base} Ten odczyt zmieniłby się najmocniej, gdyby pojawił się powtarzalny kontrsygnał wobec wcześniejszego problemu. Chodzi o zachowanie obserwowalne bez nacisku: samodzielny powrót do trudnego tematu, konsekwentną zmianę sposobu działania albo trwałe zmniejszenie wcześniejszej asymetrii. ${noInvent} Jednorazowy wyjątek jest sygnałem do obserwacji, nie automatycznym dowodem.`,
+    `${base} Jeden konkretny ruch na teraz: przez najbliższe kilka dni nie inicjuj kolejnej wielkiej rozmowy tylko po to, żeby zmniejszyć niepewność. Zapisz jedno zachowanie, które miało się zmienić, i sprawdź, czy druga strona wykona własny ruch bez prowadzenia jej za rękę. To da więcej informacji niż kolejna deklaracja i pozwoli porównać fakt z wcześniejszym wzorcem.`,
+    `Możesz użyć jednego z tych komunikatów, dopasowując go do sytuacji: „Nie potrzebuję kolejnej obietnicy. Chcę zobaczyć, co zrobimy inaczej przy następnym podobnym problemie.” „Dla mnie ważne jest, żebyś wrócił lub wróciła do tego tematu również bez mojego przypominania.” „Nie chcę rozstrzygać wszystkiego dziś. Chcę sprawdzić, czy ta zmiana utrzyma się także wtedy, gdy emocje opadną.”`,
+    `Przez kolejny okres zapisuj fakty w jednym miejscu, bez interpretowania ich na bieżąco. Użyj pól: Data | co się wydarzyło | kto wykonał pierwszy ruch | co zmieniło się później | koszt emocjonalny 1-10 | poprawa bez nacisku? | utrzymała się? | problem wrócił? Po kilku wpisach porównuj sekwencję zdarzeń, nie pojedynczy dzień. To daje materiał do następnego odczytu i ogranicza wpływ chwilowej ulgi albo chwilowego napięcia.`,
+  ];
+
+  const sections = COMPARATIVE_REPORT_SECTIONS.map((spec, index) => ({
+    title: spec.title,
+    tone: spec.tone,
+    text: texts[index],
+  }));
+
+  const previousTension = Number(previous?.tensionPercent ?? 50);
+  const previousDrift = Number(previous?.driftPercent ?? 50);
+  const previousRebuild = Number(previous?.rebuildPercent ?? 50);
+
+  return {
+    headline: "Najważniejszy jest kierunek zachowania, nie siła jednej rozmowy.",
+    subheadline: `Porównanie obejmuje całą zapisaną historię oraz najnowszy powrót po około ${elapsedDays} dniach. Tam, gdzie dane nie rozstrzygają zmiany, wniosek pozostaje celowo ostrożny.`,
+    previewLine: "Nowe fakty mają znaczenie tylko wtedy, gdy realnie potwierdzają albo podważają wcześniejszy wzorzec.",
+    tensionPercent: Math.max(0, Math.min(100, previousTension)),
+    driftPercent: Math.max(0, Math.min(100, previousDrift)),
+    rebuildPercent: Math.max(0, Math.min(100, previousRebuild)),
+    sections,
+    closing: "Nie oceniaj kolejnego etapu po tym, czy przez chwilę było spokojniej. Oceń go po tym, czy zachowanie stało się bardziej przewidywalne, odpowiedzialność bardziej obustronna, a Ty masz mniej powodów do zgadywania. Zapisane fakty z kolejnych dni dadzą następnemu odczytowi znacznie mocniejszą podstawę niż sama nadzieja albo chwilowe napięcie.",
+  };
+}
+
+
+exports.generateDynamicFollowup = async (payload) => {
+  const history = Array.isArray(payload?.conversation) ? payload.conversation : [];
+  const step = Number(payload?.step || history.length + 1);
+  const context = payload?.context || {};
+
+  const raw = await callOpenAI(
+    `Jesteś analitykiem zmian w jednej konkretnej relacji. To nie jest nowy test. Masz pamiętać poprzedni raport i całą historię powrotów.
+
+CEL:
+Zadaj jedno pytanie, które najlepiej rozstrzygnie, co REALNIE zmieniło się od poprzedniego odczytu.
+
+TOK ROZUMOWANIA, KTÓRY MASZ WYKONAĆ WEWNĘTRZNIE:
+1. Co już wiadomo z poprzedniego raportu i wcześniejszych powrotów.
+2. Jakie 2-4 hipotezy mogą tłumaczyć aktualną zmianę lub brak zmiany.
+3. Jakiego faktu brakuje, aby rozróżnić te hipotezy.
+4. Zadaj pytanie wyłącznie o ten fakt.
+
+ZASADY:
+- Nie powtarzaj ani nie parafrazuj wcześniejszych pytań.
+- Nie pytaj ogólnie „jak się czujesz”, „co jeszcze” ani „czy jest lepiej”.
+- Pytaj o obserwowalne zachowanie, inicjatywę, powtarzalność, sekwencję po konflikcie, jasność, granicę albo kontrsygnał.
+- Uwzględniaj czas od poprzedniego odczytu.
+- Każde pytanie ma wynikać bezpośrednio z historii tej osoby.
+- Nie diagnozuj drugiej osoby i nie używaj etykiet typu narcyz/psychopata.
+- Przy sygnałach przemocy, groźbach, kontroli lub realnym lęku priorytetem jest bezpieczeństwo.
+- Maksymalnie 6 pytań. Możesz zakończyć wcześniej, jeśli materiał wystarcza.
+- Gdy kończysz, teaser ma ujawnić wyłącznie, że zaszła istotna zmiana lub że wcześniejszy wzorzec się utrzymał. Bez darmowego wyniku.
+
+ZWRÓĆ STRICT JSON:
+{"lead":"","question":"","open":false,"options":[{"id":"","label":""}],"finished":false,"teaser":"","reason":""}`,
+    { context, conversation: history, latestAnswer: payload?.latestAnswer || null, step },
+    1800
+  );
+
+  const finished = Boolean(raw.finished) || step >= 6;
+  const options = Array.isArray(raw.options)
+    ? raw.options.slice(0, 5).map((item, index) => ({ id: String(item?.id || `o${index+1}`), label: String(item?.label || "").trim() })).filter((x) => x.label)
+    : [];
+
+  return {
+    lead: String(raw.lead || "Sprawdźmy jeden fakt, który najlepiej pokaże kierunek zmiany."),
+    question: String(raw.question || "Co wydarzyło się od poprzedniego odczytu i najlepiej pokazuje, czy zachowanie naprawdę się zmieniło?"),
+    open: Boolean(raw.open) || options.length < 2,
+    options,
+    finished,
+    teaser: String(raw.teaser || (finished ? "Od poprzedniego odczytu pojawiły się sygnały, które zmieniają sposób czytania tej relacji. Pełne porównanie pokaże, które wcześniejsze wnioski się potwierdziły, a które wymagają korekty." : "")),
+  };
+};
+
+exports.generateComparativeReport = async (payload) => {
+  try {
+    const firstRaw = await callOpenAI(buildComparativeReportPrompt(), payload, 11000);
+    let parsed = ReportSchema.safeParse(alignComparativeReportShape(firstRaw));
+    let report = parsed.success ? parsed.data : null;
+
+    if (!report || comparativeReportNeedsRepair(report)) {
+      const repairedRaw = await callOpenAI(
+        buildComparativeRepairPrompt(),
+        {
+          originalInput: payload,
+          weakReport: firstRaw,
+          qualityProblems:
+            "Raport był niepełny, zbyt krótki, zbyt ogólny, powtarzalny albo nie zachował wymaganej struktury porównawczej.",
+        },
+        13000
+      );
+
+      parsed = ReportSchema.safeParse(alignComparativeReportShape(repairedRaw));
+      if (parsed.success) report = parsed.data;
+    }
+
+    if (report && !comparativeReportNeedsRepair(report)) {
+      return report;
+    }
+
+    console.warn(
+      "[OpenAI Service] Raport porównawczy nie przeszedł kontroli jakości po naprawie. Zwracam bezpieczną wersję awaryjną opartą na zapisanej historii."
+    );
+    return buildEmergencyComparativeReport(payload);
+  } catch (error) {
+    console.error("[OpenAI Service] Comparative Report error:", error.message);
+    if (payload?.history) {
+      return buildEmergencyComparativeReport(payload);
+    }
+    throw error;
+  }
+};
 
 exports.generateInterviewFollowup = async (payload) => {
   const history = Array.isArray(payload?.history) ? payload.history : [];
