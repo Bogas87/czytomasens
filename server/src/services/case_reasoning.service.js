@@ -54,6 +54,11 @@ const QuestionSchema = z.object({
   threadResolved: z.boolean().optional().default(false),
 });
 
+const FastInterviewTurnSchema = z.object({
+  case_delta: CaseStateCandidateSchema.optional().default({}),
+  question: QuestionSchema,
+});
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -131,6 +136,36 @@ function compactCaseStateForModel(state) {
     needs: safeArray(source.needs).slice(-10),
     active_thread: source.active_thread || {},
     safety_flags: safeArray(source.safety_flags).slice(-20),
+  };
+}
+
+function compactCaseStateForInterview(state) {
+  const source = state && typeof state === "object" ? state : {};
+  const compactEntry = (item, maxContent = 520) => ({
+    id: item?.id,
+    type: item?.type,
+    status: item?.status,
+    confidence: item?.confidence,
+    content: truncateString(item?.content || item?.label || item?.underlying_need || item?.stated_question || "", maxContent),
+    label: truncateString(item?.label || "", 360),
+    supporting_evidence: safeArray(item?.supporting_evidence).slice(-8),
+    contradicting_evidence: safeArray(item?.contradicting_evidence).slice(-8),
+    missing_evidence: safeArray(item?.missing_evidence).slice(-5).map((value) => truncateString(value, 320)),
+  });
+
+  return {
+    case_memory: {
+      dominant_topics: safeArray(source.case_memory?.dominant_topics).slice(-10).map((item) => compactEntry(item, 360)),
+      unresolved_questions: safeArray(source.case_memory?.unresolved_questions).filter((item) => item?.status !== "resolved").slice(-12).map((item) => compactEntry(item, 420)),
+      previous_conclusions: safeArray(source.case_memory?.previous_conclusions).slice(-8).map((item) => compactEntry(item, 520)),
+      things_to_verify: safeArray(source.case_memory?.things_to_verify).filter((item) => item?.status !== "resolved").slice(-12).map((item) => compactEntry(item, 420)),
+    },
+    evidence_ledger: safeArray(source.evidence_ledger).slice(-28).map((item) => compactEntry(item, 620)),
+    hypotheses: safeArray(source.hypotheses).slice(-8).map((item) => compactEntry(item, 520)),
+    human_state: source.human_state || {},
+    needs: safeArray(source.needs).slice(-6).map((item) => compactEntry(item, 420)),
+    active_thread: source.active_thread || {},
+    safety_flags: safeArray(source.safety_flags).filter((item) => item?.status !== "resolved").slice(-8).map((item) => compactEntry(item, 420)),
   };
 }
 
@@ -1050,6 +1085,228 @@ ${JSON.stringify({ path, context })}
   }
 }
 
+
+function fastIngestCaseState(previousState, { latestInput = "", source = "open_interview" } = {}) {
+  return fallbackStateUpdate(
+    previousState || createEmptyCaseState({ source }),
+    { latestInput, source }
+  );
+}
+
+function buildFastInterviewTurnPrompt(source, openingQuestion) {
+  return `Jesteś szybkim silnikiem jednej tury wywiadu CzyToMaSens. Nie jesteś terapeutą i nie stawiasz diagnoz.
+
+CEL:
+W JEDNEJ odpowiedzi wykonaj dwie rzeczy:
+1. zaktualizuj tylko te elementy stanu przypadku, które rzeczywiście zmienił nowy materiał,
+2. wygeneruj dokładnie jedno następne pytanie.
+
+ŹRÓDŁO: ${source}
+TRYB: ${openingQuestion ? "pierwsze pytanie po formularzu" : "kolejna odpowiedź w wywiadzie"}
+
+WAŻNE DLA WYDAJNOŚCI I JAKOŚCI:
+- Nie zwracaj całego stanu przypadku. Zwróć tylko DELTĘ: nowe albo zmienione elementy.
+- Zachowuj istniejące id, gdy aktualizujesz istniejący element. Nowy element może nie mieć id.
+- Nie kopiuj ponownie niezmienionych dowodów, hipotez ani wpisów pamięci.
+- Maksymalnie 3 hipotezy o statusie active.
+- Nie potakuj automatycznie. Oddzielaj obserwowalny fakt od interpretacji intencji.
+- Jedna dobra odpowiedź może być jednocześnie pozytywnym kontrsygnałem i nadal nie rozstrzygać całej hipotezy.
+- active_thread utrzymuj przez 2-3 pytania, chyba że pojawi się bezpieczeństwo albo fakt radykalnie zmieniający obraz.
+- Human State opisuje tylko stany operacyjne rozmowy, bez diagnoz klinicznych.
+
+EVIDENCE LEDGER — DOZWOLONE TYPY:
+observed_fact, user_interpretation, inference, unknown.
+
+PYTANIE:
+- ma wynikać bezpośrednio z ostatniej odpowiedzi i aktualnego active_thread,
+- nie może powtarzać ani parafrazować wcześniejszego pytania,
+- ma sprawdzać konkretny brak, kontrsygnał, sekwencję zachowań albo rozróżniać konkurujące wyjaśnienia,
+- nie pytaj ogólnie „jak się czujesz?” ani „co jeszcze?”,
+- nie używaj nazw H1, E12, router, evidence ledger ani hipoteza,
+- lead i observation mają być krótkie,
+- observation nie może udawać pewności większej niż dane.
+
+DLA PIERWSZEGO PYTANIA:
+- musi wynikać z kombinacji wcześniejszych odpowiedzi zamkniętych, checkpointu, układu sił, ciężarów, mapy emocji, Momentu prawdy i notatki,
+- nie pytaj ponownie o coś, co użytkownik już podał wprost,
+- wybierz jeden brakujący fakt o najwyższej wartości rozstrzygającej.
+
+SAFETY:
+- poziom 1: pytanie doprecyzowujące bezpieczeństwo,
+- poziom 2: zwykła analiza ustępuje trybowi bezpieczeństwa,
+- poziom 3: przerwij zwykły flow.
+
+ZWRÓĆ WYŁĄCZNIE STRICT JSON:
+{
+  "case_delta": {
+    "case_memory": {
+      "dominant_topics": [],
+      "unresolved_questions": [],
+      "previous_conclusions": [],
+      "things_to_verify": []
+    },
+    "evidence_ledger": [],
+    "hypotheses": [],
+    "human_state": {},
+    "needs": [],
+    "active_thread": {},
+    "safety_flags": []
+  },
+  "question": {
+    "lead": "",
+    "question": "",
+    "observation": "",
+    "open": true,
+    "options": [],
+    "shouldStop": false,
+    "stopReason": "",
+    "threadResolved": false
+  }
+}`;
+}
+
+async function processInterviewTurn({
+  previousState,
+  latestInput = "",
+  context = {},
+  source = "open_interview",
+  history = [],
+  path = "",
+  openingQuestion = false,
+} = {}) {
+  const provisional = fastIngestCaseState(
+    previousState || createEmptyCaseState({ path, source }),
+    { latestInput, source }
+  );
+
+  const deterministicIntervention = routeIntervention(provisional, {
+    latestInput,
+    history,
+  });
+
+  if (deterministicIntervention.decision === "SAFETY_STOP") {
+    return {
+      caseState: provisional,
+      intervention: deterministicIntervention,
+      question: {
+        lead: "Bezpieczeństwo ma teraz pierwszeństwo przed analizą relacji.",
+        question: "",
+        observation: deterministicIntervention.reason,
+        open: true,
+        options: [],
+        shouldStop: true,
+        stopReason: deterministicIntervention.safetyLevel >= 3 ? "immediate_danger" : "safety",
+        threadResolved: false,
+      },
+      source: "deterministic_safety",
+    };
+  }
+
+  if (!(process.env.OPENAI_API_KEY || "").trim()) {
+    return {
+      caseState: provisional,
+      intervention: deterministicIntervention,
+      question: interventionFallback(deterministicIntervention, provisional),
+      source: "local_fallback",
+    };
+  }
+
+  try {
+    const completion = await openai.chat.completions.create({
+      model: INTERVIEW_MODEL,
+      temperature: 0.18,
+      max_tokens: 2600,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: buildFastInterviewTurnPrompt(source, openingQuestion),
+        },
+        {
+          role: "user",
+          content: `<<<AKTUALNY_STAN>>>
+${JSON.stringify(compactCaseStateForInterview(provisional))}
+<<<AKTUALNY_STAN>>>
+
+<<<DECYZJA_ROUTERA>>>
+${JSON.stringify(deterministicIntervention)}
+<<<DECYZJA_ROUTERA>>>
+
+<<<OSTATNIE_WYMIANY>>>
+${JSON.stringify(safeArray(history).slice(-6))}
+<<<OSTATNIE_WYMIANY>>>
+
+<<<NOWY_MATERIAL>>>
+${truncateString(latestInput, 4200)}
+<<<NOWY_MATERIAL>>>
+
+<<<KONTEKST>>>
+${JSON.stringify(compactUnknown({ path, ...context }))}
+<<<KONTEKST>>>`,
+        },
+      ],
+    });
+
+    const raw = parseJsonContent(completion.choices?.[0]?.message?.content);
+    const parsed = FastInterviewTurnSchema.safeParse(raw);
+    if (!parsed.success) {
+      return {
+        caseState: provisional,
+        intervention: deterministicIntervention,
+        question: interventionFallback(deterministicIntervention, provisional),
+        source: "schema_fallback",
+      };
+    }
+
+    let caseState = normalizeCaseState(parsed.data.case_delta || {}, provisional, source);
+    caseState = appendSafetyAssessment(caseState, assessSafetyText(latestInput), source);
+    caseState = heuristicHumanState(caseState, latestInput, source);
+    caseState = normalizeCaseState(caseState, provisional, source);
+
+    const finalIntervention = routeIntervention(caseState, {
+      latestInput,
+      history,
+    });
+
+    if (finalIntervention.decision === "SAFETY_STOP") {
+      return {
+        caseState,
+        intervention: finalIntervention,
+        question: {
+          lead: "Bezpieczeństwo ma teraz pierwszeństwo przed analizą relacji.",
+          question: "",
+          observation: finalIntervention.reason,
+          open: true,
+          options: [],
+          shouldStop: true,
+          stopReason: finalIntervention.safetyLevel >= 3 ? "immediate_danger" : "safety",
+          threadResolved: false,
+        },
+        source: "model_plus_safety",
+      };
+    }
+
+    const question = parsed.data.question;
+    question.options = safeArray(question.options).slice(0, 5);
+    question.open = question.open || question.options.length < 2;
+
+    return {
+      caseState,
+      intervention: deterministicIntervention,
+      question,
+      source: "single_call",
+    };
+  } catch (error) {
+    console.error("[Case Reasoning] Fast interview turn error:", error.message);
+    return {
+      caseState: provisional,
+      intervention: deterministicIntervention,
+      question: interventionFallback(deterministicIntervention, provisional),
+      source: "request_fallback",
+    };
+  }
+}
+
 function markQuestionAsked(state, intervention, question) {
   const normalized = normalizeCaseState(state, state, "question_asked");
   const thread = normalized.active_thread || normalizeActiveThread({}, "question_asked");
@@ -1098,6 +1355,8 @@ module.exports = {
   assessSafetyText,
   routeIntervention,
   generateNextQuestion,
+  processInterviewTurn,
+  fastIngestCaseState,
   markQuestionAsked,
   isAnalysisReady,
   buildPrivateTeaser,

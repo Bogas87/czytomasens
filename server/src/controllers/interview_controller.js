@@ -41,6 +41,7 @@ const VALID_PATHS = [
 ];
 
 exports.startInterview = async (req, res) => {
+  const startedAt = Date.now();
   try {
     const token = normalizeText(req.body.token || "");
     const path = normalizeText(req.body.path || "");
@@ -72,24 +73,25 @@ exports.startInterview = async (req, res) => {
       "initial_assessment"
     );
 
-    const caseState = await caseReasoning.updateCaseState({
+    // Jedno wywołanie AI zamiast: pełna aktualizacja Case State + osobne generowanie pytania.
+    const turn = await caseReasoning.processInterviewTurn({
       previousState: baseCaseState,
       latestInput: initialContext,
       source: "initial_assessment",
+      history: [],
+      path,
+      openingQuestion: true,
       context: {
-        path,
         initialData,
         initialContext,
-        history: [],
+        openingQuestion: true,
       },
     });
 
-    const intervention = caseReasoning.routeIntervention(caseState, {
-      latestInput: initialContext,
-      history: [],
-    });
+    const caseState = turn.caseState;
+    const intervention = turn.intervention;
 
-    if (intervention.decision === "SAFETY_STOP") {
+    if (intervention?.decision === "SAFETY_STOP" || turn.question?.shouldStop) {
       await prisma.session.update({
         where: { id: token },
         data: {
@@ -100,11 +102,11 @@ exports.startInterview = async (req, res) => {
             history: [],
             currentQuestion: null,
             currentLead: "",
-            currentObservation: intervention.reason,
+            currentObservation: turn.question?.observation || intervention?.reason || "",
             depth: 0,
             startedAt: new Date().toISOString(),
             finished: true,
-            finishReason: intervention.safetyLevel >= 3 ? "immediate_danger" : "safety",
+            finishReason: turn.question?.stopReason || (intervention?.safetyLevel >= 3 ? "immediate_danger" : "safety"),
             caseState,
           },
           payload: {
@@ -116,34 +118,18 @@ exports.startInterview = async (req, res) => {
         },
       });
 
+      console.info(`[Interview] start ${Date.now() - startedAt}ms source=${turn.source || "unknown"} safety`);
       return res.json({
         ok: true,
         crisis: true,
-        safetyLevel: intervention.safetyLevel,
-        message: intervention.reason,
+        safetyLevel: intervention?.safetyLevel || 2,
+        message: turn.question?.observation || intervention?.reason || "Priorytetem jest bezpieczeństwo.",
       });
     }
 
-    let opening;
-    try {
-      opening = await caseReasoning.generateNextQuestion({
-        state: caseState,
-        intervention,
-        history: [],
-        latestInput: initialContext,
-        path,
-        context: {
-          initialData,
-          initialContext,
-          openingQuestion: true,
-        },
-      });
-    } catch (error) {
-      console.warn("[Interview] Personalized opening fallback:", error.message);
-      opening = await interviewService.getOpeningQuestion({ path, initialContext, initialData });
-    }
-
+    let opening = turn.question;
     if (!opening?.question) {
+      // Awaryjnie tylko wtedy wykonujemy starszy generator.
       opening = await interviewService.getOpeningQuestion({ path, initialContext, initialData });
     }
 
@@ -178,6 +164,8 @@ exports.startInterview = async (req, res) => {
       },
     });
 
+    const latencyMs = Date.now() - startedAt;
+    console.info(`[Interview] start ${latencyMs}ms source=${turn.source || "unknown"}`);
     return res.json({
       ok: true,
       question: opening.question,
@@ -185,6 +173,7 @@ exports.startInterview = async (req, res) => {
       observation: opening.observation,
       depth: 1,
       exchangeIndex: 0,
+      latencyMs,
     });
   } catch (error) {
     console.error("[Interview] Start error:", error.message);
@@ -193,6 +182,7 @@ exports.startInterview = async (req, res) => {
 };
 
 exports.nextQuestion = async (req, res) => {
+  const startedAt = Date.now();
   try {
     const token = normalizeText(req.body.token || "");
     const userAnswer = normalizeText(req.body.userAnswer || "");
@@ -230,48 +220,13 @@ exports.nextQuestion = async (req, res) => {
       },
     ];
 
-    const caseState = await caseReasoning.updateCaseState({
-      previousState: state.caseState || existingPayload.caseState,
-      latestInput: userAnswer,
-      source: "open_interview",
-      context: {
-        path: state.path,
-        initialContext: state.initialContext,
-        initialData: state.initialData || existingPayload.initialAssessment || {},
-        history: updatedHistory,
-      },
-    });
+    // Po piątej odpowiedzi nie generujemy niepotrzebnego szóstego pytania.
+    if (updatedHistory.length >= 5) {
+      const caseState = caseReasoning.fastIngestCaseState(
+        state.caseState || existingPayload.caseState,
+        { latestInput: userAnswer, source: "open_interview" }
+      );
 
-    const intervention = caseReasoning.routeIntervention(caseState, {
-      latestInput: userAnswer,
-      history: updatedHistory,
-    });
-
-    if (intervention.decision === "SAFETY_STOP") {
-      await prisma.session.update({
-        where: { id: token },
-        data: {
-          interview_state: {
-            ...state,
-            history: updatedHistory,
-            finished: true,
-            finishReason: intervention.safetyLevel >= 3 ? "immediate_danger" : "safety",
-            caseState,
-          },
-          payload: { ...existingPayload, caseState },
-        },
-      });
-
-      return res.json({
-        ok: true,
-        crisis: true,
-        safetyLevel: intervention.safetyLevel,
-        message: intervention.reason,
-      });
-    }
-
-    const shouldFinishBeforeQuestion = caseReasoning.isAnalysisReady(caseState, updatedHistory.length, 5);
-    if (shouldFinishBeforeQuestion) {
       await prisma.session.update({
         where: { id: token },
         data: {
@@ -279,38 +234,103 @@ exports.nextQuestion = async (req, res) => {
             ...state,
             history: updatedHistory,
             currentQuestion: null,
+            currentLead: "",
+            currentObservation: "",
+            depth: 5,
             finished: true,
-            finishReason: "analysis_ready",
+            finishReason: "max_questions",
             caseState,
           },
           payload: { ...existingPayload, caseState },
         },
       });
 
+      const latencyMs = Date.now() - startedAt;
+      console.info(`[Interview] next ${latencyMs}ms source=local_final_ingest`);
+      return res.json({
+        ok: true,
+        finished: true,
+        exchangeCount: updatedHistory.length,
+        message: "Wywiad zebrał pełny materiał do dalszej analizy.",
+        latencyMs,
+      });
+    }
+
+    // Jedna tura = jedno wywołanie AI: aktualizacja delty stanu + następne pytanie.
+    const turn = await caseReasoning.processInterviewTurn({
+      previousState: state.caseState || existingPayload.caseState,
+      latestInput: userAnswer,
+      source: "open_interview",
+      history: updatedHistory,
+      path: state.path,
+      context: {
+        initialContext: state.initialContext,
+        initialData: state.initialData || existingPayload.initialAssessment || {},
+      },
+    });
+
+    const caseState = turn.caseState;
+    const intervention = turn.intervention;
+    const next = turn.question;
+
+    if (intervention?.decision === "SAFETY_STOP" || next?.stopReason === "safety" || next?.stopReason === "immediate_danger") {
+      await prisma.session.update({
+        where: { id: token },
+        data: {
+          interview_state: {
+            ...state,
+            history: updatedHistory,
+            finished: true,
+            finishReason: next?.stopReason || (intervention?.safetyLevel >= 3 ? "immediate_danger" : "safety"),
+            caseState,
+          },
+          payload: { ...existingPayload, caseState },
+        },
+      });
+
+      console.info(`[Interview] next ${Date.now() - startedAt}ms source=${turn.source || "unknown"} safety`);
+      return res.json({
+        ok: true,
+        crisis: true,
+        safetyLevel: intervention?.safetyLevel || 2,
+        message: next?.observation || intervention?.reason || "Priorytetem jest bezpieczeństwo.",
+      });
+    }
+
+    const analysisReady = caseReasoning.isAnalysisReady(caseState, updatedHistory.length, 5);
+    if (analysisReady || next?.shouldStop) {
+      await prisma.session.update({
+        where: { id: token },
+        data: {
+          interview_state: {
+            ...state,
+            history: updatedHistory,
+            currentQuestion: null,
+            currentLead: "",
+            currentObservation: "",
+            finished: true,
+            finishReason: next?.stopReason || "analysis_ready",
+            caseState,
+          },
+          payload: { ...existingPayload, caseState },
+        },
+      });
+
+      const latencyMs = Date.now() - startedAt;
+      console.info(`[Interview] next ${latencyMs}ms source=${turn.source || "unknown"} finished`);
       return res.json({
         ok: true,
         finished: true,
         exchangeCount: updatedHistory.length,
         message: "Wywiad zebrał wystarczający materiał do dalszej analizy.",
+        latencyMs,
       });
     }
 
-    let next;
-    try {
-      next = await caseReasoning.generateNextQuestion({
-        state: caseState,
-        intervention,
-        history: updatedHistory,
-        latestInput: userAnswer,
-        path: state.path,
-        context: {
-          initialContext: state.initialContext,
-          initialData: state.initialData || existingPayload.initialAssessment || {},
-        },
-      });
-    } catch (error) {
-      console.warn("[Interview] Case router fallback:", error.message);
-      next = await interviewService.getNextQuestion({
+    let nextQuestion = next;
+    if (!nextQuestion?.question) {
+      // Awaryjnie tylko przy niepoprawnej odpowiedzi nowego mechanizmu.
+      nextQuestion = await interviewService.getNextQuestion({
         path: state.path,
         history: updatedHistory,
         latestUserAnswer: userAnswer,
@@ -319,20 +339,21 @@ exports.nextQuestion = async (req, res) => {
       });
     }
 
-    const finished = Boolean(next.shouldStop) || updatedHistory.length >= 5;
-    const stateAfterQuestion = finished
-      ? caseState
-      : caseReasoning.markQuestionAsked(caseState, intervention, next.question);
+    const stateAfterQuestion = caseReasoning.markQuestionAsked(
+      caseState,
+      intervention,
+      nextQuestion.question
+    );
 
     const newState = {
       ...state,
       history: updatedHistory,
-      currentQuestion: finished ? null : next.question,
-      currentLead: finished ? "" : (next.lead || ""),
-      currentObservation: finished ? "" : (next.observation || ""),
+      currentQuestion: nextQuestion.question,
+      currentLead: nextQuestion.lead || "",
+      currentObservation: nextQuestion.observation || "",
       depth: Math.min(5, updatedHistory.length + 1),
-      finished,
-      finishReason: finished ? (next.stopReason || "complete") : null,
+      finished: false,
+      finishReason: null,
       caseState: stateAfterQuestion,
     };
 
@@ -344,23 +365,17 @@ exports.nextQuestion = async (req, res) => {
       },
     });
 
-    if (finished) {
-      return res.json({
-        ok: true,
-        finished: true,
-        exchangeCount: updatedHistory.length,
-        message: "Wywiad zakończony. Przejdź do /interview/finish po podsumowanie.",
-      });
-    }
-
+    const latencyMs = Date.now() - startedAt;
+    console.info(`[Interview] next ${latencyMs}ms source=${turn.source || "unknown"}`);
     return res.json({
       ok: true,
-      question: next.question,
-      lead: next.lead,
-      observation: next.observation,
+      question: nextQuestion.question,
+      lead: nextQuestion.lead,
+      observation: nextQuestion.observation,
       depth: Math.min(5, updatedHistory.length + 1),
       exchangeIndex: updatedHistory.length,
       finished: false,
+      latencyMs,
     });
   } catch (error) {
     console.error("[Interview] Next question error:", error.message);
