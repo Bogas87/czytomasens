@@ -3,6 +3,7 @@
 const crypto = require("crypto");
 const prisma = require("../db/prisma.js");
 const openaiService = require("../services/openai.service.js");
+const caseReasoning = require("../services/case_reasoning.service.js");
 
 function normalizeText(value) {
   return String(value || "").trim();
@@ -126,7 +127,6 @@ exports.createSession = async (_req, res) => {
 exports.updateSession = async (req, res) => {
   try {
     const token = normalizeText(req.body.token || req.body.sessionId || "");
-    const payload = req.body.payload || {};
     const email = normalizeText(req.body.email || "");
 
     if (!token || !isValidUUID(token)) {
@@ -137,6 +137,26 @@ exports.updateSession = async (req, res) => {
     if (!existing) {
       return res.status(404).json({ ok: false, message: "Nie znaleziono sesji." });
     }
+
+    const existingPayload = existing.payload && typeof existing.payload === "object" ? existing.payload : {};
+    const nestedPayload = req.body.payload && typeof req.body.payload === "object" ? req.body.payload : null;
+    const legacyPayload = { ...req.body };
+    delete legacyPayload.token;
+    delete legacyPayload.sessionId;
+    delete legacyPayload.email;
+    delete legacyPayload.payload;
+
+    const incomingPayload = nestedPayload || legacyPayload;
+    const interviewState = existing.interview_state && typeof existing.interview_state === "object"
+      ? existing.interview_state
+      : {};
+    const serverCaseState = interviewState.caseState || existingPayload.caseState || null;
+
+    const payload = {
+      ...existingPayload,
+      ...incomingPayload,
+      ...(serverCaseState && !incomingPayload.caseState ? { caseState: serverCaseState } : {}),
+    };
 
     const updateData = { payload };
     if (email && isValidEmail(email)) updateData.email = email;
@@ -201,10 +221,13 @@ exports.analyzeText = async (req, res) => {
       return res.status(400).json({ ok: false, message: "Opis jest zbyt długi." });
     }
 
-    if (hasCrisisContent(input)) {
+    const safety = caseReasoning.assessSafetyText(input);
+    if (safety.level >= 2) {
       return res.json(
         crisisResponse(
-          "W treści pojawił się sygnał możliwego kryzysu lub przemocy. Standardowa analiza została zatrzymana."
+          safety.level >= 3
+            ? "W treści pojawił się sygnał możliwego bezpośredniego zagrożenia. Zwykła analiza została zatrzymana."
+            : "W treści pojawił się konkretny sygnał przemocy lub realnego zagrożenia. Priorytetem jest teraz bezpieczeństwo, nie dalsza analiza relacji."
         )
       );
     }
@@ -212,19 +235,31 @@ exports.analyzeText = async (req, res) => {
     const detectedPatterns = extractPatterns(input);
     const allPatterns = [...new Set([...incomingPatterns, ...detectedPatterns])];
 
+    let existing = null;
+    if (token) {
+      existing = await prisma.session.findUnique({ where: { id: token } });
+    }
+
+    const existingPayload = existing?.payload && typeof existing.payload === "object" ? existing.payload : {};
+    const interviewState = existing?.interview_state && typeof existing.interview_state === "object" ? existing.interview_state : {};
     const payload = {
-      path: normalizeText(req.body.path || ""),
-      mode: req.body.mode === "hard" ? "hard" : "soft",
+      ...existingPayload,
+      path: normalizeText(req.body.path || existingPayload.path || ""),
+      mode: req.body.mode === "hard" ? "hard" : (existingPayload.mode || "soft"),
       patterns: allPatterns,
       customDescription: input,
-      answers: Array.isArray(req.body.answers) ? req.body.answers.slice(0, 50) : [],
+      openText: normalizeText(req.body.openText || input),
+      answers: Array.isArray(req.body.answers) ? req.body.answers.slice(0, 50) : (existingPayload.answers || []),
+      relationshipMap: req.body.relationshipMap || existingPayload.relationshipMap || {},
+      ...(interviewState.caseState || existingPayload.caseState
+        ? { caseState: interviewState.caseState || existingPayload.caseState }
+        : {}),
+      safetyLevel: safety.level,
     };
 
     const preview = await openaiService.generatePreview(payload);
 
     if (token) {
-      const existing = await prisma.session.findUnique({ where: { id: token } });
-
       if (existing) {
         await prisma.session.update({
           where: { id: token },
@@ -258,10 +293,13 @@ exports.generateCheckpoint = async (req, res) => {
       .filter(Boolean)
       .join("\n");
 
-    if (hasCrisisContent(rawText)) {
+    const safety = caseReasoning.assessSafetyText(rawText);
+    if (safety.level >= 2) {
       return res.json(
         crisisResponse(
-          "W odpowiedziach pojawiły się sygnały możliwego kryzysu. Standardowy checkpoint został zatrzymany."
+          safety.level >= 3
+            ? "W odpowiedziach pojawił się sygnał możliwego bezpośredniego zagrożenia. Standardowy checkpoint został zatrzymany."
+            : "W odpowiedziach pojawił się konkretny sygnał przemocy lub realnego zagrożenia. Priorytetem jest teraz bezpieczeństwo."
         )
       );
     }

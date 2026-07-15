@@ -7,7 +7,9 @@ const openai = new OpenAI({
   apiKey: (process.env.OPENAI_API_KEY || "").trim(),
 });
 
-const MODEL = (process.env.OPENAI_MODEL || "gpt-4o").trim();
+const DEFAULT_MODEL = (process.env.OPENAI_MODEL || "gpt-4o").trim();
+const INTERVIEW_MODEL = (process.env.OPENAI_INTERVIEW_MODEL || DEFAULT_MODEL).trim();
+const REASONING_MODEL = (process.env.OPENAI_REASONING_MODEL || DEFAULT_MODEL).trim();
 
 const NextQuestionSchema = z.object({
   question: z.string().trim().min(10),
@@ -115,11 +117,9 @@ function parseJsonContent(content) {
 function hasCrisisSignal(text) {
   const CRISIS = [
     /\bnie\s*chc[eę]\s*[żz]y[cć]\b/i,
-    /\bsamob[oó]j/i,
-    /\bprzemoc\b/i,
-    /\bpobi[łl]\b/i,
-    /\buderzy[łl]\b/i,
-    /\bboj[eę]\s+si[eę],?\s+[żz]e\s+mnie\s+zabije\b/i,
+    /\b(chc[eę]|zamierzam|zaraz).{0,30}(zabi[cć]\s+si[eę]|odebra[cć]\s+sobie\s+[żz]ycie)\b/i,
+    /\b(uderzy[łl]|pobi[łl]|dusi[łl]|szarpa[łl]|zgwa[łl]ci[łl])\s+(mnie|ją|go)\b/i,
+    /\bboj[eę]\s+si[eę].{0,60}[żz]e\s+mnie\s+zabije\b/i,
   ];
   return CRISIS.some((p) => p.test(text || ""));
 }
@@ -155,7 +155,7 @@ exports.getNextQuestion = async ({ path, history, latestUserAnswer, initialConte
   messages.push({ role: "user", content: latestUserAnswer });
 
   const completion = await openai.chat.completions.create({
-    model: MODEL,
+    model: INTERVIEW_MODEL,
     temperature: 0.3,
     messages,
     response_format: { type: "json_object" },
@@ -177,14 +177,14 @@ exports.getNextQuestion = async ({ path, history, latestUserAnswer, initialConte
   return result.data;
 };
 
-exports.summarizeInterview = async ({ path, history, initialContext }) => {
+exports.summarizeInterview = async ({ path, history, initialContext, caseState }) => {
   const fullTranscript = [
     initialContext ? `[KONTEKST]\n${initialContext}` : "",
     ...history.map((h, i) => `[WYMIANA ${i + 1}]\nPytanie: ${h.ai}\nOdpowiedź: ${h.user}`),
   ].filter(Boolean).join("\n\n");
 
   const completion = await openai.chat.completions.create({
-    model: MODEL,
+    model: REASONING_MODEL,
     temperature: 0.3,
     messages: [
       { role: "system", content: buildSummarySystemPrompt() },
@@ -211,6 +211,21 @@ exports.summarizeInterview = async ({ path, history, initialContext }) => {
 
 exports.getOpeningQuestion = async ({ path, initialContext }) => {
   const OPENING = {
+    unease: {
+      question: "Podaj jeden konkretny moment z ostatnich dwóch tygodni, po którym najmocniej pomyślałeś lub pomyślałaś, że coś między Wami nie gra. Co dokładnie się wtedy wydarzyło?",
+      lead: "Niepokój staje się użyteczny dopiero wtedy, gdy wiadomo, jaki fakt go uruchamia.",
+      observation: "Punkt wejścia do analizy — trudny do nazwania niepokój w relacji.",
+    },
+    asymmetry: {
+      question: "Opisz ostatnią sytuację, w której poczułeś lub poczułaś, że to głównie Ty podtrzymujesz kontakt, rozmowę albo naprawę. Co zrobiłeś Ty i co zrobiła druga strona?",
+      lead: "Nierównowagę najlepiej widać w sekwencji konkretnych działań.",
+      observation: "Punkt wejścia do analizy — możliwa asymetria wysiłku i odpowiedzialności.",
+    },
+    conflict: {
+      question: "Weź ostatni konflikt, który naprawdę coś między Wami zmienił. Jak zaczął się problem, co zrobiła każda ze stron i kto pierwszy próbował go później domknąć?",
+      lead: "Nie sam konflikt, lecz sposób powrotu po nim pokazuje strukturę relacji.",
+      observation: "Punkt wejścia do analizy — powtarzalny sposób przechodzenia przez konflikt.",
+    },
     betrayal: {
       question: "Zanim przejdziemy do szczegółów — powiedz mi co dokładnie się stało i kiedy to odkryłeś. Nie jak się poczułeś, tylko fakty.",
       lead: "Fakty są punktem wyjścia. Interpretacje przychodzą później.",

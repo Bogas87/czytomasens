@@ -2,6 +2,7 @@
 
 const crypto = require("crypto");
 const prisma = require("../db/prisma");
+const caseReasoning = require("./case_reasoning.service.js");
 
 let schemaReadyPromise = null;
 
@@ -16,6 +17,20 @@ function newRecoveryToken() {
 function publicUrl(token) {
   const base = (process.env.CLIENT_URL || "https://www.czytomasens.pl").replace(/\/$/, "");
   return `${base}/?recovery=${encodeURIComponent(token)}`;
+}
+
+function safeJson(value, fallback = {}) {
+  if (value == null) return fallback;
+  if (typeof value === "object") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
+function isNonEmptyObject(value) {
+  return Boolean(value && typeof value === "object" && Object.keys(value).length > 0);
 }
 
 async function ensureFollowupSchema() {
@@ -34,6 +49,9 @@ async function ensureFollowupSchema() {
         selected_path text,
         baseline jsonb NOT NULL DEFAULT '{}'::jsonb,
         full_report jsonb NOT NULL DEFAULT '{}'::jsonb,
+        case_state jsonb NOT NULL DEFAULT '{}'::jsonb,
+        case_version integer NOT NULL DEFAULT 0,
+        case_updated_at timestamptz,
         created_at timestamptz NOT NULL DEFAULT now(),
         updated_at timestamptz NOT NULL DEFAULT now(),
         reminder_due_at timestamptz,
@@ -41,6 +59,10 @@ async function ensureFollowupSchema() {
         reminder_consent boolean NOT NULL DEFAULT false
       )
     `);
+
+    await prisma.$executeRawUnsafe(`ALTER TABLE ctms_anonymous_profiles ADD COLUMN IF NOT EXISTS case_state jsonb NOT NULL DEFAULT '{}'::jsonb`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE ctms_anonymous_profiles ADD COLUMN IF NOT EXISTS case_version integer NOT NULL DEFAULT 0`);
+    await prisma.$executeRawUnsafe(`ALTER TABLE ctms_anonymous_profiles ADD COLUMN IF NOT EXISTS case_updated_at timestamptz`);
 
     await prisma.$executeRawUnsafe(`
       CREATE INDEX IF NOT EXISTS ctms_anonymous_profiles_due_idx
@@ -64,7 +86,25 @@ async function ensureFollowupSchema() {
       ON ctms_followup_checkins (profile_id, created_at DESC)
     `);
 
-    console.log("[FollowUp] Tabele gotowe.");
+    await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS ctms_case_snapshots (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        profile_id uuid NOT NULL REFERENCES ctms_anonymous_profiles(id) ON DELETE CASCADE,
+        version integer NOT NULL,
+        trigger text NOT NULL,
+        state jsonb NOT NULL DEFAULT '{}'::jsonb,
+        source_session_token text,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        UNIQUE(profile_id, version)
+      )
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS ctms_case_snapshots_profile_idx
+      ON ctms_case_snapshots (profile_id, version DESC)
+    `);
+
+    console.log("[FollowUp] Tabele i pamięć przypadku gotowe.");
   })().catch((error) => {
     schemaReadyPromise = null;
     throw error;
@@ -73,11 +113,67 @@ async function ensureFollowupSchema() {
   return schemaReadyPromise;
 }
 
+async function sessionCaseState(sessionToken) {
+  if (!sessionToken) return {};
+  try {
+    const session = await prisma.session.findUnique({
+      where: { id: sessionToken },
+      select: { payload: true },
+    });
+    return safeJson(session?.payload, {})?.caseState || {};
+  } catch {
+    return {};
+  }
+}
+
+async function createInitialSnapshotIfNeeded(profileId, state, sourceSessionToken) {
+  if (!profileId || !caseReasoning.hasMeaningfulCaseState(state)) return null;
+
+  const existing = await prisma.$queryRawUnsafe(
+    `SELECT version FROM ctms_case_snapshots WHERE profile_id=$1 ORDER BY version DESC LIMIT 1`,
+    profileId
+  );
+  if (existing?.length) return existing[0];
+
+  await prisma.$executeRawUnsafe(
+    `
+      UPDATE ctms_anonymous_profiles
+      SET case_state=$2::jsonb,
+          case_version=CASE WHEN case_version < 1 THEN 1 ELSE case_version END,
+          case_updated_at=now(),
+          updated_at=now()
+      WHERE id=$1
+    `,
+    profileId,
+    JSON.stringify(state)
+  );
+
+  const rows = await prisma.$queryRawUnsafe(
+    `
+      INSERT INTO ctms_case_snapshots (profile_id, version, trigger, state, source_session_token)
+      VALUES ($1,1,'initial_report',$2::jsonb,$3)
+      ON CONFLICT (profile_id, version) DO NOTHING
+      RETURNING version, created_at
+    `,
+    profileId,
+    JSON.stringify(state),
+    sourceSessionToken || null
+  );
+
+  return rows[0] || { version: 1 };
+}
+
 async function upsertProfile(payload) {
   await ensureFollowupSchema();
 
   const recoveryToken = newRecoveryToken();
   const hash = hashToken(recoveryToken);
+  const storedSessionState = await sessionCaseState(payload.sessionToken);
+  const caseState = caseReasoning.normalizeCaseState(
+    payload.caseState || storedSessionState || {},
+    payload.caseState || storedSessionState || {},
+    "profile_upsert"
+  );
 
   const rows = await prisma.$queryRawUnsafe(
     `
@@ -92,7 +188,7 @@ async function upsertProfile(payload) {
         baseline = CASE WHEN EXCLUDED.baseline = '{}'::jsonb THEN ctms_anonymous_profiles.baseline ELSE EXCLUDED.baseline END,
         full_report = CASE WHEN EXCLUDED.full_report = '{}'::jsonb THEN ctms_anonymous_profiles.full_report ELSE EXCLUDED.full_report END,
         updated_at = now()
-      RETURNING id, session_token, email, selected_path, created_at, reminder_due_at
+      RETURNING id, session_token, email, selected_path, created_at, reminder_due_at, case_version
     `,
     payload.sessionToken,
     payload.localId || null,
@@ -105,12 +201,17 @@ async function upsertProfile(payload) {
   );
 
   const row = rows[0] || {};
+  if (row.id && caseReasoning.hasMeaningfulCaseState(caseState)) {
+    await createInitialSnapshotIfNeeded(row.id, caseState, payload.sessionToken);
+  }
+
   return {
     recoveryToken,
     recoveryUrl: publicUrl(recoveryToken),
     email: row.email || "",
     createdAt: row.created_at,
     dueAt: row.reminder_due_at,
+    caseVersion: Math.max(1, Number(row.case_version || 0)),
   };
 }
 
@@ -119,7 +220,8 @@ async function profileByRecoveryToken(token) {
 
   const rows = await prisma.$queryRawUnsafe(
     `
-      SELECT id, session_token, email, selected_path, baseline, full_report, created_at, reminder_due_at
+      SELECT id, session_token, email, selected_path, baseline, full_report,
+             case_state, case_version, case_updated_at, created_at, reminder_due_at
       FROM ctms_anonymous_profiles
       WHERE recovery_token_hash = $1
       LIMIT 1
@@ -174,6 +276,59 @@ async function saveCheckin(token, elapsedDays, answers, result) {
   return rows[0] || null;
 }
 
+async function updateCaseStateByRecoveryToken(token, state, options = {}) {
+  await ensureFollowupSchema();
+  const profile = await profileByRecoveryToken(token);
+  if (!profile) return null;
+
+  const normalized = caseReasoning.normalizeCaseState(state, profile.case_state || {}, options.source || "case_update");
+
+  if (options.createSnapshot) {
+    const rows = await prisma.$queryRawUnsafe(
+      `
+        WITH updated AS (
+          UPDATE ctms_anonymous_profiles
+          SET case_state=$2::jsonb,
+              case_version=case_version+1,
+              case_updated_at=now(),
+              updated_at=now()
+          WHERE id=$1
+          RETURNING case_version
+        )
+        INSERT INTO ctms_case_snapshots (profile_id, version, trigger, state, source_session_token)
+        SELECT $1, case_version, $3, $2::jsonb, $4 FROM updated
+        RETURNING version, created_at
+      `,
+      profile.id,
+      JSON.stringify(normalized),
+      options.trigger || "case_update",
+      options.sourceSessionToken || null
+    );
+
+    return { state: normalized, version: rows[0]?.version || Number(profile.case_version || 0) + 1 };
+  }
+
+  const rows = await prisma.$queryRawUnsafe(
+    `
+      UPDATE ctms_anonymous_profiles
+      SET case_state=$2::jsonb, case_updated_at=now(), updated_at=now()
+      WHERE id=$1
+      RETURNING case_version, case_updated_at
+    `,
+    profile.id,
+    JSON.stringify(normalized)
+  );
+
+  return { state: normalized, version: rows[0]?.case_version || Number(profile.case_version || 0) };
+}
+
+async function saveCaseSnapshotByRecoveryToken(token, state, options = {}) {
+  return updateCaseStateByRecoveryToken(token, state, {
+    ...options,
+    createSnapshot: true,
+  });
+}
+
 async function dueReminders(limit = 100) {
   await ensureFollowupSchema();
 
@@ -214,7 +369,6 @@ async function issueRecoveryTokenForProfile(id) {
   return token;
 }
 
-
 async function historyByRecoveryToken(token) {
   await ensureFollowupSchema();
   const profile = await profileByRecoveryToken(token);
@@ -231,13 +385,29 @@ async function historyByRecoveryToken(token) {
     profile.id
   );
 
+  const snapshots = await prisma.$queryRawUnsafe(
+    `
+      SELECT version, trigger, state, source_session_token, created_at
+      FROM ctms_case_snapshots
+      WHERE profile_id=$1
+      ORDER BY version ASC
+      LIMIT 30
+    `,
+    profile.id
+  );
+
   const safeCheckins = checkins || [];
   const lastCheckin = safeCheckins.length ? safeCheckins[safeCheckins.length - 1] : null;
-  const lastActivityAt = lastCheckin?.created_at || profile.created_at;
+  const lastSnapshot = snapshots?.length ? snapshots[snapshots.length - 1] : null;
+  const lastActivityAt = lastCheckin?.created_at || lastSnapshot?.created_at || profile.case_updated_at || profile.created_at;
   const elapsedDays = Math.max(
     0,
     Math.floor((Date.now() - new Date(lastActivityAt).getTime()) / 86400000)
   );
+
+  const rawCaseState = isNonEmptyObject(profile.case_state)
+    ? profile.case_state
+    : lastSnapshot?.state || {};
 
   return {
     profile: {
@@ -249,6 +419,10 @@ async function historyByRecoveryToken(token) {
       fullReport: profile.full_report || {},
       createdAt: profile.created_at,
     },
+    caseState: caseReasoning.normalizeCaseState(rawCaseState, rawCaseState, "history_load"),
+    caseVersion: Number(profile.case_version || 0),
+    caseUpdatedAt: profile.case_updated_at || null,
+    snapshots: snapshots || [],
     checkins: safeCheckins,
     lastActivityAt,
     elapsedDays,
@@ -261,6 +435,8 @@ module.exports = {
   profileByRecoveryToken,
   scheduleReminder,
   saveCheckin,
+  updateCaseStateByRecoveryToken,
+  saveCaseSnapshotByRecoveryToken,
   dueReminders,
   markReminderSent,
   issueRecoveryTokenForProfile,

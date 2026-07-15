@@ -7,8 +7,11 @@ const { Resend } = require("resend");
 
 const prisma = require("../db/prisma");
 const openaiService = require("../services/openai.service");
-const { historyByRecoveryToken, saveCheckin } = require("../services/followup.service.js");
+const caseReasoning = require("../services/case_reasoning.service.js");
 const {
+  historyByRecoveryToken,
+  saveCheckin,
+  updateCaseStateByRecoveryToken,
   ensureFollowupSchema,
   dueReminders,
   markReminderSent,
@@ -377,31 +380,94 @@ const reportWorker = new Worker(
       const patterns = safeJson(session.patterns, []);
 
       let fullReport;
+      let finalCaseState;
+      let nextPayload = { ...payload };
+
       if (payload?.reportKind === "followup" && payload?.recoveryToken) {
         const historyContext = await historyByRecoveryToken(payload.recoveryToken);
         if (!historyContext) throw new Error("Nie znaleziono historii dla raportu porównawczego.");
+
+        const preReportCaseState = await caseReasoning.updateCaseState({
+          previousState: historyContext.caseState,
+          source: "followup_report_preparation",
+          context: {
+            history: caseReasoning.compactHistoryContext(historyContext),
+            latestConversation: payload.followUpHistory || [],
+            elapsedDays: payload.elapsedDays || 0,
+            patterns,
+          },
+        });
+
         fullReport = await openaiService.generateComparativeReport({
-          history: historyContext,
+          history: {
+            ...caseReasoning.compactHistoryContext(historyContext),
+            caseState: caseReasoning.compactCaseStateForModel(preReportCaseState),
+          },
+          caseState: caseReasoning.compactCaseStateForModel(preReportCaseState),
           latestConversation: payload.followUpHistory || [],
           elapsedDays: payload.elapsedDays || 0,
           patterns,
         });
+
+        finalCaseState = await caseReasoning.updateCaseState({
+          previousState: preReportCaseState,
+          source: "followup_report_finalization",
+          context: {
+            previousHistory: caseReasoning.compactHistoryContext(historyContext),
+            latestConversation: payload.followUpHistory || [],
+            comparativeReport: fullReport,
+            elapsedDays: payload.elapsedDays || 0,
+          },
+        });
+
+        await updateCaseStateByRecoveryToken(payload.recoveryToken, finalCaseState, {
+          source: "followup_report_finalization",
+          createSnapshot: true,
+          trigger: "followup_report",
+          sourceSessionToken: token,
+        });
+
         await saveCheckin(
           payload.recoveryToken,
           payload.elapsedDays || 0,
           payload.followUpHistory || [],
           fullReport
         );
+
+        nextPayload = { ...payload, caseState: finalCaseState };
       } else {
+        const preReportCaseState = await caseReasoning.updateCaseState({
+          previousState: payload?.caseState,
+          source: "initial_report_preparation",
+          context: {
+            payload,
+            patterns,
+          },
+        });
+
         fullReport = await openaiService.generateFullReport({
           ...payload,
           patterns,
+          caseState: caseReasoning.compactCaseStateForModel(preReportCaseState),
         });
+
+        finalCaseState = await caseReasoning.updateCaseState({
+          previousState: preReportCaseState,
+          source: "initial_report_finalization",
+          context: {
+            payload,
+            patterns,
+            fullReport,
+          },
+        });
+
+        nextPayload = { ...payload, caseState: finalCaseState };
       }
 
       await prisma.session.update({
         where: { id: token },
         data: {
+          payload: nextPayload,
           full_report: fullReport,
           report_status: "READY",
           report_ready_at: new Date(),

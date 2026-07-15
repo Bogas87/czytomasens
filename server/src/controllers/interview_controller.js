@@ -1,18 +1,14 @@
 "use strict";
 
 /**
- * INTERVIEW CONTROLLER
- * Obsługuje dynamiczny wywiad AI — zastępuje statyczne pytania
- * konwersacją w której AI schodzi głębiej na podstawie odpowiedzi.
- *
- * Nowe endpointy:
- *   POST /api/interview/start      — pierwsze pytanie otwierające
- *   POST /api/interview/next       — następne pytanie na podstawie odpowiedzi
- *   POST /api/interview/finish     — podsumowanie wywiadu, gotowe do analizy
+ * Dynamiczny wywiad CzyToMaSens.
+ * Stan rozmowy zawiera również strukturyzowany caseState, który jest aktualizowany
+ * po każdej odpowiedzi i później trafia do płatnego raportu przez updateSession().
  */
 
 const prisma = require("../db/prisma.js");
 const interviewService = require("../services/ai_interview_service.js");
+const caseReasoning = require("../services/case_reasoning.service.js");
 
 function normalizeText(value) {
   return String(value || "").trim();
@@ -22,15 +18,28 @@ function isValidUUID(uuid) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-5][0-9a-f]{3}-[089ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(uuid || "");
 }
 
-const VALID_PATHS = ["betrayal", "uncertain", "stagnation", "returning", "triangle", "loop"];
+function safeJson(value, fallback) {
+  if (value == null) return fallback;
+  if (typeof value === "object") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
 
-// ─── START WYWIADU ────────────────────────────────────────────────────────────
+const VALID_PATHS = [
+  "unease",
+  "betrayal",
+  "uncertain",
+  "asymmetry",
+  "conflict",
+  "stagnation",
+  "returning",
+  "triangle",
+  "loop",
+];
 
-/**
- * POST /api/interview/start
- * Body: { token, path, initialContext }
- * Zwraca pierwsze pytanie AI.
- */
 exports.startInterview = async (req, res) => {
   try {
     const token = normalizeText(req.body.token || "");
@@ -45,9 +54,29 @@ exports.startInterview = async (req, res) => {
       return res.status(400).json({ ok: false, message: "Nieprawidłowa ścieżka analizy." });
     }
 
-    const opening = await interviewService.getOpeningQuestion({ path, initialContext });
+    const existing = await prisma.session.findUnique({
+      where: { id: token },
+      select: { payload: true, interview_state: true },
+    });
+    if (!existing) {
+      return res.status(404).json({ ok: false, message: "Nie znaleziono sesji." });
+    }
 
-    // Zapisz stan wywiadu w sesji
+    const opening = await interviewService.getOpeningQuestion({ path, initialContext });
+    const existingPayload = safeJson(existing.payload, {});
+    const previousInterview = safeJson(existing.interview_state, {});
+    const caseState = caseReasoning.normalizeCaseState(
+      previousInterview.caseState || existingPayload.caseState || caseReasoning.createEmptyCaseState({ path, initialContext, source: "open_interview" }),
+      previousInterview.caseState || existingPayload.caseState || null,
+      "open_interview"
+    );
+
+    const stateAfterQuestion = caseReasoning.markQuestionAsked(
+      caseState,
+      { decision: "CLARIFY_FACT", target: "opening_fact" },
+      opening.question
+    );
+
     await prisma.session.update({
       where: { id: token },
       data: {
@@ -56,8 +85,17 @@ exports.startInterview = async (req, res) => {
           initialContext,
           history: [],
           currentQuestion: opening.question,
+          currentLead: opening.lead,
+          currentObservation: opening.observation,
           depth: 1,
           startedAt: new Date().toISOString(),
+          finished: false,
+          caseState: stateAfterQuestion,
+        },
+        payload: {
+          ...existingPayload,
+          path,
+          caseState: stateAfterQuestion,
         },
       },
     });
@@ -76,13 +114,6 @@ exports.startInterview = async (req, res) => {
   }
 };
 
-// ─── NASTĘPNE PYTANIE ─────────────────────────────────────────────────────────
-
-/**
- * POST /api/interview/next
- * Body: { token, userAnswer }
- * Zwraca następne pytanie AI lub sygnał zakończenia.
- */
 exports.nextQuestion = async (req, res) => {
   try {
     const token = normalizeText(req.body.token || "");
@@ -100,36 +131,44 @@ exports.nextQuestion = async (req, res) => {
       return res.status(400).json({ ok: false, message: "Odpowiedź zbyt długa (max 5000 znaków)." });
     }
 
-    // Pobierz stan wywiadu
     const session = await prisma.session.findUnique({
       where: { id: token },
-      select: { interview_state: true },
+      select: { interview_state: true, payload: true },
     });
 
     if (!session?.interview_state) {
       return res.status(400).json({ ok: false, message: "Brak aktywnego wywiadu. Zacznij od /interview/start." });
     }
 
-    const state = typeof session.interview_state === "string"
-      ? JSON.parse(session.interview_state)
-      : session.interview_state;
-
-    // Dodaj odpowiedź użytkownika do historii
+    const state = safeJson(session.interview_state, {});
+    const existingPayload = safeJson(session.payload, {});
     const updatedHistory = [
-      ...state.history,
-      { ai: state.currentQuestion, user: userAnswer },
+      ...(Array.isArray(state.history) ? state.history : []),
+      {
+        ai: state.currentQuestion,
+        user: userAnswer,
+        lead: state.currentLead || "",
+        observation: state.currentObservation || "",
+      },
     ];
 
-    // Zapytaj AI o następne pytanie
-    const next = await interviewService.getNextQuestion({
-      path: state.path,
-      history: updatedHistory,
-      latestUserAnswer: userAnswer,
-      initialContext: state.initialContext,
+    const caseState = await caseReasoning.updateCaseState({
+      previousState: state.caseState || existingPayload.caseState,
+      latestInput: userAnswer,
+      source: "open_interview",
+      context: {
+        path: state.path,
+        initialContext: state.initialContext,
+        history: updatedHistory,
+      },
     });
 
-    // Obsługa kryzysu
-    if (next.stopReason === "crisis") {
+    const intervention = caseReasoning.routeIntervention(caseState, {
+      latestInput: userAnswer,
+      history: updatedHistory,
+    });
+
+    if (intervention.decision === "SAFETY_STOP") {
       await prisma.session.update({
         where: { id: token },
         data: {
@@ -137,29 +176,92 @@ exports.nextQuestion = async (req, res) => {
             ...state,
             history: updatedHistory,
             finished: true,
-            finishReason: "crisis",
+            finishReason: intervention.safetyLevel >= 3 ? "immediate_danger" : "safety",
+            caseState,
           },
+          payload: { ...existingPayload, caseState },
         },
       });
-      return res.json({ ok: true, crisis: true });
+
+      return res.json({
+        ok: true,
+        crisis: true,
+        safetyLevel: intervention.safetyLevel,
+        message: intervention.reason,
+      });
     }
 
-    // Zapisz nowy stan
+    const shouldFinishBeforeQuestion = caseReasoning.isAnalysisReady(caseState, updatedHistory.length, 5);
+    if (shouldFinishBeforeQuestion) {
+      await prisma.session.update({
+        where: { id: token },
+        data: {
+          interview_state: {
+            ...state,
+            history: updatedHistory,
+            currentQuestion: null,
+            finished: true,
+            finishReason: "analysis_ready",
+            caseState,
+          },
+          payload: { ...existingPayload, caseState },
+        },
+      });
+
+      return res.json({
+        ok: true,
+        finished: true,
+        exchangeCount: updatedHistory.length,
+        message: "Wywiad zebrał wystarczający materiał do dalszej analizy.",
+      });
+    }
+
+    let next;
+    try {
+      next = await caseReasoning.generateNextQuestion({
+        state: caseState,
+        intervention,
+        history: updatedHistory,
+        latestInput: userAnswer,
+        path: state.path,
+        context: { initialContext: state.initialContext },
+      });
+    } catch (error) {
+      console.warn("[Interview] Case router fallback:", error.message);
+      next = await interviewService.getNextQuestion({
+        path: state.path,
+        history: updatedHistory,
+        latestUserAnswer: userAnswer,
+        initialContext: state.initialContext,
+      });
+    }
+
+    const finished = Boolean(next.shouldStop) || updatedHistory.length >= 5;
+    const stateAfterQuestion = finished
+      ? caseState
+      : caseReasoning.markQuestionAsked(caseState, intervention, next.question);
+
     const newState = {
       ...state,
       history: updatedHistory,
-      currentQuestion: next.shouldStop ? null : next.question,
-      depth: next.depth,
-      finished: next.shouldStop,
-      finishReason: next.shouldStop ? (next.stopReason || "complete") : null,
+      currentQuestion: finished ? null : next.question,
+      currentLead: finished ? "" : (next.lead || ""),
+      currentObservation: finished ? "" : (next.observation || ""),
+      depth: Math.min(5, updatedHistory.length + 1),
+      finished,
+      finishReason: finished ? (next.stopReason || "complete") : null,
+      caseState: stateAfterQuestion,
     };
 
     await prisma.session.update({
       where: { id: token },
-      data: { interview_state: newState },
+      data: {
+        interview_state: newState,
+        payload: { ...existingPayload, caseState: stateAfterQuestion },
+      },
     });
 
-    if (next.shouldStop) {
+    if (finished) {
       return res.json({
         ok: true,
         finished: true,
@@ -173,7 +275,7 @@ exports.nextQuestion = async (req, res) => {
       question: next.question,
       lead: next.lead,
       observation: next.observation,
-      depth: next.depth,
+      depth: Math.min(5, updatedHistory.length + 1),
       exchangeIndex: updatedHistory.length,
       finished: false,
     });
@@ -183,13 +285,6 @@ exports.nextQuestion = async (req, res) => {
   }
 };
 
-// ─── ZAKOŃCZENIE I PODSUMOWANIE ───────────────────────────────────────────────
-
-/**
- * POST /api/interview/finish
- * Body: { token }
- * Zwraca podsumowanie wzorców gotowe do przekazania do głównej analizy.
- */
 exports.finishInterview = async (req, res) => {
   try {
     const token = normalizeText(req.body.token || "");
@@ -200,38 +295,51 @@ exports.finishInterview = async (req, res) => {
 
     const session = await prisma.session.findUnique({
       where: { id: token },
-      select: { interview_state: true },
+      select: { interview_state: true, payload: true, patterns: true },
     });
 
     if (!session?.interview_state) {
       return res.status(400).json({ ok: false, message: "Brak wywiadu do podsumowania." });
     }
 
-    const state = typeof session.interview_state === "string"
-      ? JSON.parse(session.interview_state)
-      : session.interview_state;
+    const state = safeJson(session.interview_state, {});
+    const existingPayload = safeJson(session.payload, {});
+    const currentPatterns = Array.isArray(session.patterns) ? session.patterns : safeJson(session.patterns, []);
 
     if (!state.history || state.history.length === 0) {
       return res.status(400).json({ ok: false, message: "Brak odpowiedzi do analizy." });
     }
 
-    // Podsumuj wywiad
     const summary = await interviewService.summarizeInterview({
       path: state.path,
       history: state.history,
       initialContext: state.initialContext,
+      caseState: state.caseState,
     });
 
-    // Zapisz podsumowanie w sesji (będzie użyte przez główną analizę)
+    const finalCaseState = await caseReasoning.updateCaseState({
+      previousState: state.caseState || existingPayload.caseState,
+      source: "open_interview_summary",
+      context: {
+        path: state.path,
+        history: state.history,
+        summary,
+      },
+    });
+
+    const nextPatterns = [...new Set([
+      ...currentPatterns,
+      summary.riskLevel === "critical" ? "critical_risk" : null,
+      summary.riskLevel === "high" ? "high_risk" : null,
+      state.path,
+    ].filter(Boolean))];
+
     await prisma.session.update({
       where: { id: token },
       data: {
-        interview_state: { ...state, summary, finished: true },
-        patterns: [
-          summary.riskLevel === "critical" ? "critical_risk" : null,
-          summary.riskLevel === "high" ? "high_risk" : null,
-          state.path,
-        ].filter(Boolean),
+        interview_state: { ...state, summary, finished: true, caseState: finalCaseState },
+        payload: { ...existingPayload, caseState: finalCaseState, interviewSummary: summary },
+        patterns: nextPatterns,
       },
     });
 
@@ -241,6 +349,7 @@ exports.finishInterview = async (req, res) => {
       exchangeCount: state.history.length,
       path: state.path,
       interviewTranscript: state.history,
+      caseStateVersion: "session",
     });
   } catch (error) {
     console.error("[Interview] Finish error:", error.message);

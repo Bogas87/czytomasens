@@ -1294,7 +1294,15 @@ function friendlyError(error: unknown, fallback: string): string {
 }
 
 function hasCrisisContent(text: string): boolean {
-  const patterns = [/nie\s+chc[eę]\s+[zż]y[cć]/i, /samob[oó]j/i, /zabij(e|ę|esz|a)/i, /boj[eę]\s+si[eę].*(zabije|uderzy|skrzywdzi)/i, /pobi[łl]/i, /przemoc/i, /grozi/i, /n[oó][zż]/i, /krew/i];
+  // Frontend zatrzymuje tylko wyraźne sygnały bezpośredniego zagrożenia lub konkretnej przemocy.
+  // Niejednoznaczne słowa typu „przemoc”, „kontrola” czy „groźby” są doprecyzowywane przez backendowy Safety Layer.
+  const patterns = [
+    /nie\s+chc[eę]\s+[zż]y[cć]/i,
+    /(chc[eę]|zamierzam|zaraz).{0,30}(zabi[cć]\s+si[eę]|odebra[cć]\s+sobie\s+[zż]ycie)/i,
+    /boj[eę]\s+si[eę].{0,60}[zż]e\s+mnie\s+zabije/i,
+    /(uderzy[łl]|pobi[łl]|dusi[łl]|szarpa[łl]|zgwa[łl]ci[łl])\s+(mnie|ją|go)/i,
+    /zmusi[łl]\s+mnie\s+do\s+(seksu|stosunku)/i,
+  ];
   return patterns.some((re) => re.test(text));
 }
 
@@ -2286,6 +2294,11 @@ export default function App() {
     try {
       const profile = await ensureAnonymousProfileForFollowUp();
       const data = await startDynamicFollowUp(profile.recoveryToken);
+      if (data?.crisis) {
+        setFollowUpOpen(false);
+        setStage("crisis");
+        return;
+      }
       setDynamicFollowUpElapsedDays(Number(data.elapsedDays || 0));
       setDynamicFollowUpQuestion({ lead: data.lead, question: data.question, open: Boolean(data.open), options: data.options || [], finished: false });
       setFollowUpDraft("");
@@ -2313,6 +2326,12 @@ export default function App() {
     try {
       const profile = await ensureAnonymousProfileForFollowUp();
       const data = await nextDynamicFollowUp({ recoveryToken: profile.recoveryToken, conversation: nextHistory, latestAnswer: answerLabel });
+      if (data?.crisis) {
+        setFollowUpOpen(false);
+        setDynamicFollowUpQuestion(null);
+        setStage("crisis");
+        return;
+      }
       if (data.finished) {
         setDynamicFollowUpTeaser(data.teaser || "Od poprzedniego odczytu pojawiły się sygnały, które wymagają ponownego porównania całej historii.");
         setDynamicFollowUpQuestion(null);
@@ -2502,12 +2521,41 @@ ${finalOwnText}`;
     setStage("map_summary");
   };
 
-  const startOpenInterview = () => {
+  const startOpenInterview = async () => {
     if (!path) return;
-    setInterviewState(createLocalInterviewState(path));
     setInterviewAnswer("");
     setError(null);
     setStage("interview");
+    setInterviewBusy(true);
+
+    try {
+      const token = await ensureSession(path.key);
+      const initialContext = buildCompositeOpenText({});
+      const res = await fetch(`${API_BASE}/api/interview/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, path: path.key, initialContext }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data?.ok || !data?.question) throw new Error(data?.message || "Nie udało się uruchomić wywiadu adaptacyjnego.");
+
+      setInterviewState({
+        path: path.key,
+        currentQuestion: data.question,
+        currentLead: data.lead || "",
+        currentObservation: data.observation || "",
+        history: [],
+        depth: Number(data.depth || 1),
+        finished: false,
+        exchangeIndex: Number(data.exchangeIndex || 0),
+        source: "api",
+      });
+    } catch {
+      // Bezpieczny fallback: obecny lokalny wywiad zostaje zachowany, gdy API chwilowo nie odpowiada.
+      setInterviewState(createLocalInterviewState(path));
+    } finally {
+      setInterviewBusy(false);
+    }
   };
 
   const goToClarification = () => {

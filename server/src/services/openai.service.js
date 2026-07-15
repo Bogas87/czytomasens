@@ -7,7 +7,10 @@ const openai = new OpenAI({
   apiKey: (process.env.OPENAI_API_KEY || "").trim(),
 });
 
-const MODEL = (process.env.OPENAI_MODEL || "gpt-4o").trim();
+const DEFAULT_MODEL = (process.env.OPENAI_MODEL || "gpt-4o").trim();
+const INTERVIEW_MODEL = (process.env.OPENAI_INTERVIEW_MODEL || DEFAULT_MODEL).trim();
+const REASONING_MODEL = (process.env.OPENAI_REASONING_MODEL || DEFAULT_MODEL).trim();
+const REPORT_MODEL = (process.env.OPENAI_REPORT_MODEL || DEFAULT_MODEL).trim();
 
 const SectionSchema = z.object({
   title: z.string().trim().min(1),
@@ -57,9 +60,9 @@ function parseJsonContent(content) {
   }
 }
 
-async function callOpenAI(systemPrompt, payload, maxTokens = 2000) {
+async function callOpenAI(systemPrompt, payload, maxTokens = 2000, model = REASONING_MODEL) {
   const completion = await openai.chat.completions.create({
-    model: MODEL,
+    model,
     temperature: 0.4,
     max_tokens: maxTokens,
     messages: [
@@ -294,6 +297,16 @@ NAJWAŻNIEJSZE:
 - Masz pisać jak człowiek, który dobrze rozumie mechanizmy relacyjne: przywiązanie, lęk przed stratą, asymetrię wysiłku, cykl napięcie-ulga, nadzieję opartą na pojedynczych dobrych momentach, ucieczkę w analizowanie, potrzebę domknięcia.
 - To nie jest terapia, diagnoza ani wyrok. To profesjonalne lustro sytuacji.
 
+PAMIĘĆ STRUKTURYZOWANA:
+Jeżeli w danych znajduje się caseState, jest to rdzeń pamięci przypadku. Używaj go jako mapy, ale nie kopiuj go do raportu.
+- evidence_ledger rozróżnia observed_fact, user_interpretation, inference i unknown. Nigdy nie traktuj user_interpretation jako faktu.
+- hypotheses zawierają konkurujące wyjaśnienia, dowody za, dowody przeciw i braki. Nie wybieraj zwycięzcy bez przewagi danych.
+- human_state opisuje stan operacyjny rozmowy, nie diagnozę.
+- needs zawierają hipotezę o realnej potrzebie użytkownika; nie przedstawiaj jej jako pewnika bez oparcia.
+- active_thread pokazuje wątek, który był aktualnie rozstrzygany.
+- safety_flags mają pierwszeństwo przed zwykłą analizą.
+Każdy mocny wniosek skonfrontuj z kontrsygnałem i poziomem pewności.
+
 SILNIK ROZUMOWANIA — WYKONAJ WEWNĘTRZNIE PRZED PISANIEM:
 - najważniejsze fakty,
 - główne hipotezy,
@@ -427,7 +440,7 @@ function buildEmergencyPremiumReport(payload = {}, weak = {}) {
 
 exports.generateFullReport = async (payload) => {
   try {
-    const firstRaw = await callOpenAI(buildFullReportPrompt(), payload, 12000);
+    const firstRaw = await callOpenAI(buildFullReportPrompt(), payload, 12000, REPORT_MODEL);
     let parsed = ReportSchema.safeParse(alignReportShape(firstRaw));
     let report = parsed.success ? parsed.data : null;
 
@@ -435,7 +448,8 @@ exports.generateFullReport = async (payload) => {
       const repairedRaw = await callOpenAI(
         buildRepairPrompt(),
         { originalInput: payload, weakReport: firstRaw, qualityProblems: "Sekcje były zbyt krótkie, powtarzalne albo mówiły o raporcie zamiast o człowieku." },
-        14000
+        14000,
+        REPORT_MODEL
       );
       parsed = ReportSchema.safeParse(alignReportShape(repairedRaw));
       if (parsed.success) report = parsed.data;
@@ -535,6 +549,13 @@ function buildComparativeReportPrompt() {
     .join("\n");
 
   return `Tworzysz płatny raport porównawczy CzyToMaSens po polsku. Analizujesz CAŁĄ historię jednej relacji: pierwszy raport, wszystkie wcześniejsze powroty i najnowsze odpowiedzi. Nie zaczynasz od zera i nie piszesz nowej wersji pierwszego raportu.
+
+PAMIĘĆ STRUKTURYZOWANA:
+Jeżeli payload zawiera caseState albo history.caseState, traktuj ten stan jako ciągłą pamięć przypadku, nie jako gotowy werdykt.
+- observed_fact to opis zdarzenia; user_interpretation to interpretacja intencji; inference to wniosek systemu; unknown to brak danych.
+- Sprawdź wcześniejsze hypotheses przez supporting_evidence, contradicting_evidence i missing_evidence.
+- Uwzględnij human_state i needs tylko jako operacyjne hipotezy, bez diagnozowania.
+- W raporcie pokaż, które wcześniejsze wnioski zyskały lub straciły oparcie w nowych faktach.
 
 NAJPIERW WEWNĘTRZNIE ZBUDUJ:
 - fakty z poprzednich odczytów,
@@ -688,7 +709,8 @@ ZASADY:
 ZWRÓĆ STRICT JSON:
 {"lead":"","question":"","open":false,"options":[{"id":"","label":""}],"finished":false,"teaser":"","reason":""}`,
     { context, conversation: history, latestAnswer: payload?.latestAnswer || null, step },
-    1800
+    1800,
+    INTERVIEW_MODEL
   );
 
   const finished = Boolean(raw.finished) || step >= 6;
@@ -708,7 +730,7 @@ ZWRÓĆ STRICT JSON:
 
 exports.generateComparativeReport = async (payload) => {
   try {
-    const firstRaw = await callOpenAI(buildComparativeReportPrompt(), payload, 11000);
+    const firstRaw = await callOpenAI(buildComparativeReportPrompt(), payload, 11000, REPORT_MODEL);
     let parsed = ReportSchema.safeParse(alignComparativeReportShape(firstRaw));
     let report = parsed.success ? parsed.data : null;
 
@@ -721,7 +743,8 @@ exports.generateComparativeReport = async (payload) => {
           qualityProblems:
             "Raport był niepełny, zbyt krótki, zbyt ogólny, powtarzalny albo nie zachował wymaganej struktury porównawczej.",
         },
-        13000
+        13000,
+        REPORT_MODEL
       );
 
       parsed = ReportSchema.safeParse(alignComparativeReportShape(repairedRaw));
@@ -774,7 +797,8 @@ ZASADY:
 ZWRÓĆ STRICT JSON:
 {"ok":true,"lead":"","question":"","observation":"","finished":false,"depth":${depth},"path":"${path}"}`,
     { path, history, userAnswer, depth },
-    900
+    900,
+    INTERVIEW_MODEL
   );
 
   return {
