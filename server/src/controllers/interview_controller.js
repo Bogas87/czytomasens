@@ -45,6 +45,7 @@ exports.startInterview = async (req, res) => {
     const token = normalizeText(req.body.token || "");
     const path = normalizeText(req.body.path || "");
     const initialContext = normalizeText(req.body.initialContext || "");
+    const initialData = req.body?.initialData && typeof req.body.initialData === "object" ? req.body.initialData : {};
 
     if (!token || !isValidUUID(token)) {
       return res.status(400).json({ ok: false, message: "Nieprawidłowy token." });
@@ -62,18 +63,93 @@ exports.startInterview = async (req, res) => {
       return res.status(404).json({ ok: false, message: "Nie znaleziono sesji." });
     }
 
-    const opening = await interviewService.getOpeningQuestion({ path, initialContext });
     const existingPayload = safeJson(existing.payload, {});
     const previousInterview = safeJson(existing.interview_state, {});
-    const caseState = caseReasoning.normalizeCaseState(
-      previousInterview.caseState || existingPayload.caseState || caseReasoning.createEmptyCaseState({ path, initialContext, source: "open_interview" }),
-      previousInterview.caseState || existingPayload.caseState || null,
-      "open_interview"
+    const previousCaseState = previousInterview.caseState || existingPayload.caseState || null;
+    const baseCaseState = caseReasoning.normalizeCaseState(
+      previousCaseState || caseReasoning.createEmptyCaseState({ path, source: "initial_assessment" }),
+      previousCaseState,
+      "initial_assessment"
     );
+
+    const caseState = await caseReasoning.updateCaseState({
+      previousState: baseCaseState,
+      latestInput: initialContext,
+      source: "initial_assessment",
+      context: {
+        path,
+        initialData,
+        initialContext,
+        history: [],
+      },
+    });
+
+    const intervention = caseReasoning.routeIntervention(caseState, {
+      latestInput: initialContext,
+      history: [],
+    });
+
+    if (intervention.decision === "SAFETY_STOP") {
+      await prisma.session.update({
+        where: { id: token },
+        data: {
+          interview_state: {
+            path,
+            initialContext,
+            initialData,
+            history: [],
+            currentQuestion: null,
+            currentLead: "",
+            currentObservation: intervention.reason,
+            depth: 0,
+            startedAt: new Date().toISOString(),
+            finished: true,
+            finishReason: intervention.safetyLevel >= 3 ? "immediate_danger" : "safety",
+            caseState,
+          },
+          payload: {
+            ...existingPayload,
+            path,
+            initialAssessment: initialData,
+            caseState,
+          },
+        },
+      });
+
+      return res.json({
+        ok: true,
+        crisis: true,
+        safetyLevel: intervention.safetyLevel,
+        message: intervention.reason,
+      });
+    }
+
+    let opening;
+    try {
+      opening = await caseReasoning.generateNextQuestion({
+        state: caseState,
+        intervention,
+        history: [],
+        latestInput: initialContext,
+        path,
+        context: {
+          initialData,
+          initialContext,
+          openingQuestion: true,
+        },
+      });
+    } catch (error) {
+      console.warn("[Interview] Personalized opening fallback:", error.message);
+      opening = await interviewService.getOpeningQuestion({ path, initialContext, initialData });
+    }
+
+    if (!opening?.question) {
+      opening = await interviewService.getOpeningQuestion({ path, initialContext, initialData });
+    }
 
     const stateAfterQuestion = caseReasoning.markQuestionAsked(
       caseState,
-      { decision: "CLARIFY_FACT", target: "opening_fact" },
+      intervention,
       opening.question
     );
 
@@ -83,6 +159,7 @@ exports.startInterview = async (req, res) => {
         interview_state: {
           path,
           initialContext,
+          initialData,
           history: [],
           currentQuestion: opening.question,
           currentLead: opening.lead,
@@ -95,6 +172,7 @@ exports.startInterview = async (req, res) => {
         payload: {
           ...existingPayload,
           path,
+          initialAssessment: initialData,
           caseState: stateAfterQuestion,
         },
       },
@@ -159,6 +237,7 @@ exports.nextQuestion = async (req, res) => {
       context: {
         path: state.path,
         initialContext: state.initialContext,
+        initialData: state.initialData || existingPayload.initialAssessment || {},
         history: updatedHistory,
       },
     });
@@ -224,7 +303,10 @@ exports.nextQuestion = async (req, res) => {
         history: updatedHistory,
         latestInput: userAnswer,
         path: state.path,
-        context: { initialContext: state.initialContext },
+        context: {
+          initialContext: state.initialContext,
+          initialData: state.initialData || existingPayload.initialAssessment || {},
+        },
       });
     } catch (error) {
       console.warn("[Interview] Case router fallback:", error.message);
@@ -233,6 +315,7 @@ exports.nextQuestion = async (req, res) => {
         history: updatedHistory,
         latestUserAnswer: userAnswer,
         initialContext: state.initialContext,
+        initialData: state.initialData || existingPayload.initialAssessment || {},
       });
     }
 

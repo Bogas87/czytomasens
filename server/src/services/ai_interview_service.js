@@ -209,7 +209,42 @@ exports.summarizeInterview = async ({ path, history, initialContext, caseState }
   return result.data;
 };
 
-exports.getOpeningQuestion = async ({ path, initialContext }) => {
+exports.getOpeningQuestion = async ({ path, initialContext, initialData }) => {
+  const map = initialData?.relationshipMap || {};
+  const topBurden = map?.burdens?.[0]?.label || "";
+  const topEmotion = map?.emotions?.[0]?.label || "";
+  const truth = map?.truthCards?.[0] || "";
+  const closedAnswers = Array.isArray(initialData?.closedAnswers) ? initialData.closedAnswers : [];
+  const strongClosed = [...closedAnswers].sort((a, b) => Number(b?.score || 0) - Number(a?.score || 0))[0];
+  const signalParts = [topBurden, topEmotion].filter(Boolean);
+  const signalLead = signalParts.length
+    ? `W Twoich wcześniejszych odpowiedziach łączą się „${signalParts.join("” i „")}”.`
+    : "Wcześniejsze odpowiedzi dają już punkt zaczepienia, więc nie zaczynamy od zera.";
+
+  if (topBurden || topEmotion || truth || strongClosed?.answer) {
+    const tailoredQuestion = {
+      betrayal: `Wskaż ostatnią konkretną sytuację, w której temat „${topBurden || "zaufania"}” uruchomił u Ciebie ${topEmotion || "napięcie"}. Co dokładnie zrobiła wtedy druga osoba i co wydarzyło się później?`,
+      uncertain: `Wskaż ostatnią konkretną sytuację, która najlepiej pokazuje „${topBurden || "brak jasności"}”. Co zrobiła druga osoba bez Twojej inicjatywy i czego nadal nie dało się z tego jednoznacznie wywnioskować?`,
+      asymmetry: `Opisz ostatni moment, w którym temat „${topBurden || "nierównych starań"}” był najbardziej widoczny. Co zrobiłeś lub zrobiłaś Ty, co zrobiła druga osoba i co by się stało, gdybyś wtedy nie przejął lub nie przejęła inicjatywy?`,
+      conflict: `Weź ostatnią kłótnię, w której najmocniej pojawiło się „${topBurden || "napięcie"}”. Co uruchomiło konflikt, kto wykonał pierwszy ruch naprawczy i co realnie zmieniło się po rozmowie?`,
+      stagnation: `Podaj ostatni konkretny moment, który najlepiej pokazuje „${topBurden || "rutynę"}” i ${topEmotion || "to, co dziś czujesz"}. Co próbowała zrobić każda ze stron, żeby między Wami pojawiło się coś więcej niż codzienność?`,
+      returning: `Przywołaj ostatni kontakt po rozstaniu lub oddaleniu, w którym najmocniej pojawiło się „${topBurden || "pragnienie powrotu"}”. Co wydarzyło się konkretnie i jaki fakt pokazuje, że kolejna próba miałaby być inna niż poprzednia?`,
+      triangle: `Wskaż ostatnią sytuację, w której temat „${topBurden || "trzeciej osoby"}” najmocniej pokazał Ci coś o obecnej relacji. Co było faktem, a co dopiero Twoim porównaniem lub wyobrażeniem?`,
+      loop: `Opisz ostatni pełny cykl, w którym pojawiło się „${topBurden || "powtarzanie tego samego"}”. Co uruchomiło kryzys, co doprowadziło do powrotu i co po poprawie faktycznie utrzymało się dłużej?`,
+      unease: `Wskaż ostatnią konkretną sytuację, w której „${topBurden || "niepokój"}” i ${topEmotion || "napięcie"} pojawiły się razem. Co dokładnie zrobiła druga osoba, a co było już Twoją interpretacją tego zdarzenia?`,
+    }[path];
+
+    if (tailoredQuestion) {
+      return {
+        question: tailoredQuestion,
+        lead: signalLead,
+        observation: truth
+          ? `Jedno z wybranych przez Ciebie zdań brzmi: „${truth}”. Teraz trzeba sprawdzić, jaki konkretny fakt rzeczywiście je wspiera albo mu przeczy.`
+          : `Najpierw sprawdzimy konkretny fakt związany z sygnałem „${topBurden || strongClosed?.answer || path}”, zamiast powtarzać pytania z formularza.`,
+      };
+    }
+  }
+
   const OPENING = {
     unease: {
       question: "Podaj jeden konkretny moment z ostatnich dwóch tygodni, po którym najmocniej pomyślałeś lub pomyślałaś, że coś między Wami nie gra. Co dokładnie się wtedy wydarzyło?",

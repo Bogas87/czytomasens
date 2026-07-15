@@ -39,6 +39,7 @@ type Stage =
   | "force_signal"
   | "burdens"
   | "burden_signal"
+  | "emotions"
   | "truth_cards"
   | "truth_signal"
   | "short_note"
@@ -60,12 +61,14 @@ type ForceMapKey = "contactInitiative" | "repairAfterConflict" | "emotionalLabor
 type ForceValue = "definitely_me" | "mostly_me" | "balanced" | "mostly_other" | "definitely_other";
 type ForceMap = Partial<Record<ForceMapKey, ForceValue>>;
 type BurdenItem = { label: string; rank: number };
+type EmotionItem = { label: string; rank: number };
 type ClarificationQuestion = { id: string; lead: string; text: string; signal: string };
 type ClarificationAnswerMap = Record<string, string>;
 type MapSignal = { label: string; value: string; tone: "normal" | "gold" | "danger" };
 type RelationshipMapPayload = {
   forceMap: ForceMap;
   burdens: BurdenItem[];
+  emotions: EmotionItem[];
   truthCards: string[];
   userNote: string;
   clarificationAnswers?: { question: string; answer: string; signal: string }[];
@@ -513,13 +516,85 @@ const ENTRY_CONFIGS: EntryConfig[] = [
   },
  ];
 
-const FORCE_MAP_ITEMS: { key: ForceMapKey; title: string; hint: string }[] = [
+type ForceMapItem = { key: ForceMapKey; title: string; hint: string };
+
+const FORCE_MAP_ITEMS: ForceMapItem[] = [
   { key: "contactInitiative", title: "Kto częściej inicjuje kontakt?", hint: "Nie chodzi o jedną wiadomość, tylko o rytm relacji." },
   { key: "repairAfterConflict", title: "Kto częściej naprawia po konflikcie?", hint: "Kto wraca do rozmowy, łagodzi napięcie albo próbuje domknąć temat." },
   { key: "emotionalLabor", title: "Kto niesie większy ciężar emocjonalny?", hint: "Kto więcej analizuje, tłumaczy, czeka, pilnuje atmosfery." },
   { key: "avoidance", title: "Kto częściej unika trudnych rozmów?", hint: "Wskaż stronę, która częściej odsuwa temat albo znika w ciszę." },
   { key: "fearOfLoss", title: "Kto bardziej boi się utraty tej relacji?", hint: "Nie kto bardziej kocha, tylko kto bardziej boi się konsekwencji końca." },
 ];
+
+const FORCE_MAP_ITEMS_BY_PATH: Record<EntryKey, ForceMapItem[]> = {
+  unease: [
+    { key: "contactInitiative", title: "Kto częściej szuka kontaktu, kiedy pojawia się niepokój?", hint: "Kto pierwszy próbuje sprawdzić, co właściwie dzieje się między Wami." },
+    { key: "repairAfterConflict", title: "Kto częściej próbuje nazwać i wyjaśnić napięcie?", hint: "Nie chodzi o winę, tylko o to, kto podejmuje próbę zrozumienia sytuacji." },
+    { key: "emotionalLabor", title: "Kto więcej analizuje i pilnuje atmosfery?", hint: "Kto częściej czyta sygnały, tłumaczy zachowania i próbuje utrzymać spokój." },
+    { key: "avoidance", title: "Kto częściej unika tematów, które mogłyby dać jasność?", hint: "Kto odsuwa rozmowę, zmienia temat albo zostawia rzeczy niedopowiedziane." },
+    { key: "fearOfLoss", title: "Kto bardziej boi się, że nazwanie problemu coś popsuje?", hint: "Lęk przed utratą może wpływać na to, ile rzeczy zostaje przemilczanych." },
+  ],
+  betrayal: [
+    { key: "contactInitiative", title: "Kto częściej inicjuje rozmowy, które mają odbudować zaufanie?", hint: "Kto wraca do tematu z własnej inicjatywy, a nie dopiero po nacisku." },
+    { key: "repairAfterConflict", title: "Kto częściej próbuje naprawdę domknąć pytania po zdradzie lub kłamstwie?", hint: "Kto bierze odpowiedzialność za wyjaśnienie tego, co nadal wraca." },
+    { key: "emotionalLabor", title: "Kto niesie większy ciężar odbudowy poczucia bezpieczeństwa?", hint: "Kto więcej sprawdza, uspokaja, tłumaczy i pilnuje, żeby temat się nie rozpadł." },
+    { key: "avoidance", title: "Kto częściej unika szczegółów albo powrotu do tego, co się stało?", hint: "Czy pytania można domknąć, czy temat ma po prostu zniknąć." },
+    { key: "fearOfLoss", title: "Kto bardziej boi się, że ten temat może zakończyć relację?", hint: "Nie chodzi o miłość, tylko o wpływ lęku przed końcem na zachowanie." },
+  ],
+  uncertain: [
+    { key: "contactInitiative", title: "Kto częściej inicjuje kontakt, kiedy relacja zaczyna się rozmywać?", hint: "Kto podtrzymuje rytm kontaktu, gdy druga osoba nic nie uruchamia." },
+    { key: "repairAfterConflict", title: "Kto częściej próbuje nazwać, czym właściwie jest ta relacja?", hint: "Kto wraca do pytania o status, kierunek i wzajemne oczekiwania." },
+    { key: "emotionalLabor", title: "Kto więcej czeka, analizuje i dopasowuje się do niejasności?", hint: "Brak definicji nie jest neutralny — zwykle ktoś ponosi jego większy koszt." },
+    { key: "avoidance", title: "Kto częściej unika konkretnej deklaracji albo rozmowy o kierunku?", hint: "Kto zostawia temat otwarty, mimo że dla drugiej strony ma on znaczenie." },
+    { key: "fearOfLoss", title: "Kto bardziej boi się, że postawienie sprawy jasno zakończy tę relację?", hint: "Czasem niejasność trwa dlatego, że konkret mógłby wymusić decyzję." },
+  ],
+  asymmetry: [
+    { key: "contactInitiative", title: "Kto częściej uruchamia kontakt, bliskość i wspólne działania?", hint: "Kto nadaje relacji ruch, kiedy nic nie dzieje się samo." },
+    { key: "repairAfterConflict", title: "Kto częściej bierze odpowiedzialność za naprawę po napięciu?", hint: "Kto pierwszy wraca, tłumaczy i próbuje odbudować kontakt." },
+    { key: "emotionalLabor", title: "Kto więcej pamięta, planuje i dba o więź?", hint: "Chodzi o niewidoczny ciężar utrzymywania relacji przy życiu." },
+    { key: "avoidance", title: "Kto częściej odpuszcza odpowiedzialność, gdy druga osoba przejmuje ster?", hint: "Sprawdź, kto może liczyć na to, że relacja i tak zostanie podtrzymana." },
+    { key: "fearOfLoss", title: "Kto bardziej boi się, że bez własnego wysiłku relacja się rozpadnie?", hint: "Ten lęk często pokazuje, kto czuje się odpowiedzialny za całość." },
+  ],
+  conflict: [
+    { key: "contactInitiative", title: "Kto częściej rozpoczyna trudne rozmowy, zanim napięcie wybuchnie?", hint: "Kto próbuje zająć się problemem zanim zamieni się w kolejną kłótnię." },
+    { key: "repairAfterConflict", title: "Kto częściej wraca po kłótni i próbuje naprawić kontakt?", hint: "Najwięcej mówi to, co dzieje się już po wybuchu." },
+    { key: "emotionalLabor", title: "Kto więcej pilnuje, żeby rozmowa nie zamieniła się w walkę?", hint: "Kto łagodzi, tłumaczy, zatrzymuje eskalację albo bierze odpowiedzialność za atmosferę." },
+    { key: "avoidance", title: "Kto częściej przerywa rozmowę, wycofuje się albo zamyka w ciszy?", hint: "Wycofanie może chronić przed eskalacją albo blokować naprawę — ważny jest wzorzec." },
+    { key: "fearOfLoss", title: "Kto bardziej boi się kolejnego konfliktu albo jego konsekwencji?", hint: "Lęk przed następną kłótnią może ustawiać całą komunikację." },
+  ],
+  stagnation: [
+    { key: "contactInitiative", title: "Kto częściej inicjuje bliskość, rozmowę i wspólny czas?", hint: "Nie logistykę, tylko rzeczy, które naprawdę budują kontakt." },
+    { key: "repairAfterConflict", title: "Kto częściej próbuje ożywić coś, co między Wami wygasło?", hint: "Kto proponuje zmianę zamiast tylko utrzymywać codzienność." },
+    { key: "emotionalLabor", title: "Kto więcej niesie emocjonalnie, żeby relacja nie stała się tylko rutyną?", hint: "Kto próbuje zachować ciekawość, ciepło i poczucie bycia razem." },
+    { key: "avoidance", title: "Kto częściej unika rozmowy o tym, że czegoś już brakuje?", hint: "Brak konfliktu może oznaczać spokój albo rezygnację z rozmowy." },
+    { key: "fearOfLoss", title: "Kto bardziej boi się zmiany, nawet jeśli obecny układ nie daje satysfakcji?", hint: "Przyzwyczajenie i lęk przed zmianą mogą podtrzymywać relację inaczej niż bliskość." },
+  ],
+  returning: [
+    { key: "contactInitiative", title: "Kto częściej inicjuje kontakt po rozstaniu albo oddaleniu?", hint: "Kto uruchamia kolejny powrót, gdy emocje znowu rosną." },
+    { key: "repairAfterConflict", title: "Kto częściej wraca do prawdziwych przyczyn rozstania?", hint: "Powrót do kontaktu to nie to samo co naprawa tego, co wcześniej nie działało." },
+    { key: "emotionalLabor", title: "Kto więcej pracuje, żeby kolejna próba miała być inna?", hint: "Kto niesie plan zmiany, rozmowy i odpowiedzialność za nowy start." },
+    { key: "avoidance", title: "Kto częściej unika konkretów o tym, co miałoby się zmienić po powrocie?", hint: "Bez konkretu łatwo wrócić do osoby, ale też do starego układu." },
+    { key: "fearOfLoss", title: "Kto bardziej boi się ostatecznego zamknięcia tej historii?", hint: "Czasem wraca się nie tylko do człowieka, ale też do niedomkniętej historii." },
+  ],
+  triangle: [
+    { key: "contactInitiative", title: "Kto częściej inicjuje prawdziwy kontakt w obecnej relacji?", hint: "Nie chodzi o logistykę, tylko o zainteresowanie, obecność i bliskość." },
+    { key: "repairAfterConflict", title: "Kto częściej próbuje rozmawiać o tym, czego w obecnej relacji brakuje?", hint: "Trzecia osoba często uwidacznia problem, który istniał już wcześniej." },
+    { key: "emotionalLabor", title: "Kto niesie większy ciężar wyboru, ukrywania albo rozdwojenia?", hint: "Sprawdź, gdzie naprawdę kumuluje się napięcie tej sytuacji." },
+    { key: "avoidance", title: "Kto częściej unika jasnej decyzji albo rozmowy o konsekwencjach?", hint: "Brak decyzji też tworzy układ i ma swój koszt." },
+    { key: "fearOfLoss", title: "Kto bardziej boi się konsekwencji utraty jednej z tych relacji?", hint: "Lęk przed stratą może utrudniać zobaczenie, czego naprawdę brakuje." },
+  ],
+  loop: [
+    { key: "contactInitiative", title: "Kto częściej inicjuje kolejny powrót po kryzysie albo rozstaniu?", hint: "Kto uruchamia fazę pojednania, kiedy napięcie opada." },
+    { key: "repairAfterConflict", title: "Kto częściej próbuje naprawić przyczynę, a nie tylko odzyskać kontakt?", hint: "Ulga po powrocie może wyglądać jak zmiana, choć źródło problemu zostaje." },
+    { key: "emotionalLabor", title: "Kto niesie większy ciężar całego cyklu?", hint: "Kto więcej analizuje, czeka, wraca i próbuje nadać kolejnemu powrotowi sens." },
+    { key: "avoidance", title: "Kto częściej unika realnej zmiany, gdy kryzys już mija?", hint: "Najważniejsze jest to, co dzieje się po odzyskaniu spokoju." },
+    { key: "fearOfLoss", title: "Kto bardziej boi się definitywnego końca tego cyklu?", hint: "Lęk przed końcem może być jednym z mechanizmów kolejnych powrotów." },
+  ],
+};
+
+function forceMapItemsForPath(pathKey?: EntryKey): ForceMapItem[] {
+  return pathKey ? FORCE_MAP_ITEMS_BY_PATH[pathKey] : FORCE_MAP_ITEMS;
+}
 
 const FORCE_OPTIONS: { value: ForceValue; label: string }[] = [
   { value: "definitely_me", label: "Zdecydowanie ja" },
@@ -529,41 +604,142 @@ const FORCE_OPTIONS: { value: ForceValue; label: string }[] = [
   { value: "definitely_other", label: "Zdecydowanie druga osoba" },
 ];
 
-const BURDEN_OPTIONS = [
-  "brak jasności",
-  "kłótnie",
-  "cisza",
-  "nierówne starania",
-  "rutyna / wypalenie",
-  "zdrada / kłamstwo",
-  "ktoś trzeci",
-  "brak bliskości",
-  "powroty i rozstania",
-  "lęk przed samotnością",
-  "kontrola / zazdrość",
-  "finanse / codzienność",
-  "rodzina / presja z zewnątrz",
-  "seks / intymność",
-];
+const BURDEN_OPTIONS_BY_PATH: Record<EntryKey, string[]> = {
+  unease: ["ciągła czujność", "brak jasności", "mieszane sygnały", "nadmierne analizowanie", "cisza po ważnych momentach", "nierówne starania", "brak poczucia bezpieczeństwa", "brak bliskości", "lęk przed nazwaniem problemu", "kontrola / zazdrość", "brak kierunku", "coś się zmieniło, ale nie wiem co"],
+  betrayal: ["zdrada / kłamstwo", "niepełna prawda", "brak odpowiedzialności", "ciągła kontrola", "powrót nieufności", "presja żeby już zapomnieć", "lęk że to się powtórzy", "brak przejrzystości", "utrata bliskości", "ktoś trzeci", "wstyd / poczucie winy", "seks / intymność"],
+  uncertain: ["brak jasności", "mieszane sygnały", "brak deklaracji", "kontakt tylko gdy się wycofuję", "nierówne starania", "ciągłe czekanie", "brak planów", "brak wyłączności", "ktoś trzeci", "lęk przed samotnością", "kontrola / zazdrość", "ciągłe analizowanie"],
+  asymmetry: ["nierówne starania", "ja zawsze inicjuję", "ja naprawiam po konflikcie", "brak wdzięczności", "brak odpowiedzialności drugiej strony", "ciągłe dopasowywanie się", "brak wzajemności", "zmęczenie rolą ratownika", "brak bliskości", "cisza gdy przestaję się starać", "obniżanie własnych potrzeb", "finanse / codzienność"],
+  conflict: ["kłótnie", "eskalacja", "cisza po konflikcie", "wypominanie przeszłości", "brak naprawy", "atak / obrona", "chodzenie na palcach", "brak bezpiecznej rozmowy", "obrażanie / przekraczanie granic", "ten sam temat wraca", "kontrola / zazdrość", "dzieci / rodzina wciągane w konflikt"],
+  stagnation: ["rutyna / wypalenie", "brak bliskości", "brak ciekawości sobą", "tylko logistyka", "brak wspólnych planów", "seks / intymność", "samotność obok siebie", "brak inicjatywy", "rezygnacja z rozmów", "lęk przed zmianą", "finanse / codzienność", "rodzina / obowiązki"],
+  returning: ["powroty i rozstania", "idealizowanie przeszłości", "brak realnej zmiany", "tęsknota silniejsza niż fakty", "niedomknięta historia", "brak zaufania", "samotność po rozstaniu", "stare problemy wracają", "brak konkretnego planu", "nierówne starania", "ktoś trzeci", "lęk przed ostatecznym końcem"],
+  triangle: ["ktoś trzeci", "brak bliskości w obecnej relacji", "porównywanie dwóch osób", "ukrywanie / podwójne życie", "brak decyzji", "poczucie winy", "idealizowanie nowej osoby", "lęk przed stratą obu relacji", "seks / intymność", "rutyna / wypalenie", "brak jasności", "presja czasu"],
+  loop: ["powroty i rozstania", "po poprawie wraca to samo", "intensywność zamiast stabilności", "brak trwałej zmiany", "lęk przed końcem", "uzależnienie od ulgi po powrocie", "nierówne starania", "cisza", "kłótnie", "idealizowanie dobrych momentów", "brak granicy końcowej", "zmęczenie cyklem"],
+};
 
-const TRUTH_CARD_OPTIONS = [
-  "Gdybym przestał/przestała się starać, ta relacja by zgasła.",
-  "Po każdej poprawie wracamy w to samo miejsce.",
-  "Bardziej boję się końca niż wierzę w zmianę.",
-  "Najlepsze momenty zasłaniają mi to, co dzieje się najczęściej.",
-  "Ta relacja daje mi emocje, ale nie daje mi oparcia.",
-  "Nie wiem, czy chcę tej osoby, czy chcę żeby ta historia miała sens.",
-  "Czekam na jasność od kogoś, kto od dawna korzysta z mojego czekania.",
-  "Mam więcej nadziei niż faktów, które tę nadzieję potwierdzają.",
-];
+function burdenOptionsForPath(pathKey?: EntryKey): string[] {
+  return pathKey ? BURDEN_OPTIONS_BY_PATH[pathKey] : BURDEN_OPTIONS_BY_PATH.unease;
+}
+
+const EMOTION_OPTIONS_BY_PATH: Record<EntryKey, string[]> = {
+  unease: ["niepokój", "czujność", "dezorientacja", "napięcie", "nadzieja", "lęk", "zmęczenie", "poczucie winy", "złość", "smutek", "ulga w dobrych chwilach", "brak zaufania do własnej oceny"],
+  betrayal: ["nieufność", "złość", "żal", "lęk że to się powtórzy", "wstyd", "poczucie winy", "potrzeba kontroli", "smutek", "tęsknota za tym co było", "nadzieja", "odrętwienie", "ulga gdy wszystko się zgadza"],
+  uncertain: ["niepewność", "nadzieja", "lęk przed odrzuceniem", "czekanie", "frustracja", "dezorientacja", "tęsknota", "zazdrość", "napięcie", "ulga po kontakcie", "wstyd że nadal czekam", "potrzeba pewności"],
+  asymmetry: ["zmęczenie", "żal", "frustracja", "poczucie niedocenienia", "złość", "lęk przed odpuszczeniem", "poczucie winy gdy przestaję się starać", "samotność", "nadzieja", "bezsilność", "przeciążenie", "tęsknota za wzajemnością"],
+  conflict: ["złość", "lęk przed kolejną kłótnią", "bezsilność", "wstyd po tym co padło", "żal", "napięcie", "poczucie winy", "ulga po pogodzeniu", "czujność", "smutek", "frustracja", "zmęczenie konfliktem"],
+  stagnation: ["pustka", "samotność", "obojętność", "smutek", "tęsknota za dawną bliskością", "ulga że nie ma konfliktu", "lęk przed zmianą", "poczucie winy", "nuda", "rezygnacja", "nadzieja że coś wróci", "niepewność czy to jeszcze miłość"],
+  returning: ["tęsknota", "nadzieja", "lęk przed kolejnym zranieniem", "idealizowanie", "samotność", "ulga po kontakcie", "żal", "poczucie winy", "niepewność", "pragnienie domknięcia", "złość", "lęk przed ostatecznym końcem"],
+  triangle: ["fascynacja", "poczucie winy", "lęk", "ekscytacja", "dezorientacja", "zazdrość", "wstyd", "ulga przy drugiej osobie", "smutek", "presja decyzji", "nadzieja", "strach przed stratą"],
+  loop: ["tęsknota", "ulga po powrocie", "lęk przed kolejnym kryzysem", "intensywność", "nadzieja", "zmęczenie", "bezsilność", "złość", "poczucie winy", "strach przed końcem", "euforia po pojednaniu", "brak spokoju"],
+};
+
+function emotionOptionsForPath(pathKey?: EntryKey): string[] {
+  return pathKey ? EMOTION_OPTIONS_BY_PATH[pathKey] : EMOTION_OPTIONS_BY_PATH.unease;
+}
+
+const TRUTH_CARD_OPTIONS_BY_PATH: Record<EntryKey, string[]> = {
+  unease: [
+    "Nie umiem wskazać jednego problemu, ale coraz mniej ufam własnemu spokojowi w tej relacji.",
+    "Częściej analizuję sygnały niż po prostu jestem w tej relacji.",
+    "Są dobre momenty, ale mój niepokój wraca bez wyraźnego domknięcia.",
+    "Boję się, że jeśli nazwę problem wprost, usłyszę coś, czego nie chcę wiedzieć.",
+    "Nie wiem jeszcze, czy problem jest między nami, czy w sposobie, w jaki próbuję uzyskać pewność.",
+    "Potrzebuję konkretów, bo same uspokajające słowa przestały mi wystarczać.",
+    "Mam poczucie, że coś się zmieniło, choć nie potrafię jeszcze uczciwie powiedzieć co.",
+    "Chcę sprawdzić, czy moje napięcie ma oparcie w powtarzalnych faktach.",
+  ],
+  betrayal: [
+    "Najtrudniejsze nie jest to, co się stało, tylko że nadal nie wiem, czy znam całą prawdę.",
+    "Przeprosiny padły, ale nie jestem pewien/pewna, czy odpowiedzialność naprawdę zmieniła zachowanie.",
+    "Kontrola daje mi chwilową ulgę, ale nie odbudowuje zaufania.",
+    "Czuję presję, żeby już zamknąć temat szybciej, niż naprawdę potrafię.",
+    "Boję się bardziej powtórki niż samego wspomnienia tego, co się stało.",
+    "Chcę wierzyć w zmianę, ale nadal szukam dowodów zamiast czuć bezpieczeństwo.",
+    "Nie wiem, czy odbudowujemy relację, czy tylko próbujemy wrócić do normalności.",
+    "Najważniejsze pytanie brzmi dla mnie: co ta osoba robi dziś inaczej bez mojego pilnowania?",
+  ],
+  uncertain: [
+    "Czekam na jasność od osoby, która może nie mieć interesu, żeby ją dać.",
+    "Najwięcej dzieje się wtedy, gdy zaczynam się wycofywać.",
+    "Niejasność trwa tak długo, że sama stała się częścią tej relacji.",
+    "Boję się zapytać wprost, bo odpowiedź mogłaby zakończyć to, co jeszcze mam.",
+    "Częściej analizuję sygnały niż opieram się na jasnych ustaleniach.",
+    "Moje oczekiwania stopniowo dopasowały się do tego, jak mało pewności dostaję.",
+    "Nie wiem, czy czekam na tę osobę, czy na wersję relacji, która jeszcze się nie wydarzyła.",
+    "Potrzebuję zobaczyć, co ta osoba robi bez mojego inicjowania i przypominania.",
+  ],
+  asymmetry: [
+    "Gdybym przestał/przestała się starać, duża część tej relacji prawdopodobnie by zgasła.",
+    "Coraz częściej proszę o rzeczy, które kiedyś uważałem/uważałam za podstawę.",
+    "Biorę odpowiedzialność za atmosferę, rozmowy i naprawę bardziej, niż chcę przyznać.",
+    "Druga osoba może nie być obojętna, ale korzysta z tego, że ja i tak podtrzymuję całość.",
+    "Zmęczyło mnie bycie osobą, która zawsze musi uruchomić zmianę.",
+    "Nie wiem już, czy jestem wybierany/wybierana, czy po prostu potrzebny/potrzebna do utrzymania układu.",
+    "Moje staranie stało się tak normalne, że trudno mi zobaczyć, co dzieje się bez niego.",
+    "Najuczciwszy test to sprawdzić, czy druga strona wykona ruch, kiedy ja przestanę prowadzić.",
+  ],
+  conflict: [
+    "Nie boję się już tylko samej kłótni, ale tego, co zostaje po niej na kolejne dni.",
+    "Coraz częściej walczymy przeciwko sobie zamiast razem przeciwko problemowi.",
+    "Wracamy do spokoju, ale nie zawsze do rozwiązania.",
+    "Są tematy, których unikam, bo wiem, jak łatwo rozmowa może się wymknąć.",
+    "Po kolejnych konfliktach przybywa śladów, a ubywa poczucia bezpieczeństwa.",
+    "Przeprosiny nie wystarczają mi, jeśli ten sam sposób kłócenia się wraca.",
+    "Nie wiem, czy problemem jest różnica zdań, czy sposób, w jaki traktujemy się pod presją.",
+    "Najważniejsze jest dla mnie zobaczyć, czy umiemy realnie naprawiać, a nie tylko przeczekać napięcie.",
+  ],
+  stagnation: [
+    "Brak kłótni nie daje mi już pewności, że między nami jest bliskość.",
+    "Jesteśmy razem, ale coraz mniej rzeczy naprawdę przeżywamy razem.",
+    "Nie wiem, czy to spokojna faza, czy moment, w którym oboje przestaliśmy oczekiwać zmiany.",
+    "Tęsknię bardziej za dawną wersją naszej relacji niż za tym, jak jest dzisiaj.",
+    "Rutyna daje bezpieczeństwo, ale nie wiem, czy nadal daje mi więź.",
+    "Boję się zmiany, choć obecny układ też mnie nie zaspokaja.",
+    "Najtrudniej mi przyznać, jak dawno nie czułem/czułam prawdziwej ciekawości między nami.",
+    "Potrzebuję sprawdzić, czy oboje chcemy coś odbudować, czy tylko nie chcemy burzyć codzienności.",
+  ],
+  returning: [
+    "Tęsknota wygładza mi część powodów, dla których wcześniej się rozstaliśmy.",
+    "Chcę wrócić, ale nie mam jeszcze dowodu, że wrócilibyśmy do czegoś innego.",
+    "Najbardziej boję się, że kolejny powrót da ulgę, a potem odtworzy ten sam problem.",
+    "Nie wiem, czy tęsknię za tą osobą, czy za szansą na inne zakończenie tej historii.",
+    "Kontakt po rozstaniu uruchamia we mnie więcej nadziei, niż mam konkretnych ustaleń.",
+    "Sama miłość nie odpowiada jeszcze na pytanie, co miałoby się realnie zmienić.",
+    "Chcę zobaczyć, kto bierze odpowiedzialność za przyczyny rozstania, a nie tylko za powrót.",
+    "Potrzebuję odróżnić realną gotowość do zmiany od lęku przed ostatecznym końcem.",
+  ],
+  triangle: [
+    "Trzecia osoba pokazała mi brak, którego wcześniej nie umiałem/umiałam nazwać.",
+    "Nie wiem jeszcze, czy wybieram człowieka, czy uczucie, którego brakowało mi w obecnej relacji.",
+    "Nowa relacja jest łatwiejsza do idealizowania, bo nie przeszła jeszcze testu codzienności.",
+    "Brak decyzji też jest decyzją i ma koszt dla wszystkich stron.",
+    "Część mojego napięcia wynika z wyboru, a część z problemów, które istniały wcześniej.",
+    "Boję się stracić obie możliwości i dlatego trudno mi zobaczyć, czego naprawdę chcę.",
+    "Potrzebuję oddzielić fascynację od informacji o tym, czego brakuje w obecnej relacji.",
+    "Nawet bez trzeciej osoby musiałbym/musiałabym zmierzyć się z tym, co nie działa między nami.",
+  ],
+  loop: [
+    "Po każdej poprawie wracamy do podobnego miejsca.",
+    "Ulga po powrocie bywa tak silna, że łatwo pomylić ją z naprawą.",
+    "Najmocniej czuję tę relację wtedy, gdy grozi jej utrata.",
+    "Dobre momenty zasłaniają mi pytanie, co dzieje się najczęściej.",
+    "Nie wiem, czy trzyma mnie ta osoba, czy cały rytm napięcia i pojednania.",
+    "Kolejne próby mają sens tylko wtedy, jeśli coś zmienia się również po ustaniu kryzysu.",
+    "Bardziej boję się definitywnego końca niż kolejnego powrotu do tego samego.",
+    "Potrzebuję zobaczyć, co naprawdę utrzymało się po poprzednich powrotach dłużej niż kilka tygodni.",
+  ],
+};
+
+function truthCardOptionsForPath(pathKey?: EntryKey): string[] {
+  return pathKey ? TRUTH_CARD_OPTIONS_BY_PATH[pathKey] : TRUTH_CARD_OPTIONS_BY_PATH.unease;
+}
 
 function forceLabel(value?: ForceValue): string {
   return FORCE_OPTIONS.find((item) => item.value === value)?.label || "Nie zaznaczono";
 }
 
-function mapCompletion(forceMap: ForceMap, burdens: BurdenItem[], truthCards: string[]): number {
+function mapCompletion(forceMap: ForceMap, burdens: BurdenItem[], emotions: EmotionItem[], truthCards: string[]): number {
   const forceDone = FORCE_MAP_ITEMS.filter((item) => Boolean(forceMap[item.key])).length;
-  return Math.round(((forceDone / FORCE_MAP_ITEMS.length) * 0.45 + (Math.min(burdens.length, 3) / 3) * 0.3 + (Math.min(truthCards.length, 2) / 2) * 0.25) * 100);
+  return Math.round(((forceDone / FORCE_MAP_ITEMS.length) * 0.34 + (Math.min(burdens.length, 3) / 3) * 0.24 + (Math.min(emotions.length, 3) / 3) * 0.18 + (Math.min(truthCards.length, 2) / 2) * 0.24) * 100);
 }
 
 function isMeHeavy(value?: ForceValue): boolean {
@@ -578,10 +754,11 @@ function hasBurden(burdens: BurdenItem[], fragment: string): boolean {
   return burdens.some((item) => item.label.toLowerCase().includes(fragment.toLowerCase()));
 }
 
-function buildMapSignals(forceMap: ForceMap, burdens: BurdenItem[], truthCards: string[]): MapSignal[] {
+function buildMapSignals(forceMap: ForceMap, burdens: BurdenItem[], truthCards: string[], emotions: EmotionItem[] = []): MapSignal[] {
   const meLoad = FORCE_MAP_ITEMS.filter((item) => isMeHeavy(forceMap[item.key])).length;
   const otherLoad = FORCE_MAP_ITEMS.filter((item) => isOtherHeavy(forceMap[item.key])).length;
   const topBurden = burdens[0]?.label || "brak jednego dominującego ciężaru";
+  const topEmotion = emotions[0]?.label || "brak wskazanej dominującej emocji";
   const asymmetry = meLoad >= 3 ? "ciężar częściej po Twojej stronie" : otherLoad >= 3 ? "ciężar częściej po stronie drugiej osoby" : "układ częściowo zrównoważony";
   const risk = truthCards.some((text) => text.includes("wracamy w to samo")) || hasBurden(burdens, "powroty") ? "powtarzanie tego samego cyklu" :
     truthCards.some((text) => text.includes("boję się końca")) || hasBurden(burdens, "lęk") ? "lęk może mieszać się z decyzją" :
@@ -596,6 +773,7 @@ function buildMapSignals(forceMap: ForceMap, burdens: BurdenItem[], truthCards: 
 
   return [
     { label: "Największy ciężar", value: topBurden, tone: burdens.length ? "gold" : "normal" },
+    { label: "Dominująca emocja", value: topEmotion, tone: emotions.length ? "gold" : "normal" },
     { label: "Układ sił", value: asymmetry, tone: meLoad >= 3 || otherLoad >= 3 ? "danger" : "normal" },
     { label: "Punkt ryzyka", value: risk, tone: "danger" },
     { label: "Do doprecyzowania", value: focus, tone: "gold" },
@@ -1244,8 +1422,45 @@ function buildAdaptiveLocalQuestion(
   return chosen;
 }
 
-function createLocalInterviewState(path: EntryConfig): InterviewState {
-  const localQuestions = [...(LOCAL_INTERVIEW_QUESTIONS[path.key] || []), ...universalDeepeningQuestions(path)].slice(0, 6);
+function buildLocalPersonalizedOpening(path: EntryConfig, seed?: any): LocalInterviewQuestion | null {
+  const map = seed?.relationshipMap || {};
+  const topBurden = map?.burdens?.[0]?.label || "";
+  const topEmotion = map?.emotions?.[0]?.label || "";
+  const truth = map?.truthCards?.[0] || "";
+  if (!topBurden && !topEmotion && !truth) return null;
+
+  const lead = [topBurden, topEmotion].filter(Boolean).length
+    ? `W Twoich odpowiedziach najmocniej łączą się „${[topBurden, topEmotion].filter(Boolean).join("” i „")}”.`
+    : "W Twoich wcześniejszych odpowiedziach pojawił się jeden wyraźny wątek, którego nie warto pytać od początku.";
+
+  const questionByPath: Record<EntryKey, string> = {
+    unease: `Podaj ostatnią konkretną sytuację, w której pojawiło się „${topBurden || "poczucie, że coś nie gra"}”. Co dokładnie zrobiła druga osoba, a co było już Twoją interpretacją tego zdarzenia?`,
+    betrayal: `Wskaż ostatnią sytuację, w której „${topBurden || "problem z zaufaniem"}” uruchomił ${topEmotion || "napięcie"}. Co zrobiła wtedy druga osoba i co wydarzyło się później?`,
+    uncertain: `Podaj ostatnią sytuację, która najlepiej pokazuje „${topBurden || "brak jasności"}”. Co zrobiła druga osoba bez Twojej inicjatywy i czego nadal nie dało się z tego jednoznacznie wywnioskować?`,
+    asymmetry: `Opisz ostatni moment, w którym „${topBurden || "nierówne starania"}” były najbardziej widoczne. Co zrobiłeś lub zrobiłaś Ty, co zrobiła druga osoba i co by się stało, gdybyś wtedy niczego nie uruchomił lub nie uruchomiła?`,
+    conflict: `Weź ostatnią kłótnię, w której pojawiło się „${topBurden || "napięcie"}”. Co uruchomiło konflikt, kto wykonał pierwszy ruch naprawczy i co realnie zmieniło się później?`,
+    stagnation: `Podaj ostatni moment, który najlepiej pokazuje „${topBurden || "rutynę"}”. Co próbowała zrobić każda ze stron, żeby między Wami pojawiło się coś więcej niż codzienność?`,
+    returning: `Przywołaj ostatni kontakt po rozstaniu lub oddaleniu, w którym najmocniej pojawiło się „${topBurden || "pragnienie powrotu"}”. Jaki konkretny fakt pokazuje, że kolejna próba miałaby być inna?`,
+    triangle: `Wskaż ostatnią sytuację, w której „${topBurden || "trzecia osoba"}” pokazała Ci coś o obecnej relacji. Co było faktem, a co dopiero porównaniem lub wyobrażeniem?`,
+    loop: `Opisz ostatni pełny cykl, w którym pojawiło się „${topBurden || "powtarzanie tego samego"}”. Co uruchomiło kryzys, co doprowadziło do powrotu i co po poprawie naprawdę się utrzymało?`,
+  };
+
+  return {
+    lead,
+    question: questionByPath[path.key],
+    observation: truth
+      ? `Wybrane przez Ciebie zdanie „${truth}” jest tezą do sprawdzenia, nie gotowym wnioskiem. Teraz potrzebny jest konkretny fakt.`
+      : `Pierwsze pytanie wynika z Twojej mapy, a nie z gotowej listy dla ścieżki „${path.title}”.`,
+  };
+}
+
+function createLocalInterviewState(path: EntryConfig, seed?: any): InterviewState {
+  const personalizedOpening = buildLocalPersonalizedOpening(path, seed);
+  const localQuestions = [
+    ...(personalizedOpening ? [personalizedOpening] : []),
+    ...(LOCAL_INTERVIEW_QUESTIONS[path.key] || []),
+    ...universalDeepeningQuestions(path),
+  ].filter((item, index, all) => all.findIndex((candidate) => normalizeAnswerText(candidate.question) === normalizeAnswerText(item.question)) === index).slice(0, 6);
   const first = localQuestions[0];
   return {
     path: path.key,
@@ -1334,10 +1549,12 @@ function localTone(chance: number): "red" | "yellow" | "green" {
 function buildMapBasedPreview(path: EntryConfig, map: RelationshipMapPayload, finalOpenText: string): Preview {
   const fm = map.forceMap || {};
   const burdensList = map.burdens || [];
+  const emotionList = map.emotions || [];
   const truths = map.truthCards || [];
   const meLoad = FORCE_MAP_ITEMS.filter((item) => isMeHeavy(fm[item.key])).length;
   const otherLoad = FORCE_MAP_ITEMS.filter((item) => isOtherHeavy(fm[item.key])).length;
   const topBurden = burdensList[0]?.label || "brak jednego dominującego ciężaru";
+  const topEmotion = emotionList[0]?.label || "";
   const hasLoop = truths.some((t) => /wracamy|nadziei|czekam|starać|zgasła/i.test(t));
   const hasClarity = hasBurden(burdensList, "brak jasności") || path.key === "uncertain";
   const hasThird = hasBurden(burdensList, "ktoś trzeci") || path.key === "triangle";
@@ -1379,7 +1596,7 @@ function buildMapBasedPreview(path: EntryConfig, map: RelationshipMapPayload, fi
     headline,
     truth: meText,
     mirror: specificRisk,
-    summary: `${meText} ${resourceText}`,
+    summary: `${meText} ${topEmotion ? `Najczęściej uruchamia się przy tym ${topEmotion}. ` : ""}${resourceText}`,
     paidTease: "Pełna analiza nie dopisuje dramatu. Rozdziela zasoby, ryzyko, koszt emocjonalny i konkretny ruch, który ma sens w tej jednej relacji.",
     whatUserKnows: `${topBurden !== "brak jednego dominującego ciężaru" ? `Najmocniej wraca temat: ${topBurden}. ` : "Nie ma jednego prostego winnego. "}${meText}`,
     hiddenInsight: specificRisk,
@@ -1899,6 +2116,7 @@ export default function App() {
   const [interviewBusy, setInterviewBusy] = useState(false);
   const [forceMap, setForceMap] = useState<ForceMap>({});
   const [burdens, setBurdens] = useState<BurdenItem[]>([]);
+  const [emotions, setEmotions] = useState<EmotionItem[]>([]);
   const [truthCards, setTruthCards] = useState<string[]>([]);
   const [relationshipNote, setRelationshipNote] = useState("");
   const [clarificationQuestions, setClarificationQuestions] = useState<ClarificationQuestion[]>([]);
@@ -2015,6 +2233,7 @@ export default function App() {
           setInterviewState(parsed.interviewState || null);
           setForceMap(parsed.forceMap || {});
           setBurdens(parsed.burdens || []);
+          setEmotions(parsed.emotions || []);
           setTruthCards(parsed.truthCards || []);
           setRelationshipNote(parsed.relationshipNote || "");
           setClarificationQuestions(parsed.clarificationQuestions || []);
@@ -2132,8 +2351,8 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, forceMap, burdens, truthCards, relationshipNote, clarificationQuestions, clarificationAnswers, clarificationIndex, clarificationDraft, followUpResult }));
-  }, [stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, forceMap, burdens, truthCards, relationshipNote, clarificationQuestions, clarificationAnswers, clarificationIndex, clarificationDraft]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, forceMap, burdens, emotions, truthCards, relationshipNote, clarificationQuestions, clarificationAnswers, clarificationIndex, clarificationDraft, followUpResult }));
+  }, [stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, forceMap, burdens, emotions, truthCards, relationshipNote, clarificationQuestions, clarificationAnswers, clarificationIndex, clarificationDraft]);
 
   const ensureSession = async (entryKey: EntryKey): Promise<string> => {
     if (sessionToken) return sessionToken;
@@ -2380,7 +2599,7 @@ export default function App() {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(FOLLOWUP_KEY);
     localStorage.removeItem(FOLLOWUP_RESULT_KEY);
-    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setConsents([false, false, false, false]); setLegalOpen(null); setInterviewState(null); setInterviewAnswer(""); setForceMap({}); setBurdens([]); setTruthCards([]); setRelationshipNote(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft(""); setFollowUpOpen(false); setFollowUpIndex(0); setFollowUpAnswers({}); setFollowUpDraft(""); setFollowUpResult(null); setFollowUpDueAt(""); setFollowUpMessage(""); setDynamicFollowUpQuestion(null); setDynamicFollowUpHistory([]); setDynamicFollowUpTeaser(""); setDynamicFollowUpElapsedDays(0); setFollowUpCheckoutBusy(false);
+    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setConsents([false, false, false, false]); setLegalOpen(null); setInterviewState(null); setInterviewAnswer(""); setForceMap({}); setBurdens([]); setEmotions([]); setTruthCards([]); setRelationshipNote(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft(""); setFollowUpOpen(false); setFollowUpIndex(0); setFollowUpAnswers({}); setFollowUpDraft(""); setFollowUpResult(null); setFollowUpDueAt(""); setFollowUpMessage(""); setDynamicFollowUpQuestion(null); setDynamicFollowUpHistory([]); setDynamicFollowUpTeaser(""); setDynamicFollowUpElapsedDays(0); setFollowUpCheckoutBusy(false);
     window.history.replaceState({}, "", "/");
     setRoutePath("/");
   };
@@ -2397,6 +2616,7 @@ export default function App() {
     setInterviewState(null);
     setForceMap({});
     setBurdens([]);
+    setEmotions([]);
     setTruthCards([]);
     setRelationshipNote("");
     setClarificationQuestions([]);
@@ -2443,6 +2663,17 @@ export default function App() {
     });
   };
 
+  const toggleEmotion = (label: string) => {
+    setEmotions((current) => {
+      const exists = current.find((item) => item.label === label);
+      if (exists) {
+        return current.filter((item) => item.label !== label).map((item, index) => ({ ...item, rank: index + 1 }));
+      }
+      if (current.length >= 3) return current;
+      return [...current, { label, rank: current.length + 1 }];
+    });
+  };
+
   const toggleTruthCard = (text: string) => {
     setTruthCards((current) => {
       if (current.includes(text)) return current.filter((item) => item !== text);
@@ -2456,6 +2687,7 @@ export default function App() {
     return {
       forceMap,
       burdens,
+      emotions,
       truthCards,
       userNote: relationshipNote.trim(),
       clarificationAnswers: clarificationQuestions.map((q) => ({
@@ -2466,14 +2698,65 @@ export default function App() {
     };
   };
 
+  const buildClosedAnswerSnapshot = () => {
+    if (!path) return [];
+    return path.questions.map((question) => {
+      const selectedId = answers[question.id];
+      const option = question.options.find((item) => item.id === selectedId);
+      return {
+        id: question.id,
+        question: question.text,
+        answer: option?.label || "Brak odpowiedzi",
+        score: typeof option?.score === "number" ? option.score : null,
+      };
+    });
+  };
+
+  const buildInterviewSeed = () => {
+    if (!path) return null;
+    const checkpointId = answers[`${path.key}_checkpoint`];
+    const checkpointOption = path.checkpoint.options.find((item) => item.id === checkpointId);
+    return {
+      path: { key: path.key, title: path.title },
+      closedAnswers: buildClosedAnswerSnapshot(),
+      checkpoint: {
+        question: path.checkpoint.text,
+        answer: checkpointOption?.label || "Brak odpowiedzi",
+        score: typeof checkpointOption?.score === "number" ? checkpointOption.score : null,
+      },
+      relationshipMap: {
+        axes: forceMapItemsForPath(path.key).map((item) => ({
+          key: item.key,
+          question: item.title,
+          answer: forceLabel(forceMap[item.key]),
+        })),
+        burdens: burdens.map((item) => ({ rank: item.rank, label: item.label })),
+        emotions: emotions.map((item) => ({ rank: item.rank, label: item.label })),
+        truthCards: [...truthCards],
+        userNote: relationshipNote.trim(),
+      },
+    };
+  };
+
   const buildCompositeOpenText = (clarificationsOverride?: ClarificationAnswerMap): string => {
     const answersSource = clarificationsOverride || clarificationAnswers;
-    const forceLines = FORCE_MAP_ITEMS
+    const forceLines = forceMapItemsForPath(path?.key)
       .map((item) => `- ${item.title}: ${forceLabel(forceMap[item.key])}`)
       .join("\n");
+    const closedLines = path
+      ? buildClosedAnswerSnapshot().map((item, index) => `${index + 1}. ${item.question}\nOdpowiedź: ${item.answer}`).join("\n\n")
+      : "Brak danych z pytań zamkniętych.";
+    const checkpointId = path ? answers[`${path.key}_checkpoint`] : "";
+    const checkpointOption = path?.checkpoint.options.find((item) => item.id === checkpointId);
+    const checkpointLines = path
+      ? `${path.checkpoint.text}\nOdpowiedź: ${checkpointOption?.label || "Brak odpowiedzi"}`
+      : "Brak checkpointu.";
     const burdenLines = burdens.length
       ? burdens.map((item) => `${item.rank}. ${item.label}`).join("\n")
       : "Brak wskazanych ciężarów.";
+    const emotionLines = emotions.length
+      ? emotions.map((item) => `${item.rank}. ${item.label}`).join("\n")
+      : "Brak wskazanych emocji.";
     const truthLines = truthCards.length
       ? truthCards.map((item) => `- ${item}`).join("\n")
       : "Brak wybranych zdań prawdy.";
@@ -2485,13 +2768,25 @@ export default function App() {
       ? clarificationQuestions.map((q, index) => `Doprecyzowanie ${index + 1}: ${q.text}\nOdpowiedź: ${(answersSource[q.id] || "").trim() || "pominięte"}`).join("\n\n")
       : "Brak doprecyzowań.";
     const finalOwnText = openText.trim() && !openText.includes("Pytanie:") ? openText.trim() : "Brak dodatkowego opisu końcowego.";
-    return `MAPA RELACJI — dane kliknięte przez użytkownika
+    return `ŚCIEŻKA ANALIZY
+${path?.title || selectedPath || "nieznana"}
+
+PYTANIA ZAMKNIĘTE — konkretne odpowiedzi użytkownika
+${closedLines}
+
+PYTANIE ROZSTRZYGAJĄCE
+${checkpointLines}
+
+MAPA RELACJI — dane kliknięte przez użytkownika
 
 UKŁAD SIŁ
 ${forceLines}
 
 NAJWIĘKSZE CIĘŻARY
 ${burdenLines}
+
+MAPA EMOCJI
+${emotionLines}
 
 MOMENT PRAWDY
 ${truthLines}
@@ -2516,7 +2811,7 @@ ${finalOwnText}`;
     setClarificationAnswers({});
     setClarificationIndex(0);
     setClarificationDraft("");
-    setInterviewState(createLocalInterviewState(path));
+    setInterviewState(createLocalInterviewState(path, buildInterviewSeed()));
     setInterviewAnswer("");
     setStage("map_summary");
   };
@@ -2531,12 +2826,17 @@ ${finalOwnText}`;
     try {
       const token = await ensureSession(path.key);
       const initialContext = buildCompositeOpenText({});
+      const initialData = buildInterviewSeed();
       const res = await fetch(`${API_BASE}/api/interview/start`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, path: path.key, initialContext }),
+        body: JSON.stringify({ token, path: path.key, initialContext, initialData }),
       });
       const data = await res.json().catch(() => ({}));
+      if (data?.crisis) {
+        setStage("crisis");
+        return;
+      }
       if (!res.ok || !data?.ok || !data?.question) throw new Error(data?.message || "Nie udało się uruchomić wywiadu adaptacyjnego.");
 
       setInterviewState({
@@ -2552,7 +2852,7 @@ ${finalOwnText}`;
       });
     } catch {
       // Bezpieczny fallback: obecny lokalny wywiad zostaje zachowany, gdy API chwilowo nie odpowiada.
-      setInterviewState(createLocalInterviewState(path));
+      setInterviewState(createLocalInterviewState(path, buildInterviewSeed()));
     } finally {
       setInterviewBusy(false);
     }
@@ -2659,7 +2959,8 @@ ${finalOwnText}`;
     if (stage === "force_signal") { setStage("force_map"); return; }
     if (stage === "burdens") { setStage("force_signal"); return; }
     if (stage === "burden_signal") { setStage("burdens"); return; }
-    if (stage === "truth_cards") { setStage("burden_signal"); return; }
+    if (stage === "emotions") { setStage("burden_signal"); return; }
+    if (stage === "truth_cards") { setStage("emotions"); return; }
     if (stage === "truth_signal") { setStage("truth_cards"); return; }
     if (stage === "short_note") { setStage("truth_signal"); return; }
     if (stage === "map_summary") { setStage("short_note"); return; }
@@ -3095,13 +3396,13 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
             <motion.div key={`${path.key}-force-map`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
                 <div>
-                  <div className="eyebrow">MAPA RELACJI · KROK 1 Z 4</div>
+                  <div className="eyebrow">MAPA RELACJI · KROK 1 Z 5</div>
                   <h2>Układ sił</h2>
                   <p>Nie przesuwasz suwaków. Po prostu zaznaczasz, po której stronie częściej leży ciężar danego elementu.</p>
                 </div>
                 <div className="progress-wrap">
                   <span>Mapa relacji</span>
-                  <div className="progress-track"><div className="progress-fill" style={{ width: `${mapCompletion(forceMap, burdens, truthCards)}%` }} /></div>
+                  <div className="progress-track"><div className="progress-fill" style={{ width: `${mapCompletion(forceMap, burdens, emotions, truthCards)}%` }} /></div>
                 </div>
               </div>
               <Glass className="question-panel relationship-map-panel">
@@ -3109,7 +3410,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                   To jest część, która pozwala zobaczyć asymetrię bez pisania długiej historii. Wybierz najbliższą odpowiedź, nie idealną.
                 </div>
                 <div className="force-map-list">
-                  {FORCE_MAP_ITEMS.map((item) => (
+                  {forceMapItemsForPath(path.key).map((item) => (
                     <div key={item.key} className="force-map-item">
                       <div className="force-map-copy">
                         <strong>{item.title}</strong>
@@ -3132,7 +3433,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                 </div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => setStage("force_signal")} disabled={FORCE_MAP_ITEMS.some((item) => !forceMap[item.key])}>Dalej →</PrimaryButton>
+                  <PrimaryButton onClick={() => setStage("force_signal")} disabled={forceMapItemsForPath(path.key).some((item) => !forceMap[item.key])}>Dalej →</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
@@ -3152,7 +3453,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
             <motion.div key={`${path.key}-burdens`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
                 <div>
-                  <div className="eyebrow">MAPA RELACJI · KROK 2 Z 4</div>
+                  <div className="eyebrow">MAPA RELACJI · KROK 2 Z 5</div>
                   <h2>Co najbardziej ciąży?</h2>
                   <p>Wybierz maksymalnie trzy rzeczy. Kolejność kliknięcia oznacza wagę: 1 to największy ciężar.</p>
                 </div>
@@ -3163,7 +3464,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
               </div>
               <Glass className="question-panel relationship-map-panel">
                 <div className="burden-grid">
-                  {BURDEN_OPTIONS.map((label) => {
+                  {burdenOptionsForPath(path.key).map((label) => {
                     const selected = burdens.find((item) => item.label === label);
                     return (
                       <button
@@ -3194,16 +3495,58 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
             <PauseInsightPanel
               insight={buildPauseInsight("burdens", path, answers, forceMap, burdens, truthCards)}
               onBack={goBack}
-              onNext={() => setStage("truth_cards")}
+              onNext={() => setStage("emotions")}
               nextLabel="Dalej →"
             />
           )}
+
+          {stage === "emotions" && path && (
+            <motion.div key={`${path.key}-emotions`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="section-head compact">
+                <div>
+                  <div className="eyebrow">MAPA RELACJI · KROK 3 Z 5</div>
+                  <h2>Mapa emocji</h2>
+                  <p>Wybierz maksymalnie trzy stany, które najczęściej uruchamia ta sytuacja. Kolejność oznacza siłę: 1 to emocja dominująca.</p>
+                </div>
+                <div className="progress-wrap">
+                  <span>{emotions.length}/3</span>
+                  <div className="progress-track"><div className="progress-fill" style={{ width: `${(emotions.length / 3) * 100}%` }} /></div>
+                </div>
+              </div>
+              <Glass className="question-panel relationship-map-panel">
+                <div className="burden-grid">
+                  {emotionOptionsForPath(path.key).map((label) => {
+                    const selected = emotions.find((item) => item.label === label);
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        className={`burden-chip ${selected ? "selected" : ""}`}
+                        onClick={() => toggleEmotion(label)}
+                      >
+                        {selected && <span className="burden-rank">{selected.rank}</span>}
+                        <span>{label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <div className="map-step-note">
+                  Emocja nie jest dowodem na intencję drugiej osoby. Pokazuje jednak, jaki koszt i jaki stan ta relacja regularnie uruchamia w Tobie.
+                </div>
+                <div className="section-actions">
+                  <GhostButton onClick={goBack}>Wróć</GhostButton>
+                  <PrimaryButton onClick={() => setStage("truth_cards")} disabled={emotions.length < 1}>Dalej →</PrimaryButton>
+                </div>
+              </Glass>
+            </motion.div>
+          )}
+
 
           {stage === "truth_cards" && path && (
             <motion.div key={`${path.key}-truth-cards`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
                 <div>
-                  <div className="eyebrow">MAPA RELACJI · KROK 3 Z 4</div>
+                  <div className="eyebrow">MAPA RELACJI · KROK 4 Z 5</div>
                   <h2>Moment prawdy</h2>
                   <p>Zaznacz jedno albo dwa zdania, które najbardziej trafiają w to, czego nie chcesz już obchodzić dookoła.</p>
                 </div>
@@ -3214,7 +3557,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
               </div>
               <Glass className="question-panel relationship-map-panel">
                 <div className="truth-card-grid">
-                  {TRUTH_CARD_OPTIONS.map((text) => {
+                  {truthCardOptionsForPath(path.key).map((text) => {
                     const selected = truthCards.includes(text);
                     return (
                       <button
@@ -3254,7 +3597,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
             <motion.div key={`${path.key}-short-note`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
                 <div>
-                  <div className="eyebrow">MAPA RELACJI · KROK 4 Z 4</div>
+                  <div className="eyebrow">MAPA RELACJI · KROK 5 Z 5</div>
                   <h2>Jedno zdanie od Ciebie</h2>
                   <p>Dopisz jedną rzecz, której nie było w odpowiedziach. Może być jednym zdaniem.</p>
                 </div>
@@ -3272,6 +3615,10 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                   <div>
                     <span>Ciężary</span>
                     <strong>{burdens.map((item) => `${item.rank}. ${item.label}`).join(" · ") || "brak"}</strong>
+                  </div>
+                  <div>
+                    <span>Emocje</span>
+                    <strong>{emotions.map((item) => `${item.rank}. ${item.label}`).join(" · ") || "brak"}</strong>
                   </div>
                   <div>
                     <span>Moment prawdy</span>
@@ -3316,7 +3663,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                   <span className="signal-dot dot-c" />
                 </div>
                 <div className="signal-grid">
-                  {buildMapSignals(forceMap, burdens, truthCards).map((signal) => (
+                  {buildMapSignals(forceMap, burdens, truthCards, emotions).map((signal) => (
                     <div key={signal.label} className={`signal-card ${signal.tone}`}>
                       <span>{signal.label}</span>
                       <strong>{signal.value}</strong>
