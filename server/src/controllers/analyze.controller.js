@@ -20,27 +20,6 @@ function isValidEmail(email) {
   return !e || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
 }
 
-const CRISIS_PATTERNS = [
-  /\bnie\s*chc[eę]\s*[żz]y[cć]\b/i,
-  /\bsamob[oó]j/i,
-  /\bodebra[cć]\s+sobie\s+[żz]ycie\b/i,
-  /\bzabij[eę]\s+si[eę]\b/i,
-  /\bskrzywdz[ić]\s+siebie\b/i,
-  /\bboj[eę]\s+si[eę]\s+o\s+[żz]ycie\b/i,
-  /\bboj[eę]\s+si[eę],?\s+[żz]e\s+mnie\s+zabije\b/i,
-  /\bpobi[łl]\b/i,
-  /\buderzy[łl]\b/i,
-  /\bprzemoc\b/i,
-  /\bn[oó][żz]\b/i,
-  /\bkrew\b/i,
-];
-
-function hasCrisisContent(text) {
-  const value = normalizeText(text);
-  if (!value) return false;
-  return CRISIS_PATTERNS.some((pattern) => pattern.test(value));
-}
-
 function extractPatterns(text) {
   const lower = normalizeText(text).toLowerCase();
   const patterns = [];

@@ -24,7 +24,7 @@ export const TERMS = {
 §3. Usługa cyfrowa i płatność
 
 1. Dostęp do pełnego raportu jest odpłatny. Cena jest podana przed dokonaniem zakupu.
-2. Płatność realizowana jest przez operatora Stripe. Akceptowane metody: karta płatnicza, BLIK, Przelewy24.
+2. Płatność realizowana jest przez operatora Stripe. Akceptowane metody: karta płatnicza i BLIK.
 3. Po skutecznej płatności system generuje indywidualny raport i dostarcza go użytkownikowi.
 4. Faktura/potwierdzenie zakupu dostępne są poprzez system Stripe.
 

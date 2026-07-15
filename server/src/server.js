@@ -39,13 +39,105 @@ app.use(
 );
 
 // WEBHOOK MUSI BYĆ PRZED express.json()
+function isUniqueConstraintError(error) {
+  return error?.code === "P2002" || /unique constraint/i.test(String(error?.message || ""));
+}
+
+async function markStripeEventProcessed(event, token) {
+  try {
+    await prisma.processedStripeEvent.create({
+      data: {
+        event_id: event.id,
+        event_type: event.type,
+        session_id: token,
+      },
+    });
+    return true;
+  } catch (error) {
+    if (isUniqueConstraintError(error)) return true;
+    throw error;
+  }
+}
+
+async function processPaidCheckoutEvent(event) {
+  const checkout = event.data.object;
+  const token = checkout?.metadata?.token || null;
+  const email = checkout?.metadata?.email || checkout?.customer_email || null;
+
+  if (!token) {
+    console.error("[WEBHOOK] Brak tokenu w metadata Stripe.");
+    return { ok: true, ignored: true };
+  }
+
+  const alreadyProcessed = await prisma.processedStripeEvent.findUnique({
+    where: { event_id: event.id },
+  });
+  if (alreadyProcessed) {
+    console.log(`[WEBHOOK] Event ${event.id} już przetworzony. Pomijam.`);
+    return { ok: true, duplicate: true };
+  }
+
+  // Nie generujemy raportu, dopóki Stripe nie potwierdzi realnie opłaconej sesji.
+  if (checkout?.payment_status && checkout.payment_status !== "paid") {
+    console.log(`[WEBHOOK] Checkout ${checkout.id} nie ma statusu paid. Oczekuję na potwierdzenie płatności.`);
+    return { ok: true, pending: true };
+  }
+
+  const existingSession = await prisma.session.findUnique({
+    where: { id: token },
+    select: {
+      id: true,
+      report_status: true,
+      payment_status: true,
+    },
+  });
+
+  if (!existingSession) {
+    // 500 powoduje ponowienie webhooka przez Stripe; nie tworzymy pustej sesji bez danych raportu.
+    throw new Error(`Nie znaleziono sesji ${token} powiązanej z opłaconą płatnością.`);
+  }
+
+  const paymentIntentId = typeof checkout?.payment_intent === "string"
+    ? checkout.payment_intent
+    : checkout?.payment_intent?.id || null;
+
+  await prisma.session.update({
+    where: { id: token },
+    data: {
+      payment_status: "PAID",
+      report_status: existingSession.report_status === "READY" ? "READY" : "QUEUED",
+      email,
+      stripe_session_id: checkout.id,
+      ...(paymentIntentId ? { stripe_payment_intent_id: paymentIntentId } : {}),
+      paid_at: new Date(),
+    },
+  });
+
+  if (existingSession.report_status !== "READY") {
+    const queueModule = require("./jobs/queue.js");
+    if (typeof queueModule.enqueueReport !== "function") {
+      throw new Error("Brak funkcji enqueueReport w module kolejki.");
+    }
+
+    // Job ma stałe jobId report-${token}, więc ponowiony webhook nie wygeneruje równoległego duplikatu.
+    await queueModule.enqueueReport(token);
+    console.log(`[WEBHOOK] Raport zakolejkowany: ${token}`);
+  }
+
+  // Event oznaczamy jako zakończony dopiero PO zapisie płatności i skutecznym dodaniu joba.
+  // Jeżeli baza albo Redis chwilowo padną wcześniej, zwracamy 500 i Stripe ponowi webhook.
+  await markStripeEventProcessed(event, token);
+
+  return { ok: true };
+}
+
 app.post(
   "/api/webhook",
   express.raw({ type: "application/json" }),
   async (req, res) => {
     try {
       if (!stripe || !webhookSecret) {
-        return res.status(400).json({ ok: false, error: "Brak konfiguracji Stripe webhook." });
+        return res.status(503).json({ ok: false, error: "Brak konfiguracji Stripe webhook." });
       }
 
       const signature = req.headers["stripe-signature"];
@@ -56,87 +148,35 @@ app.post(
       let event;
       try {
         event = stripe.webhooks.constructEvent(req.body, signature, webhookSecret);
-      } catch (err) {
-        console.error("[WEBHOOK] Błąd weryfikacji podpisu:", err.message);
+      } catch (error) {
+        console.error("[WEBHOOK] Błąd weryfikacji podpisu:", error.message);
         return res.status(400).json({ ok: false, error: "Nieprawidłowa sygnatura webhooka." });
       }
 
-      if (event.type === "checkout.session.completed") {
-        const session = event.data.object;
-        const token = session?.metadata?.token || null;
-        const email = session?.metadata?.email || session?.customer_email || null;
+      if (
+        event.type === "checkout.session.completed"
+        || event.type === "checkout.session.async_payment_succeeded"
+      ) {
+        await processPaidCheckoutEvent(event);
+      }
 
-        // POPRAWKA: sprawdź czy ten event Stripe był już przetworzony
-        // Stripe może wysłać ten sam event kilka razy — bez tego
-        // użytkownik mógłby dostać dwa raporty i dwa maile
-        try {
-          const alreadyProcessed = await prisma.processedStripeEvent.findUnique({
-            where: { event_id: event.id },
+      if (event.type === "checkout.session.async_payment_failed") {
+        const checkout = event.data.object;
+        const token = checkout?.metadata?.token || null;
+        if (token) {
+          await prisma.session.updateMany({
+            where: { id: token, payment_status: "PENDING" },
+            data: { payment_status: "FAILED", last_error: "Stripe: płatność nie została potwierdzona." },
           });
-
-          if (alreadyProcessed) {
-            console.log(`[WEBHOOK] Event ${event.id} już przetworzony. Pomijam.`);
-            return res.status(200).json({ ok: true });
-          }
-
-          // Zapisz event jako przetworzony
-          await prisma.processedStripeEvent.create({
-            data: {
-              event_id: event.id,
-              event_type: event.type,
-              session_id: token || null,
-            },
-          });
-        } catch (dedupErr) {
-          // Jeśli zapis się nie powiódł (np. race condition — dwa requesty jednocześnie),
-          // bezpieczniej jest zignorować ten event niż przetworzyć go podwójnie
-          console.error("[WEBHOOK] Błąd deduplicacji eventu:", dedupErr.message);
-          return res.status(200).json({ ok: true });
-        }
-
-        if (!token) {
-          console.error("[WEBHOOK] Brak tokenu w metadata.");
-          return res.status(200).json({ ok: true });
-        }
-
-        try {
-          await prisma.session.upsert({
-            where: { id: token },
-            update: {
-              payment_status: "PAID",
-              report_status: "QUEUED",
-              email,
-              stripe_session_id: session.id,
-              paid_at: new Date(),
-            },
-            create: {
-              id: token,
-              email,
-              payment_status: "PAID",
-              report_status: "QUEUED",
-              stripe_session_id: session.id,
-              paid_at: new Date(),
-            },
-          });
-
-          try {
-            const queueModule = require("./jobs/queue.js");
-            if (typeof queueModule.enqueueReport === "function") {
-              await queueModule.enqueueReport(token);
-              console.log(`[WEBHOOK] Raport zakolejkowany: ${token}`);
-            }
-          } catch (queueErr) {
-            console.error("[WEBHOOK] Błąd kolejki:", queueErr.message);
-          }
-        } catch (dbErr) {
-          console.error("[WEBHOOK] Błąd zapisu płatności:", dbErr.message);
         }
       }
 
       return res.status(200).json({ ok: true });
-    } catch (err) {
-      console.error("[WEBHOOK] Błąd ogólny:", err.message);
-      return res.status(200).json({ ok: true });
+    } catch (error) {
+      // Nie potwierdzamy błędnie obsłużonego opłaconego eventu.
+      // Stripe może wtedy bezpiecznie ponowić dostarczenie webhooka.
+      console.error("[WEBHOOK] Błąd przetwarzania:", error.message);
+      return res.status(500).json({ ok: false, error: "Webhook nie został jeszcze poprawnie przetworzony." });
     }
   }
 );
@@ -154,7 +194,8 @@ app.get("/api/health", (req, res) => {
     ok: true,
     service: "CzyToMaSens API",
     model: process.env.OPENAI_MODEL || "gpt-4o",
-    price: process.env.PRICE_AMOUNT_GR || "2900",
+    price: process.env.INITIAL_PRICE_AMOUNT_GR || "1999",
+    followupPrice: process.env.FOLLOWUP_PRICE_AMOUNT_GR || "999",
   });
 });
 

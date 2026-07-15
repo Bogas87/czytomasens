@@ -532,47 +532,83 @@ function preserveActiveThreadContinuity(previous, candidate) {
   return candidate;
 }
 
+function normalizeSafetyText(text) {
+  return String(text || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[łŁ]/g, "l")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function assessSafetyText(text) {
-  const value = String(text || "").trim();
+  const value = normalizeSafetyText(text);
   if (!value) return { level: 0, category: "none", reason: "", confidence: 0 };
 
+  // Poziom 3: bezpośredni zamiar, plan albo wiarygodna groźba śmierci.
   const level3 = [
-    /\b(chc[eę]|zamierzam|zaraz|dzisiaj)\s+(si[eę]\s+)?(zabi[cć]|odebra[cć]\s+sobie\s+[żz]ycie)\b/i,
-    /\bmam\s+plan.{0,80}(samob[oó]j|zabi[cć]\s+si[eę])\b/i,
-    /\bnie\s+chc[eę]\s+[żz]y[cć]\b/i,
-    /\b(grozi|powiedzia[łl]).{0,50}[żz]e\s+mnie\s+zabije\b/i,
-    /\bboj[eę]\s+si[eę].{0,60}[żz]e\s+mnie\s+zabije\b/i,
-    /\bma\s+(n[oó][żz]|bro[nń]).{0,50}(grozi|idzie|stoi|czeka)\b/i,
+    /\b(chce|zamierzam|zaraz|dzisiaj|teraz)\s+(sie\s+)?(zabic|zabije|skrzywdzic)\b/i,
+    /\b(zabije|powiesze|otruje)\s+sie\b/i,
+    /\b(odbiore|chce\s+odebrac|zamierzam\s+odebrac)\s+sobie\s+zycie\b/i,
+    /\bnie\s+chce\s+(juz\s+|dalej\s+)?zyc\b/i,
+    /\bchce\s+skonczyc\s+ze\s+soba\b/i,
+    /\bmam\s+(konkretny\s+)?plan(\s+samobojczy|.{0,80}(zabic\s+sie|odebrac\s+sobie\s+zycie|skonczyc\s+ze\s+soba))\b/i,
+    /\b(grozi|powiedzial|mowi).{0,60}(zabije\s+mnie|ze\s+mnie\s+zabije)\b/i,
+    /\bboje\s+sie.{0,80}(ze\s+mnie\s+zabije|o\s+swoje\s+zycie)\b/i,
+    /\bma\s+(noz|bron).{0,60}(grozi|idzie|stoi|czeka|celuje)\b/i,
   ];
   if (level3.some((pattern) => pattern.test(value))) {
-    return { level: 3, category: "immediate_danger", reason: "Wypowiedź może wskazywać na bezpośrednie zagrożenie życia lub samouszkodzenia.", confidence: 0.97 };
+    return {
+      level: 3,
+      category: "immediate_danger",
+      reason: "Wypowiedź może wskazywać na bezpośrednie zagrożenie życia lub samouszkodzenia.",
+      confidence: 0.98,
+    };
   }
 
+  // Poziom 2: konkretna przemoc, przymus, realne zagrożenie albo myśli samobójcze bez deklarowanego planu.
   const level2 = [
-    /\b(uderzy[łl]|pobi[łl]|dusi[łl]|szarpa[łl]|kopn[aą][łl]|zgwa[łl]ci[łl])\s+(mnie|ją|go)\b/i,
-    /\bzmusi[łl]\s+mnie\s+do\s+(seksu|stosunku)\b/i,
-    /\b(grozi\s+mi|grozi[łl]\s+mi)\b/i,
-    /\bnie\s+pozwala\s+mi\s+(wyj[śs][cć]|spotyka[cć]\s+si[eę])\b/i,
-    /\bboje?\s+si[eę]\s+wr[oó]ci[cć]\s+do\s+domu\b/i,
+    /\b(uderzyl|pobil|dusil|szarpal|kopnal|zgwalcil|przypalal|bil)\s+(mnie|ja|go)\b/i,
+    /\b(zmusil|zmusila)\s+mnie\s+do\s+(seksu|stosunku)\b/i,
+    /\b(grozi\s+mi|grozil\s+mi|grozi\s+ze)\b/i,
+    /\b(nie\s+pozwala|zabrania)\s+mi\s+(wyjsc|spotykac\s+sie|pracowac)\b/i,
+    /\b(blokuje|zablokowal|zastawil).{0,40}(wyjscie|drzwi)\b/i,
+    /\bboje\s+sie\s+wrocic\s+do\s+domu\b/i,
     /\bprzemoc\s+(fizyczna|seksualna|ekonomiczna)\b/i,
-    /\b(zabra[łl]|kontroluje).{0,40}(pieni[aą]dze|konto|wyp[łl]at[eę])\b/i,
+    /\b(zabral|kontroluje).{0,50}(pieniadze|konto|wyplate)\b/i,
+    /\b(mam|miewam)\s+mysli\s+samobojcze\b/i,
+    /\bmysle\s+o\s+samobojstwie\b/i,
+    /\bchce\s+zrobic\s+sobie\s+krzywde\b/i,
   ];
   if (level2.some((pattern) => pattern.test(value))) {
-    return { level: 2, category: "credible_harm", reason: "Wypowiedź opisuje konkretne zachowanie mogące oznaczać przemoc, przymus lub realne zagrożenie.", confidence: 0.9 };
+    return {
+      level: 2,
+      category: "credible_harm",
+      reason: "Wypowiedź opisuje konkretne zachowanie mogące oznaczać przemoc, przymus lub realne zagrożenie.",
+      confidence: 0.93,
+    };
   }
 
+  // Poziom 1: sygnał niejednoznaczny — trzeba dopytać, nie zatrzymywać automatycznie całej analizy.
   const level1 = [
     /\bprzemoc\b/i,
-    /\bgro[zź]b/i,
+    /\bgrozb/i,
     /\bkontroluje\b/i,
     /\bizoluje\b/i,
     /\bupokarza\b/i,
-    /\bboj[eę]\s+si[eę]\s+(jego|jej)\s+reakcji\b/i,
+    /\bboje\s+sie\s+(jego|jej)\s+reakcji\b/i,
     /\bkrzyczy\s+na\s+mnie\b/i,
-    /\bnie\s+czuj[eę]\s+si[eę]\s+bezpiecznie\b/i,
+    /\bnie\s+czuje\s+sie\s+bezpiecznie\b/i,
+    /\bchodze\s+na\s+palcach\b/i,
   ];
   if (level1.some((pattern) => pattern.test(value))) {
-    return { level: 1, category: "safety_uncertain", reason: "Pojawił się niejednoznaczny sygnał bezpieczeństwa, który wymaga doprecyzowania przed mocnym wnioskiem.", confidence: 0.62 };
+    return {
+      level: 1,
+      category: "safety_uncertain",
+      reason: "Pojawił się niejednoznaczny sygnał bezpieczeństwa, który wymaga doprecyzowania przed mocnym wnioskiem.",
+      confidence: 0.68,
+    };
   }
 
   return { level: 0, category: "none", reason: "", confidence: 0 };
@@ -781,7 +817,34 @@ Zwróć pełny zaktualizowany stan przypadku widoczny w przekazanym kontekście.
 }
 
 function hasLanguageAbsolute(text) {
-  return /\b(zawsze|nigdy|na\s+pewno|wszyscy|specjalnie|chce\s+tylko|robi\s+to\s+tylko\s+po\s+to)\b/i.test(String(text || ""));
+  return /\b(zawsze|nigdy|na\s+pewno|wszyscy|specjalnie|celowo|chce\s+tylko|robi\s+to\s+tylko\s+po\s+to)\b/i.test(String(text || ""));
+}
+
+function hasConcreteBehaviorSignal(text) {
+  const value = String(text || "");
+  return /\b(wczoraj|dzisiaj|ostatni[aeyi]?|tydzie[nń]|miesi[aą]c|godzin[ayę]|dni|raz|razy|po\s+k[łl][oó]tni|napisa[łl]|zadzwoni[łl]|wr[oó]ci[łl]|powiedzia[łl]|zrobi[łl]|wyszed[łl]|znikn[aą][łl]|przeprosi[łl]|zaprosi[łl]|przyszed[łl]|odwo[łl]a[łl])\b/i.test(value)
+    || /\b\d+\b/.test(value);
+}
+
+function hasStrongIntentAttribution(text) {
+  return /\b(on|ona|partner|partnerka|m[aą][żz]|[żz]ona).{0,35}\b(na\s+pewno|specjalnie|celowo|chce\s+tylko|nie\s+kocha\s+mnie|kocha\s+mnie|manipuluje\s+mn[aą]|robi\s+to\s+po\s+to)\b/i.test(String(text || ""));
+}
+
+function shouldChallengeAssumption(state, latestInput) {
+  const text = String(latestInput || "").trim();
+  if (!text) return false;
+
+  const strongClaim = hasLanguageAbsolute(text) || hasStrongIntentAttribution(text);
+  if (!strongClaim) return false;
+
+  const concrete = hasConcreteBehaviorSignal(text);
+  const hasCounterSignal = safeArray(state?.hypotheses).some(
+    (hypothesis) => hypothesis.status === "active" && safeArray(hypothesis.contradicting_evidence).length > 0
+  );
+
+  // Nie kwestionujemy automatycznie każdej interpretacji. Challenge pojawia się tylko,
+  // gdy mocne twierdzenie nie ma konkretnego oparcia albo istnieje już realny kontrsygnał.
+  return !concrete || hasCounterSignal;
 }
 
 function routeIntervention(state, { latestInput = "", history = [] } = {}) {
@@ -850,16 +913,6 @@ function routeIntervention(state, { latestInput = "", history = [] } = {}) {
     };
   }
 
-  const latestInterpretation = [...safeArray(normalized.evidence_ledger)].reverse().find((evidence) => evidence.type === "user_interpretation" && evidence.status !== "resolved");
-  if (hasLanguageAbsolute(latestInput) || (latestInterpretation && latestInterpretation.confidence < 0.65)) {
-    return {
-      decision: "CHALLENGE_ASSUMPTION",
-      target: latestInterpretation?.id || "latest_assumption",
-      reason: "W narracji pojawia się mocne założenie, którego nie należy traktować jak ustalonego faktu.",
-      safetyLevel: 0,
-    };
-  }
-
   if (human.need_for_certainty === "high") {
     return {
       decision: "REFRAME",
@@ -876,6 +929,18 @@ function routeIntervention(state, { latestInput = "", history = [] } = {}) {
       decision: "CLARIFY_FACT",
       target: unknown?.id || unresolvedQuestion?.id || "missing_fact",
       reason: unknown?.content || unresolvedQuestion?.content || "Brakuje konkretnego faktu potrzebnego do uczciwego wniosku.",
+      safetyLevel: 0,
+    };
+  }
+
+  if (shouldChallengeAssumption(normalized, latestInput)) {
+    const latestInterpretation = [...safeArray(normalized.evidence_ledger)].reverse().find(
+      (evidence) => evidence.type === "user_interpretation" && evidence.status !== "resolved"
+    );
+    return {
+      decision: "CHALLENGE_ASSUMPTION",
+      target: latestInterpretation?.id || "latest_assumption",
+      reason: "W narracji pojawia się mocne założenie, które wymaga sprawdzenia na faktach albo zderzenia z istniejącym kontrsygnałem.",
       safetyLevel: 0,
     };
   }

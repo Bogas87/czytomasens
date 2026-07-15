@@ -1508,17 +1508,35 @@ function friendlyError(error: unknown, fallback: string): string {
   return fallback;
 }
 
+function normalizeSafetyText(text: string): string {
+  return String(text || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[łŁ]/g, "l")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function hasCrisisContent(text: string): boolean {
-  // Frontend zatrzymuje tylko wyraźne sygnały bezpośredniego zagrożenia lub konkretnej przemocy.
-  // Niejednoznaczne słowa typu „przemoc”, „kontrola” czy „groźby” są doprecyzowywane przez backendowy Safety Layer.
+  // Frontend zatrzymuje tylko poziom 2-3. Sygnały niejednoznaczne doprecyzowuje backend.
+  const value = normalizeSafetyText(text);
   const patterns = [
-    /nie\s+chc[eę]\s+[zż]y[cć]/i,
-    /(chc[eę]|zamierzam|zaraz).{0,30}(zabi[cć]\s+si[eę]|odebra[cć]\s+sobie\s+[zż]ycie)/i,
-    /boj[eę]\s+si[eę].{0,60}[zż]e\s+mnie\s+zabije/i,
-    /(uderzy[łl]|pobi[łl]|dusi[łl]|szarpa[łl]|zgwa[łl]ci[łl])\s+(mnie|ją|go)/i,
-    /zmusi[łl]\s+mnie\s+do\s+(seksu|stosunku)/i,
+    /\b(chce|zamierzam|zaraz|dzisiaj|teraz)\s+(sie\s+)?(zabic|zabije|skrzywdzic)\b/i,
+    /\b(zabije|powiesze|otruje)\s+sie\b/i,
+    /\b(odbiore|chce\s+odebrac|zamierzam\s+odebrac)\s+sobie\s+zycie\b/i,
+    /\bnie\s+chce\s+(juz\s+|dalej\s+)?zyc\b/i,
+    /\bchce\s+skonczyc\s+ze\s+soba\b/i,
+    /\bmam\s+(konkretny\s+)?plan(\s+samobojczy|.{0,80}(zabic\s+sie|odebrac\s+sobie\s+zycie|skonczyc\s+ze\s+soba))\b/i,
+    /\b(grozi|powiedzial|mowi).{0,60}(zabije\s+mnie|ze\s+mnie\s+zabije)\b/i,
+    /\bboje\s+sie.{0,80}(ze\s+mnie\s+zabije|o\s+swoje\s+zycie)\b/i,
+    /\b(uderzyl|pobil|dusil|szarpal|kopnal|zgwalcil|bil)\s+(mnie|ja|go)\b/i,
+    /\b(zmusil|zmusila)\s+mnie\s+do\s+(seksu|stosunku)\b/i,
+    /\bboje\s+sie\s+wrocic\s+do\s+domu\b/i,
+    /\b(mam|miewam)\s+mysli\s+samobojcze\b/i,
+    /\bmysle\s+o\s+samobojstwie\b/i,
   ];
-  return patterns.some((re) => re.test(text));
+  return patterns.some((re) => re.test(value));
 }
 
 function buildPreview(path: EntryConfig, answers: AnswerMap, openText: string): Preview {
@@ -1682,8 +1700,12 @@ async function nextDynamicFollowUp(payload: any): Promise<any> {
   return data;
 }
 
-async function createCheckout(token: string, email: string, consentAcceptedAt: string, kind: "initial" | "followup" = "initial", payload: any = {}): Promise<{ url: string }> {
-  const res = await fetch(`${API_BASE}/api/create-checkout`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token, email, consentAcceptedAt, kind, payload }) });
+async function createCheckout(token: string, email: string, consentAcceptedAt: string): Promise<{ url: string }> {
+  const res = await fetch(`${API_BASE}/api/create-checkout`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, email, consentAcceptedAt }),
+  });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data?.url) throw new Error(data?.error || "Błąd inicjalizacji płatności.");
   return { url: data.url };
@@ -2586,7 +2608,7 @@ export default function App() {
         entryKey: selectedPath,
       };
       await updateSession({ token, payload, email: checkoutEmail });
-      const checkout = await createCheckout(token, checkoutEmail, new Date().toISOString(), "followup", payload);
+      const checkout = await createCheckout(token, checkoutEmail, new Date().toISOString());
       window.location.href = checkout.url;
     } catch (e: any) {
       setFollowUpMessage(friendlyError(e, "Nie udało się rozpocząć płatności za raport porównawczy."));
@@ -3850,7 +3872,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                     </div>
                     <div className="unlock-form">
                       <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Twój adres e-mail." />
-                      <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Pokaż pełną analizę tej relacji"}</PrimaryButton>
+                      <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Pokaż pełną analizę — 19,99 zł"}</PrimaryButton>
                     </div>
                     <div className="unlock-fineprint">To nie jest diagnoza, terapia ani decyzja za Ciebie. To prywatny odczyt jednej perspektywy.</div>
                   </Glass>
