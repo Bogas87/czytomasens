@@ -1,9 +1,9 @@
 "use strict";
 
-const crypto = require("crypto");
 const prisma = require("../db/prisma.js");
 const openaiService = require("../services/openai.service.js");
 const caseReasoning = require("../services/case_reasoning.service.js");
+const { verifySignedAccess } = require("../security/report-access.js");
 
 function normalizeText(value) {
   return String(value || "").trim();
@@ -56,39 +56,6 @@ function crisisResponse(extraMessage) {
       extraMessage ||
       "W treści pojawił się sygnał możliwego kryzysu. Standardowa analiza została zatrzymana.",
   };
-}
-
-function getSignedSecret() {
-  return (
-    process.env.REPORT_LINK_SECRET ||
-    process.env.STRIPE_WEBHOOK_SECRET ||
-    process.env.OPENAI_API_KEY ||
-    "ctms-dev-secret"
-  );
-}
-
-function createSignedSignature(token, exp) {
-  return crypto
-    .createHmac("sha256", getSignedSecret())
-    .update(`${token}.${exp}`)
-    .digest("hex");
-}
-
-function verifySignedSignature(token, exp, sig) {
-  const now = Date.now();
-  const expires = Number(exp);
-
-  if (!Number.isFinite(expires) || expires < now) {
-    return false;
-  }
-
-  const expected = createSignedSignature(token, String(exp));
-  const a = Buffer.from(expected);
-  const b = Buffer.from(String(sig));
-
-  if (a.length !== b.length) return false;
-
-  return crypto.timingSafeEqual(a, b);
 }
 
 // ─── SESJA ───────────────────────────────────────────────────────────────────
@@ -336,57 +303,10 @@ exports.getSessionData = async (req, res) => {
 };
 
 exports.getReport = async (req, res) => {
-  try {
-    const token = normalizeText(req.params.token || req.query.token || "");
-
-    if (!token || !isValidUUID(token)) {
-      return res.status(400).json({ ok: false, message: "Nieprawidłowy token." });
-    }
-
-    const session = await prisma.session.findUnique({
-      where: { id: token },
-      select: {
-        payment_status: true,
-        report_status: true,
-        full_report: true,
-        patterns: true,
-        last_error: true,
-      },
-    });
-
-    if (!session) {
-      return res.status(404).json({ ok: false, message: "Nie znaleziono sesji." });
-    }
-
-    if (session.report_status === "READY" && session.full_report) {
-      return res.json({ ok: true, report: session.full_report, patterns: session.patterns });
-    }
-
-    if (session.payment_status !== "PAID") {
-      return res.status(402).json({ ok: false, message: "Raport nie został jeszcze opłacony." });
-    }
-
-    if (session.report_status === "QUEUED" || session.report_status === "PROCESSING") {
-      return res.status(202).json({
-        ok: false,
-        pending: true,
-        message: "Raport jest jeszcze przygotowywany.",
-      });
-    }
-
-    if (session.report_status === "FAILED") {
-      return res.status(500).json({
-        ok: false,
-        message: "Wystąpił błąd podczas generowania raportu.",
-        error: session.last_error || null,
-      });
-    }
-
-    return res.status(404).json({ ok: false, message: "Raport nie jest dostępny." });
-  } catch (error) {
-    console.error("[API] Report fetch error:", error.message);
-    return res.status(500).json({ ok: false, message: "Błąd systemu pobierania raportu." });
-  }
+  return res.status(403).json({
+    ok: false,
+    message: "Pełny raport jest dostępny wyłącznie przez bezpieczny link czasowy.",
+  });
 };
 
 exports.getSignedReport = async (req, res) => {
@@ -399,7 +319,7 @@ exports.getSignedReport = async (req, res) => {
       return res.status(400).json({ ok: false, message: "Nieprawidłowy link dostępu." });
     }
 
-    if (!verifySignedSignature(token, exp, sig)) {
+    if (!verifySignedAccess(token, exp, sig)) {
       return res
         .status(403)
         .json({ ok: false, message: "Link dostępu wygasł albo jest nieprawidłowy." });

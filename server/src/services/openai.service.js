@@ -134,7 +134,7 @@ Zwróć STRICT JSON: {"title":"","insight":"","question":""}`,
 
 
 const FULL_REPORT_SECTIONS = [
-  { title: "WERDYKT WSTĘPNY", tone: "normal" },
+  { title: "NAJWAŻNIEJSZY WNIOSEK", tone: "normal" },
   { title: "CO W TEJ HISTORII NAPRAWDĘ DZIAŁA", tone: "gold" },
   { title: "CO CIĘ TRZYMA", tone: "gold" },
   { title: "CO KOSZTUJE CIĘ NAJWIĘCEJ", tone: "danger" },
@@ -355,7 +355,7 @@ METRYKI:
 - rebuildPercent: realność zmiany wzorca, nie "szansa uratowania".
 
 ZWRÓĆ WYŁĄCZNIE STRICT JSON:
-{"headline":"","subheadline":"","previewLine":"","tensionPercent":0,"driftPercent":0,"rebuildPercent":0,"sections":[{"title":"WERDYKT WSTĘPNY","text":"","tone":"normal"}],"closing":""}`;
+{"headline":"","subheadline":"","previewLine":"","tensionPercent":0,"driftPercent":0,"rebuildPercent":0,"sections":[{"title":"NAJWAŻNIEJSZY WNIOSEK","text":"","tone":"normal"}],"closing":""}`;
 }
 
 function buildRepairPrompt() {

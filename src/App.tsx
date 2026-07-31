@@ -156,11 +156,16 @@ type InterviewState = {
 };
 
 type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string };
+type ReportAccess = { token: string; exp: string; sig: string };
 
 const STORAGE_KEY = "ctms_one_person_deep_premium_v21";
 const FOLLOWUP_KEY = "ctms_followup_after_7_days";
 const ANON_PROFILE_KEY = "ctms_anonymous_profile_v1";
 const FOLLOWUP_RESULT_KEY = "ctms_followup_result_v1";
+const REPORT_ACCESS_KEY = "ctms_report_access_v1";
+const STORAGE_TTL_MS = 90 * 24 * 60 * 60 * 1000;
+const CHECKOUT_CONSENT_VERSION = "2026-07-31";
+const ANALYSIS_CONSENT_VERSION = "2026-07-31";
 
 
 const FOLLOWUP_QUESTIONS: FollowUpQuestion[] = [
@@ -1480,15 +1485,15 @@ function createLocalInterviewState(path: EntryConfig, seed?: any): InterviewStat
 const LEGAL_CONTENT: Record<Exclude<LegalKey, null>, { title: string; body: string }> = {
   regulamin: {
     title: "Regulamin",
-    body: "Data obowiązywania: 21.05.2026 r.\n\n1. Informacje ogólne\n\nSerwis CzyToMaSens jest dostępny pod adresem www.czytomasens.pl i umożliwia wykonanie prywatnej analizy relacji na podstawie odpowiedzi użytkownika.\n\nUsługodawcą jest osoba fizyczna prowadząca serwis CzyToMaSens. Kontakt z usługodawcą: kontakt.czytomasens@gmail.com.\n\n2. Charakter usługi\n\nCzyToMaSens jest narzędziem analitycznym i refleksyjnym. Serwis nie świadczy usług psychologicznych, terapeutycznych, medycznych, prawnych ani diagnostycznych.\n\nWynik oraz raport powstają na podstawie odpowiedzi użytkownika i mają charakter informacyjny. Nie są diagnozą, opinią specjalisty ani oceną drugiej osoby.\n\n3. Korzystanie z serwisu\n\nUżytkownik wybiera ścieżkę analizy, odpowiada na pytania i może otrzymać pierwszy obraz sytuacji. Pełny raport jest dostępny po dokonaniu płatności.\n\nUżytkownik powinien udzielać odpowiedzi zgodnych z rzeczywistą sytuacją.\n\n4. Płatność i raport\n\nPełny raport jest odpłatną treścią cyfrową przygotowywaną indywidualnie na podstawie odpowiedzi użytkownika. Płatność obsługiwana jest przez Stripe.\n\n5. Prawo odstąpienia\n\nPrzed zakupem użytkownik wyraża zgodę na rozpoczęcie realizacji usługi przed upływem 14 dni i przyjmuje do wiadomości, że po rozpoczęciu generowania raportu traci prawo odstąpienia od umowy w zakresie tej treści cyfrowej.\n\n6. Reklamacje\n\nReklamacje można składać na adres: kontakt.czytomasens@gmail.com.\n\n7. Odpowiedzialność\n\nUżytkownik samodzielnie podejmuje decyzje dotyczące swojej relacji. Serwis nie ponosi odpowiedzialności za decyzje podjęte na podstawie wyniku lub raportu.\n\nW sytuacji zagrożenia życia, zdrowia, przemocy lub silnego kryzysu psychicznego użytkownik powinien skontaktować się z odpowiednimi służbami, lekarzem, psychologiem lub osobą zaufaną."
+    body: "Data obowiązywania: 31.07.2026 r.\n\n1. Informacje ogólne\n\nSerwis CzyToMaSens jest dostępny pod adresem czytomasens.pl i umożliwia wykonanie prywatnej analizy relacji na podstawie odpowiedzi użytkownika.\n\nUsługodawcą jest osoba fizyczna prowadząca serwis CzyToMaSens. Kontakt z usługodawcą: kontakt.czytomasens@gmail.com.\n\n2. Charakter usługi\n\nCzyToMaSens jest narzędziem analitycznym i refleksyjnym. Serwis nie świadczy usług psychologicznych, terapeutycznych, medycznych, prawnych ani diagnostycznych.\n\nWynik oraz raport powstają automatycznie na podstawie odpowiedzi użytkownika i mają charakter informacyjny. Nie są diagnozą, opinią specjalisty ani oceną drugiej osoby.\n\n3. Korzystanie z serwisu\n\nUżytkownik wybiera ścieżkę analizy, odpowiada na pytania i może otrzymać pierwszy obraz sytuacji. Pełny raport jest dostępny po dokonaniu płatności.\n\nUżytkownik powinien udzielać odpowiedzi zgodnych z rzeczywistą sytuacją i nie podawać danych pozwalających bez potrzeby zidentyfikować osoby trzecie.\n\n4. Płatność i raport\n\nPełny raport jest odpłatną treścią cyfrową przygotowywaną indywidualnie na podstawie odpowiedzi użytkownika. Płatność obsługiwana jest przez Stripe.\n\n5. Prawo odstąpienia\n\nBezpośrednio przed zakupem użytkownik może wyrazić wyraźną zgodę na rozpoczęcie realizacji usługi przed upływem 14 dni i potwierdzić, że po rozpoczęciu generowania raportu traci prawo odstąpienia od umowy w zakresie tej treści cyfrowej.\n\n6. Reklamacje\n\nReklamacje można składać na adres: kontakt.czytomasens@gmail.com.\n\n7. Odpowiedzialność\n\nUżytkownik samodzielnie podejmuje decyzje dotyczące swojej relacji. Serwis nie ponosi odpowiedzialności za decyzje podjęte wyłącznie na podstawie wyniku lub raportu.\n\nW sytuacji zagrożenia życia, zdrowia, przemocy lub silnego kryzysu psychicznego użytkownik powinien przerwać analizę i skorzystać z odpowiedniej, bezpośredniej pomocy."
   },
   prywatnosc: {
     title: "Polityka prywatności i RODO",
-    body: "Data obowiązywania: 21.05.2026 r.\n\n1. Administrator danych\n\nAdministratorem danych osobowych jest osoba fizyczna prowadząca serwis CzyToMaSens. Kontakt w sprawach danych osobowych: kontakt.czytomasens@gmail.com.\n\n2. Jakie dane przetwarzamy\n\nSerwis może przetwarzać: adres e-mail, odpowiedzi udzielone w analizie, treść wpisaną w polach otwartych, identyfikator sesji, informacje o płatności przekazane przez operatora płatności oraz podstawowe dane techniczne.\n\n3. Cele przetwarzania\n\nDane są przetwarzane w celu przygotowania analizy i raportu, obsługi płatności, udostępnienia raportu, obsługi reklamacji oraz zapewnienia bezpieczeństwa serwisu.\n\n4. Okres przechowywania\n\nDane związane z analizą i raportem są przechowywane przez okres do 90 dni, chyba że użytkownik wcześniej zażąda ich usunięcia."
+    body: "Data obowiązywania: 31.07.2026 r.\n\n1. Administrator danych\n\nAdministratorem danych osobowych jest osoba fizyczna prowadząca serwis CzyToMaSens. Kontakt w sprawach danych osobowych: kontakt.czytomasens@gmail.com.\n\n2. Jakie dane przetwarzamy\n\nSerwis może przetwarzać: adres e-mail, odpowiedzi udzielone w analizie, treść wpisaną w polach otwartych, identyfikator sesji, informacje o płatności przekazane przez operatora płatności, adres IP, rodzaj przeglądarki oraz dane zapisane lokalnie na urządzeniu. Odpowiedzi mogą zawierać informacje dotyczące zdrowia, życia seksualnego lub innych szczególnie prywatnych okoliczności. Użytkownik powinien ograniczyć dane osób trzecich do minimum.\n\n3. Cele i podstawy przetwarzania\n\nDane są przetwarzane w celu wykonania usługi i przygotowania raportu, obsługi płatności, udostępnienia raportu, obsługi reklamacji oraz zabezpieczenia serwisu. Podstawą jest wykonanie umowy, obowiązek prawny, uzasadniony interes administratora, a w zakresie wymaganym dla danych szczególnych kategorii — wyraźna zgoda użytkownika.\n\n4. Odbiorcy i dostawcy\n\nW realizacji usługi uczestniczą: OpenAI jako dostawca technologii generowania analizy, Railway jako dostawca infrastruktury i bazy danych, Stripe jako operator płatności oraz Resend jako dostawca wiadomości e-mail. Dane nie są sprzedawane ani wykorzystywane przez serwis do reklamy. Korzystanie z dostawców spoza Europejskiego Obszaru Gospodarczego może wiązać się z transferem danych na podstawie mechanizmów wymaganych przez RODO.\n\n5. Okres przechowywania\n\nDane związane z analizą, raportem i anonimowym profilem powrotu są automatycznie usuwane po maksymalnie 90 dniach od ostatniej aktywności, chyba że obowiązek prawny wymaga dłuższego przechowania wybranych danych transakcyjnych. Dane zapisane lokalnie użytkownik może usunąć przyciskiem „Od początku” lub przez wyczyszczenie danych strony w przeglądarce.\n\n6. Prawa użytkownika\n\nUżytkownik ma prawo dostępu do danych, ich sprostowania, usunięcia, ograniczenia przetwarzania, przeniesienia, sprzeciwu oraz złożenia skargi do Prezesa UODO. Żądania można kierować na adres kontakt.czytomasens@gmail.com."
   },
   rodo: {
     title: "Informacja RODO i cookies",
-    body: "Data obowiązywania: 21.05.2026 r.\n\nAdministratorem danych jest osoba fizyczna prowadząca serwis CzyToMaSens. Kontakt w sprawach danych osobowych: kontakt.czytomasens@gmail.com.\n\nSerwis wykorzystuje pliki cookies i podobne technologie w celu prawidłowego działania strony, utrzymania sesji oraz poprawy bezpieczeństwa.\n\nUżytkownik może ograniczyć lub usunąć cookies w ustawieniach przeglądarki. Ograniczenie cookies technicznych może spowodować, że część funkcji serwisu nie będzie działać prawidłowo."
+    body: "Data obowiązywania: 31.07.2026 r.\n\nAdministratorem danych jest osoba fizyczna prowadząca serwis CzyToMaSens. Kontakt w sprawach danych osobowych: kontakt.czytomasens@gmail.com.\n\nSerwis korzysta z technicznej pamięci przeglądarki, w szczególności localStorage i sessionStorage, aby zapamiętać postęp analizy, umożliwić bezpieczny powrót do raportu i ograniczyć utratę odpowiedzi po odświeżeniu strony. Serwis nie używa tych danych do reklamy ani śledzenia użytkownika pomiędzy innymi stronami.\n\nPostęp analizy zapisany na urządzeniu wygasa po 90 dniach. Użytkownik może usunąć go wcześniej przyciskiem „Od początku” albo przez wyczyszczenie danych strony w ustawieniach przeglądarki. Usunięcie danych lokalnych może uniemożliwić powrót do niedokończonej analizy z tego urządzenia."
   },
   kontakt: {
     title: "Kontakt",
@@ -1700,11 +1705,21 @@ async function nextDynamicFollowUp(payload: any): Promise<any> {
   return data;
 }
 
-async function createCheckout(token: string, email: string, consentAcceptedAt: string): Promise<{ url: string }> {
+async function createCheckout(
+  token: string,
+  email: string,
+  consent: { accepted: boolean; acceptedAt: string }
+): Promise<{ url: string }> {
   const res = await fetch(`${API_BASE}/api/create-checkout`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token, email, consentAcceptedAt }),
+    body: JSON.stringify({
+      token,
+      email,
+      consentAccepted: consent.accepted,
+      consentAcceptedAt: consent.acceptedAt,
+      consentVersion: CHECKOUT_CONSENT_VERSION,
+    }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok || !data?.url) throw new Error(data?.error || "Błąd inicjalizacji płatności.");
@@ -1721,53 +1736,6 @@ function isTemporaryReportStatus(status: number): boolean {
   // 404 = sesja/raport może jeszcze nie być widoczny po powrocie ze Stripe
   // 409/425 = techniczne stany "jeszcze nie teraz", jeśli backend kiedyś je zwróci
   return status === 202 || status === 402 || status === 404 || status === 409 || status === 425;
-}
-
-async function fetchPaidReport(token: string): Promise<FullReport> {
-  const MAX_ATTEMPTS = 120; // 120 x 3 s = do 6 minut oczekiwania po płatności
-  const INTERVAL_MS = 3000;
-
-  let lastMessage = "Raport jest jeszcze przygotowywany.";
-
-  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
-    try {
-      const res = await fetch(`${API_BASE}/api/report/${encodeURIComponent(token)}`, {
-        method: "GET",
-        headers: { Accept: "application/json" },
-        cache: "no-store",
-      });
-
-      const data = await res.json().catch(() => ({}));
-
-      if (res.ok && data?.report) {
-        return data.report as FullReport;
-      }
-
-      lastMessage = data?.message || data?.error || lastMessage;
-
-      if (isTemporaryReportStatus(res.status)) {
-        await wait(INTERVAL_MS);
-        continue;
-      }
-
-      throw new Error(lastMessage || "Błąd pobierania raportu.");
-    } catch (error: any) {
-      const message = String(error?.message || "");
-
-      // Krótkie problemy sieciowe po przekierowaniu ze Stripe traktujemy jako stan przejściowy.
-      if (/failed to fetch|networkerror|load failed|fetch/i.test(message) && attempt < MAX_ATTEMPTS - 1) {
-        await wait(INTERVAL_MS);
-        continue;
-      }
-
-      if (attempt >= MAX_ATTEMPTS - 1) break;
-      throw error;
-    }
-  }
-
-  throw new Error(
-    `${lastMessage} Płatność została przyjęta, ale raport nadal się generuje. Nie płać drugi raz. Zostaw chwilę systemowi i kliknij „Sprawdź raport ponownie” albo sprawdź e-mail.`
-  );
 }
 
 async function fetchSignedReport(accessToken: string, accessExp: string, accessSig: string): Promise<FullReport> {
@@ -1887,8 +1855,23 @@ async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: An
         premiumSpecific,
       } as Preview;
     }
-  } catch (e: any) { if (e?.message === "__CRISIS__") throw e; }
-  return buildPreview(path, answers, openText);
+  } catch (e: any) {
+    if (e?.message === "__CRISIS__") throw e;
+  }
+
+  const answerPreview = buildPreview(path, answers, openText);
+  if (!relationshipMap) return answerPreview;
+
+  const mapPreview = buildMapBasedPreview(path, relationshipMap, openText);
+  const blendedChance = Math.round((answerPreview.chance + mapPreview.chance * 2) / 3);
+  return {
+    ...mapPreview,
+    chance: blendedChance,
+    tension: Math.round((answerPreview.tension + mapPreview.tension * 2) / 3),
+    asymmetry: Math.round((answerPreview.asymmetry + mapPreview.asymmetry * 2) / 3),
+    change: Math.round((answerPreview.change + mapPreview.change * 2) / 3),
+    tone: localTone(blendedChance),
+  };
 }
 
 
@@ -2120,6 +2103,7 @@ export default function App() {
   const [dynamicFollowUpTeaser, setDynamicFollowUpTeaser] = useState("");
   const [dynamicFollowUpElapsedDays, setDynamicFollowUpElapsedDays] = useState(0);
   const [followUpCheckoutBusy, setFollowUpCheckoutBusy] = useState(false);
+  const [followUpPurchaseConsent, setFollowUpPurchaseConsent] = useState(false);
 
   const [selectedPath, setSelectedPath] = useState<EntryKey | null>(null);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -2131,7 +2115,12 @@ export default function App() {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [, setConsents] = useState<boolean[]>([false, false, false, false]);
+  const [analysisConsent, setAnalysisConsent] = useState(false);
+  const [analysisConsentAcceptedAt, setAnalysisConsentAcceptedAt] = useState("");
+  const [purchaseConsent, setPurchaseConsent] = useState(false);
+  const [reportAccess, setReportAccess] = useState<ReportAccess | null>(() => {
+    try { return JSON.parse(sessionStorage.getItem(REPORT_ACCESS_KEY) || "null"); } catch { return null; }
+  });
   const [legalOpen, setLegalOpen] = useState<LegalKey>(null);
   const [interviewState, setInterviewState] = useState<InterviewState | null>(null);
   const [interviewAnswer, setInterviewAnswer] = useState("");
@@ -2241,6 +2230,10 @@ export default function App() {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
           const parsed = JSON.parse(raw);
+          if (!parsed.savedAt || Date.now() - Number(parsed.savedAt) > STORAGE_TTL_MS) {
+            localStorage.removeItem(STORAGE_KEY);
+            throw new Error("LOCAL_STATE_EXPIRED");
+          }
           const restoredStage: Stage = parsed.stage === "processing" ? (parsed.preview ? "preview" : "landing") : (parsed.stage || "landing");
           setStage(restoredStage);
           setSelectedPath(parsed.selectedPath || null);
@@ -2251,7 +2244,8 @@ export default function App() {
           setPreview(parsed.preview || null);
           setFullReport(parsed.fullReport || null);
           setSessionToken(parsed.sessionToken || null);
-          setConsents(parsed.consents || [false, false, false, false]);
+          setAnalysisConsent(Boolean(parsed.analysisConsent));
+          setAnalysisConsentAcceptedAt(parsed.analysisConsentAcceptedAt || "");
           setInterviewState(parsed.interviewState || null);
           setForceMap(parsed.forceMap || {});
           setBurdens(parsed.burdens || []);
@@ -2312,6 +2306,9 @@ export default function App() {
     const accessSig = params.get("sig");
 
     if (accessToken && accessExp && accessSig) {
+      const nextAccess = { token: accessToken, exp: accessExp, sig: accessSig };
+      setReportAccess(nextAccess);
+      try { sessionStorage.setItem(REPORT_ACCESS_KEY, JSON.stringify(nextAccess)); } catch {}
       setBusy(true);
       setError(null);
       setStage("processing");
@@ -2344,37 +2341,17 @@ export default function App() {
     }
 
     if (success === "1" && token) {
-      setBusy(true);
-      setError(null);
-      setStage("processing");
       setSessionToken(token);
-
-      fetchPaidReport(token)
-        .then((report) => {
-          setFullReport(report);
-          setSessionToken(token);
-          setStage("paid");
-          setBusy(false);
-        })
-        .catch((e: any) => {
-          setBusy(false);
-          setStage("error");
-          setError(
-            friendlyError(
-              e,
-              "Płatność wróciła poprawnie, ale raport nadal się przygotowuje. Nie płać drugi raz. Kliknij „Sprawdź raport ponownie” albo sprawdź e-mail za chwilę."
-            )
-          );
-        })
-        .finally(() => {
-          window.history.replaceState({}, "", window.location.pathname);
-        });
+      setBusy(false);
+      setStage("error");
+      setError("Płatność została przyjęta. Ze względów bezpieczeństwa pełny raport otworzysz z czasowego linku wysłanego na podany adres e-mail.");
+      window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, forceMap, burdens, emotions, truthCards, relationshipNote, clarificationQuestions, clarificationAnswers, clarificationIndex, clarificationDraft, followUpResult }));
-  }, [stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, interviewState, forceMap, burdens, emotions, truthCards, relationshipNote, clarificationQuestions, clarificationAnswers, clarificationIndex, clarificationDraft]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ savedAt: Date.now(), stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, analysisConsent, analysisConsentAcceptedAt, interviewState, forceMap, burdens, emotions, truthCards, relationshipNote, clarificationQuestions, clarificationAnswers, clarificationIndex, clarificationDraft, followUpResult }));
+  }, [stage, selectedPath, questionIndex, answers, openText, email, preview, fullReport, sessionToken, analysisConsent, analysisConsentAcceptedAt, interviewState, forceMap, burdens, emotions, truthCards, relationshipNote, clarificationQuestions, clarificationAnswers, clarificationIndex, clarificationDraft]);
 
   const ensureSession = async (entryKey: EntryKey): Promise<string> => {
     if (sessionToken) return sessionToken;
@@ -2593,6 +2570,10 @@ export default function App() {
       setFollowUpMessage("Podaj poprawny adres e-mail, aby otrzymać dostęp do raportu porównawczego.");
       return;
     }
+    if (!followUpPurchaseConsent) {
+      setFollowUpMessage("Zaznacz zgodę na rozpoczęcie generowania raportu porównawczego bezpośrednio po płatności.");
+      return;
+    }
     setFollowUpCheckoutBusy(true);
     setFollowUpMessage("");
     try {
@@ -2608,7 +2589,8 @@ export default function App() {
         entryKey: selectedPath,
       };
       await updateSession({ token, payload, email: checkoutEmail });
-      const checkout = await createCheckout(token, checkoutEmail, new Date().toISOString());
+      const acceptedAt = new Date().toISOString();
+      const checkout = await createCheckout(token, checkoutEmail, { accepted: true, acceptedAt });
       window.location.href = checkout.url;
     } catch (e: any) {
       setFollowUpMessage(friendlyError(e, "Nie udało się rozpocząć płatności za raport porównawczy."));
@@ -2621,12 +2603,19 @@ export default function App() {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(FOLLOWUP_KEY);
     localStorage.removeItem(FOLLOWUP_RESULT_KEY);
-    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setConsents([false, false, false, false]); setLegalOpen(null); setInterviewState(null); setInterviewAnswer(""); setForceMap({}); setBurdens([]); setEmotions([]); setTruthCards([]); setRelationshipNote(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft(""); setFollowUpOpen(false); setFollowUpIndex(0); setFollowUpAnswers({}); setFollowUpDraft(""); setFollowUpResult(null); setFollowUpDueAt(""); setFollowUpMessage(""); setDynamicFollowUpQuestion(null); setDynamicFollowUpHistory([]); setDynamicFollowUpTeaser(""); setDynamicFollowUpElapsedDays(0); setFollowUpCheckoutBusy(false);
+    localStorage.removeItem(ANON_PROFILE_KEY);
+    localStorage.removeItem("ctms_local_anonymous_id");
+    sessionStorage.removeItem(REPORT_ACCESS_KEY);
+    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setAnalysisConsent(false); setAnalysisConsentAcceptedAt(""); setPurchaseConsent(false); setReportAccess(null); setLegalOpen(null); setInterviewState(null); setInterviewAnswer(""); setForceMap({}); setBurdens([]); setEmotions([]); setTruthCards([]); setRelationshipNote(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft(""); setFollowUpOpen(false); setFollowUpIndex(0); setFollowUpAnswers({}); setFollowUpDraft(""); setFollowUpResult(null); setFollowUpDueAt(""); setFollowUpMessage(""); setDynamicFollowUpQuestion(null); setDynamicFollowUpHistory([]); setDynamicFollowUpTeaser(""); setDynamicFollowUpElapsedDays(0); setFollowUpCheckoutBusy(false); setFollowUpPurchaseConsent(false); setAnonymousProfile(null);
     window.history.replaceState({}, "", "/");
     setRoutePath("/");
   };
 
   const startPath = async (key: EntryKey) => {
+    if (!analysisConsent) {
+      setStage("consent");
+      return;
+    }
     setBusy(false);
     setError(null);
     setSelectedPath(key);
@@ -2650,7 +2639,17 @@ export default function App() {
     createSession(key)
       .then((data) => {
         const token = data?.token || data?.sessionId || null;
-        if (token) setSessionToken(token);
+        if (token) {
+          setSessionToken(token);
+          updateSession({
+            token,
+            analysisConsent: {
+              accepted: true,
+              acceptedAt: analysisConsentAcceptedAt || new Date().toISOString(),
+              version: ANALYSIS_CONSENT_VERSION,
+            },
+          }).catch(() => {});
+        }
       })
       .catch(() => {});
   };
@@ -3013,45 +3012,49 @@ ${finalOwnText}`;
     setError(null);
     setStage("processing");
 
-    const previewData = buildMapBasedPreview(path, relationshipMap, finalOpenText);
-    setPreview(previewData);
+    try {
+      let token = sessionToken || "";
+      if (!token) {
+        const data = await createSession(path.key);
+        token = data?.token || data?.sessionId || "";
+        if (token) setSessionToken(token);
+      }
+      if (!token) throw new Error("Nie udało się utworzyć sesji analizy.");
 
-    window.setTimeout(() => {
+      const previewData = await fetchPreviewFromAPI(token, path, answers, finalOpenText, relationshipMap);
+      setPreview(previewData);
+      await updateSession({ token, path: path.key, answers, openText: finalOpenText, relationshipMap, preview: previewData, stage: "preview" });
       setStage("preview");
       setBusy(false);
-    }, 850);
-
-    const persist = async () => {
-      try {
-        let token = sessionToken || "";
-        if (!token) {
-          const data = await createSession(path.key);
-          token = data?.token || data?.sessionId || "";
-          if (token) setSessionToken(token);
-        }
-        if (token) {
-          await updateSession({ token, path: path.key, answers, openText: finalOpenText, relationshipMap, preview: previewData, stage: "preview" });
-        }
-      } catch {}
-    };
-    persist();
+    } catch (e: any) {
+      if (e?.message === "__CRISIS__") {
+        setStage("crisis");
+      } else {
+        setError(friendlyError(e, "Nie udało się przygotować odczytu. Spróbuj ponownie."));
+        setStage("open_text");
+      }
+      setBusy(false);
+    }
   };
 
   const pay = async () => {
     if (!selectedPath || !preview) { setError("Brak gotowego podglądu."); return; }
     if (!email.includes("@")) { setError("Podaj prawidłowy adres e-mail."); return; }
+    if (!purchaseConsent) { setError("Zaznacz zgodę na rozpoczęcie generowania raportu bezpośrednio po płatności."); return; }
     setBusy(true); setError(null);
     try {
       const token = await ensureSession(selectedPath);
-      await updateSession({ token, path: selectedPath, answers, openText, relationshipMap: relationshipMapPayload(), preview, email, consentAcceptedAt: new Date().toISOString(), stage: "checkout_started" });
-      const checkout = await createCheckout(token, email, new Date().toISOString());
+      const acceptedAt = new Date().toISOString();
+      await updateSession({ token, path: selectedPath, answers, openText, relationshipMap: relationshipMapPayload(), preview, email, purchaseConsent: { accepted: true, acceptedAt, version: CHECKOUT_CONSENT_VERSION }, stage: "checkout_started" });
+      const checkout = await createCheckout(token, email, { accepted: true, acceptedAt });
       window.location.href = checkout.url;
     } catch (e: any) { setError(friendlyError(e, "Nie udało się rozpocząć płatności.")); setBusy(false); }
   };
 
   const retryPaidReport = async () => {
-    if (!sessionToken) {
-      setError("Brak tokenu sesji. Nie klikaj ponownie płatności — najpierw sprawdź mail albo logi płatności.");
+    const access = reportAccess;
+    if (!access) {
+      setError("Bezpieczny link wygasł albo nie jest dostępny w tej karcie. Otwórz link do raportu z wiadomości e-mail.");
       return;
     }
 
@@ -3060,7 +3063,7 @@ ${finalOwnText}`;
     setStage("processing");
 
     try {
-      const report = await fetchPaidReport(sessionToken);
+      const report = await fetchSignedReport(access.token, access.exp, access.sig);
       setFullReport(report);
       setStage("paid");
     } catch (e: any) {
@@ -3334,9 +3337,23 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                 <div className="consent-note">
                   Korzystając dalej, potwierdzasz, że zapoznałeś się z Regulaminem oraz Polityką prywatności i RODO. Pełny raport jest treścią cyfrową przygotowywaną po płatności na podstawie Twoich odpowiedzi. W wyjątkowych sytuacjach technicznych raport może zostać udostępniony w terminie do 14 dni.
                 </div>
+                <label className="purchase-consent" style={{ marginTop: "16px" }}>
+                  <input
+                    type="checkbox"
+                    checked={analysisConsent}
+                    onChange={(event) => {
+                      const accepted = event.target.checked;
+                      setAnalysisConsent(accepted);
+                      setAnalysisConsentAcceptedAt(accepted ? new Date().toISOString() : "");
+                    }}
+                  />
+                  <span>
+                    Wyrażam zgodę na przetwarzanie treści, które podam w analizie, w celu przygotowania automatycznego odczytu. Rozumiem, że mogą one dotyczyć bardzo prywatnych informacji, w tym zdrowia, życia seksualnego lub przemocy, i że do wygenerowania analizy korzystamy z technologii OpenAI.
+                  </span>
+                </label>
                 <div className="consent-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => { setStage("entry"); }}>Wchodzę dalej</PrimaryButton>
+                  <PrimaryButton onClick={() => { setStage("entry"); }} disabled={!analysisConsent}>Wchodzę dalej</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
@@ -3872,6 +3889,16 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                     </div>
                     <div className="unlock-form">
                       <input className="ctms-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Twój adres e-mail." />
+                      <label className="purchase-consent">
+                        <input
+                          type="checkbox"
+                          checked={purchaseConsent}
+                          onChange={(event) => setPurchaseConsent(event.target.checked)}
+                        />
+                        <span>
+                          Wyrażam zgodę na rozpoczęcie generowania indywidualnego raportu bezpośrednio po płatności i przyjmuję do wiadomości, że po rozpoczęciu realizacji tracę prawo odstąpienia od umowy w zakresie tej treści cyfrowej.
+                        </span>
+                      </label>
                       <PrimaryButton onClick={pay} disabled={busy}>{busy ? "Przetwarzanie..." : "Pokaż pełną analizę — 19,99 zł"}</PrimaryButton>
                     </div>
                     <div className="unlock-fineprint">To nie jest diagnoza, terapia ani decyzja za Ciebie. To prywatny odczyt jednej perspektywy.</div>
@@ -4007,6 +4034,16 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                     <div className="followup-reminder-card" style={{ marginTop: 18 }}>
                       <label className="followup-label">E-mail do odbioru raportu</label>
                       <input type="email" value={followUpEmail || email} onChange={(event) => setFollowUpEmail(event.target.value)} placeholder="Twój adres e-mail" className="followup-email" />
+                      <label className="purchase-consent">
+                        <input
+                          type="checkbox"
+                          checked={followUpPurchaseConsent}
+                          onChange={(event) => setFollowUpPurchaseConsent(event.target.checked)}
+                        />
+                        <span>
+                          Wyrażam zgodę na rozpoczęcie generowania raportu porównawczego bezpośrednio po płatności i przyjmuję do wiadomości utratę prawa odstąpienia po rozpoczęciu realizacji.
+                        </span>
+                      </label>
                     </div>
                     <div className="section-actions">
                       <PrimaryButton onClick={buyFollowUpReport} disabled={followUpCheckoutBusy}>{followUpCheckoutBusy ? "Przekierowuję…" : "Odbierz pełne porównanie — 9,99 zł"}</PrimaryButton>
@@ -4032,7 +4069,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                   Jeżeli płatność została pobrana, system powinien dokończyć generowanie raportu w tle i wysłać link na podany adres e-mail.
                 </p>
                 <div className="section-actions">
-                  {sessionToken && <PrimaryButton onClick={retryPaidReport} disabled={busy}>{busy ? "Sprawdzam..." : "Sprawdź raport ponownie"}</PrimaryButton>}
+                  {reportAccess && <PrimaryButton onClick={retryPaidReport} disabled={busy}>{busy ? "Sprawdzam..." : "Sprawdź raport ponownie"}</PrimaryButton>}
                   <GhostButton onClick={resetAll}>Nowa analiza</GhostButton>
                 </div>
               </Glass>

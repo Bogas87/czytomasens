@@ -66,9 +66,9 @@ router.post("/interview/next", aiLimiter, interviewController.nextQuestion);
 router.post("/interview/finish", aiLimiter, interviewController.finishInterview);
 
 // ─── RAPORTY ──────────────────────────────────────────────────────────────────
-router.get("/report/signed", analyzeController.getSignedReport);
-router.get("/report/:token", analyzeController.getReport);
-router.get("/session/:token", analyzeController.getSessionData);
+router.get("/report/signed", generalLimiter, analyzeController.getSignedReport);
+router.get("/report/:token", generalLimiter, analyzeController.getReport);
+router.get("/session/:token", generalLimiter, analyzeController.getSessionData);
 
 // ─── 404 ──────────────────────────────────────────────────────────────────────
 router.use((req, res) => {

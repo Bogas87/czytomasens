@@ -2,6 +2,9 @@
 
 const Stripe = require("stripe");
 const prisma = require("../db/prisma.js");
+const { createSignedAccess } = require("../security/report-access.js");
+
+const CONSENT_VERSION = "2026-07-31";
 
 const stripeSecret = (process.env.STRIPE_SECRET_KEY || "").trim();
 const stripe = stripeSecret
@@ -43,7 +46,13 @@ async function existingOpenCheckout(session) {
   if (!stripe || !session?.stripe_session_id || session.payment_status === "PAID") return null;
   try {
     const checkout = await stripe.checkout.sessions.retrieve(session.stripe_session_id);
-    if (checkout?.status === "open" && checkout?.url) return checkout;
+    if (
+      checkout?.status === "open"
+      && checkout?.url
+      && checkout?.metadata?.consentVersion === CONSENT_VERSION
+    ) {
+      return checkout;
+    }
   } catch (error) {
     console.warn("[Stripe] Nie udało się odczytać poprzedniej sesji checkout:", error.message);
   }
@@ -59,6 +68,8 @@ exports.createCheckout = async (req, res) => {
     const token = normalizeText(req.body?.token || req.body?.sessionToken || "");
     const email = normalizeText(req.body?.email || "");
     const consentAcceptedAt = normalizeText(req.body?.consentAcceptedAt || "");
+    const consentAccepted = req.body?.consentAccepted === true;
+    const consentVersion = normalizeText(req.body?.consentVersion || "");
 
     if (!token || !isValidUUID(token)) {
       return res.status(400).json({ ok: false, error: "Nieprawidłowy token sesji." });
@@ -66,8 +77,16 @@ exports.createCheckout = async (req, res) => {
     if (!validEmail(email)) {
       return res.status(400).json({ ok: false, error: "Nieprawidłowy adres e-mail." });
     }
-    if (!consentAcceptedAt || Number.isNaN(Date.parse(consentAcceptedAt))) {
-      return res.status(400).json({ ok: false, error: "Brak prawidłowej zgody na rozpoczęcie realizacji usługi." });
+    if (
+      !consentAccepted
+      || consentVersion !== CONSENT_VERSION
+      || !consentAcceptedAt
+      || Number.isNaN(Date.parse(consentAcceptedAt))
+    ) {
+      return res.status(400).json({
+        ok: false,
+        error: "Potwierdź rozpoczęcie realizacji usługi cyfrowej i utratę prawa odstąpienia po rozpoczęciu generowania raportu.",
+      });
     }
 
     const dbSession = await prisma.session.findUnique({
@@ -124,7 +143,8 @@ exports.createCheckout = async (req, res) => {
     const priceAmountGr = kind === "followup" ? followupPriceAmountGr : initialPriceAmountGr;
 
     const clientUrl = normalizeText(process.env.CLIENT_URL || "https://czytomasens.pl").replace(/\/$/, "");
-    const successUrl = `${clientUrl}?success=1&token=${encodeURIComponent(token)}`;
+    const access = createSignedAccess(token);
+    const successUrl = `${clientUrl}?success=1&access_token=${encodeURIComponent(access.token)}&exp=${encodeURIComponent(access.exp)}&sig=${encodeURIComponent(access.sig)}`;
     const cancelUrl = `${clientUrl}?cancel=1`;
 
     const ipAddress = normalizeText(req.headers["x-forwarded-for"] || "").split(",")[0]?.trim()
@@ -156,6 +176,9 @@ exports.createCheckout = async (req, res) => {
         token,
         email: email.slice(0, 450),
         consentAcceptedAt,
+        consentAccepted: "true",
+        consentVersion,
+        consentScope: "immediate_digital_content_and_withdrawal_acknowledgement",
         ipAddress: ipAddress.slice(0, 200),
         userAgent: userAgent.slice(0, 450),
         entryKey: normalizeText(payload?.entryKey || payload?.path || "").slice(0, 450),
@@ -170,6 +193,14 @@ exports.createCheckout = async (req, res) => {
       data: {
         email,
         stripe_session_id: checkout.id,
+        payload: {
+          ...payload,
+          purchaseConsent: {
+            accepted: true,
+            acceptedAt: consentAcceptedAt,
+            version: consentVersion,
+          },
+        },
       },
     });
 

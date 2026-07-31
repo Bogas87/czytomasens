@@ -1,0 +1,77 @@
+{
+  "/": {
+    "title": "CzyToMaSens | Prywatna analiza relacji",
+    "description": "Prywatna analiza relacji. Zobacz, co naprawdę wraca między Wami, kto niesie większy ciężar i czy ta relacja ma jeszcze sens.",
+    "type": "website"
+  },
+  "/artykuly": {
+    "title": "Artykuły o relacjach, związkach i schematach | CzyToMaSens",
+    "description": "Artykuły o relacjach, powrotach, niepewności, bliskości i sytuacjach, które od środka trudno nazwać.",
+    "type": "website"
+  },
+  "/artykuly/czy-ten-zwiazek-ma-sens": {
+    "title": "Czy ten związek ma sens? Kryzys czy brak kierunku | CzyToMaSens",
+    "description": "Zastanawiasz się, czy to jeszcze ma sens? Sprawdź, jak odróżnić chwilowy kryzys od relacji, która od dawna nie ma kierunku.",
+    "type": "article"
+  },
+  "/artykuly/czy-warto-ratowac-zwiazek": {
+    "title": "Czy warto ratować związek? Walczyć czy odpuścić | CzyToMaSens",
+    "description": "Nie każdy kryzys oznacza koniec. Ale nie każda walka ma sens. Sprawdź, czy ratujesz relację, czy tylko boisz się ją stracić.",
+    "type": "article"
+  },
+  "/artykuly/czy-ona-on-sie-mna-bawi": {
+    "title": "Czy ona/on się mną bawi? Mieszane sygnały | CzyToMaSens",
+    "description": "Raz ciepło, raz dystans, raz jesteś ważny, raz nie wiesz, na czym stoisz. Sprawdź, co naprawdę mówią mieszane sygnały w relacji.",
+    "type": "article"
+  },
+  "/artykuly/toksyczna-relacja-czy-trudny-moment": {
+    "title": "Toksyczna relacja czy trudny moment? | CzyToMaSens",
+    "description": "Nie wiesz, czy przechodzicie kryzys, czy relacja jest destrukcyjna? Sprawdź, jak to odróżnić, zanim ocenisz wszystko na emocjach.",
+    "type": "article"
+  },
+  "/artykuly/czy-warto-dac-druga-szanse": {
+    "title": "Czy warto dać drugą szansę? Tęsknota czy zmiana | CzyToMaSens",
+    "description": "Zastanawiasz się, czy wracać do byłej lub byłego? Sprawdź, jak odróżnić prawdziwą zmianę od chwilowej tęsknoty.",
+    "type": "article"
+  },
+  "/artykuly/relacja-bez-zaangazowania": {
+    "title": "Relacja bez zaangażowania. Czym jest situationship | CzyToMaSens",
+    "description": "Nie wiecie, kim dla siebie jesteście? Sprawdź, dlaczego brak statusu relacji kosztuje więcej, niż się wydaje, i komu ta niejasność służy.",
+    "type": "article"
+  },
+  "/artykuly/dlaczego-wracasz-do-tego-samego-partnera": {
+    "title": "Dlaczego wracasz do tego samego partnera | CzyToMaSens",
+    "description": "Nie chodzi tylko o miłość. Sprawdź, dlaczego wracasz do znanego napięcia, nawet jeśli wiesz, że ten schemat Ci nie służy.",
+    "type": "article"
+  },
+  "/artykuly/czy-moj-zwiazek-jest-zdrowy": {
+    "title": "Czy mój związek jest zdrowy? | CzyToMaSens",
+    "description": "Zdrowych związków zwykle nie sprawdza się w internecie o drugiej w nocy. Zobacz, na co naprawdę warto spojrzeć.",
+    "type": "article"
+  },
+  "/artykuly/jak-rozpoznac-ze-zwiazek-nie-ma-przyszlosci": {
+    "title": "Jak rozpoznać, że związek nie ma przyszłości | CzyToMaSens",
+    "description": "Miłość i przyszłość relacji to nie zawsze to samo. Sprawdź, kiedy relacja traci kierunek mimo silnych uczuć.",
+    "type": "article"
+  },
+  "/regulamin": {
+    "title": "Regulamin | CzyToMaSens",
+    "description": "Regulamin świadczenia usług cyfrowych CzyToMaSens.",
+    "type": "website"
+  },
+  "/polityka-prywatnosci": {
+    "title": "Polityka prywatności i RODO | CzyToMaSens",
+    "description": "Informacje o przetwarzaniu danych w serwisie CzyToMaSens.",
+    "type": "website"
+  },
+  "/rodo": {
+    "title": "Informacja RODO | CzyToMaSens",
+    "description": "Informacja RODO serwisu CzyToMaSens.",
+    "type": "website"
+  },
+  "/kontakt": {
+    "title": "Kontakt | CzyToMaSens",
+    "description": "Kontakt w sprawach raportu, płatności, reklamacji i danych osobowych.",
+    "type": "website"
+  }
+}

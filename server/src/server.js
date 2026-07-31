@@ -2,6 +2,7 @@
 
 const express = require("express");
 const cors = require("cors");
+const rateLimit = require("express-rate-limit");
 const Stripe = require("stripe");
 const routes = require("./api/routes.js");
 const followupRoutes = require("./routes/followup.routes.js");
@@ -184,8 +185,16 @@ app.post(
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+const followupLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, error: "Zbyt wiele zapytań. Poczekaj chwilę i spróbuj ponownie." },
+});
+
 // Anonimowy powrót, przypomnienia i ponowny odczyt — bez kont użytkowników.
-app.use("/api/followup", followupRoutes);
+app.use("/api/followup", followupLimiter, followupRoutes);
 
 app.use("/api", routes);
 

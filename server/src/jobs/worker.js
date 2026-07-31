@@ -1,6 +1,5 @@
 "use strict";
 
-const crypto = require("crypto");
 const { Worker, UnrecoverableError } = require("bullmq");
 const Redis = require("ioredis");
 const { Resend } = require("resend");
@@ -8,6 +7,7 @@ const { Resend } = require("resend");
 const prisma = require("../db/prisma");
 const openaiService = require("../services/openai.service");
 const caseReasoning = require("../services/case_reasoning.service.js");
+const { createSignedAccess } = require("../security/report-access.js");
 const {
   historyByRecoveryToken,
   saveCheckin,
@@ -40,24 +40,31 @@ const clientUrl = (process.env.CLIENT_URL || "https://www.czytomasens.pl").repla
 const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 const LOCK_STALE_MS = 10 * 60 * 1000;
+const RETENTION_INTERVAL_MS = 24 * 60 * 60 * 1000;
 
-function getSignedSecret() {
-  return (
-    process.env.REPORT_LINK_SECRET ||
-    process.env.STRIPE_WEBHOOK_SECRET ||
-    process.env.OPENAI_API_KEY ||
-    "ctms-dev-secret"
-  );
+function dataRetentionDays() {
+  const parsed = Number.parseInt(process.env.DATA_RETENTION_DAYS || "90", 10);
+  return Number.isInteger(parsed) && parsed >= 1 && parsed <= 365 ? parsed : 90;
 }
 
-function createSignedAccess(token, ttlMs = 1000 * 60 * 60 * 48) {
-  const exp = String(Date.now() + ttlMs);
-  const sig = crypto
-    .createHmac("sha256", getSignedSecret())
-    .update(`${token}.${exp}`)
-    .digest("hex");
+async function runRetentionCleanup() {
+  const days = dataRetentionDays();
+  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-  return { token, exp, sig };
+  try {
+    await ensureFollowupSchema();
+    const removedProfiles = await prisma.$executeRawUnsafe(
+      `DELETE FROM ctms_anonymous_profiles WHERE updated_at < now() - interval '${days} days'`
+    );
+    const removedSessions = await prisma.session.deleteMany({
+      where: { created_at: { lt: cutoff } },
+    });
+    console.log(
+      `[Retention] Usunięto sesje: ${removedSessions.count}, profile anonimowe: ${removedProfiles}. Okres: ${days} dni.`
+    );
+  } catch (error) {
+    console.error("[Retention] Błąd czyszczenia starych danych:", error.message);
+  }
 }
 
 function buildReportUrl(token) {
@@ -539,6 +546,8 @@ reportWorker.on("completed", (job) => {
 // Nie trzeba tworzyć nowej usługi Railway.
 processFollowupReminders();
 const followupTimer = setInterval(processFollowupReminders, 60 * 60 * 1000);
+runRetentionCleanup();
+const retentionTimer = setInterval(runRetentionCleanup, RETENTION_INTERVAL_MS);
 
 
 async function shutdown(signal) {
@@ -546,6 +555,7 @@ async function shutdown(signal) {
 
   try {
     clearInterval(followupTimer);
+    clearInterval(retentionTimer);
     await reportWorker.close();
     console.log("[Worker] Worker zamknięty.");
 

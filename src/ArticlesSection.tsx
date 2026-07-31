@@ -484,35 +484,47 @@ export function ArticlesSection({
           <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
             <div style={styles.header}>
               <div>
-                <span style={styles.eyebrow}>"BIBLIOTEKA RELACJI"</span>
+                <span style={styles.eyebrow}>BIBLIOTEKA RELACJI</span>
                 <h2 className="articles-main-title" style={styles.title}>
-                  "Poradniki o relacjach"
+                  Poradniki o relacjach
                 </h2>
                 <p className="articles-main-subtitle" style={styles.subtitle}>
-                  "Poradniki, które pomagają nazwać problem w relacji."
+                  Poradniki, które pomagają nazwać problem w relacji.
                 </p>
               </div>
               <div className="article-header-actions" style={styles.headerActions}>
                 {indexRoute && (
-                  <button className="article-home-link" style={styles.homeLink} onClick={goToHome}>
+                  <a className="article-home-link" style={styles.homeLink} href="/">
                     ← Wróć na stronę główną
-                  </button>
+                  </a>
                 )}
                 {!indexRoute && (
-                  <button className="article-soft-link" style={styles.softLink} onClick={onNavigateHome}>
+                  <a
+                    className="article-soft-link"
+                    style={styles.softLink}
+                    href="/artykuly"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      onNavigateHome?.();
+                    }}
+                  >
                     Zobacz pełną mapę tekstów →
-                  </button>
+                  </a>
                 )}
               </div>
             </div>
 
             <div className="articles-grid" style={styles.grid}>
               {visibleArticles.map((article) => (
-                <button
+                <a
                   key={article.slug}
                   className="article-card-btn"
                   style={{ ...styles.card, ...(hoveredSlug === article.slug ? styles.cardHovered : {}) }}
-                  onClick={() => open(article.slug)}
+                  href={`/artykuly/${article.slug}`}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    open(article.slug);
+                  }}
                   onMouseEnter={() => setHoveredSlug(article.slug)}
                   onMouseLeave={() => setHoveredSlug(null)}
                 >
@@ -529,7 +541,7 @@ export function ArticlesSection({
                     ))}
                   </div>
                   <div className="article-card-arrow" style={styles.cardArrow}>Przeczytaj tekst →</div>
-                </button>
+                </a>
               ))}
             </div>
           </motion.div>
@@ -540,8 +552,16 @@ export function ArticlesSection({
             <div style={styles.articleShell}>
               <article style={styles.articleWrap}>
                 <div className="article-top-actions" style={styles.articleTopActions}>
-                  <button className="article-back" style={styles.articleBack} onClick={back}>← Wróć do listy tekstów</button>
-                  <button className="article-home-link" style={styles.homeLink} onClick={goToHome}>Strona główna</button>
+                  <a
+                    className="article-back"
+                    style={styles.articleBack}
+                    href="/artykuly"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      back();
+                    }}
+                  >← Wróć do listy tekstów</a>
+                  <a className="article-home-link" style={styles.homeLink} href="/">Strona główna</a>
                 </div>
                 <div style={styles.articleKickerRow}>
                   <span style={styles.cardKicker}>{openArticle.kicker}</span>
@@ -576,10 +596,19 @@ export function ArticlesSection({
                     <p style={styles.relatedTitle}>Powiązane teksty</p>
                     <div className="article-related-grid" style={styles.relatedGrid}>
                       {relatedArticles.map((article) => (
-                        <button key={article.slug} className="article-related-card" style={styles.relatedCard} onClick={() => open(article.slug)}>
+                        <a
+                          key={article.slug}
+                          className="article-related-card"
+                          style={styles.relatedCard}
+                          href={`/artykuly/${article.slug}`}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            open(article.slug);
+                          }}
+                        >
                           <span style={styles.cardKicker}>{article.kicker}</span>
                           <h3 className="article-related-title" style={{ ...styles.cardTitle, fontSize: "20px", marginTop: "10px" }}>{article.title}</h3>
-                        </button>
+                        </a>
                       ))}
                     </div>
                   </div>

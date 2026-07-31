@@ -389,6 +389,34 @@ button { cursor: pointer; }
 .unlock-panel { padding: 24px; }
 .unlock-copy { margin: 0; font-size: 18px; line-height: 1.8; color: #ece4dd; }
 .unlock-form { display: grid; gap: 12px; margin-top: 16px; }
+.article-card-btn,
+.article-related-card,
+.article-home-link,
+.article-soft-link,
+.article-back {
+  color: inherit;
+  text-decoration: none;
+}
+.purchase-consent {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  gap: 11px;
+  align-items: start;
+  padding: 14px 15px;
+  border: 1px solid rgba(197,160,89,.22);
+  border-radius: 14px;
+  background: rgba(197,160,89,.045);
+  color: #cfc6bd;
+  font-size: 12px;
+  line-height: 1.55;
+  cursor: pointer;
+}
+.purchase-consent input {
+  width: 17px;
+  height: 17px;
+  margin: 2px 0 0;
+  accent-color: var(--gold);
+}
 .unlock-note { color: var(--muted); font-size: 14px; margin-top: 10px; }
 
 .analysis-boundary,
