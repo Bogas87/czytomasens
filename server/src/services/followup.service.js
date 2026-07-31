@@ -71,6 +71,34 @@ async function ensureFollowupSchema() {
     `);
 
     await prisma.$executeRawUnsafe(`
+      CREATE TABLE IF NOT EXISTS ctms_followup_reminders (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        profile_id uuid NOT NULL REFERENCES ctms_anonymous_profiles(id) ON DELETE CASCADE,
+        stage_days integer NOT NULL,
+        due_at timestamptz NOT NULL,
+        sent_at timestamptz,
+        created_at timestamptz NOT NULL DEFAULT now(),
+        UNIQUE(profile_id, stage_days, due_at)
+      )
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      CREATE INDEX IF NOT EXISTS ctms_followup_reminders_due_idx
+      ON ctms_followup_reminders (due_at)
+      WHERE sent_at IS NULL
+    `);
+
+    await prisma.$executeRawUnsafe(`
+      INSERT INTO ctms_followup_reminders (profile_id, stage_days, due_at)
+      SELECT id,
+             GREATEST(1, ROUND(EXTRACT(EPOCH FROM (reminder_due_at - updated_at)) / 86400)::integer),
+             reminder_due_at
+      FROM ctms_anonymous_profiles
+      WHERE reminder_consent=true AND reminder_sent_at IS NULL AND reminder_due_at IS NOT NULL
+      ON CONFLICT DO NOTHING
+    `);
+
+    await prisma.$executeRawUnsafe(`
       CREATE TABLE IF NOT EXISTS ctms_followup_checkins (
         id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
         profile_id uuid NOT NULL REFERENCES ctms_anonymous_profiles(id) ON DELETE CASCADE,
@@ -235,8 +263,13 @@ async function profileByRecoveryToken(token) {
 async function scheduleReminder(token, email, days) {
   await ensureFollowupSchema();
 
-  const safeDays = Math.max(1, Math.min(60, Number(days || 7)));
-  const dueAt = new Date(Date.now() + safeDays * 86400000);
+  const requestedDays = Array.isArray(days) ? days : [days || 7];
+  const safeDays = [...new Set(requestedDays.map((value) => Math.max(1, Math.min(60, Number(value || 7)))))]
+    .filter(Number.isFinite)
+    .sort((a, b) => a - b)
+    .slice(0, 4);
+  const plan = safeDays.length ? safeDays : [7, 21];
+  const firstDueAt = new Date(Date.now() + plan[0] * 86400000);
 
   const rows = await prisma.$queryRawUnsafe(
     `
@@ -248,10 +281,32 @@ async function scheduleReminder(token, email, days) {
     `,
     hashToken(token),
     email,
-    dueAt
+    firstDueAt
   );
 
-  return rows[0] || null;
+  const profile = rows[0];
+  if (!profile) return null;
+
+  await prisma.$executeRawUnsafe(
+    `DELETE FROM ctms_followup_reminders WHERE profile_id=$1 AND sent_at IS NULL`,
+    profile.id
+  );
+
+  for (const stageDays of plan) {
+    const dueAt = new Date(Date.now() + stageDays * 86400000);
+    await prisma.$executeRawUnsafe(
+      `
+        INSERT INTO ctms_followup_reminders (profile_id, stage_days, due_at)
+        VALUES ($1,$2,$3)
+        ON CONFLICT DO NOTHING
+      `,
+      profile.id,
+      stageDays,
+      dueAt
+    );
+  }
+
+  return { ...profile, scheduleDays: plan };
 }
 
 async function saveCheckin(token, elapsedDays, answers, result) {
@@ -334,26 +389,41 @@ async function dueReminders(limit = 100) {
 
   return prisma.$queryRawUnsafe(
     `
-      SELECT id, email, reminder_due_at
-      FROM ctms_anonymous_profiles
-      WHERE reminder_consent=true
-        AND reminder_sent_at IS NULL
-        AND reminder_due_at IS NOT NULL
-        AND reminder_due_at <= now()
-        AND email IS NOT NULL
-        AND email <> ''
-      ORDER BY reminder_due_at ASC
+      SELECT r.id AS reminder_id,
+             r.profile_id,
+             r.stage_days,
+             r.due_at AS reminder_due_at,
+             p.email
+      FROM ctms_followup_reminders r
+      JOIN ctms_anonymous_profiles p ON p.id=r.profile_id
+      WHERE r.sent_at IS NULL
+        AND r.due_at <= now()
+        AND p.reminder_consent=true
+        AND p.email IS NOT NULL
+        AND p.email <> ''
+      ORDER BY r.due_at ASC
       LIMIT $1
     `,
     Number(limit)
   );
 }
 
-async function markReminderSent(id) {
+async function markReminderSent(reminderId, profileId) {
   await ensureFollowupSchema();
   await prisma.$executeRawUnsafe(
-    `UPDATE ctms_anonymous_profiles SET reminder_sent_at=now(), updated_at=now() WHERE id=$1`,
-    id
+    `UPDATE ctms_followup_reminders SET sent_at=now() WHERE id=$1`,
+    reminderId
+  );
+  await prisma.$executeRawUnsafe(
+    `
+      UPDATE ctms_anonymous_profiles p
+      SET reminder_sent_at=CASE
+            WHEN EXISTS (SELECT 1 FROM ctms_followup_reminders r WHERE r.profile_id=p.id AND r.sent_at IS NULL)
+            THEN NULL ELSE now() END,
+          updated_at=now()
+      WHERE p.id=$1
+    `,
+    profileId
   );
 }
 

@@ -1,16 +1,11 @@
 "use strict";
 
 const crypto = require("crypto");
-const OpenAI = require("openai");
 const { z } = require("zod");
+const { callFlexibleJson, hasApiKey, MODEL_DEFAULTS } = require("./ai-runtime.service.js");
 
-const openai = new OpenAI({
-  apiKey: (process.env.OPENAI_API_KEY || "").trim(),
-});
-
-const DEFAULT_MODEL = (process.env.OPENAI_MODEL || "gpt-4o").trim();
-const REASONING_MODEL = (process.env.OPENAI_REASONING_MODEL || DEFAULT_MODEL).trim();
-const INTERVIEW_MODEL = (process.env.OPENAI_INTERVIEW_MODEL || DEFAULT_MODEL).trim();
+const REASONING_MODEL = MODEL_DEFAULTS.reasoning;
+const INTERVIEW_MODEL = MODEL_DEFAULTS.interview;
 
 const EVIDENCE_TYPES = new Set(["observed_fact", "user_interpretation", "inference", "unknown"]);
 const INTERVENTIONS = new Set([
@@ -777,21 +772,15 @@ async function updateCaseState({ previousState, latestInput = "", context = {}, 
   const base = normalizeCaseState(previousState || createEmptyCaseState({ source }), previousState, source);
   const deterministicSafety = assessSafetyText(latestInput);
 
-  if (!(process.env.OPENAI_API_KEY || "").trim()) {
+  if (!hasApiKey()) {
     return fallbackStateUpdate(base, { latestInput, source });
   }
 
   try {
-    const completion = await openai.chat.completions.create({
+    const raw = await callFlexibleJson({
       model: REASONING_MODEL,
-      temperature: 0.15,
-      max_tokens: 6500,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: buildReasoningSystemPrompt(source) },
-        {
-          role: "user",
-          content: `<<<POPRZEDNI_STAN>>>
+      instructions: buildReasoningSystemPrompt(source),
+      input: `<<<POPRZEDNI_STAN>>>
 ${JSON.stringify(compactCaseStateForModel(base))}
 <<<POPRZEDNI_STAN>>>
 
@@ -800,11 +789,9 @@ ${JSON.stringify({ latestInput: truncateString(latestInput, 5000), context: comp
 <<<NOWY_MATERIAL>>>
 
 Zwróć pełny zaktualizowany stan przypadku widoczny w przekazanym kontekście. Zachowuj identyfikatory istniejących elementów.`,
-        },
-      ],
+      maxOutputTokens: 6500,
+      reasoningEffort: "medium",
     });
-
-    const raw = parseJsonContent(completion.choices?.[0]?.message?.content);
     const parsed = CaseStateCandidateSchema.safeParse(raw);
     let state = parsed.success ? normalizeCaseState(parsed.data, base, source) : fallbackStateUpdate(base, { latestInput, source });
     state = appendSafetyAssessment(state, deterministicSafety, source);
@@ -1069,20 +1056,14 @@ async function generateNextQuestion({ state, intervention, history = [], latestI
     };
   }
 
-  if (!(process.env.OPENAI_API_KEY || "").trim()) {
+  if (!hasApiKey()) {
     return interventionFallback(route, normalized);
   }
 
   try {
-    const completion = await openai.chat.completions.create({
+    const raw = await callFlexibleJson({
       model: INTERVIEW_MODEL,
-      temperature: 0.22,
-      max_tokens: 1300,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content: `Jesteś prowadzącym adaptacyjny wywiad CzyToMaSens. Nie jesteś terapeutą. Twoim zadaniem jest wygenerować DOKŁADNIE JEDNO następne pytanie wynikające z decyzji Intervention Routera.
+      instructions: `Jesteś prowadzącym adaptacyjny wywiad CzyToMaSens. Nie jesteś terapeutą. Twoim zadaniem jest wygenerować DOKŁADNIE JEDNO następne pytanie wynikające z decyzji Intervention Routera.
 
 DECYZJE:
 DEEPEN — pogłęb aktualny wątek bez zmiany tematu.
@@ -1110,10 +1091,7 @@ ZASADY:
 
 ZWRÓĆ STRICT JSON:
 {"lead":"","question":"","observation":"","open":true,"options":[],"shouldStop":false,"stopReason":"","threadResolved":false}`,
-        },
-        {
-          role: "user",
-          content: `<<<STAN_PRZYPADKU>>>
+      input: `<<<STAN_PRZYPADKU>>>
 ${JSON.stringify(normalized)}
 <<<STAN_PRZYPADKU>>>
 
@@ -1132,11 +1110,9 @@ ${latestInput}
 <<<KONTEKST>>>
 ${JSON.stringify({ path, context })}
 <<<KONTEKST>>>`,
-        },
-      ],
+      maxOutputTokens: 1300,
+      reasoningEffort: "low",
     });
-
-    const raw = parseJsonContent(completion.choices?.[0]?.message?.content);
     const parsed = QuestionSchema.safeParse(raw);
     if (!parsed.success) return interventionFallback(route, normalized);
 
@@ -1267,7 +1243,7 @@ async function processInterviewTurn({
     };
   }
 
-  if (!(process.env.OPENAI_API_KEY || "").trim()) {
+  if (!hasApiKey()) {
     return {
       caseState: provisional,
       intervention: deterministicIntervention,
@@ -1277,19 +1253,10 @@ async function processInterviewTurn({
   }
 
   try {
-    const completion = await openai.chat.completions.create({
+    const raw = await callFlexibleJson({
       model: INTERVIEW_MODEL,
-      temperature: 0.18,
-      max_tokens: 2600,
-      response_format: { type: "json_object" },
-      messages: [
-        {
-          role: "system",
-          content: buildFastInterviewTurnPrompt(source, openingQuestion),
-        },
-        {
-          role: "user",
-          content: `<<<AKTUALNY_STAN>>>
+      instructions: buildFastInterviewTurnPrompt(source, openingQuestion),
+      input: `<<<AKTUALNY_STAN>>>
 ${JSON.stringify(compactCaseStateForInterview(provisional))}
 <<<AKTUALNY_STAN>>>
 
@@ -1308,11 +1275,9 @@ ${truncateString(latestInput, 4200)}
 <<<KONTEKST>>>
 ${JSON.stringify(compactUnknown({ path, ...context }))}
 <<<KONTEKST>>>`,
-        },
-      ],
+      maxOutputTokens: 2600,
+      reasoningEffort: "low",
     });
-
-    const raw = parseJsonContent(completion.choices?.[0]?.message?.content);
     const parsed = FastInterviewTurnSchema.safeParse(raw);
     if (!parsed.success) {
       return {

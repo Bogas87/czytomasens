@@ -52,7 +52,11 @@ router.post("/reminder", async (req, res) => {
     if (!recoveryToken || !email) return res.status(400).json({ error: "Podaj e-mail i token powrotu." });
     const saved = await scheduleReminder(recoveryToken, String(email).trim(), days);
     if (!saved) return res.status(404).json({ error: "Nie znaleziono anonimowego profilu." });
-    return res.json({ ok: true, dueAt: saved.reminder_due_at });
+    return res.json({
+      ok: true,
+      dueAt: saved.reminder_due_at,
+      scheduleDays: saved.scheduleDays || [7, 21],
+    });
   } catch (error) {
     console.error("[FollowUp] reminder:", error);
     return res.status(500).json({ error: "Nie udało się ustawić przypomnienia." });

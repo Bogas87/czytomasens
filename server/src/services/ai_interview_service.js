@@ -1,15 +1,10 @@
 "use strict";
 
-const OpenAI = require("openai");
 const { z } = require("zod");
+const { callStructured, MODEL_DEFAULTS } = require("./ai-runtime.service.js");
 
-const openai = new OpenAI({
-  apiKey: (process.env.OPENAI_API_KEY || "").trim(),
-});
-
-const DEFAULT_MODEL = (process.env.OPENAI_MODEL || "gpt-4o").trim();
-const INTERVIEW_MODEL = (process.env.OPENAI_INTERVIEW_MODEL || DEFAULT_MODEL).trim();
-const REASONING_MODEL = (process.env.OPENAI_REASONING_MODEL || DEFAULT_MODEL).trim();
+const INTERVIEW_MODEL = MODEL_DEFAULTS.interview;
+const REASONING_MODEL = MODEL_DEFAULTS.reasoning;
 
 const NextQuestionSchema = z.object({
   question: z.string().trim().min(10),
@@ -17,7 +12,7 @@ const NextQuestionSchema = z.object({
   observation: z.string().trim().min(10),
   depth: z.number().min(1).max(5),
   shouldStop: z.boolean(),
-  stopReason: z.string().optional(),
+  stopReason: z.string(),
 });
 
 const InterviewSummarySchema = z.object({
@@ -154,14 +149,15 @@ exports.getNextQuestion = async ({ path, history, latestUserAnswer, initialConte
 
   messages.push({ role: "user", content: latestUserAnswer });
 
-  const completion = await openai.chat.completions.create({
+  const raw = await callStructured({
     model: INTERVIEW_MODEL,
-    temperature: 0.3,
-    messages,
-    response_format: { type: "json_object" },
+    instructions: buildInterviewerSystemPrompt(path, history.length),
+    input: JSON.stringify({ initialContext, history, latestUserAnswer }),
+    schema: NextQuestionSchema,
+    schemaName: "ctms_next_question_v2",
+    maxOutputTokens: 1000,
+    reasoningEffort: "low",
   });
-
-  const raw = parseJsonContent(completion.choices?.[0]?.message?.content);
   const result = NextQuestionSchema.safeParse(raw);
 
   if (!result.success) {
@@ -171,6 +167,7 @@ exports.getNextQuestion = async ({ path, history, latestUserAnswer, initialConte
       observation: "Odpowiedź wymaga pogłębienia przez konkrety.",
       depth: history.length + 1,
       shouldStop: false,
+      stopReason: "",
     };
   }
 
@@ -183,17 +180,15 @@ exports.summarizeInterview = async ({ path, history, initialContext, caseState }
     ...history.map((h, i) => `[WYMIANA ${i + 1}]\nPytanie: ${h.ai}\nOdpowiedź: ${h.user}`),
   ].filter(Boolean).join("\n\n");
 
-  const completion = await openai.chat.completions.create({
+  const raw = await callStructured({
     model: REASONING_MODEL,
-    temperature: 0.3,
-    messages: [
-      { role: "system", content: buildSummarySystemPrompt() },
-      { role: "user", content: `<<<TRANSKRYPT>>>\n${fullTranscript}\n<<<TRANSKRYPT>>>` },
-    ],
-    response_format: { type: "json_object" },
+    instructions: buildSummarySystemPrompt(),
+    input: `<<<TRANSKRYPT>>>\n${fullTranscript}\n<<<TRANSKRYPT>>>`,
+    schema: InterviewSummarySchema,
+    schemaName: "ctms_interview_summary_v2",
+    maxOutputTokens: 1400,
+    reasoningEffort: "medium",
   });
-
-  const raw = parseJsonContent(completion.choices?.[0]?.message?.content);
   const result = InterviewSummarySchema.safeParse(raw);
 
   if (!result.success) {

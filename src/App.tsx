@@ -101,7 +101,17 @@ type Preview = {
   premiumSpecific?: string;
 };
 
-type FullReportSection = { title: string; text: string; tone?: "normal" | "gold" | "danger" };
+type ReportConfidence = "low" | "medium" | "high";
+type FullReportSection = {
+  key?: string;
+  title: string;
+  text: string;
+  tone?: "normal" | "gold" | "danger";
+  confidence?: ReportConfidence;
+  evidence?: string[];
+  counterSignal?: string;
+  whatCouldChange?: string;
+};
 
 type FollowUpOption = { id: string; label: string; score: number };
 type FollowUpQuestion = { id: string; lead: string; text: string; options?: FollowUpOption[]; open?: boolean };
@@ -143,6 +153,8 @@ type AnonymousProfile = {
 type FullReport = {
   headline?: string; subheadline?: string; previewLine?: string;
   tensionPercent?: number; driftPercent?: number; rebuildPercent?: number;
+  overallConfidence?: ReportConfidence;
+  evidenceSummary?: string[];
   sections?: FullReportSection[]; closing?: string;
 };
 
@@ -166,6 +178,13 @@ const REPORT_ACCESS_KEY = "ctms_report_access_v1";
 const STORAGE_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 const CHECKOUT_CONSENT_VERSION = "2026-07-31";
 const ANALYSIS_CONSENT_VERSION = "2026-07-31";
+const FOLLOWUP_PLAN_DAYS = [7, 21] as const;
+
+const confidenceLabel = (value?: ReportConfidence) => ({
+  low: "niska — materiał wymaga doprecyzowania",
+  medium: "średnia — sygnały są spójne, ale pochodzą z jednej perspektywy",
+  high: "wysoka — kilka obserwowalnych faktów wskazuje ten sam wzorzec",
+}[value || "low"]);
 
 
 const FOLLOWUP_QUESTIONS: FollowUpQuestion[] = [
@@ -1679,6 +1698,16 @@ async function scheduleAnonymousReminder(payload: any): Promise<any> {
   return data;
 }
 
+async function submitReportFeedback(payload: { sessionToken: string; rating: 1 | 3 | 5; comment?: string }): Promise<void> {
+  const res = await fetch(`${API_BASE}/api/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...payload, reportKind: "full_report_v2" }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data?.error || "Nie udało się zapisać oceny.");
+}
+
 async function saveFollowUpCheckin(payload: any): Promise<any> {
   const res = await fetch(`${API_BASE}/api/followup/checkin`, {
     method: "POST",
@@ -2094,7 +2123,6 @@ export default function App() {
   const [followUpResult, setFollowUpResult] = useState<FollowUpResult | null>(() => {
     try { return JSON.parse(localStorage.getItem(FOLLOWUP_RESULT_KEY) || "null"); } catch { return null; }
   });
-  const [followUpDays, setFollowUpDays] = useState(7);
   const [followUpEmail, setFollowUpEmail] = useState("");
   const [followUpMessage, setFollowUpMessage] = useState("");
   const [followUpSaving, setFollowUpSaving] = useState(false);
@@ -2104,6 +2132,8 @@ export default function App() {
   const [dynamicFollowUpElapsedDays, setDynamicFollowUpElapsedDays] = useState(0);
   const [followUpCheckoutBusy, setFollowUpCheckoutBusy] = useState(false);
   const [followUpPurchaseConsent, setFollowUpPurchaseConsent] = useState(false);
+  const [reportFeedback, setReportFeedback] = useState<1 | 3 | 5 | null>(null);
+  const [reportFeedbackMessage, setReportFeedbackMessage] = useState("");
 
   const [selectedPath, setSelectedPath] = useState<EntryKey | null>(null);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -2404,7 +2434,7 @@ export default function App() {
 
   const scheduleFollowUp = async () => {
     const due = new Date();
-    due.setDate(due.getDate() + followUpDays);
+    due.setDate(due.getDate() + FOLLOWUP_PLAN_DAYS[0]);
     const dueAt = due.toISOString();
     setFollowUpSaving(true);
     setFollowUpMessage("");
@@ -2432,7 +2462,7 @@ export default function App() {
         await scheduleAnonymousReminder({
           recoveryToken: profile.recoveryToken,
           email: followUpEmail || email,
-          days: followUpDays,
+          days: [...FOLLOWUP_PLAN_DAYS],
         });
       }
 
@@ -2447,34 +2477,42 @@ export default function App() {
       try { localStorage.setItem(FOLLOWUP_KEY, JSON.stringify(payload)); } catch {}
       setFollowUpDueAt(dueAt);
 
-      const start = due.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
-      const endDate = new Date(due.getTime() + 30 * 60 * 1000);
-      const end = endDate.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
       const recoveryUrl = profile?.recoveryUrl || (profile?.recoveryToken ? `${window.location.origin}/?recovery=${encodeURIComponent(profile.recoveryToken)}` : window.location.origin);
+      const calendarEvents = FOLLOWUP_PLAN_DAYS.map((days) => {
+        const eventStart = new Date();
+        eventStart.setDate(eventStart.getDate() + days);
+        const eventEnd = new Date(eventStart.getTime() + 30 * 60 * 1000);
+        const start = eventStart.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+        const end = eventEnd.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+        return [
+          "BEGIN:VEVENT",
+          `UID:ctms-${sessionToken || "private"}-${days}@czytomasens.pl`,
+          `DTSTART:${start}`,
+          `DTEND:${end}`,
+          `SUMMARY:Ponowny odczyt relacji po ${days} dniach — CzyToMaSens`,
+          `DESCRIPTION:Sprawdź po ${days} dniach, co realnie zmieniło się w zachowaniu i czy zmiana się utrzymuje.`,
+          `URL:${recoveryUrl}`,
+          "END:VEVENT",
+        ].join("\r\n");
+      });
       const ics = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
         "PRODID:-//CzyToMaSens//Ponowny odczyt//PL",
-        "BEGIN:VEVENT",
-        `DTSTART:${start}`,
-        `DTEND:${end}`,
-        "SUMMARY:Ponowny odczyt relacji — CzyToMaSens",
-        `DESCRIPTION:Wróć do zapisanej analizy po ${followUpDays} dniach i sprawdź, co realnie zmieniło się w zachowaniu.`,
-        `URL:${recoveryUrl}`,
-        "END:VEVENT",
+        ...calendarEvents,
         "END:VCALENDAR",
       ].join("\r\n");
       const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `czytomasens-powrot-za-${followUpDays}-dni.ics`;
+      a.download = "czytomasens-powrot-7-i-21-dni.ics";
       a.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 
       setFollowUpMessage(
         followUpEmail || email
-          ? `Gotowe. Przypomnienie wyślemy po ${followUpDays} dniach, a link pozwoli otworzyć analizę także na innym urządzeniu.`
+          ? "Gotowe. Przypomnienia wyślemy po 7 i 21 dniach, a link pozwoli otworzyć analizę także na innym urządzeniu."
           : `Termin zapisany. Dodaj e-mail, aby dostać link działający także na innym urządzeniu.`
       );
     } catch (e: any) {
@@ -3037,6 +3075,18 @@ ${finalOwnText}`;
     }
   };
 
+  const saveReportFeedback = async (rating: 1 | 3 | 5) => {
+    if (!sessionToken || reportFeedback) return;
+    setReportFeedbackMessage("");
+    try {
+      await submitReportFeedback({ sessionToken, rating });
+      setReportFeedback(rating);
+      setReportFeedbackMessage("Dziękujemy. Ta ocena posłuży do mierzenia trafności kolejnych wersji analizy.");
+    } catch (e: any) {
+      setReportFeedbackMessage(friendlyError(e, "Nie udało się zapisać oceny. Raport pozostaje bez zmian."));
+    }
+  };
+
   const pay = async () => {
     if (!selectedPath || !preview) { setError("Brak gotowego podglądu."); return; }
     if (!email.includes("@")) { setError("Podaj prawidłowy adres e-mail."); return; }
@@ -3093,6 +3143,12 @@ ${finalOwnText}`;
           <h2>${safe(section.title)}</h2>
         </div>
         <div class="section-body">${paragraphs(section.text)}</div>
+        <div class="section-confidence">Pewność: ${safe(confidenceLabel(section.confidence))}</div>
+        <div class="evidence-box">
+          ${section.evidence?.length ? `<div><strong>Podstawa wniosku</strong><ul>${section.evidence.map((item) => `<li>${safe(item)}</li>`).join("")}</ul></div>` : ""}
+          ${section.counterSignal ? `<div><strong>Kontrsygnał</strong><p>${safe(section.counterSignal)}</p></div>` : ""}
+          ${section.whatCouldChange ? `<div><strong>Co zmieni ocenę</strong><p>${safe(section.whatCouldChange)}</p></div>` : ""}
+        </div>
       </section>`).join("\n");
 
     const metrics = [
@@ -3153,6 +3209,9 @@ linear-gradient(145deg,#0a0908,#16130f 66%,#0a0908);color:#f7f1e7;display:flex;f
 .section-no{font-size:7.5pt;letter-spacing:.24em;color:#9b7b3e;font-weight:800;padding-top:1.2mm}
 h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;letter-spacing:-.02em;margin:0;color:#1c1813}
 .section-body p{font-size:10.7pt;line-height:1.62;margin:0 0 3mm;color:#332e28;orphans:3;widows:3}
+.section-confidence{display:inline-block;margin:1mm 0 3mm;padding:1.4mm 2.5mm;border-radius:99px;background:#f4eee2;color:#715b34;font-size:7.5pt;font-weight:700}
+.evidence-box{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm;margin-top:3mm;padding:4mm;background:#f8f6f1;border:1px solid #e5ded1;border-radius:3mm}
+.evidence-box strong{display:block;font-size:7.5pt;letter-spacing:.06em;text-transform:uppercase;color:#80683b;margin-bottom:1.5mm}.evidence-box p,.evidence-box li{font-size:8.3pt;line-height:1.45;color:#4b443c;margin:0}.evidence-box ul{margin:0;padding-left:4mm}
 .closing,.followup-summary{margin:9mm 0 0;border:1px solid #cdbd9b;background:#f8f4eb;padding:7mm;border-radius:4mm;break-inside:avoid;page-break-inside:avoid}
 .closing{font-family:Georgia,'Times New Roman',serif;font-size:15pt;line-height:1.45;color:#2b2115}
 .followup-summary h2{margin:1mm 0 3mm}.followup-summary p{margin:0;color:#3d362e}
@@ -3178,6 +3237,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
   <div class="kicker">Najważniejsze na początku</div>
   <h1>${safe(fullReport.headline || "Pełny odczyt relacji")}</h1>
   <p class="cover-lead">${safe(fullReport.subheadline || fullReport.previewLine || "Prywatny odczyt sytuacji oparty na odpowiedziach, zachowaniach i powtarzających się sygnałach.")}</p>
+  <p class="cover-lead" style="font-size:10pt;margin-top:4mm;color:#c8b994"><strong>Pewność odczytu:</strong> ${safe(confidenceLabel(fullReport.overallConfidence))}</p>
   ${metrics ? `<div class="metrics">${metrics}</div>` : ""}
   <div class="cover-bottom">
     <div><h3>Jak czytać ten dokument</h3><p>Nie szukaj jednego procentu ani jednego zdania, które podejmie decyzję za Ciebie. Najwięcej mówi układ: co wraca, kto bierze odpowiedzialność i czy po rozmowie zmienia się zachowanie.</p></div>
@@ -3877,7 +3937,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                 {path && (
                   <Glass className="unlock-panel unlock-panel--strong">
                     <div className="eyebrow">PEŁNA ANALIZA</div>
-                    <p className="unlock-copy">Pełny raport rozwija ten odczyt w 17 sekcjach: z pomocniczymi wskaźnikami, bez sprowadzania relacji do jednego wyniku, z pokazaniem zasobów, ryzyk, kosztu emocjonalnego i ruchu, który ma sens teraz.</p>
+                    <p className="unlock-copy">Pełny raport rozwija ten odczyt w 7 kluczowych obszarach i modułach dobranych do Twojej historii. Pokazuje podstawy wniosków, kontrsygnały, poziom pewności oraz konkretny ruch — bez sprowadzania relacji do jednego wyniku.</p>
                     <div className="premium-sample-grid">
                       {buildPremiumSamples(path, preview).map((item, index) => (
                         <div key={item.title} className="premium-sample-card">
@@ -3929,6 +3989,15 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                 <div className="premium-report-head">
                   <h2>{fullReport.headline || "Pełny raport relacji"}</h2>
                   <p>{fullReport.subheadline || fullReport.previewLine || "Poniżej znajdziesz odczyt Twojej sytuacji podzielony na konkretne obszary."}</p>
+                  <div className={`report-confidence report-confidence--${fullReport.overallConfidence || "low"}`}>
+                    <strong>Pewność odczytu:</strong> {confidenceLabel(fullReport.overallConfidence)}
+                  </div>
+                  {!!fullReport.evidenceSummary?.length && (
+                    <div className="report-evidence-summary">
+                      <span>Najmocniejsze podstawy odczytu</span>
+                      <ul>{fullReport.evidenceSummary.map((item, index) => <li key={index}>{item}</li>)}</ul>
+                    </div>
+                  )}
                 </div>
                 {(typeof fullReport.tensionPercent === "number" || typeof fullReport.driftPercent === "number" || typeof fullReport.rebuildPercent === "number") && (
                   <div className="premium-indicator-strip">
@@ -3950,21 +4019,45 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                     <Glass key={i} className={`report-section premium-report-section report-section--${section.tone || "normal"}`}>
                       <div className="premium-section-no">{String(i + 1).padStart(2, "0")}</div>
                       <div className={`report-section-title ${section.tone || "normal"}`}>{section.title}</div>
+                      <div className={`section-confidence section-confidence--${section.confidence || "low"}`}>
+                        Pewność: {confidenceLabel(section.confidence)}
+                      </div>
                       <div className="report-section-text">
                         {String(section.text || "").split("\n").filter(Boolean).map((para, pi) => (
                           <p key={pi}>{para}</p>
                         ))}
+                      </div>
+                      <div className="section-evidence-grid">
+                        {!!section.evidence?.length && (
+                          <div><strong>Na czym opiera się ten wniosek</strong><ul>{section.evidence.map((item, index) => <li key={index}>{item}</li>)}</ul></div>
+                        )}
+                        {section.counterSignal && <div><strong>Co nie pasuje do tej tezy</strong><p>{section.counterSignal}</p></div>}
+                        {section.whatCouldChange && <div><strong>Co mogłoby zmienić ocenę</strong><p>{section.whatCouldChange}</p></div>}
                       </div>
                     </Glass>
                   ))}
                 </div>
                 {fullReport.closing && <div className="report-closing premium-closing">{fullReport.closing}</div>}
 
+                <Glass className="report-feedback-panel">
+                  <div>
+                    <div className="eyebrow">KONTROLA JAKOŚCI</div>
+                    <h3>Czy ten raport był trafny i użyteczny?</h3>
+                    <p>Ocena nie zmienia raportu. Pomaga odróżnić faktycznie trafne analizy od tych, które brzmią dobrze, ale są zbyt ogólne.</p>
+                  </div>
+                  <div className="report-feedback-actions">
+                    {([[5, "Trafny"], [3, "Częściowo"], [1, "Nietrafny"]] as [1 | 3 | 5, string][]).map(([rating, label]) => (
+                      <button key={rating} type="button" className={reportFeedback === rating ? "is-selected" : ""} onClick={() => saveReportFeedback(rating)} disabled={reportFeedback !== null}>{label}</button>
+                    ))}
+                  </div>
+                  {reportFeedbackMessage && <span className="followup-message">{reportFeedbackMessage}</span>}
+                </Glass>
+
                 <Glass className="pulse-upsell-panel followup-panel">
                   <div>
                     <div className="eyebrow">SPRAWDŹ, CO ZMIENIŁO SIĘ NAPRAWDĘ</div>
                     <h3>Ponowny odczyt relacji</h3>
-                    <p>Możesz wrócić po jednym, trzech, pięciu albo dziewięciu dniach — wtedy, kiedy wydarzy się coś ważnego. System porówna nowe zachowania z pierwszym odczytem, zamiast kazać Ci robić całą analizę od początku.</p>
+                    <p>Wróć po 7 dniach, żeby sprawdzić pierwszy ruch, i po 21 dniach, żeby zobaczyć, czy zmiana się utrzymała. System porówna nowe zachowania z pierwszym odczytem, zamiast kazać Ci robić całą analizę od początku.</p>
                     <div className="pulse-upsell-grid">
                       <span>dynamiczne pytania zależne od Twojej historii</span>
                       <span>porównanie z pierwszym raportem</span>
@@ -3982,10 +4075,8 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                   </div>
                   <div className="pulse-price-card followup-reminder-card">
                     <strong>{followUpDueAt ? `Ustawiono: ${new Date(followUpDueAt).toLocaleDateString("pl-PL")}` : "Przypomnienie bez konta"}</strong>
-                    <label className="followup-label">Kiedy przypomnieć?</label>
-                    <select value={followUpDays} onChange={(event) => setFollowUpDays(Number(event.target.value))} className="followup-select">
-                      {[1,3,4,5,7,9,14].map((days) => <option key={days} value={days}>za {days} {days === 1 ? "dzień" : "dni"}</option>)}
-                    </select>
+                    <label className="followup-label">Plan sprawdzenia zmiany</label>
+                    <div className="followup-plan"><strong>7 dni</strong><span>pierwszy obserwowalny ruch</span><strong>21 dni</strong><span>trwałość bez nacisku</span></div>
                     <label className="followup-label">E-mail do prywatnego linku</label>
                     <input type="email" value={followUpEmail || email} onChange={(event) => setFollowUpEmail(event.target.value)} placeholder="Twój adres e-mail" className="followup-email" />
                     <button type="button" className="pulse-cta" onClick={scheduleFollowUp} disabled={followUpSaving}>

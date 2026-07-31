@@ -6,6 +6,7 @@ const rateLimit = require("express-rate-limit");
 const Stripe = require("stripe");
 const routes = require("./api/routes.js");
 const followupRoutes = require("./routes/followup.routes.js");
+const feedbackRoutes = require("./routes/feedback.routes.js");
 const { PrismaClient } = require("@prisma/client");
 
 const app = express();
@@ -195,6 +196,7 @@ const followupLimiter = rateLimit({
 
 // Anonimowy powrót, przypomnienia i ponowny odczyt — bez kont użytkowników.
 app.use("/api/followup", followupLimiter, followupRoutes);
+app.use("/api/feedback", followupLimiter, feedbackRoutes);
 
 app.use("/api", routes);
 
@@ -202,7 +204,9 @@ app.get("/api/health", (req, res) => {
   res.json({
     ok: true,
     service: "CzyToMaSens API",
-    model: process.env.OPENAI_MODEL || "gpt-4o",
+    model: process.env.OPENAI_MODEL || "gpt-5.6-terra",
+    reportModel: process.env.OPENAI_REPORT_MODEL || "gpt-5.6-sol",
+    aiApi: "responses",
     price: process.env.INITIAL_PRICE_AMOUNT_GR || "1999",
     followupPrice: process.env.FOLLOWUP_PRICE_AMOUNT_GR || "999",
   });

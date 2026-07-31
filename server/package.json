@@ -11,7 +11,8 @@
     "start:worker": "node src/jobs/worker.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy"
+    "prisma:deploy": "prisma migrate deploy",
+    "eval:analysis": "node scripts/run-analysis-evals.js"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",

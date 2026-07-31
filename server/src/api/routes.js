@@ -36,7 +36,9 @@ router.get("/health", (_req, res) => {
   return res.json({
     ok: true,
     service: "CzyToMaSens API",
-    model: process.env.OPENAI_MODEL || "gpt-4o",
+    model: process.env.OPENAI_MODEL || "gpt-5.6-terra",
+    reportModel: process.env.OPENAI_REPORT_MODEL || "gpt-5.6-sol",
+    aiApi: "responses",
     timestamp: new Date().toISOString(),
   });
 });

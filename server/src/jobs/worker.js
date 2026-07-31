@@ -235,8 +235,15 @@ async function sendReportEmail({ token, email }) {
 console.log("Worker uruchomiony. Oczekuję na zadania...");
 
 
-function buildFollowupEmailHtml(recoveryUrl) {
+function buildFollowupEmailHtml(recoveryUrl, stageDays = 7) {
   const safeUrl = escapeHtml(recoveryUrl);
+  const isSecondCheck = Number(stageDays) >= 21;
+  const heading = isSecondCheck
+    ? "Trzy tygodnie później: czy zmiana się utrzymała?"
+    : "Tydzień później: co naprawdę się zmieniło?";
+  const copy = isSecondCheck
+    ? "To moment na sprawdzenie trwałości. Czy nowy sposób działania utrzymał się bez przypominania, czy wrócił dawny układ i ten sam koszt?"
+    : "Sprawdź nie sam nastrój, lecz zachowanie: czy druga strona zrobiła coś bez nacisku, czy problem wrócił i czy masz dziś więcej jasności.";
   return `
 <!doctype html>
 <html lang="pl">
@@ -248,12 +255,10 @@ function buildFollowupEmailHtml(recoveryUrl) {
             CzyToMaSens<span style="color:#c5a059">.</span>
           </td></tr>
           <tr><td style="padding:0 30px 10px;font-size:22px;font-weight:800;line-height:1.35;">
-            Minęło trochę czasu. Co naprawdę się zmieniło?
+            ${heading}
           </td></tr>
           <tr><td style="padding:0 30px 20px;color:#c9c1b8;line-height:1.7;font-size:15px;">
-            To dobry moment, żeby sprawdzić nie sam nastrój, lecz zachowanie:
-            czy druga strona zrobiła coś bez nacisku, czy problem wrócił
-            i czy masz dziś więcej jasności.
+            ${copy}
           </td></tr>
           <tr><td style="padding:4px 30px 30px;">
             <a href="${safeUrl}" style="display:inline-block;padding:14px 22px;background:#c5a059;color:#111;text-decoration:none;border-radius:999px;font-weight:800;">
@@ -282,20 +287,23 @@ async function processFollowupReminders() {
 
     for (const item of due) {
       try {
-        const token = await issueRecoveryTokenForProfile(item.id);
+        const token = await issueRecoveryTokenForProfile(item.profile_id);
         const recoveryUrl = publicUrl(token);
+        const stageDays = Number(item.stage_days || 7);
 
         await resend.emails.send({
           from: resendFromEmail,
           to: item.email,
-          subject: "Minęło trochę czasu. Co naprawdę się zmieniło?",
-          html: buildFollowupEmailHtml(recoveryUrl),
+          subject: stageDays >= 21
+            ? "Czy zmiana się utrzymała? Ponowny odczyt po 21 dniach"
+            : "Co naprawdę się zmieniło? Ponowny odczyt po 7 dniach",
+          html: buildFollowupEmailHtml(recoveryUrl, stageDays),
         });
 
-        await markReminderSent(item.id);
-        console.log(`[FollowUp] Przypomnienie wysłane: ${item.id}`);
+        await markReminderSent(item.reminder_id, item.profile_id);
+        console.log(`[FollowUp] Przypomnienie ${stageDays} dni wysłane: ${item.reminder_id}`);
       } catch (error) {
-        console.error(`[FollowUp] Błąd przypomnienia ${item.id}:`, error.message);
+        console.error(`[FollowUp] Błąd przypomnienia ${item.reminder_id}:`, error.message);
       }
     }
   } catch (error) {
