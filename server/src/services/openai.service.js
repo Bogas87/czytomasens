@@ -243,6 +243,144 @@ function appendBlindspotSection(report, payload) {
   return { ...report, sections: existingSections };
 }
 
+
+const FORCE_WEIGHT = Object.freeze({
+  definitely_me: 2,
+  mostly_me: 1,
+  balanced: 0,
+  mostly_other: -1,
+  definitely_other: -2,
+});
+
+function compactPortraitText(value, fallback, maxLength = 220) {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (!text) return fallback;
+  return text.length <= maxLength ? text : `${text.slice(0, maxLength - 1).trim()}…`;
+}
+
+function buildRelationshipPortrait(payload = {}, report = {}) {
+  const map = payload.relationshipMap || {};
+  const force = map.forceMap || {};
+  const weight = (key) => Number(FORCE_WEIGHT[force[key]] || 0);
+  const effortScore =
+    weight("contactInitiative") +
+    weight("repairAfterConflict") +
+    weight("emotionalLabor") -
+    weight("avoidance") +
+    weight("fearOfLoss") * 0.5;
+
+  const tension = Number(report.tensionPercent ?? 50);
+  const drift = Number(report.driftPercent ?? 50);
+  const rebuild = Number(report.rebuildPercent ?? 50);
+  const topBurden = Array.isArray(map.burdens) ? String(map.burdens[0]?.label || "").trim() : "";
+  const topTruth = Array.isArray(map.truthCards) ? String(map.truthCards[0] || "").trim() : "";
+
+  const forceState = effortScore >= 2.5 ? "user_heavy" : effortScore <= -2.5 ? "other_heavy" : "balanced";
+  const relationState = rebuild >= 64 && drift < 56
+    ? "reciprocal"
+    : tension >= 68 || drift >= 68
+      ? "strained"
+      : "suspended";
+
+  const declarationsState = drift <= 36 ? "coherent" : drift <= 64 ? "mixed" : "weak";
+  const behaviorState = rebuild >= 66 ? "coherent" : rebuild >= 40 ? "mixed" : "weak";
+  const directionState = rebuild >= 66 && drift < 58
+    ? "forward"
+    : rebuild < 36 && (tension >= 66 || drift >= 66)
+      ? "backward"
+      : "stalled";
+
+  const userState = forceState === "other_heavy" ? "other_heavy" : forceState;
+  const otherState = forceState === "user_heavy" ? "other_heavy" : forceState === "other_heavy" ? "user_heavy" : "balanced";
+
+  const forceHeadline = forceState === "user_heavy"
+    ? "Relacja porusza się głównie dzięki Twojemu wysiłkowi"
+    : forceState === "other_heavy"
+      ? "Inicjatywa częściej przychodzi z drugiej strony"
+      : relationState === "reciprocal"
+        ? "Wzajemność jest widoczna po obu stronach"
+        : relationState === "strained"
+          ? "Układ utrzymuje się w napięciu"
+          : "Ciężar pozostaje nierozstrzygnięty";
+
+  const userLabel = forceState === "user_heavy"
+    ? "częściej inicjujesz, naprawiasz i domykasz"
+    : forceState === "other_heavy"
+      ? "rzadziej przejmujesz inicjatywę"
+      : "Twój udział nie dominuje nad całością";
+  const otherLabel = forceState === "user_heavy"
+    ? "mniej ruchu bez Twojego impulsu"
+    : forceState === "other_heavy"
+      ? "częściej uruchamia kontakt lub naprawę"
+      : "udział wygląda na zbliżony lub zmienny";
+  const relationLabel = relationState === "reciprocal"
+    ? "ma obustronny punkt oparcia"
+    : relationState === "strained"
+      ? "jest utrzymywana kosztem lub napięciem"
+      : "pozostaje między zasobem a kosztem";
+
+  const forceInsightFallback = compactPortraitText(
+    report.previewLine,
+    "Najwięcej mówi rozkład inicjatywy, odpowiedzialności i naprawy po napięciu, nie sama intensywność uczuć."
+  );
+  const forceInsight = topBurden
+    ? compactPortraitText(`Najmocniej wraca: ${topBurden}. ${forceInsightFallback}`, forceInsightFallback)
+    : forceInsightFallback;
+
+  const truthHeadline = directionState === "forward"
+    ? "Słowa i zachowanie zaczynają iść w jednym kierunku"
+    : directionState === "backward"
+      ? "Zachowanie osłabia to, co obiecują słowa"
+      : "Kierunek nadal nie jest potwierdzony";
+  const declarationsLabel = declarationsState === "coherent"
+    ? "konkretne i spójne"
+    : declarationsState === "mixed"
+      ? "częściowo jasne, częściowo otwarte"
+      : "mocniejsze niż ich pokrycie";
+  const behaviorLabel = behaviorState === "coherent"
+    ? "powtarzalne i potwierdzające"
+    : behaviorState === "mixed"
+      ? "nieregularne lub zależne od napięcia"
+      : "nie potwierdza trwałej zmiany";
+  const directionLabel = directionState === "forward"
+    ? "ruch do przodu"
+    : directionState === "backward"
+      ? "powrót do starego układu"
+      : "zawieszenie";
+
+  const truthInsightFallback = "O kierunku relacji decyduje zachowanie widoczne również wtedy, gdy emocje opadną i nikt nie prowadzi drugiej strony za rękę.";
+  const truthInsight = topTruth
+    ? compactPortraitText(`Najważniejszy kontrast: ${topTruth} ${truthInsightFallback}`, truthInsightFallback)
+    : compactPortraitText(report.closing, truthInsightFallback);
+
+  return {
+    forceField: {
+      headline: forceHeadline,
+      userState,
+      otherState,
+      relationState,
+      userLabel,
+      otherLabel,
+      relationLabel,
+      insight: forceInsight,
+    },
+    truthLine: {
+      headline: truthHeadline,
+      declarationsState,
+      behaviorState,
+      directionState,
+      declarationsLabel,
+      behaviorLabel,
+      directionLabel,
+      insight: truthInsight,
+    },
+  };
+}
+
+function withRelationshipPortrait(report, payload) {
+  return { ...report, portrait: buildRelationshipPortrait(payload, report) };
+}
+
 function wordCount(text = "") {
   return String(text).trim().split(/\s+/).filter(Boolean).length;
 }
@@ -561,15 +699,15 @@ exports.generateFullReport = async (payload) => {
     }
 
     if (!report) {
-      return appendBlindspotSection(buildEmergencyPremiumReport(payload, firstRaw), payload);
+      return withRelationshipPortrait(appendBlindspotSection(buildEmergencyPremiumReport(payload, firstRaw), payload), payload);
     }
 
     if (reportNeedsRepair(report, payload)) {
       console.warn("[OpenAI Service] Raport premium nadal był zbyt słaby po naprawie. Zwracam bezpieczną wersję redakcyjną bez powtórzeń.");
-      return appendBlindspotSection(buildEmergencyPremiumReport(payload, report), payload);
+      return withRelationshipPortrait(appendBlindspotSection(buildEmergencyPremiumReport(payload, report), payload), payload);
     }
 
-    return appendBlindspotSection(report, payload);
+    return withRelationshipPortrait(appendBlindspotSection(report, payload), payload);
   } catch (error) {
     console.error("[OpenAI Service] Full Report error:", error.message);
     throw error;
@@ -882,17 +1020,17 @@ exports.generateComparativeReport = async (payload) => {
     }
 
     if (report && !comparativeReportNeedsRepair(report)) {
-      return report;
+      return withRelationshipPortrait(report, payload);
     }
 
     console.warn(
       "[OpenAI Service] Raport porównawczy nie przeszedł kontroli jakości po naprawie. Zwracam bezpieczną wersję awaryjną opartą na zapisanej historii."
     );
-    return buildEmergencyComparativeReport(payload);
+    return withRelationshipPortrait(buildEmergencyComparativeReport(payload), payload);
   } catch (error) {
     console.error("[OpenAI Service] Comparative Report error:", error.message);
     if (payload?.history) {
-      return buildEmergencyComparativeReport(payload);
+      return withRelationshipPortrait(buildEmergencyComparativeReport(payload), payload);
     }
     throw error;
   }

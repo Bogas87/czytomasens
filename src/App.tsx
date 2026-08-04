@@ -30,7 +30,6 @@ const BRAND = {
 
 type Stage =
   | "landing"
-  | "consent"
   | "entry"
   | "questions"
   | "checkpoint"
@@ -150,12 +149,37 @@ type AnonymousProfile = {
   email?: string;
 };
 
+type PortraitState = "balanced" | "user_heavy" | "other_heavy" | "strained" | "suspended" | "reciprocal" | "mixed" | "weak" | "coherent" | "forward" | "stalled" | "backward";
+type RelationshipPortrait = {
+  forceField: {
+    headline: string;
+    userState: PortraitState;
+    otherState: PortraitState;
+    relationState: PortraitState;
+    userLabel: string;
+    otherLabel: string;
+    relationLabel: string;
+    insight: string;
+  };
+  truthLine: {
+    headline: string;
+    declarationsState: PortraitState;
+    behaviorState: PortraitState;
+    directionState: PortraitState;
+    declarationsLabel: string;
+    behaviorLabel: string;
+    directionLabel: string;
+    insight: string;
+  };
+};
+
 type FullReport = {
   headline?: string; subheadline?: string; previewLine?: string;
   tensionPercent?: number; driftPercent?: number; rebuildPercent?: number;
   overallConfidence?: ReportConfidence;
   evidenceSummary?: string[];
   sections?: FullReportSection[]; closing?: string;
+  portrait?: RelationshipPortrait;
 };
 
 type InterviewExchange = { ai: string; user: string; lead?: string; observation?: string };
@@ -177,7 +201,7 @@ const FOLLOWUP_RESULT_KEY = "ctms_followup_result_v1";
 const REPORT_ACCESS_KEY = "ctms_report_access_v1";
 const STORAGE_TTL_MS = 90 * 24 * 60 * 60 * 1000;
 const CHECKOUT_CONSENT_VERSION = "2026-07-31";
-const ANALYSIS_CONSENT_VERSION = "2026-07-31";
+const ANALYSIS_CONSENT_VERSION = "2026-08-03";
 const FOLLOWUP_PLAN_DAYS = [7, 21] as const;
 
 const confidenceLabel = (value?: ReportConfidence) => ({
@@ -185,6 +209,60 @@ const confidenceLabel = (value?: ReportConfidence) => ({
   medium: "średnia — sygnały są spójne, ale pochodzą z jednej perspektywy",
   high: "wysoka — kilka obserwowalnych faktów wskazuje ten sam wzorzec",
 }[value || "low"]);
+
+function qualitativePortraitFromReport(report: FullReport): RelationshipPortrait {
+  const tension = Number(report.tensionPercent ?? 50);
+  const drift = Number(report.driftPercent ?? 50);
+  const rebuild = Number(report.rebuildPercent ?? 50);
+  const forceState: PortraitState = drift >= 66 ? "user_heavy" : drift <= 34 ? "balanced" : "suspended";
+  const relationState: PortraitState = rebuild >= 64 && drift < 56
+    ? "reciprocal"
+    : tension >= 68 || drift >= 68
+      ? "strained"
+      : "suspended";
+  const declarationsState: PortraitState = drift <= 36 ? "coherent" : drift <= 64 ? "mixed" : "weak";
+  const behaviorState: PortraitState = rebuild >= 66 ? "coherent" : rebuild >= 40 ? "mixed" : "weak";
+  const directionState: PortraitState = rebuild >= 66 && drift < 58
+    ? "forward"
+    : rebuild < 36 && (tension >= 66 || drift >= 66)
+      ? "backward"
+      : "stalled";
+
+  return {
+    forceField: {
+      headline: relationState === "reciprocal"
+        ? "Relacja ma obustronny punkt oparcia"
+        : relationState === "strained"
+          ? "Ciężar nie rozkłada się neutralnie"
+          : "Układ pozostaje nierozstrzygnięty",
+      userState: forceState,
+      otherState: forceState === "user_heavy" ? "other_heavy" : forceState,
+      relationState,
+      userLabel: forceState === "user_heavy" ? "częściej uruchamiasz i domykasz" : forceState === "balanced" ? "masz własny udział, ale nie niesiesz wszystkiego" : "część ciężaru nadal zostaje po Twojej stronie",
+      otherLabel: forceState === "user_heavy" ? "mniej ruchu bez Twojego impulsu" : forceState === "balanced" ? "widać odpowiedź i udział" : "udział jest zmienny albo trudny do odczytania",
+      relationLabel: relationState === "reciprocal" ? "wzajemność widoczna w zachowaniu" : relationState === "strained" ? "utrzymywana nierówno lub w napięciu" : "zawieszona między zasobem a kosztem",
+      insight: report.previewLine || "Najwięcej mówi nie intensywność uczuć, tylko rozkład inicjatywy, odpowiedzialności i naprawy po napięciu.",
+    },
+    truthLine: {
+      headline: directionState === "forward"
+        ? "Słowa i zachowanie zaczynają iść w jednym kierunku"
+        : directionState === "backward"
+          ? "Zachowanie osłabia to, co obiecują słowa"
+          : "Kierunek nadal nie jest potwierdzony",
+      declarationsState,
+      behaviorState,
+      directionState,
+      declarationsLabel: declarationsState === "coherent" ? "spójne i konkretne" : declarationsState === "mixed" ? "częściowo jasne, częściowo otwarte" : "mocniejsze niż ich pokrycie",
+      behaviorLabel: behaviorState === "coherent" ? "powtarzalne i potwierdzające" : behaviorState === "mixed" ? "nieregularne lub zależne od napięcia" : "nie potwierdza trwałej zmiany",
+      directionLabel: directionState === "forward" ? "ruch do przodu" : directionState === "backward" ? "powrót do starego układu" : "zawieszenie",
+      insight: report.closing || "To, co ma znaczenie, powinno być widoczne również wtedy, gdy emocje opadną i nikt nie prowadzi drugiej strony za rękę.",
+    },
+  };
+}
+
+function resolveRelationshipPortrait(report: FullReport): RelationshipPortrait {
+  return report.portrait || qualitativePortraitFromReport(report);
+}
 
 
 const FOLLOWUP_QUESTIONS: FollowUpQuestion[] = [
@@ -1978,7 +2056,7 @@ function GhostButton({ children, onClick }: { children: React.ReactNode; onClick
 
 function PremiumBadge({ preview }: { preview: Preview }) {
   const color = preview.tone === "red" ? BRAND.danger : preview.tone === "green" ? BRAND.success : BRAND.goldSoft;
-  const scoreExplanation = `Wynik pochodzi z trzech osi: napięcie w relacji (${preview.tension}%), asymetria zaangażowania (${preview.asymmetry}%), realność zmiany (${preview.change}%). Im wyższe napięcie i asymetria, tym niższy wynik końcowy.`;
+  const scoreExplanation = "To syntetyczny pierwszy odczyt całego układu. Nie jest prognozą ani matematyczną oceną przyszłości relacji.";
   return (
     <Glass className="ctms-preview-badge">
       <div className="ctms-kicker">NA ILE TO MA SENS</div>
@@ -1987,6 +2065,70 @@ function PremiumBadge({ preview }: { preview: Preview }) {
       <div className="ctms-preview-truth">{preview.truth}</div>
       <div className="ctms-preview-mirror">{preview.mirror}</div>
       <div className="ctms-score-explanation">{scoreExplanation}</div>
+    </Glass>
+  );
+}
+
+function RelationshipForcePortraitCard({ portrait }: { portrait: RelationshipPortrait["forceField"] }) {
+  return (
+    <Glass className="relationship-portrait relationship-force-portrait">
+      <div className="portrait-header">
+        <div>
+          <div className="eyebrow">PORTRET RELACJI · UKŁAD SIŁ</div>
+          <h3>{portrait.headline}</h3>
+        </div>
+        <span className="portrait-signature">CTMS / 01</span>
+      </div>
+      <div className={`force-field force-field--${portrait.relationState}`}>
+        <div className={`portrait-node portrait-node--user state-${portrait.userState}`}>
+          <span>TY</span>
+          <strong>{portrait.userLabel}</strong>
+        </div>
+        <div className={`force-connection force-connection--left state-${portrait.relationState}`} aria-hidden="true"><i /></div>
+        <div className={`portrait-node portrait-node--relation state-${portrait.relationState}`}>
+          <span>RELACJA</span>
+          <strong>{portrait.relationLabel}</strong>
+          <b aria-hidden="true" />
+        </div>
+        <div className={`force-connection force-connection--right state-${portrait.relationState}`} aria-hidden="true"><i /></div>
+        <div className={`portrait-node portrait-node--other state-${portrait.otherState}`}>
+          <span>DRUGA OSOBA</span>
+          <strong>{portrait.otherLabel}</strong>
+        </div>
+      </div>
+      <p className="portrait-insight">{portrait.insight}</p>
+    </Glass>
+  );
+}
+
+function TruthLinePortraitCard({ portrait }: { portrait: RelationshipPortrait["truthLine"] }) {
+  const items = [
+    { label: "Deklaracje", value: portrait.declarationsLabel, state: portrait.declarationsState },
+    { label: "Zachowanie", value: portrait.behaviorLabel, state: portrait.behaviorState },
+    { label: "Realny kierunek", value: portrait.directionLabel, state: portrait.directionState },
+  ];
+  return (
+    <Glass className="relationship-portrait truth-line-portrait">
+      <div className="portrait-header">
+        <div>
+          <div className="eyebrow">PORTRET RELACJI · LINIA PRAWDY</div>
+          <h3>{portrait.headline}</h3>
+        </div>
+        <span className="portrait-signature">CTMS / 02</span>
+      </div>
+      <div className={`truth-line truth-line--${portrait.directionState}`}>
+        {items.map((item, index) => (
+          <React.Fragment key={item.label}>
+            <div className={`truth-stop state-${item.state}`}>
+              <span className="truth-stop-index">0{index + 1}</span>
+              <i aria-hidden="true" />
+              <div><span>{item.label}</span><strong>{item.value}</strong></div>
+            </div>
+            {index < items.length - 1 && <div className="truth-connector" aria-hidden="true"><b /></div>}
+          </React.Fragment>
+        ))}
+      </div>
+      <p className="portrait-insight">{portrait.insight}</p>
     </Glass>
   );
 }
@@ -2264,7 +2406,7 @@ export default function App() {
             localStorage.removeItem(STORAGE_KEY);
             throw new Error("LOCAL_STATE_EXPIRED");
           }
-          const restoredStage: Stage = parsed.stage === "processing" ? (parsed.preview ? "preview" : "landing") : (parsed.stage || "landing");
+          const restoredStage: Stage = parsed.stage === "processing" ? (parsed.preview ? "preview" : "landing") : (parsed.stage === "consent" ? "entry" : (parsed.stage || "landing"));
           setStage(restoredStage);
           setSelectedPath(parsed.selectedPath || null);
           setQuestionIndex(parsed.questionIndex || 0);
@@ -2650,16 +2792,14 @@ export default function App() {
   };
 
   const startPath = async (key: EntryKey) => {
-    if (!analysisConsent) {
-      setStage("consent");
-      return;
-    }
     setBusy(false);
     setError(null);
     setSelectedPath(key);
     setQuestionIndex(0);
     setAnswers({});
     setOpenText("");
+    setAnalysisConsent(false);
+    setAnalysisConsentAcceptedAt("");
     setPreview(null);
     setFullReport(null);
     setInterviewState(null);
@@ -2679,14 +2819,6 @@ export default function App() {
         const token = data?.token || data?.sessionId || null;
         if (token) {
           setSessionToken(token);
-          updateSession({
-            token,
-            analysisConsent: {
-              accepted: true,
-              acceptedAt: analysisConsentAcceptedAt || new Date().toISOString(),
-              version: ANALYSIS_CONSENT_VERSION,
-            },
-          }).catch(() => {});
         }
       })
       .catch(() => {});
@@ -3035,12 +3167,17 @@ ${finalOwnText}`;
     if (stage === "interview") { setStage("map_summary"); return; }
     if (stage === "open_text") { if (interviewState && interviewState.history.length > 0) { setStage("interview"); return; } setStage("truth_cards"); return; }
     if (stage === "preview") { setStage(clarificationQuestions.length ? "clarification" : "map_summary"); return; }
-    if (stage === "consent") { setStage("landing"); return; }
-    if (stage === "entry") setStage("consent");
+    if (stage === "entry") setStage("landing");
   };
 
   const buildPreviewAndGo = async (clarificationsOverride?: ClarificationAnswerMap) => {
     if (!path) return;
+    if (!analysisConsent) {
+      setError("Zaznacz zgodę na przetworzenie treści potrzebnych do przygotowania analizy.");
+      return;
+    }
+    const consentAcceptedAt = analysisConsentAcceptedAt || new Date().toISOString();
+    if (!analysisConsentAcceptedAt) setAnalysisConsentAcceptedAt(consentAcceptedAt);
     const relationshipMap = relationshipMapPayload(clarificationsOverride);
     const finalOpenText = buildCompositeOpenText(clarificationsOverride);
     if (hasCrisisContent(finalOpenText)) { setStage("crisis"); return; }
@@ -3061,7 +3198,16 @@ ${finalOwnText}`;
 
       const previewData = await fetchPreviewFromAPI(token, path, answers, finalOpenText, relationshipMap);
       setPreview(previewData);
-      await updateSession({ token, path: path.key, answers, openText: finalOpenText, relationshipMap, preview: previewData, stage: "preview" });
+      await updateSession({
+        token,
+        path: path.key,
+        answers,
+        openText: finalOpenText,
+        relationshipMap,
+        preview: previewData,
+        analysisConsent: { accepted: true, acceptedAt: consentAcceptedAt, version: ANALYSIS_CONSENT_VERSION },
+        stage: "preview",
+      });
       setStage("preview");
       setBusy(false);
     } catch (e: any) {
@@ -3136,7 +3282,35 @@ ${finalOwnText}`;
     const generatedAt = new Date().toLocaleDateString("pl-PL", { year: "numeric", month: "long", day: "numeric" });
     const reportId = String(sessionToken || anonymousProfile?.recoveryToken || "prywatny").slice(0, 10).toUpperCase();
 
-    const sections = (fullReport.sections || []).map((section, index) => `
+    const portrait = resolveRelationshipPortrait(fullReport);
+    const stateClass = (value?: PortraitState) => `state-${safe(value || "suspended")}`;
+    const forcePortraitPrint = `
+      <section class="portrait-card portrait-card-force">
+        <div class="portrait-card-head"><div><span>PORTRET RELACJI · UKŁAD SIŁ</span><h2>${safe(portrait.forceField.headline)}</h2></div><b>CTMS / 01</b></div>
+        <div class="print-force-field ${stateClass(portrait.forceField.relationState)}">
+          <div class="print-force-node ${stateClass(portrait.forceField.userState)}"><small>TY</small><strong>${safe(portrait.forceField.userLabel)}</strong></div>
+          <div class="print-force-link"><i></i></div>
+          <div class="print-force-node print-force-node-relation ${stateClass(portrait.forceField.relationState)}"><small>RELACJA</small><strong>${safe(portrait.forceField.relationLabel)}</strong></div>
+          <div class="print-force-link"><i></i></div>
+          <div class="print-force-node ${stateClass(portrait.forceField.otherState)}"><small>DRUGA OSOBA</small><strong>${safe(portrait.forceField.otherLabel)}</strong></div>
+        </div>
+        <p class="portrait-card-insight">${safe(portrait.forceField.insight)}</p>
+      </section>`;
+    const truthLinePrint = `
+      <section class="portrait-card portrait-card-truth">
+        <div class="portrait-card-head"><div><span>PORTRET RELACJI · LINIA PRAWDY</span><h2>${safe(portrait.truthLine.headline)}</h2></div><b>CTMS / 02</b></div>
+        <div class="print-truth-line ${stateClass(portrait.truthLine.directionState)}">
+          <div class="print-truth-stop ${stateClass(portrait.truthLine.declarationsState)}"><em>01</em><i></i><small>Deklaracje</small><strong>${safe(portrait.truthLine.declarationsLabel)}</strong></div>
+          <div class="print-truth-connector"></div>
+          <div class="print-truth-stop ${stateClass(portrait.truthLine.behaviorState)}"><em>02</em><i></i><small>Zachowanie</small><strong>${safe(portrait.truthLine.behaviorLabel)}</strong></div>
+          <div class="print-truth-connector"></div>
+          <div class="print-truth-stop ${stateClass(portrait.truthLine.directionState)}"><em>03</em><i></i><small>Realny kierunek</small><strong>${safe(portrait.truthLine.directionLabel)}</strong></div>
+        </div>
+        <p class="portrait-card-insight">${safe(portrait.truthLine.insight)}</p>
+      </section>`;
+
+    const sections = (fullReport.sections || []).map((section, index) => {
+      const sectionHtml = `
       <section class="report-section tone-${safe(section.tone || "normal")}">
         <div class="section-heading">
           <div class="section-no">${String(index + 1).padStart(2, "0")}</div>
@@ -3149,18 +3323,11 @@ ${finalOwnText}`;
           ${section.counterSignal ? `<div><strong>Kontrsygnał</strong><p>${safe(section.counterSignal)}</p></div>` : ""}
           ${section.whatCouldChange ? `<div><strong>Co zmieni ocenę</strong><p>${safe(section.whatCouldChange)}</p></div>` : ""}
         </div>
-      </section>`).join("\n");
-
-    const metrics = [
-      [fullReport.tensionPercent, "Napięcie", "koszt emocjonalny"],
-      [fullReport.driftPercent, "Rozjazd", "słowa kontra zachowanie"],
-      [fullReport.rebuildPercent, "Realna zmiana", "grunt do odbudowy"],
-    ].filter(([value]) => typeof value === "number").map(([value, label, desc]) => `
-      <div class="metric">
-        <div class="metric-value">${Math.round(Number(value))}</div>
-        <div><strong>${safe(String(label))}</strong><span>${safe(String(desc))}</span></div>
-        <div class="metric-track"><i style="width:${Math.max(4, Math.min(100, Number(value)))}%"></i></div>
-      </div>`).join("");
+      </section>`;
+      if (index === 1) return `${sectionHtml}${forcePortraitPrint}`;
+      if (index === 5) return `${sectionHtml}${truthLinePrint}`;
+      return sectionHtml;
+    }).join("\n");
 
     const followup = followUpResult ? `
       <section class="followup-summary">
@@ -3191,11 +3358,6 @@ linear-gradient(145deg,#0a0908,#16130f 66%,#0a0908);color:#f7f1e7;display:flex;f
 .kicker{margin-top:22mm;font-size:8pt;letter-spacing:.36em;color:#d4ad5b;text-transform:uppercase}
 .cover h1{font-family:Georgia,'Times New Roman',serif;font-size:35pt;line-height:1.02;letter-spacing:-.035em;margin:5mm 0 5mm;max-width:150mm}
 .cover-lead{font-size:13pt;line-height:1.55;color:#ddd5c9;max-width:145mm;margin:0}
-.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:4mm;margin-top:13mm}
-.metric{border:1px solid rgba(215,185,120,.28);border-radius:4mm;padding:4mm;background:rgba(255,255,255,.035)}
-.metric-value{font-family:Georgia,'Times New Roman',serif;font-size:23pt;color:#d4ad5b;line-height:1}
-.metric strong{display:block;margin-top:2mm;font-size:9pt}.metric span{display:block;color:#aea69b;font-size:7.5pt;margin-top:.8mm}
-.metric-track{height:1.2mm;background:rgba(255,255,255,.1);border-radius:99px;margin-top:3mm;overflow:hidden}.metric-track i{display:block;height:100%;background:#d4ad5b}
 .cover-bottom{margin-top:auto;display:grid;grid-template-columns:1.2fr .8fr;gap:8mm;border-top:1px solid rgba(215,185,120,.25);padding-top:7mm}
 .cover-bottom h3{font-family:Georgia,'Times New Roman',serif;font-size:15pt;margin:0 0 2mm}.cover-bottom p{font-size:9pt;line-height:1.6;color:#c9c0b4;margin:0}
 .confidential{border-left:2px solid #d4ad5b;padding-left:5mm}
@@ -3212,6 +3374,17 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
 .section-confidence{display:inline-block;margin:1mm 0 3mm;padding:1.4mm 2.5mm;border-radius:99px;background:#f4eee2;color:#715b34;font-size:7.5pt;font-weight:700}
 .evidence-box{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm;margin-top:3mm;padding:4mm;background:#f8f6f1;border:1px solid #e5ded1;border-radius:3mm}
 .evidence-box strong{display:block;font-size:7.5pt;letter-spacing:.06em;text-transform:uppercase;color:#80683b;margin-bottom:1.5mm}.evidence-box p,.evidence-box li{font-size:8.3pt;line-height:1.45;color:#4b443c;margin:0}.evidence-box ul{margin:0;padding-left:4mm}
+.portrait-card{margin:3mm 0 8mm;padding:7mm;border:1px solid #cdbd9b;border-radius:4mm;background:linear-gradient(145deg,#16130f,#0b0a08);color:#f6efe5;break-inside:avoid;page-break-inside:avoid}
+.portrait-card-head{display:flex;justify-content:space-between;gap:7mm;align-items:flex-start;padding-bottom:5mm;border-bottom:1px solid rgba(215,185,120,.27)}
+.portrait-card-head span{display:block;font-size:6.8pt;letter-spacing:.22em;color:#d4ad5b;font-weight:800}.portrait-card-head h2{margin:2mm 0 0;color:#f7f1e8;font-size:18pt}.portrait-card-head>b{font-size:6.8pt;letter-spacing:.16em;color:#a99979;white-space:nowrap}
+.print-force-field{display:grid;grid-template-columns:1fr 13mm 1.1fr 13mm 1fr;align-items:center;gap:2mm;margin:8mm 0 6mm}
+.print-force-node{min-height:32mm;padding:5mm 4mm;border:1px solid rgba(215,185,120,.28);border-radius:50%;background:radial-gradient(circle at 35% 25%,rgba(215,185,120,.13),rgba(255,255,255,.025) 55%,transparent);display:flex;flex-direction:column;justify-content:center;text-align:center}
+.print-force-node-relation{min-height:39mm;border-color:rgba(215,185,120,.58);box-shadow:inset 0 0 0 1.8mm rgba(215,185,120,.05)}
+.print-force-node small,.print-truth-stop small{font-size:6.6pt;letter-spacing:.16em;color:#b9aa8e}.print-force-node strong{font-family:Georgia,'Times New Roman',serif;font-size:9.2pt;line-height:1.3;margin-top:1.5mm;color:#f2e8d8}
+.print-force-link{height:1px;background:rgba(215,185,120,.38);position:relative}.print-force-link i{position:absolute;width:3mm;height:3mm;border:1px solid #d4ad5b;border-radius:50%;background:#16130f;top:50%;left:50%;transform:translate(-50%,-50%)}
+.print-truth-line{display:grid;grid-template-columns:1fr 13mm 1fr 13mm 1fr;align-items:center;margin:8mm 0 6mm}.print-truth-stop{text-align:center;position:relative;padding:0 1mm}.print-truth-stop em{display:block;font-size:6.5pt;letter-spacing:.14em;color:#8f826d;font-style:normal}.print-truth-stop i{display:block;width:6mm;height:6mm;margin:2mm auto;border:1px solid #d4ad5b;transform:rotate(45deg);background:#16130f}.print-truth-stop small{display:block}.print-truth-stop strong{display:block;font-family:Georgia,'Times New Roman',serif;font-size:9.3pt;line-height:1.32;color:#f2e8d8;margin-top:1mm}.print-truth-connector{height:1px;background:linear-gradient(90deg,rgba(215,185,120,.18),rgba(215,185,120,.72),rgba(215,185,120,.18))}
+.portrait-card-insight{margin:0;padding-top:5mm;border-top:1px solid rgba(215,185,120,.22);font-family:Georgia,'Times New Roman',serif;font-size:10.4pt;line-height:1.55;color:#ded3c3}
+.portrait-card .state-strained,.portrait-card .state-weak,.portrait-card .state-backward{border-color:rgba(182,111,111,.62)}.portrait-card .state-reciprocal,.portrait-card .state-coherent,.portrait-card .state-forward{border-color:rgba(153,184,145,.62)}
 .closing,.followup-summary{margin:9mm 0 0;border:1px solid #cdbd9b;background:#f8f4eb;padding:7mm;border-radius:4mm;break-inside:avoid;page-break-inside:avoid}
 .closing{font-family:Georgia,'Times New Roman',serif;font-size:15pt;line-height:1.45;color:#2b2115}
 .followup-summary h2{margin:1mm 0 3mm}.followup-summary p{margin:0;color:#3d362e}
@@ -3238,7 +3411,6 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
   <h1>${safe(fullReport.headline || "Pełny odczyt relacji")}</h1>
   <p class="cover-lead">${safe(fullReport.subheadline || fullReport.previewLine || "Prywatny odczyt sytuacji oparty na odpowiedziach, zachowaniach i powtarzających się sygnałach.")}</p>
   <p class="cover-lead" style="font-size:10pt;margin-top:4mm;color:#c8b994"><strong>Pewność odczytu:</strong> ${safe(confidenceLabel(fullReport.overallConfidence))}</p>
-  ${metrics ? `<div class="metrics">${metrics}</div>` : ""}
   <div class="cover-bottom">
     <div><h3>Jak czytać ten dokument</h3><p>Nie szukaj jednego procentu ani jednego zdania, które podejmie decyzję za Ciebie. Najwięcej mówi układ: co wraca, kto bierze odpowiedzialność i czy po rozmowie zmienia się zachowanie.</p></div>
     <div class="confidential"><h3>Tylko dla Ciebie</h3><p>To prywatny odczyt jednej perspektywy. Nie jest diagnozą ani oceną drugiej osoby.</p></div>
@@ -3297,7 +3469,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
           onNavigateArticle={(slug) => navigateTo(`/artykuly/${slug}`)}
           onStartAnalysis={() => {
             navigateTo("/");
-            setStage("consent");
+            setStage("entry");
           }}
         />
       </motion.div>
@@ -3313,7 +3485,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
         {stage !== "landing" && !isPublicContentRoute && <GhostButton onClick={resetAll}>Od początku</GhostButton>}
       </div>
 
-      <main className={`ctms-main ${(["consent","questions","checkpoint","interview","open_text","preview","paid","error","crisis"].includes(stage) || Boolean(routeLegalKey)) ? "narrow" : ""}`}>
+      <main className={`ctms-main ${(["questions","checkpoint","interview","open_text","preview","paid","error","crisis"].includes(stage) || Boolean(routeLegalKey)) ? "narrow" : ""}`}>
         <AnimatePresence mode="wait">
 
           {stage === "landing" && isPublicContentRoute && renderPublicContentRoute()}
@@ -3335,7 +3507,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                     <strong>Prywatnie i bezpiecznie.</strong> Odpowiedzi służą wyłącznie do przygotowania Twojej analizy. Nie publikujemy ich, nie sprzedajemy i nie budujemy z nich publicznego profilu. Dostęp do analizy masz tylko Ty, chyba że samodzielnie zdecydujesz inaczej.
                   </div>
                   <div className="ctms-landing-actions">
-                    <PrimaryButton onClick={() => setStage("consent")}>Rozpocznij prywatną analizę</PrimaryButton>
+                    <PrimaryButton onClick={() => setStage("entry")}>Rozpocznij prywatną analizę</PrimaryButton>
                   </div>
                 </Glass>
                 <div className="hero-side-stack hero-side-stack--premium">
@@ -3384,38 +3556,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                 </Glass>
               </section>
 
-              <ArticlesSection onNavigateHome={() => navigateTo("/artykuly")} onNavigateArticle={(slug) => navigateTo(`/artykuly/${slug}`)} onStartAnalysis={() => setStage("consent")} />
-            </motion.div>
-          )}
-
-          {stage === "consent" && (
-            <motion.div key="consent" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <Glass className="question-panel consent-panel">
-                <div className="eyebrow">ZANIM WEJDZIESZ</div>
-                <h2>Przeczytaj to. Serio.</h2>
-                <p className="consent-copy">To narzędzie nie ma Cię straszyć ani pocieszać na siłę. Ma pokazać, co wynika z Twoich odpowiedzi: ryzyka, potencjał i miejsce, w którym warto przestać udawać, że wszystko jest jasne.</p>
-                <div className="consent-note">
-                  Korzystając dalej, potwierdzasz, że zapoznałeś się z Regulaminem oraz Polityką prywatności i RODO. Pełny raport jest treścią cyfrową przygotowywaną po płatności na podstawie Twoich odpowiedzi. W wyjątkowych sytuacjach technicznych raport może zostać udostępniony w terminie do 14 dni.
-                </div>
-                <label className="purchase-consent" style={{ marginTop: "16px" }}>
-                  <input
-                    type="checkbox"
-                    checked={analysisConsent}
-                    onChange={(event) => {
-                      const accepted = event.target.checked;
-                      setAnalysisConsent(accepted);
-                      setAnalysisConsentAcceptedAt(accepted ? new Date().toISOString() : "");
-                    }}
-                  />
-                  <span>
-                    Wyrażam zgodę na przetwarzanie treści, które podam w analizie, w celu przygotowania automatycznego odczytu. Rozumiem, że mogą one dotyczyć bardzo prywatnych informacji, w tym zdrowia, życia seksualnego lub przemocy, i że do wygenerowania analizy korzystamy z technologii OpenAI.
-                  </span>
-                </label>
-                <div className="consent-actions">
-                  <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => { setStage("entry"); }} disabled={!analysisConsent}>Wchodzę dalej</PrimaryButton>
-                </div>
-              </Glass>
+              <ArticlesSection onNavigateHome={() => navigateTo("/artykuly")} onNavigateArticle={(slug) => navigateTo(`/artykuly/${slug}`)} onStartAnalysis={() => setStage("entry")} />
             </motion.div>
           )}
 
@@ -3858,9 +3999,26 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                 </div>
                 <textarea className="ctms-textarea" value={openText} onChange={(e) => setOpenText(e.target.value)} placeholder="Co konkretnie się dzieje? Opisz fakty..." maxLength={3000} />
                 <div className="text-meta"><div>To jest rdzeń analizy.</div><div>{openText.length}/3000</div></div>
+                <label className="analysis-consent-inline">
+                  <input
+                    type="checkbox"
+                    checked={analysisConsent}
+                    onChange={(event) => {
+                      const accepted = event.target.checked;
+                      setAnalysisConsent(accepted);
+                      setAnalysisConsentAcceptedAt(accepted ? new Date().toISOString() : "");
+                      if (accepted) setError(null);
+                    }}
+                  />
+                  <span>
+                    Wyrażam zgodę na przetworzenie treści podanych w analizie, w tym informacji mogących dotyczyć zdrowia, życia intymnego lub przemocy, wyłącznie w celu przygotowania mojego odczytu z użyciem technologii OpenAI.
+                    <small> Kontynuując, akceptujesz <a href="/regulamin" target="_blank" rel="noreferrer">Regulamin</a>, <a href="/polityka-prywatnosci" target="_blank" rel="noreferrer">Politykę prywatności</a> i informację <a href="/rodo" target="_blank" rel="noreferrer">RODO</a>.</small>
+                  </span>
+                </label>
+                {error && <div className="error-line" style={{ marginTop: "12px" }}>{error}</div>}
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => buildPreviewAndGo()} disabled={busy || openText.trim().length < 10}>{busy ? "Analizuję..." : "Pokaż pierwszy obraz sytuacji"}</PrimaryButton>
+                  <PrimaryButton onClick={() => buildPreviewAndGo()} disabled={busy || openText.trim().length < 10 || !analysisConsent}>{busy ? "Analizuję..." : "Pokaż pierwszy obraz sytuacji"}</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
@@ -3999,42 +4157,31 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                     </div>
                   )}
                 </div>
-                {(typeof fullReport.tensionPercent === "number" || typeof fullReport.driftPercent === "number" || typeof fullReport.rebuildPercent === "number") && (
-                  <div className="premium-indicator-strip">
-                    {([
-                      [fullReport.tensionPercent || 0, "Napięcie", "ile kosztu emocjonalnego niesie ta sytuacja"],
-                      [fullReport.driftPercent || 0, "Rozjazd", "na ile deklaracje, zachowania i potrzeby nie idą razem"],
-                      [fullReport.rebuildPercent || 0, "Realna zmiana", "czy widać podstawy do ruchu, nie tylko nadzieję"],
-                    ] as [number, string, string][]).map(([value, label, desc]) => (
-                      <div key={label} className="premium-indicator">
-                        <strong>{label}</strong>
-                        <span>{desc}</span>
-                        <div className="premium-indicator-bar"><i style={{ width: `${Math.max(5, Math.min(95, value))}%` }} /></div>
-                      </div>
-                    ))}
-                  </div>
-                )}
                 <div className="report-sections premium-report-sections">
                   {(fullReport.sections || []).map((section, i) => (
-                    <Glass key={i} className={`report-section premium-report-section report-section--${section.tone || "normal"}`}>
-                      <div className="premium-section-no">{String(i + 1).padStart(2, "0")}</div>
-                      <div className={`report-section-title ${section.tone || "normal"}`}>{section.title}</div>
-                      <div className={`section-confidence section-confidence--${section.confidence || "low"}`}>
-                        Pewność: {confidenceLabel(section.confidence)}
-                      </div>
-                      <div className="report-section-text">
-                        {String(section.text || "").split("\n").filter(Boolean).map((para, pi) => (
-                          <p key={pi}>{para}</p>
-                        ))}
-                      </div>
-                      <div className="section-evidence-grid">
-                        {!!section.evidence?.length && (
-                          <div><strong>Na czym opiera się ten wniosek</strong><ul>{section.evidence.map((item, index) => <li key={index}>{item}</li>)}</ul></div>
-                        )}
-                        {section.counterSignal && <div><strong>Co nie pasuje do tej tezy</strong><p>{section.counterSignal}</p></div>}
-                        {section.whatCouldChange && <div><strong>Co mogłoby zmienić ocenę</strong><p>{section.whatCouldChange}</p></div>}
-                      </div>
-                    </Glass>
+                    <React.Fragment key={section.key || i}>
+                      <Glass className={`report-section premium-report-section report-section--${section.tone || "normal"}`}>
+                        <div className="premium-section-no">{String(i + 1).padStart(2, "0")}</div>
+                        <div className={`report-section-title ${section.tone || "normal"}`}>{section.title}</div>
+                        <div className={`section-confidence section-confidence--${section.confidence || "low"}`}>
+                          Pewność: {confidenceLabel(section.confidence)}
+                        </div>
+                        <div className="report-section-text">
+                          {String(section.text || "").split("\n").filter(Boolean).map((para, pi) => (
+                            <p key={pi}>{para}</p>
+                          ))}
+                        </div>
+                        <div className="section-evidence-grid">
+                          {!!section.evidence?.length && (
+                            <div><strong>Na czym opiera się ten wniosek</strong><ul>{section.evidence.map((item, index) => <li key={index}>{item}</li>)}</ul></div>
+                          )}
+                          {section.counterSignal && <div><strong>Co nie pasuje do tej tezy</strong><p>{section.counterSignal}</p></div>}
+                          {section.whatCouldChange && <div><strong>Co mogłoby zmienić ocenę</strong><p>{section.whatCouldChange}</p></div>}
+                        </div>
+                      </Glass>
+                      {i === 1 && <RelationshipForcePortraitCard portrait={resolveRelationshipPortrait(fullReport).forceField} />}
+                      {i === 5 && <TruthLinePortraitCard portrait={resolveRelationshipPortrait(fullReport).truthLine} />}
+                    </React.Fragment>
                   ))}
                 </div>
                 {fullReport.closing && <div className="report-closing premium-closing">{fullReport.closing}</div>}
