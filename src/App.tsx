@@ -15,6 +15,7 @@ function readApiBase(): string {
 }
 
 const API_BASE = readApiBase();
+const OPEN_INTERVIEW_LIMIT = 3;
 
 const BRAND = {
   gold: "#C5A059",
@@ -418,7 +419,7 @@ function buildFollowUpResult(
       ? "W porównaniu z pierwszym odczytem jest więcej zachowania, które może dawać realny grunt. Nie trzeba tego umniejszać, ale warto obserwować, czy inicjatywa i odpowiedzialność utrzymają się także wtedy, gdy nie prowadzisz całego procesu."
       : trend === "worse"
         ? "Porównanie nie pokazuje zwykłego gorszego dnia. Najwięcej waży powrót tego samego mechanizmu, brak samodzielnej inicjatywy albo wzrost napięcia. To moment, żeby nie dokładać nadziei tam, gdzie nadal brakuje zachowania."
-        : "Na tym etapie nie ma uczciwych podstaw ani do ogłoszenia przełomu, ani do przekreślenia relacji. Najbardziej rozstrzygające będzie to, co wydarzy się bez kolejnego nacisku, przypominania i ratowania atmosfery.";
+        : "Dziś nie ma uczciwych podstaw ani do ogłoszenia przełomu, ani do przekreślenia relacji. Rozstrzygnie to, co wydarzy się bez kolejnego nacisku, przypominania i ratowania atmosfery.";
 
   return {
     trend,
@@ -928,21 +929,35 @@ function buildCycleSteps(pathKey?: EntryKey, burdens: BurdenItem[] = [], truthCa
   return ["sygnał", "napięcie", "doprecyzowanie", "wniosek"];
 }
 
-function visualLevelLabel(value: number) {
-  if (value >= 70) return "wysoki";
-  if (value >= 45) return "średni";
-  return "niski";
+function sentenceCase(value: string): string {
+  const clean = String(value || "").replace(/^\d+\.\s*/, "").trim();
+  return clean ? clean.charAt(0).toUpperCase() + clean.slice(1) : "";
 }
 
-function VisualBars({ items }: { items: VisualBar[] }) {
+function asSentence(value: string): string {
+  const clean = sentenceCase(value);
+  if (!clean) return "";
+  return /[.!?]$/.test(clean) ? clean : `${clean}.`;
+}
+
+function signalRole(index: number): string {
+  if (index === 0) return "główny trop";
+  if (index === 1) return "sygnał wspierający";
+  return "do sprawdzenia";
+}
+
+function SignalHierarchy({ items }: { items: VisualBar[] }) {
   return (
-    <div className="visual-bars">
-      {items.map((item) => (
-        <div key={item.label} className={`visual-bar-item ${item.tone || "normal"}`}>
-          <div className="visual-bar-head"><strong>{item.label}</strong><span>poziom {visualLevelLabel(item.value)}</span></div>
-          <div className="visual-bar-track"><div className="visual-bar-fill" style={{ width: `${item.value}%` }} /></div>
-          <div className="visual-bar-text">{item.text}</div>
-        </div>
+    <div className="signal-hierarchy">
+      {items.slice(0, 3).map((item, index) => (
+        <article key={`${item.label}-${index}`} className={`signal-hierarchy-item rank-${index + 1} ${item.tone || "normal"}`}>
+          <div className="signal-hierarchy-meta">
+            <span>{String(index + 1).padStart(2, "0")}</span>
+            <em>{signalRole(index)}</em>
+          </div>
+          <strong>{sentenceCase(item.label)}</strong>
+          <p>{asSentence(item.text)}</p>
+        </article>
       ))}
     </div>
   );
@@ -965,7 +980,7 @@ function cycleStepDescription(step: string): string {
     "działa": "są elementy, które trzymają układ",
     "obciąża": "jest koszt, którego nie warto pomijać",
     "wymaga sprawdzenia": "bez doprecyzowania łatwo o zły wniosek",
-    "wniosek": "dopiero całość pokaże obraz",
+    "wniosek": "ten punkt wymaga rozstrzygnięcia",
     "bliskość": "jest coś, co nadal przyciąga",
     "ciężar": "jednocześnie pojawia się obciążenie",
     "próba naprawy": "jest ruch w stronę poprawy",
@@ -995,19 +1010,21 @@ function cycleStepDescription(step: string): string {
   return descriptions[normalized] || "ten element dopowie dalsza część analizy";
 }
 
-function CycleDiagram({ steps }: { steps: string[] }) {
+function MechanismNarrative({ steps }: { steps: string[] }) {
+  const parts = steps.slice(0, 4);
+  if (!parts.length) return null;
+  const labels = ["Zaczyna się od", "Potem pojawia się", "W odpowiedzi wchodzi", "Jeśli rytm się nie zmienia, zostaje"];
   return (
-    <div className="cycle-diagram" aria-label="Możliwy układ relacji">
-      {steps.map((step, index) => (
-        <React.Fragment key={`${step}-${index}`}>
-          <div className="cycle-step">
-            <span>{String(index + 1).padStart(2, "0")}</span>
-            <strong>{step}</strong>
-            <em>{cycleStepDescription(step)}</em>
-          </div>
-          {index < steps.length - 1 && <div className="cycle-arrow">↓</div>}
-        </React.Fragment>
-      ))}
+    <div className="mechanism-narrative" aria-label="Mechanizm relacji opisany jednym ciągiem">
+      <div className="mechanism-narrative-copy">
+        {parts.map((step, index) => (
+          <span key={`${step}-${index}`} className={`mechanism-phrase phrase-${index + 1}`}>
+            <small>{labels[index] || "Następnie"}</small>
+            <strong>{sentenceCase(step)}</strong>
+          </span>
+        ))}
+      </div>
+      <p>{parts.map((step) => sentenceCase(cycleStepDescription(step))).join(" · ")}</p>
     </div>
   );
 }
@@ -1182,7 +1199,7 @@ function buildPauseInsight(variant: PauseVariant, path: EntryConfig | null, answ
   if (variant === "burdens") {
     if (mode === "supportive") return {
       mode, eyebrow: "PO WYBORZE CIĘŻARÓW",
-      title: topBurden ? `Najbardziej trzeba nazwać: ${topBurden}` : "Nie ma jednego ciężaru, który przykrywa wszystko",
+      title: topBurden ? `Najbardziej trzeba nazwać: ${sentenceCase(topBurden)}` : "Nie ma jednego ciężaru, który przykrywa wszystko",
       text: topBurden ? "To wygląda bardziej jak temat do uporządkowania niż automatyczny dowód, że relacja jest zła." : "Czasem problem nie jest jednym wielkim ciężarem, tylko kilkoma drobnymi napięciami, które zbierają się po czasie.",
       takeaway: "Wynik nie powinien robić z tego dramatu, jeśli odpowiedzi pokazują też współpracę i kontakt.",
       notProof: "Samo wskazanie ciężaru nie mówi jeszcze, czy druga strona chce i potrafi coś zmienić.",
@@ -1190,7 +1207,7 @@ function buildPauseInsight(variant: PauseVariant, path: EntryConfig | null, answ
     };
     if (mode === "difficult") return {
       mode, eyebrow: "PO WYBORZE CIĘŻARÓW",
-      title: topBurden ? `${topBurden} nie jest tylko etykietą problemu` : "Ciężar zaczyna ustawiać dalszy odczyt",
+      title: topBurden ? `${sentenceCase(topBurden)} nie jest tylko etykietą problemu` : "Ciężar zaczyna ustawiać dalszy odczyt",
       text: "Najważniejsze nie jest samo słowo, które zaznaczyłeś. Ważniejsze jest to, czy ten temat wraca, zmienia Twoje zachowanie i zostawia Cię z większym kosztem niż drugą stronę.",
       takeaway: "Dalsze pytanie ma sprawdzić konkretną sytuację z życia, żeby raport nie powtórzył tylko zaznaczenia.",
       notProof: "To jeszcze nie mówi, kto jest winny. Mówi, gdzie trzeba szukać faktów.",
@@ -1198,7 +1215,7 @@ function buildPauseInsight(variant: PauseVariant, path: EntryConfig | null, answ
     };
     return {
       mode, eyebrow: "PO WYBORZE CIĘŻARÓW",
-      title: topBurden ? `Najmocniej wraca temat: ${topBurden}` : "Ciężar nie jest jeszcze jednoznaczny",
+      title: topBurden ? `Najmocniej wraca temat: ${sentenceCase(topBurden)}` : "Ciężar nie jest jeszcze jednoznaczny",
       text: "Ten wybór jest punktem zaczepienia, nie gotowym raportem. Trzeba jeszcze sprawdzić, czy to chwilowe napięcie, czy coś, co powtarza się w podobny sposób.",
       takeaway: "Raport powinien z tego wyciągnąć wniosek, a nie przepisać nazwę zaznaczonego kafelka.",
       notProof: "Sama nazwa problemu nie wystarczy do uczciwej oceny.",
@@ -1247,12 +1264,12 @@ function PauseInsightPanel({ insight, onBack, onNext, nextLabel = "Dalej →" }:
         {insight.quote && <div className="pause-quote">„{insight.quote}”</div>}
         <div className="pause-grid">
           <div className="pause-visual-card">
-            <div className="eyebrow">CO TO MOŻE OZNACZAĆ</div>
-            <VisualBars items={insight.bars} />
+            <div className="eyebrow">NAJWAŻNIEJSZE TROPY</div>
+            <SignalHierarchy items={insight.bars} />
           </div>
           <div className="pause-visual-card">
-            <div className="eyebrow">CZEGO JESZCZE NIE WIEMY</div>
-            <CycleDiagram steps={insight.cycle || []} />
+            <div className="eyebrow">{insight.mode === "supportive" ? "JAK TEN UKŁAD MOŻE SIĘ REGULOWAĆ" : "JAK TEN UKŁAD SIĘ NAKRĘCA"}</div>
+            <MechanismNarrative steps={insight.cycle || []} />
             {insight.chips && insight.chips.length > 0 && (
               <div className="pause-chip-row">
                 {insight.chips.map((chip) => <span key={chip}>{chip}</span>)}
@@ -1686,13 +1703,13 @@ function buildMapBasedPreview(path: EntryConfig, map: RelationshipMapPayload, fi
   const change = clampScore(76 - tension * 0.24 - asymmetry * 0.18 - (hasLoop ? 14 : 0) + (hasResource ? 14 : 0));
   const chance = clampScore(38 + change * 0.46 - tension * 0.24 - asymmetry * 0.16 + (hasResource ? 12 : 0));
   const meText = meLoad >= 3
-    ? "Najmocniej widać, że sporo odpowiedzialności zbiera się po Twojej stronie: inicjowanie, wracanie do tematu, pilnowanie atmosfery albo czekanie na jasność."
+    ? "Większość odpowiedzialności zbiera się po Twojej stronie: inicjujesz, wracasz do tematu, pilnujesz atmosfery albo czekasz na jasność."
     : otherLoad >= 3
-      ? "W odczycie widać, że druga strona nie jest całkiem bierna, ale nadal trzeba sprawdzić, czy jej ruch jest stały, czy pojawia się głównie wtedy, gdy sytuacja robi się niewygodna."
-      : "Układ nie wygląda jednostronnie w prosty sposób. Właśnie dlatego najważniejsze jest sprawdzić, które zachowania są stałe, a które pojawiają się tylko po napięciu.";
+      ? "Druga strona wykonuje ruch, ale trzeba sprawdzić jego trwałość: czy pojawia się regularnie, czy głównie wtedy, gdy sytuacja robi się niewygodna."
+      : "Ciężar nie układa się jednoznacznie po jednej stronie. Rozstrzygnie to dopiero powtarzalność zachowań po napięciu.";
   const resourceText = hasResource
-    ? "To ważne: w odpowiedziach są też zasoby. Nie wszystko trzeba czytać jako złą wolę albo koniec relacji. Jest coś, na czym można budować, jeśli za słowami pójdzie powtarzalne zachowanie."
-    : "Na tym etapie zasoby nie są jeszcze wystarczająco mocne, żeby oprzeć na nich decyzję. To nie znaczy, że ich nie ma. Znaczy, że trzeba je zobaczyć w działaniu, nie w deklaracji.";
+    ? "Są też konkretne zasoby: kontakt, próba naprawy albo udział drugiej strony. Mają znaczenie tylko wtedy, gdy utrzymują się poza jedną dobrą rozmową."
+    : "Zasoby są na razie zbyt słabo potwierdzone, żeby oprzeć na nich decyzję. Potrzebne jest zachowanie, które pojawi się ponownie bez przypominania.";
   const specificRisk = hasThird
     ? "Obecność osoby trzeciej może wyostrzać braki, które istniały wcześniej. Nie chodzi tylko o tę osobę, ale o to, co przy niej zaczęło być bardziej widoczne."
     : hasClarity
@@ -1714,14 +1731,18 @@ function buildMapBasedPreview(path: EntryConfig, map: RelationshipMapPayload, fi
     tone: localTone(chance),
     badge,
     headline,
-    truth: meText,
+    truth: topBurden !== "brak jednego dominującego ciężaru"
+      ? `Najmocniej wraca temat: ${topBurden}. To kierunek do sprawdzenia, nie gotowy wyrok.`
+      : "Nie ma jednego sygnału, który uczciwie tłumaczyłby całą relację.",
     mirror: specificRisk,
     summary: `${meText} ${topEmotion ? `Najczęściej uruchamia się przy tym ${topEmotion}. ` : ""}${resourceText}`,
-    paidTease: "Pełna analiza nie dopisuje dramatu. Rozdziela zasoby, ryzyko, koszt emocjonalny i konkretny ruch, który ma sens w tej jednej relacji.",
-    whatUserKnows: `${topBurden !== "brak jednego dominującego ciężaru" ? `Najmocniej wraca temat: ${topBurden}. ` : "Nie ma jednego prostego winnego. "}${meText}`,
-    hiddenInsight: specificRisk,
-    contradiction: hasResource ? "Możliwe, że obok realnych zasobów działa też napięcie, które każe zbyt szybko uznać chwilową poprawę za trwałą zmianę." : "Możliwe, że największy rozjazd jest między tym, czego potrzebujesz, a tym, co regularnie dostajesz bez proszenia i pilnowania.",
-    concreteConclusion: chance >= 70 ? "Nie podejmuj decyzji z lęku. Sprawdź spokojnie, czy dobre elementy są powtarzalne i obustronne." : chance >= 45 ? "Nie rozstrzygaj tego jednym procentem. Przez najbliższe dni patrz na zachowanie po rozmowie, nie na samą rozmowę." : "Najpierw przestań ratować sytuację za dwie osoby. Dopiero wtedy zobaczysz, czy druga strona naprawdę uczestniczy w zmianie.",
+    paidTease: "Pełna analiza rozdziela zachowania, interpretacje, kontrsygnały i jeden konkretny ruch dla tej historii.",
+    whatUserKnows: meText,
+    hiddenInsight: hasResource
+      ? "Obraz zmieni powtarzalna inicjatywa i odpowiedzialność po obu stronach, widoczna bez dodatkowego nacisku."
+      : "Obraz zmieni dopiero konkretne zachowanie drugiej strony, które powtórzy się bez przypominania i prowadzenia jej za rękę.",
+    contradiction: resourceText,
+    concreteConclusion: chance >= 70 ? "Nie podejmuj decyzji z lęku. Sprawdź spokojnie, czy dobre elementy są powtarzalne i obustronne." : chance >= 45 ? "Przez najbliższe dni patrz na zachowanie po rozmowie, nie na siłę samej rozmowy." : "Na chwilę przestań ratować sytuację za dwie osoby. Zobaczysz wtedy, czy druga strona wykonuje własny ruch.",
     tensionMeaning: "To nie ocena miłości. To koszt psychiczny: ile czujności, czekania i analizowania uruchamia ta relacja.",
     asymmetryMeaning: "To rozkład ciężaru: kto częściej inicjuje, wraca, naprawia i pilnuje, żeby sprawa się nie rozsypała.",
     changeMeaning: "To pytanie, czy zmiana jest widoczna w zachowaniu bez nacisku, czy tylko pojawia się po rozmowie i presji.",
@@ -1935,11 +1956,15 @@ async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: An
       const chance = Math.round(100 - tension * 0.5 - asymmetry * 0.3 + change * 0.2);
       const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
       const sections: FullReportSection[] = Array.isArray(p.sections) ? p.sections : [];
-      const whatUserKnows = findSectionText(sections, "co uzytkownik sam juz wie", sections[0]?.text || "");
-      const hiddenInsight = findSectionText(sections, "co wynika ale nie zostalo powiedziane wprost", sections[1]?.text || sections[0]?.text || "");
-      const contradiction = findSectionText(sections, "najwieksza sprzecznosc", "Na tym etapie nie chodzi o szukanie winy. Chodzi o sprawdzenie, czy Twoje nadzieje zgadzają się z tym, co regularnie dzieje się między Wami.");
-      const concreteConclusion = findSectionText(sections, "jeden konkretny wniosek", sections[1]?.text || p.previewLine || "");
-      const premiumSpecific = findSectionText(sections, "co dokladnie daje premium", p.closing || "Pełny raport pokaże, co naprawdę trzyma tę relację, gdzie rozmijają się nadzieje z faktami i jaki następny krok ma sens.");
+      const firstSection = sections[0];
+      const evidence = Array.isArray(firstSection?.evidence) && firstSection.evidence.length
+        ? firstSection.evidence
+        : Array.isArray(p.evidenceSummary) ? p.evidenceSummary : [];
+      const whatUserKnows = evidence.slice(0, 3).map((item: string) => asSentence(item)).join(" ") || firstSection?.text || "W odpowiedziach nie ma jeszcze dość konkretów, żeby postawić mocny wniosek.";
+      const hiddenInsight = firstSection?.whatCouldChange || "Powtarzalne zachowanie po rozmowie, widoczne bez przypominania i nacisku.";
+      const contradiction = firstSection?.counterSignal || "Jedna perspektywa nie pozwala rozstrzygnąć intencji drugiej osoby.";
+      const concreteConclusion = p.closing || firstSection?.whatCouldChange || "Sprawdź jeden konkretny fakt w zachowaniu, nie kolejną deklarację.";
+      const premiumSpecific = findSectionText(sections, "co dokladnie daje premium", "Pełny raport rozdziela fakty, hipotezy, kontrsygnały i konkretny ruch dla tej historii.");
       return {
         chance: clamp(chance, 5, 95),
         tension: clamp(tension, 5, 97),
@@ -1948,9 +1973,9 @@ async function fetchPreviewFromAPI(token: string, path: EntryConfig, answers: An
         tone: chance <= 30 ? "red" : chance <= 60 ? "yellow" : "green",
         badge: p.subheadline || "Analiza relacji",
         headline: p.headline || "Wynik gotowy.",
-        truth: p.previewLine || concreteConclusion,
-        mirror: hiddenInsight,
-        summary: concreteConclusion || hiddenInsight || whatUserKnows,
+        truth: p.previewLine || "Najważniejszy mechanizm da się nazwać, ale nie należy go mylić z wyrokiem.",
+        mirror: p.subheadline || firstSection?.text || "Ten odczyt opiera się na zachowaniach, nie na próbie zgadywania intencji.",
+        summary: firstSection?.text || whatUserKnows,
         paidTease: premiumSpecific,
         whatUserKnows,
         hiddenInsight,
@@ -2016,7 +2041,7 @@ function buildPreviewMap(path: EntryConfig, preview: Preview) {
     { label: "Najmocniejszy sygnał", text: axisText },
     { label: "Największe ryzyko", text: riskText },
     { label: "Pytanie, którego jeszcze nie widać w wyniku", text: pathQuestion[path.key] },
-    { label: "Co wymaga pogłębienia", text: "Pełny raport rozdziela fakty, nadzieję, koszt emocjonalny i realną zmianę, zamiast zostawiać Cię tylko z jednym procentem." },
+    { label: "Co wymaga pogłębienia", text: "Pełny raport rozdziela fakty, nadzieję, koszt emocjonalny i realną zmianę, zamiast sprowadzać historię do jednego wskaźnika." },
   ];
 }
 
@@ -3080,7 +3105,7 @@ ${finalOwnText}`;
     const updatedHistory: InterviewExchange[] = [...interviewState.history, { ai: interviewState.currentQuestion, user: interviewAnswer.trim(), lead: interviewState.currentLead, observation: interviewState.currentObservation }];
 
     if (interviewState.source === "local") {
-      const maxDepth = 5;
+      const maxDepth = OPEN_INTERVIEW_LIMIT;
       if (currentExchangeCount < maxDepth) {
         const pathConfig = ENTRY_CONFIGS.find((item) => item.key === interviewState.path) || ENTRY_CONFIGS[0];
         const nextQuestion = buildAdaptiveLocalQuestion(pathConfig, interviewAnswer.trim(), updatedHistory, currentExchangeCount + 1);
@@ -3111,15 +3136,18 @@ ${finalOwnText}`;
       return;
     }
     
-    if (currentExchangeCount > 5) {
+    if (currentExchangeCount >= OPEN_INTERVIEW_LIMIT) {
       setInterviewBusy(true);
       try {
-        await fetch(`${API_BASE}/api/interview/next`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: sessionToken, userAnswer: interviewAnswer.trim() }) }).catch(() => {});
         await fetch(`${API_BASE}/api/interview/finish`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: sessionToken }) }).catch(() => {});
       } catch {}
       finally { setInterviewBusy(false); }
       const transcript = updatedHistory.map((e) => `Pytanie: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n");
-      setInterviewState({ ...interviewState, history: updatedHistory, finished: true }); setOpenText(transcript); setStage("open_text"); return;
+      setInterviewState({ ...interviewState, history: updatedHistory, finished: true });
+      setOpenText(transcript);
+      setInterviewAnswer("");
+      setStage("open_text");
+      return;
     }
     
     setInterviewBusy(true); setError(null);
@@ -3129,12 +3157,12 @@ ${finalOwnText}`;
       if (d.crisis) { setStage("crisis"); return; }
       if (!d.ok) throw new Error(d.message || "Błąd wywiadu.");
       
-      if (d.finished || updatedHistory.length >= 5) {
+      if (d.finished || updatedHistory.length >= OPEN_INTERVIEW_LIMIT) {
         try { await fetch(`${API_BASE}/api/interview/finish`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: sessionToken }) }); } catch {}
         const transcript = updatedHistory.map((e) => `Pytanie: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n");
         setInterviewState({ ...interviewState, history: updatedHistory, finished: true }); setOpenText(transcript); setStage("open_text");
       } else {
-        setInterviewState({ ...interviewState, history: updatedHistory, currentQuestion: d.question, currentLead: d.lead || "", currentObservation: d.observation || "", depth: Math.min(d.depth, 5), exchangeIndex: d.exchangeIndex });
+        setInterviewState({ ...interviewState, history: updatedHistory, currentQuestion: d.question, currentLead: d.lead || "", currentObservation: d.observation || "", depth: Math.min(d.depth, OPEN_INTERVIEW_LIMIT), exchangeIndex: d.exchangeIndex });
         setInterviewAnswer("");
       }
     } catch (e: any) { setError(friendlyError(e, "Nie udało się przejść dalej.")); }
@@ -3911,12 +3939,12 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                   ))}
                 </div>
                 <div className="visual-insight-panel">
-                  <div className="eyebrow">CO TRZEBA SPRAWDZIĆ</div>
-                  <VisualBars items={buildMapVisualBars(forceMap, burdens, truthCards)} />
+                  <div className="eyebrow">TRZY TROPY DO SPRAWDZENIA</div>
+                  <SignalHierarchy items={buildMapVisualBars(forceMap, burdens, truthCards)} />
                 </div>
                 <div className="cycle-panel">
-                  <div className="eyebrow">MOŻLIWY PRZEBIEG</div>
-                  <CycleDiagram steps={buildCycleSteps(path.key, burdens, truthCards)} />
+                  <div className="eyebrow">MECHANIZM, KTÓRY TRZEBA ZWERYFIKOWAĆ</div>
+                  <MechanismNarrative steps={buildCycleSteps(path.key, burdens, truthCards)} />
                 </div>
                 <div className="map-step-note strong-note">
                   Jeszcze {clarificationQuestions.length || 1} {clarificationQuestions.length === 1 ? "konkretna odpowiedź" : clarificationQuestions.length === 2 ? "konkretne odpowiedzi" : "konkretne odpowiedzi"}. Chodzi o przykład, nie o długi opis.
@@ -3968,8 +3996,8 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
               <div className="section-head compact">
                 <div className="eyebrow">{(ENTRY_CONFIGS.find((x) => x.key === selectedPath)?.title || "").toUpperCase()}</div>
                 <div className="progress-wrap">
-                  <span>Pytanie otwarte {interviewState.depth} z 5</span>
-                  <div className="progress-track"><div className="progress-fill" style={{ width: `${(interviewState.depth / 5) * 100}%` }} /></div>
+                  <span>Pytanie otwarte {Math.min(interviewState.depth, OPEN_INTERVIEW_LIMIT)} z {OPEN_INTERVIEW_LIMIT}</span>
+                  <div className="progress-track"><div className="progress-fill" style={{ width: `${(Math.min(interviewState.depth, OPEN_INTERVIEW_LIMIT) / OPEN_INTERVIEW_LIMIT) * 100}%` }} /></div>
                 </div>
               </div>
               <Glass className="question-panel">
@@ -4052,45 +4080,29 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                   </div>
                 </div>
 
-                <Glass className="preview-analysis-panel preview-analysis-panel--strong">
-                  <div className="eyebrow">CO WIDAĆ Z TWOICH ODPOWIEDZI</div>
-                  <div className="preview-analysis-grid">
-                    <div className="preview-analysis-item highlight">
-                      <span>01</span>
-                      <strong>Co jest najważniejsze na start</strong>
+                <Glass className="preview-analysis-panel preview-analysis-panel--strong preview-evidence-panel">
+                  <div className="eyebrow">NA CZYM OPIERA SIĘ TEN ODCZYT</div>
+                  <div className="preview-evidence-layout">
+                    <div className="preview-evidence-main">
+                      <span>Fakty i zachowania</span>
                       <p>{preview.whatUserKnows || preview.summary}</p>
                     </div>
-                    <div className="preview-analysis-item">
-                      <span>02</span>
-                      <strong>Co może zniekształcać ocenę</strong>
-                      <p>{preview.contradiction || "Sprawdź, czy nadzieja, zmęczenie albo ostatnia rozmowa nie nadają sytuacji większej pewności, niż naprawdę ma."}</p>
-                    </div>
-                    <div className="preview-analysis-item">
-                      <span>03</span>
-                      <strong>Co jest zasobem</strong>
-                      <p>{preview.tone === "green" ? "W odpowiedziach widać elementy kontaktu i wzajemności. To nie znaczy, że wszystko jest proste, ale daje punkt, od którego można zacząć spokojniejszą rozmowę." : "Zasób nie zawsze oznacza komfort. Czasem zasobem jest samo to, że potrafisz nazwać ciężar i przestać udawać, że wszystko rozwiąże się samo."}</p>
-                    </div>
-                    <div className="preview-analysis-item conclusion">
-                      <span>04</span>
-                      <strong>Następny konkretny ruch</strong>
-                      <p>{preview.concreteConclusion || "Przez kilka dni patrz nie na deklaracje, tylko na to, co zmienia się bez Twojego ciągnięcia tematu."}</p>
+                    <div className="preview-evidence-side">
+                      <div className="preview-editorial-note">
+                        <span>Czego nie przesądzamy</span>
+                        <p>{preview.contradiction || "Jedna perspektywa nie pozwala rozstrzygnąć intencji drugiej osoby ani uznać pojedynczego zdarzenia za stały wzorzec."}</p>
+                      </div>
+                      <div className="preview-editorial-note">
+                        <span>Co może zmienić obraz</span>
+                        <p>{preview.hiddenInsight || "Powtarzalne zachowanie po rozmowie, widoczne bez przypominania i nacisku."}</p>
+                      </div>
                     </div>
                   </div>
+                  <div className="preview-next-move">
+                    <span>Najbliższy rozsądny ruch</span>
+                    <strong>{preview.concreteConclusion || "Przez kilka dni patrz nie na deklaracje, tylko na to, co zmienia się bez Twojego ciągnięcia tematu."}</strong>
+                  </div>
                 </Glass>
-
-                {path && (
-                  <Glass className="preview-map-panel preview-map-panel--quiet">
-                    <div className="eyebrow">MAPA POMOCNICZA — NIE WYROK</div>
-                    <div className="preview-map-grid">
-                      {buildPreviewMap(path, preview).map((item) => (
-                        <div key={item.label} className="preview-map-item">
-                          <span>{item.label}</span>
-                          <p>{item.text}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </Glass>
-                )}
 
                 {path && (
                   <Glass className="unlock-panel unlock-panel--strong">

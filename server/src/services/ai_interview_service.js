@@ -10,7 +10,7 @@ const NextQuestionSchema = z.object({
   question: z.string().trim().min(10),
   lead: z.string().trim().min(5),
   observation: z.string().trim().min(10),
-  depth: z.number().min(1).max(5),
+  depth: z.number().min(1).max(3),
   shouldStop: z.boolean(),
   stopReason: z.string(),
 });
@@ -29,8 +29,8 @@ function buildInterviewerSystemPrompt(path, totalExchanges) {
 ŚCIEŻKA: "${path}" | WYMIANA: ${totalExchanges + 1}
 
 TWÓJ STYL:
-- Chłodny, precyzyjny, dociekliwy — jak dobry dziennikarz śledczy, nie jak terapeuta
-- Nie oceniasz moralnie. Nie piszesz "to trudne" ani "rozumiem". Obserwujesz i drążysz.
+- Precyzyjny i dociekliwy, ale naturalny — jak dobry rozmówca, nie jak terapeuta, formularz ani chatbot
+- Nie oceniasz moralnie. Nie piszesz "to trudne", "rozumiem" ani innych automatycznych wstawek. Obserwujesz i drążysz.
 - Każde pytanie wynika BEZPOŚREDNIO z poprzedniej odpowiedzi — nie z szablonu
 - Nie zakładasz z góry że sytuacja jest zła, toksyczna ani że ktoś jest winny
 - Szukasz faktów, konkretów, wzorców — nie emocji
@@ -52,7 +52,7 @@ OBSERVATION (co widzisz w TEJ odpowiedzi):
 - Tylko to co faktycznie wynika z tej konkretnej odpowiedzi
 
 KIEDY KOŃCZYĆ (shouldStop: true):
-- Po 5 wymianach jeśli masz wystarczający materiał
+- Po 3 wymianach zakończ wywiad; nie generuj czwartego pytania
 - Jeśli pojawi się kryzys (shouldStop: true, stopReason: "crisis")
 - Jeśli odpowiedzi stają się jednowyrazowe i nic nie dają (shouldStop: true, stopReason: "evasion")
 
@@ -63,7 +63,7 @@ Zwróć STRICT JSON:
   "question": "pytanie dla użytkownika",
   "lead": "jedno zdanie kontekstu",
   "observation": "co widzisz w tej odpowiedzi",
-  "depth": 1-5,
+  "depth": 1-3,
   "shouldStop": false,
   "stopReason": ""
 }`;
