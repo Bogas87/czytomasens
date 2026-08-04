@@ -2557,6 +2557,7 @@ export default function App() {
   const [reportFeedbackMessage, setReportFeedbackMessage] = useState("");
 
   const [selectedPath, setSelectedPath] = useState<EntryKey | null>(null);
+  const [entryPreviewKey, setEntryPreviewKey] = useState<EntryKey>("unease");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [openText, setOpenText] = useState("");
@@ -2602,6 +2603,7 @@ export default function App() {
   };
 
   const path = useMemo(() => ENTRY_CONFIGS.find((x) => x.key === selectedPath) || null, [selectedPath]);
+  const entryPreview = useMemo(() => ENTRY_CONFIGS.find((x) => x.key === entryPreviewKey) || ENTRY_CONFIGS[0], [entryPreviewKey]);
   const currentQuestion = path?.questions[questionIndex] || null;
 
   useEffect(() => {
@@ -3065,7 +3067,7 @@ export default function App() {
     localStorage.removeItem(ANON_PROFILE_KEY);
     localStorage.removeItem("ctms_local_anonymous_id");
     sessionStorage.removeItem(REPORT_ACCESS_KEY);
-    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setAnalysisConsent(false); setAnalysisConsentAcceptedAt(""); setPurchaseConsent(false); setReportAccess(null); setLegalOpen(null); setInterviewState(null); setInterviewAnswer(""); setForceMap({}); setBurdens([]); setEmotions([]); setTruthCards([]); setRelationshipNote(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft(""); setFollowUpOpen(false); setFollowUpIndex(0); setFollowUpAnswers({}); setFollowUpDraft(""); setFollowUpResult(null); setFollowUpDueAt(""); setFollowUpMessage(""); setDynamicFollowUpQuestion(null); setDynamicFollowUpHistory([]); setDynamicFollowUpTeaser(""); setDynamicFollowUpElapsedDays(0); setFollowUpCheckoutBusy(false); setFollowUpPurchaseConsent(false); setAnonymousProfile(null);
+    setStage("landing"); setSelectedPath(null); setEntryPreviewKey("unease"); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setAnalysisConsent(false); setAnalysisConsentAcceptedAt(""); setPurchaseConsent(false); setReportAccess(null); setLegalOpen(null); setInterviewState(null); setInterviewAnswer(""); setForceMap({}); setBurdens([]); setEmotions([]); setTruthCards([]); setRelationshipNote(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft(""); setFollowUpOpen(false); setFollowUpIndex(0); setFollowUpAnswers({}); setFollowUpDraft(""); setFollowUpResult(null); setFollowUpDueAt(""); setFollowUpMessage(""); setDynamicFollowUpQuestion(null); setDynamicFollowUpHistory([]); setDynamicFollowUpTeaser(""); setDynamicFollowUpElapsedDays(0); setFollowUpCheckoutBusy(false); setFollowUpPurchaseConsent(false); setAnonymousProfile(null);
     window.history.replaceState({}, "", "/");
     setRoutePath("/");
   };
@@ -3746,74 +3748,73 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
 
           {stage === "landing" && !isPublicContentRoute && (
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <section className="ctms-front-stage" data-ui-version="2.4.5">
-                <Glass className="ctms-front-canvas">
-                  <aside className="ctms-front-rail">
-                    <div className="ctms-front-rail-mark">
-                      <span>01</span>
-                      <small>ODCZYT RELACJI</small>
-                    </div>
-
-                    <div className="ctms-front-rail-copy">
-                      <div className="eyebrow">PRYWATNA ANALIZA JEDNEJ PERSPEKTYWY</div>
-                      <h1>Zobacz układ, zanim kolejny raz spróbujesz go naprawić.</h1>
-                      <p>Nie szukamy szybkiego werdyktu. Najpierw sprawdzamy, co wraca, kto niesie ciężar i gdzie słowa przestają zgadzać się z zachowaniem.</p>
-                    </div>
-
-                    <div className="ctms-front-rail-foot">
-                      <span>PRYWATNIE I BEZPIECZNIE</span>
-                      <strong>Twoje odpowiedzi służą wyłącznie do przygotowania analizy i nie tworzą publicznego profilu.</strong>
-                    </div>
-                  </aside>
-
-                  <section className="ctms-front-body">
-                    <div className="ctms-front-rule">
-                      <span>CZYTOMASENS</span>
+              <section className="ctms-home-stage" data-ui-version="2.4.6">
+                <div className="ctms-home-glow" aria-hidden="true" />
+                <Glass className="ctms-home-canvas">
+                  <section className="ctms-home-copy">
+                    <div className="ctms-home-eyebrow">
+                      <span>PRYWATNY ODCZYT RELACJI</span>
                       <i aria-hidden="true" />
                     </div>
 
-                    <blockquote>
-                      „Najwięcej mówi nie to, co ktoś obiecuje w napięciu, tylko to, co potrafi utrzymać, kiedy emocje opadną.”
-                    </blockquote>
+                    <h1>Przestań zgadywać, co to znaczy. Zobacz, co naprawdę robi ta relacja.</h1>
+                    <p className="ctms-home-lead">
+                      CzyToMaSens nie wydaje szybkiego wyroku. Porządkuje fakty, oddziela słowa od zachowania i pokazuje wzór, który wraca nawet wtedy, gdy emocje opadną.
+                    </p>
 
-                    <div className="ctms-front-ledger">
-                      <div className="ctms-front-ledger-row">
-                        <span>01</span>
-                        <div>
-                          <small>NAJPIERW</small>
-                          <strong>Ustalamy, co naprawdę wraca.</strong>
-                          <p>Pytania zamknięte porządkują napięcie, zaufanie, powtarzalność i poczucie bezpieczeństwa.</p>
-                        </div>
-                      </div>
-
-                      <div className="ctms-front-ledger-row">
-                        <span>02</span>
-                        <div>
-                          <small>POTEM</small>
-                          <strong>Rozkładamy ciężar relacji.</strong>
-                          <p>Sprawdzamy inicjatywę, naprawę, unikanie i to, kto utrzymuje kontakt, kiedy nie ma już wielkich słów.</p>
-                        </div>
-                      </div>
-
-                      <div className="ctms-front-ledger-row">
-                        <span>03</span>
-                        <div>
-                          <small>NA KOŃCU</small>
-                          <strong>Konfrontujemy obraz z konkretną sytuacją.</strong>
-                          <p>Trzy pytania otwarte schodzą od faktu do mechanizmu i próby prawdy, żeby wynik nie opierał się wyłącznie na kliknięciach.</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="ctms-front-boundary">
-                      <span>GRANICA ODCZYTU</span>
-                      <p>Analiza zna tylko Twoją perspektywę. Dlatego nie udaje diagnozy drugiej osoby — pokazuje fakty, luki, kontrsygnały i najrozsądniejszy następny ruch.</p>
-                    </div>
-
-                    <div className="ctms-front-actions">
+                    <div className="ctms-home-actions">
                       <PrimaryButton onClick={() => setStage("entry")}>Rozpocznij prywatną analizę</PrimaryButton>
+                      <div className="ctms-home-privacy">
+                        <span aria-hidden="true">●</span>
+                        <div>
+                          <strong>Jedna perspektywa. Bez publicznego profilu.</strong>
+                          <small>Wynik porządkuje sytuację, nie diagnozuje drugiej osoby.</small>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="ctms-home-axis" aria-label="Trzy warstwy analizy">
+                      <div><span>01</span><strong>Fakty</strong><small>co wydarzyło się naprawdę</small></div>
+                      <div><span>02</span><strong>Mechanizm</strong><small>co uruchamia ten sam układ</small></div>
+                      <div><span>03</span><strong>Ruch</strong><small>co ma sens zrobić dalej</small></div>
                     </div>
                   </section>
+
+                  <aside className="ctms-home-reading">
+                    <div className="ctms-home-reading-top">
+                      <span>PRZESUNIĘCIE PERSPEKTYWY</span>
+                      <small>ODCZYT / 01</small>
+                    </div>
+
+                    <div className="ctms-home-reading-word" aria-hidden="true">WZÓR</div>
+
+                    <blockquote>
+                      „To, co boli najmocniej, nie zawsze jest tym, co decyduje. Decyduje to, co regularnie wraca.”
+                    </blockquote>
+
+                    <div className="ctms-home-layers">
+                      <div className="ctms-home-layer">
+                        <span>01</span>
+                        <small>SŁOWA</small>
+                        <strong>Co zostało powiedziane, obiecane albo wyjaśnione.</strong>
+                      </div>
+                      <div className="ctms-home-layer active">
+                        <span>02</span>
+                        <small>ZACHOWANIE</small>
+                        <strong>Co dzieje się ponownie bez Twojego przypominania.</strong>
+                      </div>
+                      <div className="ctms-home-layer">
+                        <span>03</span>
+                        <small>KIERUNEK</small>
+                        <strong>Co realnie rośnie, stoi w miejscu albo wygasa.</strong>
+                      </div>
+                    </div>
+
+                    <div className="ctms-home-reading-foot">
+                      <span>EFEKT</span>
+                      <strong>Nie kolejna opinia. Czytelny obraz układu i jeden rozsądny następny ruch.</strong>
+                    </div>
+                  </aside>
                 </Glass>
               </section>
 
@@ -3823,23 +3824,75 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
 
           {stage === "entry" && (
             <motion.div key="entry" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="section-head">
-                <div><div className="eyebrow">WYBIERZ ŚCIEŻKĘ</div><h2>Co Cię tu przyprowadziło?</h2><p>Wybierz to co najbardziej nie daje Ci spokoju. Pytania i analiza będą dopasowane do Twojej sytuacji.</p></div>
-                <GhostButton onClick={goBack}>Wróć</GhostButton>
-              </div>
-              <div className="entry-grid">
-                {ENTRY_CONFIGS.map((entry) => (
-                  <Glass key={entry.key} className="entry-card">
-                    <div className="eyebrow">ŚCIEŻKA ANALIZY</div>
-                    <h3>{entry.title}</h3>
-                    <div className="entry-subtitle">{entry.subtitle}</div>
-                    <div style={{ margin: "14px 0", padding: "12px 16px", borderLeft: `2px solid ${BRAND.gold}`, background: "rgba(197,160,89,0.05)", fontSize: "13px", color: BRAND.muted, lineHeight: 1.6, fontStyle: "italic" }}>{entry.quote}</div>
-                    <div className="entry-intro">{entry.intro}</div>
-                    <div style={{ fontSize: "12px", color: BRAND.muted, margin: "8px 0 16px" }}>⏱ {entry.duration}</div>
-                    <div className="entry-action"><PrimaryButton onClick={() => startPath(entry.key)}>{busy ? "Przygotowuję..." : "Zacznij analizę"}</PrimaryButton></div>
-                  </Glass>
-                ))}
-              </div>
+              <section className="ctms-route-stage" data-ui-version="2.4.6">
+                <div className="ctms-route-head">
+                  <div>
+                    <div className="eyebrow">WYBIERZ PUNKT WEJŚCIA</div>
+                    <h2>Co dziś wymaga nazwania?</h2>
+                    <p>Wszystkie ścieżki prowadzą przez ten sam standard analizy. Różnią się punktem, od którego zaczynamy zadawać pytania.</p>
+                  </div>
+                  <GhostButton onClick={goBack}>Wróć</GhostButton>
+                </div>
+
+                <Glass className="ctms-route-canvas">
+                  <section className="ctms-route-matrix" aria-label="Ścieżki analizy">
+                    <div className="ctms-route-matrix-top">
+                      <span>9 ŚCIEŻEK</span>
+                      <small>Kliknij, żeby porównać. Analiza rozpocznie się dopiero po potwierdzeniu.</small>
+                    </div>
+
+                    <div className="ctms-route-grid-compact">
+                      {ENTRY_CONFIGS.map((entry, index) => {
+                        const active = entryPreview.key === entry.key;
+                        return (
+                          <button
+                            key={entry.key}
+                            type="button"
+                            className={`ctms-route-option ${active ? "active" : ""}`}
+                            onClick={() => setEntryPreviewKey(entry.key)}
+                            onMouseEnter={() => setEntryPreviewKey(entry.key)}
+                            onFocus={() => setEntryPreviewKey(entry.key)}
+                            aria-pressed={active}
+                          >
+                            <span>{String(index + 1).padStart(2, "0")}</span>
+                            <div>
+                              <strong>{entry.title}</strong>
+                              <small>{entry.subtitle}</small>
+                            </div>
+                            <i aria-hidden="true">{active ? "—" : "+"}</i>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+
+                  <aside className="ctms-route-preview" key={entryPreview.key}>
+                    <div className="ctms-route-preview-top">
+                      <span>WYBRANA ŚCIEŻKA</span>
+                      <strong>{String(ENTRY_CONFIGS.findIndex((item) => item.key === entryPreview.key) + 1).padStart(2, "0")}</strong>
+                    </div>
+
+                    <div className="ctms-route-preview-copy">
+                      <div className="eyebrow">PUNKT STARTOWY ANALIZY</div>
+                      <h3>{entryPreview.title}</h3>
+                      <p>{entryPreview.subtitle}</p>
+                      <blockquote>{entryPreview.quote}</blockquote>
+                    </div>
+
+                    <div className="ctms-route-preview-focus">
+                      <span>CO SPRAWDZIMY</span>
+                      <p>{entryPreview.intro}</p>
+                    </div>
+
+                    <div className="ctms-route-preview-action">
+                      <PrimaryButton onClick={() => startPath(entryPreview.key)}>
+                        {busy ? "Przygotowuję..." : "Wybieram tę ścieżkę"}
+                      </PrimaryButton>
+                      <small>Ścieżkę można zmienić, wracając do tego ekranu.</small>
+                    </div>
+                  </aside>
+                </Glass>
+              </section>
             </motion.div>
           )}
 
