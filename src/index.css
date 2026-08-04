@@ -9626,3 +9626,292 @@ select {
     transform: scale(.992) !important;
   }
 }
+
+
+/* ==========================================================================
+   ANALIZA 2.5.0 — PRAWA STRONA JAKO PRZYKŁADOWE, PERSONALIZOWANE LUSTRO
+   ========================================================================== */
+
+.ctms-home-reading--mirror {
+  position: relative;
+  isolation: isolate;
+  gap: 0;
+  padding: clamp(42px, 3.8vw, 66px) clamp(40px, 3.6vw, 62px) !important;
+  background:
+    radial-gradient(circle at 84% 7%, rgba(197,160,89,.21), transparent 27%),
+    radial-gradient(circle at 6% 54%, rgba(197,160,89,.07), transparent 28%),
+    linear-gradient(180deg, rgba(27,23,18,.92), rgba(7,7,8,.985)) !important;
+}
+
+.ctms-home-reading--mirror::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: .48;
+  background:
+    linear-gradient(112deg, transparent 0 18%, rgba(197,160,89,.075) 18.15% 18.35%, transparent 18.5% 42%, rgba(197,160,89,.045) 42.15% 42.3%, transparent 42.45%),
+    radial-gradient(circle at 50% 0, rgba(255,255,255,.025), transparent 45%);
+  pointer-events: none;
+}
+
+.ctms-home-reading--mirror .ctms-home-reading-word {
+  top: 38px;
+  right: -56px;
+  font-size: clamp(104px, 9.5vw, 176px);
+  color: rgba(197,160,89,.052);
+  letter-spacing: -.07em;
+}
+
+.ctms-mirror-source {
+  position: relative;
+  z-index: 1;
+  margin-top: 34px;
+  padding: 18px 20px 19px;
+  border: 1px solid rgba(197,160,89,.24);
+  border-left: 3px solid rgba(214,177,97,.82);
+  border-radius: 6px 18px 18px 6px;
+  background:
+    linear-gradient(90deg, rgba(197,160,89,.11), rgba(197,160,89,.025) 58%, rgba(255,255,255,.012));
+}
+
+.ctms-mirror-source small,
+.ctms-mirror-main small,
+.ctms-mirror-evidence small,
+.ctms-mirror-shift small {
+  display: block;
+  color: #c9a75d;
+  font-size: 8px;
+  line-height: 1.3;
+  font-weight: 900;
+  letter-spacing: .24em;
+}
+
+.ctms-mirror-source p {
+  margin: 10px 0 0;
+  color: #d8cec5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(16px, 1.3vw, 20px);
+  line-height: 1.48;
+  font-style: italic;
+}
+
+.ctms-mirror-main {
+  position: relative;
+  z-index: 1;
+  margin-top: 28px;
+  padding: 0 0 28px;
+  border-bottom: 1px solid rgba(255,255,255,.09);
+}
+
+.ctms-mirror-main-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ctms-mirror-main-label > span {
+  color: #d8b365;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.ctms-home-reading--mirror .ctms-mirror-main blockquote {
+  margin: 15px 0 0;
+  max-width: none;
+  color: #f6eee5;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(28px, 2.45vw, 42px);
+  font-weight: 500;
+  line-height: 1.075;
+  letter-spacing: -.036em;
+  text-wrap: balance;
+}
+
+.ctms-mirror-main > p {
+  max-width: 720px;
+  margin: 17px 0 0;
+  color: #b9aea5;
+  font-size: 14px;
+  line-height: 1.72;
+}
+
+.ctms-mirror-evidence {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  margin-top: 8px;
+}
+
+.ctms-mirror-evidence article {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(255,255,255,.078);
+}
+
+.ctms-mirror-evidence article > span {
+  color: rgba(216,179,101,.82);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.ctms-mirror-evidence strong {
+  display: block;
+  margin-top: 7px;
+  color: #eee5dc;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.ctms-mirror-evidence p {
+  margin: 6px 0 0;
+  color: #8f8780;
+  font-size: 11px;
+  line-height: 1.58;
+}
+
+.ctms-mirror-shift {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 46px;
+  gap: 18px;
+  align-items: center;
+  margin-top: 22px;
+  padding: 18px 18px 18px 20px;
+  border: 1px solid rgba(197,160,89,.36);
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 100% 0, rgba(197,160,89,.14), transparent 42%),
+    linear-gradient(90deg, rgba(197,160,89,.10), rgba(197,160,89,.035));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.035);
+}
+
+.ctms-mirror-shift strong {
+  display: block;
+  margin-top: 8px;
+  color: #e9dfd5;
+  font-size: 13px;
+  line-height: 1.58;
+}
+
+.ctms-mirror-shift > span {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  border: 1px solid rgba(218,180,99,.48);
+  color: #d8b365;
+  font-size: 22px;
+}
+
+.ctms-mirror-promise {
+  position: relative;
+  z-index: 1;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,.075);
+}
+
+.ctms-mirror-promise span {
+  display: block;
+  color: #d8b365;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .05em;
+}
+
+.ctms-mirror-promise p {
+  margin: 7px 0 0;
+  color: #8f8780;
+  font-size: 11px;
+  line-height: 1.62;
+}
+
+@media (min-width: 901px) {
+  .ctms-home-canvas.ctms-glass {
+    grid-template-columns: minmax(0, .96fr) minmax(0, 1.04fr) !important;
+  }
+
+  .ctms-home-reading--mirror {
+    min-height: 100%;
+  }
+}
+
+@media (max-width: 1100px) and (min-width: 901px) {
+  .ctms-home-reading--mirror {
+    padding-inline: 34px !important;
+  }
+
+  .ctms-home-reading--mirror .ctms-mirror-main blockquote {
+    font-size: clamp(27px, 3vw, 35px);
+  }
+}
+
+@media (max-width: 900px) {
+  .ctms-home-reading--mirror {
+    border-left: 0 !important;
+    border-top: 1px solid rgba(197,160,89,.24);
+  }
+
+  .ctms-home-reading--mirror .ctms-home-reading-word {
+    right: -28px;
+    font-size: 112px;
+  }
+}
+
+@media (max-width: 640px) {
+  .ctms-home-reading--mirror {
+    padding: 26px 18px 28px !important;
+  }
+
+  .ctms-home-reading--mirror .ctms-home-reading-top {
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .ctms-home-reading--mirror .ctms-home-reading-top small {
+    text-align: right;
+  }
+
+  .ctms-mirror-source {
+    margin-top: 24px;
+    padding: 15px 15px 16px;
+  }
+
+  .ctms-mirror-source p {
+    font-size: 16px;
+  }
+
+  .ctms-home-reading--mirror .ctms-mirror-main blockquote {
+    font-size: clamp(27px, 8.5vw, 35px);
+    line-height: 1.08;
+  }
+
+  .ctms-mirror-main > p {
+    font-size: 13px;
+  }
+
+  .ctms-mirror-evidence article {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 12px;
+    padding: 16px 0;
+  }
+
+  .ctms-mirror-evidence strong {
+    font-size: 13px;
+  }
+
+  .ctms-mirror-shift {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .ctms-mirror-shift > span {
+    display: none;
+  }
+}

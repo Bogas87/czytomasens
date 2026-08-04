@@ -3746,7 +3746,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
 
           {stage === "landing" && !isPublicContentRoute && (
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <section className="ctms-home-stage" data-ui-version="2.4.8">
+              <section className="ctms-home-stage" data-ui-version="2.5.0">
                 <div className="ctms-home-glow" aria-hidden="true" />
                 <Glass className="ctms-home-canvas">
                   <section className="ctms-home-copy">
@@ -3802,48 +3802,70 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                     </div>
                   </section>
 
-                  <aside className="ctms-home-reading">
+                  <aside className="ctms-home-reading ctms-home-reading--mirror">
                     <div className="ctms-home-reading-top">
-                      <span>ODCZYT, KTÓRY SCHODZI GŁĘBIEJ</span>
-                      <small>BEZ WYROKU</small>
+                      <span>PRZYKŁADOWE LUSTRO ANALIZY</span>
+                      <small>FRAGMENT ODCZYTU</small>
                     </div>
 
-                    <div className="ctms-home-reading-word" aria-hidden="true">SEDNO</div>
+                    <div className="ctms-home-reading-word" aria-hidden="true">LUSTRO</div>
 
-                    <blockquote>
-                      „Dobra chwila nie unieważnia wzorca. Przeprosiny nie są zmianą. Uczucie nie zastępuje wzajemności.”
-                    </blockquote>
+                    <div className="ctms-mirror-source">
+                      <small>TO, CO KTOŚ MÓGŁBY NAPISAĆ</small>
+                      <p>„Kiedy jest dobrze, naprawdę wierzę, że wszystko wraca. Potem znowu to ja pytam, inicjuję kontakt i próbuję uspokoić sytuację.”</p>
+                    </div>
 
-                    <div className="ctms-home-reading-core">
+                    <div className="ctms-mirror-main">
+                      <div className="ctms-mirror-main-label">
+                        <span aria-hidden="true">✦</span>
+                        <small>LUSTRO</small>
+                      </div>
+                      <blockquote>
+                        Nie męczy Cię jedna trudna chwila. Męczy Cię to, że spokój pojawia się dopiero wtedy, gdy ponownie bierzesz relację na siebie.
+                      </blockquote>
+                      <p>
+                        To przesuwa najważniejsze pytanie z „czy ta osoba coś czuje?” na „czy ta relacja potrafi utrzymać wzajemność bez Twojego ciągłego wysiłku?”.
+                      </p>
+                    </div>
+
+                    <div className="ctms-mirror-evidence" aria-label="Jak analiza dochodzi do wniosku">
                       <article>
                         <span>01</span>
                         <div>
-                          <small>CO WRACA</small>
-                          <strong>Nie jeden gorszy moment, tylko schemat, który pojawia się mimo rozmów.</strong>
-                          <p>Powtarzalność mówi więcej niż intensywność pojedynczego zdarzenia.</p>
+                          <small>FAKT Z ODPOWIEDZI</small>
+                          <strong>To Ty częściej uruchamiasz kontakt i domykasz napięcie.</strong>
+                          <p>Nie oceniamy intencji. Patrzymy na powtarzalny rozkład działania.</p>
                         </div>
                       </article>
                       <article>
                         <span>02</span>
                         <div>
-                          <small>KTO NIESIE CIĘŻAR</small>
-                          <strong>Kto inicjuje kontakt, naprawia napięcie i pilnuje, żeby relacja się nie rozsypała.</strong>
-                          <p>Wzajemność widać po zachowaniu, nie po samych zapewnieniach.</p>
+                          <small>MECHANIZM</small>
+                          <strong>Dobra chwila przynosi ulgę, ale nie zmienia układu odpowiedzialności.</strong>
+                          <p>Ulga może chwilowo uciszyć problem, nie rozwiązując jego źródła.</p>
                         </div>
                       </article>
                       <article>
                         <span>03</span>
                         <div>
-                          <small>CO TO KOSZTUJE</small>
-                          <strong>Czy relacja daje oparcie, czy utrzymuje Cię w czujności, analizowaniu i oczekiwaniu.</strong>
-                          <p>Koszt emocjonalny jest częścią obrazu, a nie dodatkiem do niego.</p>
+                          <small>GRANICA WNIOSKU</small>
+                          <strong>To jeszcze nie dowód braku uczuć. To dowód braku stabilnego potwierdzenia w zachowaniu.</strong>
+                          <p>Raport oddziela to, co wiadomo, od tego, czego nie wolno dopowiadać.</p>
                         </div>
                       </article>
                     </div>
 
-                    <div className="ctms-home-verdict">
-                      <small>PO ANALIZIE</small>
-                      <strong>Wiesz, co jest faktem, co tylko interpretacją i jaki następny ruch rzeczywiście coś sprawdzi.</strong>
+                    <div className="ctms-mirror-shift">
+                      <div>
+                        <small>CO MOGŁOBY ZMIENIĆ OCENĘ</small>
+                        <strong>Samodzielny i powtarzalny ruch drugiej strony — bez Twojego przypominania, nacisku i ratowania atmosfery.</strong>
+                      </div>
+                      <span aria-hidden="true">→</span>
+                    </div>
+
+                    <div className="ctms-mirror-promise">
+                      <span>Twoja analiza nie powtórzy tego przykładu.</span>
+                      <p>Jej język, tropy i wniosek powstaną z wybranej ścieżki, zamkniętych odpowiedzi, trzech pogłębiających pytań i opisu konkretnej sytuacji.</p>
                     </div>
                   </aside>
                 </Glass>
