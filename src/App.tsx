@@ -40,6 +40,7 @@ type Stage =
   | "burdens"
   | "burden_signal"
   | "emotions"
+  | "mid_reflection"
   | "truth_cards"
   | "truth_signal"
   | "short_note"
@@ -85,6 +86,22 @@ type EntryConfig = {
   questions: Question[];
   checkpoint: { title: string; text: string; options: Option[] };
   openPrompt: string;
+};
+
+type MidwayReflection = {
+  kicker: string;
+  title: string;
+  quote: string;
+  signal: string;
+  next: string;
+};
+
+type FinalContextConfig = {
+  eyebrow: string;
+  title: string;
+  lead: string;
+  placeholder: string;
+  prompts: [string, string, string];
 };
 
 type Preview = {
@@ -618,6 +635,107 @@ const ENTRY_CONFIGS: EntryConfig[] = [
     openPrompt: "Co konkretnie trzyma Cię w tym cyklu i dlaczego mimo wszystkiego co wiesz, wracasz?",
   },
  ];
+
+const FINAL_CONTEXT_BY_PATH: Record<EntryKey, FinalContextConfig> = {
+  unease: {
+    eyebrow: "DOPISZ TO, CZEGO NIE DAŁO SIĘ ZAMKNĄĆ W PYTANIACH",
+    title: "Opisz relację tak, jak wygląda w zwykłym dniu — nie tylko wtedy, gdy jest źle.",
+    lead: "Napisz, co uruchamia niepokój, jak reaguje druga osoba i co dzieje się później. Ten opis może wzmocnić wcześniejszy trop, osłabić go albo całkiem zmienić kierunek odczytu.",
+    placeholder: "Np. W większości dni jest spokojnie, ale kiedy pytam o przyszłość, rozmowa się urywa. Potem to ja wracam do tematu i próbuję uspokoić sytuację…",
+    prompts: ["co dokładnie wraca", "jak wygląda reakcja drugiej osoby", "co robisz Ty i co zostaje po wszystkim"],
+  },
+  betrayal: {
+    eyebrow: "SZERSZY KONTEKST PO ZDRADZIE LUB KŁAMSTWIE",
+    title: "Opisz, co wydarzyło się później — bo odbudowę zaufania widać po zachowaniu, nie po samych przeprosinach.",
+    lead: "Oddziel fakty od podejrzeń. Napisz, co zostało wyjaśnione, co zmieniło się w codziennym zachowaniu i co nadal uruchamia brak bezpieczeństwa.",
+    placeholder: "Np. Po odkryciu powiedział wszystko i przez pierwszy miesiąc był bardzo otwarty. Teraz znowu unika pytań, a ja wracam do sprawdzania…",
+    prompts: ["co było faktem", "co zmieniło się po odkryciu", "co nadal podważa lub odbudowuje zaufanie"],
+  },
+  uncertain: {
+    eyebrow: "DOPISZ, JAK TA RELACJA WYGLĄDA W PRAKTYCE",
+    title: "Nie opisuj etykiety. Opisz rytm kontaktu, inicjatywę i to, co dzieje się, gdy prosisz o jasność.",
+    lead: "Najwięcej wniesie zwykły obraz ostatnich tygodni: kto szuka kontaktu, co pada w rozmowach i czy po deklaracjach pojawia się czytelny ruch.",
+    placeholder: "Np. Widzimy się regularnie i mówi, że mu zależy, ale kiedy pytam, dokąd to zmierza, odpowiada ogólnie i przez kilka dni kontakt słabnie…",
+    prompts: ["jak często i z czyjej inicjatywy macie kontakt", "co druga osoba deklaruje", "co dzieje się po prośbie o jasność"],
+  },
+  asymmetry: {
+    eyebrow: "POKAŻ, JAK ROZKŁADA SIĘ CIĘŻAR RELACJI",
+    title: "Opisz jedną typową sytuację, w której widać, kto uruchamia kontakt, rozmowę i naprawę.",
+    lead: "Nie chodzi o rozliczanie każdej wiadomości. Chodzi o stały układ: co robisz Ty, co dzieje się bez Twojego ruchu i jak druga osoba reaguje, gdy przestajesz prowadzić.",
+    placeholder: "Np. Gdy się oddalamy, zawsze piszę pierwszy, proponuję rozmowę i próbuję ustalić rozwiązanie. Jeśli tego nie zrobię, temat po prostu znika…",
+    prompts: ["co najczęściej robisz Ty", "co robi druga osoba bez Twojej inicjatywy", "co dzieje się, gdy odpuszczasz"],
+  },
+  conflict: {
+    eyebrow: "DOPISZ PEŁNY PRZEBIEG KONFLIKTU",
+    title: "Opisz ostatnią kłótnię od pierwszego napięcia aż do tego, co zostało po rozmowie.",
+    lead: "Ważne są trzy momenty: co uruchomiło konflikt, jak zachowała się każda strona i czy później zmieniło się cokolwiek poza atmosferą.",
+    placeholder: "Np. Zaczęło się od…, ja odpowiedziałem…, druga osoba zrobiła…, następnego dnia wróciliśmy do rozmowy, ale ustalenie nie zostało dotrzymane…",
+    prompts: ["co uruchomiło konflikt", "kto i jak próbował go domknąć", "co realnie zmieniło się później"],
+  },
+  stagnation: {
+    eyebrow: "OPISZ RÓŻNICĘ MIĘDZY KIEDYŚ A TERAZ",
+    title: "Pokaż, czy to spokojna stabilność, czy relacja, która działa już głównie z przyzwyczajenia.",
+    lead: "Napisz, co kiedyś dawało bliskość, czego dziś brakuje i jakie konkretne próby zmiany podjęła każda ze stron.",
+    placeholder: "Np. Kiedyś dużo rozmawialiśmy i planowaliśmy wspólne rzeczy. Teraz funkcjonujemy poprawnie, ale osobno. Ja proponowałem…, druga osoba…",
+    prompts: ["co było żywe wcześniej", "co zniknęło lub osłabło", "kto i jak próbował to zmienić"],
+  },
+  returning: {
+    eyebrow: "ZANIM OCENISZ POWRÓT, DOPISZ TŁO",
+    title: "Opisz, dlaczego relacja się skończyła i jaki konkretny fakt pokazuje, że kolejna próba miałaby wyglądać inaczej.",
+    lead: "Tęsknota jest ważna, ale nie rozstrzyga sensu powrotu. Liczy się przyczyna rozstania, obecne zachowanie i gotowość obu stron do konkretnej zmiany.",
+    placeholder: "Np. Rozstaliśmy się przez…, od tamtej pory druga osoba zrobiła…, ja zmieniłem…, ale nadal nie wiem, czy…",
+    prompts: ["co naprawdę zakończyło relację", "co zmieniło się od tamtej pory", "jaki dowód przemawia za innym przebiegiem"],
+  },
+  triangle: {
+    eyebrow: "DOPISZ FAKTY, NIE TYLKO PORÓWNANIE",
+    title: "Opisz obecną relację i trzecią osobę osobno — co jest realnym zachowaniem, a co obietnicą albo wyobrażeniem.",
+    lead: "Ten kontekst ma pomóc oddzielić brak w obecnej relacji od fascynacji nowością. Napisz, jakie zobowiązania istnieją, jak wygląda realny kontakt i czego faktycznie szukasz.",
+    placeholder: "Np. W obecnej relacji od dawna brakuje…, z trzecią osobą mam kontakt…, ona realnie zrobiła…, a ja wyobrażam sobie…",
+    prompts: ["jak wygląda obecna relacja", "co trzecia osoba robi realnie", "czego szukasz poza fascynacją"],
+  },
+  loop: {
+    eyebrow: "OPISZ JEDEN PEŁNY CYKL",
+    title: "Pokaż, jak zaczyna się kryzys, co prowadzi do powrotu i po czym poznajesz, że wszystko znów wraca.",
+    lead: "Nie skupiaj się tylko na ostatnim pojednaniu. Najwięcej da pełna sekwencja oraz jeden fakt, który po poprzednim powrocie miał się zmienić, ale się nie utrzymał.",
+    placeholder: "Np. Najpierw pojawia się…, potem odchodzimy od siebie, wracamy gdy…, przez kilka tygodni jest…, a później znów…",
+    prompts: ["co uruchamia rozstanie lub oddalenie", "co prowadzi do powrotu", "co po poprawie znów się powtarza"],
+  },
+};
+
+const MIDWAY_PATH_SENTENCE: Record<EntryKey, string> = {
+  unease: "Niepokój zaczyna wyglądać mniej jak przypadkowy stan, a bardziej jak reakcja na brak jasności i konieczność ciągłego czytania sygnałów.",
+  betrayal: "Najmocniej pracuje już nie samo wydarzenie, lecz pytanie, czy późniejsze zachowanie daje grunt, czy tylko chwilowo uspokaja czujność.",
+  uncertain: "Sednem nie jest sama nazwa relacji, lecz to, czy druga osoba daje czytelny kierunek również wtedy, gdy nie prosisz jej o deklarację.",
+  asymmetry: "Tu nie rozstrzyga, kto czuje mocniej. Rozstrzyga to, kto regularnie uruchamia kontakt, naprawę i ruch do przodu.",
+  conflict: "Nie sam konflikt buduje obraz tej relacji. Znacznie więcej mówi sposób powrotu po nim i to, czy następny spór przebiega inaczej.",
+  stagnation: "Coraz ważniejsze staje się odróżnienie spokojnej stabilności od układu, który trwa głównie dlatego, że obie strony nauczyły się w nim funkcjonować.",
+  returning: "Tęsknota może przywrócić intensywność, ale sama nie odpowiada na pytanie, czy zniknął powód wcześniejszego końca.",
+  triangle: "Porównanie dwóch osób łatwo miesza realne potrzeby z wyobrażeniem. Teraz trzeba oddzielić zachowanie od obietnicy nowego początku.",
+  loop: "Najwięcej powie nie kolejny powrót, lecz to, czy po nim zmienia się choć jeden element całego cyklu.",
+};
+
+function buildMidwayReflection(path: EntryConfig, forceMap: ForceMap, burdens: BurdenItem[], emotions: EmotionItem[]): MidwayReflection {
+  const topBurden = burdens[0]?.label || "to, co najbardziej ciąży";
+  const topEmotion = emotions[0]?.label || "stan, który wraca najczęściej";
+  const pathItems = forceMapItemsForPath(path.key);
+  const userHeavy = pathItems.filter((item) => ["definitely_me", "mostly_me"].includes(String(forceMap[item.key] || "")));
+  const balanceLine = userHeavy.length >= 3
+    ? "W kilku miejscach to Ty częściej przejmujesz inicjatywę albo odpowiedzialność za domknięcie sytuacji."
+    : userHeavy.length === 2
+      ? "W części kluczowych momentów ciężar przesuwa się na Twoją stronę, ale obraz nie jest jeszcze jednostronny."
+      : "Rozkład wysiłku nie daje jeszcze podstaw do prostego wniosku o jednostronności.";
+  return {
+    kicker: "ZATRZYMAJMY SIĘ NA CHWILĘ",
+    title: "Jedno zdanie zaczyna się już wyłaniać",
+    quote: MIDWAY_PATH_SENTENCE[path.key],
+    signal: `Najmocniej łączą się teraz dwa sygnały: „${topBurden}” i „${topEmotion}”. ${balanceLine}`,
+    next: "To nie jest wynik. Za chwilę sprawdzimy, czy ten trop wytrzymuje zderzenie z konkretnymi sytuacjami z życia.",
+  };
+}
+
+function finalContextForPath(path: EntryConfig): FinalContextConfig {
+  return FINAL_CONTEXT_BY_PATH[path.key];
+}
 
 type ForceMapItem = { key: ForceMapKey; title: string; hint: string };
 
@@ -2431,7 +2549,7 @@ export default function App() {
             localStorage.removeItem(STORAGE_KEY);
             throw new Error("LOCAL_STATE_EXPIRED");
           }
-          const restoredStage: Stage = parsed.stage === "processing" ? (parsed.preview ? "preview" : "landing") : (parsed.stage === "consent" ? "entry" : (parsed.stage || "landing"));
+          const restoredStage: Stage = parsed.stage === "processing" ? (parsed.preview ? "preview" : "landing") : (parsed.stage === "consent" ? "entry" : (parsed.stage === "short_note" ? "truth_cards" : (parsed.stage || "landing")));
           setStage(restoredStage);
           setSelectedPath(parsed.selectedPath || null);
           setQuestionIndex(parsed.questionIndex || 0);
@@ -2954,7 +3072,7 @@ export default function App() {
     };
   };
 
-  const buildCompositeOpenText = (clarificationsOverride?: ClarificationAnswerMap): string => {
+  const buildCompositeOpenText = (clarificationsOverride?: ClarificationAnswerMap, finalContextOverride?: string): string => {
     const answersSource = clarificationsOverride || clarificationAnswers;
     const forceLines = forceMapItemsForPath(path?.key)
       .map((item) => `- ${item.title}: ${forceLabel(forceMap[item.key])}`)
@@ -2983,7 +3101,8 @@ export default function App() {
     const clarificationLines = clarificationQuestions.length
       ? clarificationQuestions.map((q, index) => `Doprecyzowanie ${index + 1}: ${q.text}\nOdpowiedź: ${(answersSource[q.id] || "").trim() || "pominięte"}`).join("\n\n")
       : "Brak doprecyzowań.";
-    const finalOwnText = openText.trim() && !openText.includes("Pytanie:") ? openText.trim() : "Brak dodatkowego opisu końcowego.";
+    const finalContext = typeof finalContextOverride === "string" ? finalContextOverride.trim() : openText.trim();
+    const finalOwnText = finalContext || "Użytkownik nie dopisał szerszego kontekstu końcowego.";
     return `ŚCIEŻKA ANALIZY
 ${path?.title || selectedPath || "nieznana"}
 
@@ -3016,7 +3135,7 @@ ${interviewLines}
 DOPRECYZOWANIA
 ${clarificationLines}
 
-DODATKOWY OPIS KOŃCOWY
+SZERSZY KONTEKST UŻYTKOWNIKA — OSTATNIE OKNO
 ${finalOwnText}`;
   };
 
@@ -3086,16 +3205,26 @@ ${finalOwnText}`;
 
   const saveClarificationAndNext = (skip = false) => {
     const question = clarificationQuestions[clarificationIndex];
-    if (!question) { buildPreviewAndGo(clarificationAnswers); return; }
+    if (!question) { setStage("open_text"); return; }
     const nextAnswers = { ...clarificationAnswers, [question.id]: skip ? "" : clarificationDraft.trim() };
     setClarificationAnswers(nextAnswers);
     if (clarificationIndex >= clarificationQuestions.length - 1) {
-      buildPreviewAndGo(nextAnswers);
+      setStage("open_text");
       return;
     }
     const nextIndex = clarificationIndex + 1;
     setClarificationIndex(nextIndex);
     setClarificationDraft(nextAnswers[clarificationQuestions[nextIndex].id] || "");
+  };
+
+  const advanceAfterOpenInterview = () => {
+    if (clarificationQuestions.length) {
+      setClarificationIndex(0);
+      setClarificationDraft(clarificationAnswers[clarificationQuestions[0]?.id] || "");
+      setStage("clarification");
+      return;
+    }
+    setStage("open_text");
   };
 
   const sendInterviewAnswer = async () => {
@@ -3122,17 +3251,9 @@ ${finalOwnText}`;
         setInterviewAnswer("");
         return;
       }
-      const transcript = updatedHistory.map((e) => `Pytanie: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n");
       setInterviewState({ ...interviewState, history: updatedHistory, finished: true });
-      setOpenText(transcript);
       setInterviewAnswer("");
-      if (clarificationQuestions.length) {
-        setClarificationIndex(0);
-        setClarificationDraft(clarificationAnswers[clarificationQuestions[0].id] || "");
-        setStage("clarification");
-      } else {
-        window.setTimeout(() => buildPreviewAndGo({}), 0);
-      }
+      advanceAfterOpenInterview();
       return;
     }
     
@@ -3142,11 +3263,9 @@ ${finalOwnText}`;
         await fetch(`${API_BASE}/api/interview/finish`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: sessionToken }) }).catch(() => {});
       } catch {}
       finally { setInterviewBusy(false); }
-      const transcript = updatedHistory.map((e) => `Pytanie: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n");
       setInterviewState({ ...interviewState, history: updatedHistory, finished: true });
-      setOpenText(transcript);
       setInterviewAnswer("");
-      setStage("open_text");
+      advanceAfterOpenInterview();
       return;
     }
     
@@ -3159,14 +3278,19 @@ ${finalOwnText}`;
       
       if (d.finished || updatedHistory.length >= OPEN_INTERVIEW_LIMIT) {
         try { await fetch(`${API_BASE}/api/interview/finish`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: sessionToken }) }); } catch {}
-        const transcript = updatedHistory.map((e) => `Pytanie: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n");
-        setInterviewState({ ...interviewState, history: updatedHistory, finished: true }); setOpenText(transcript); setStage("open_text");
+        setInterviewState({ ...interviewState, history: updatedHistory, finished: true }); advanceAfterOpenInterview();
       } else {
         setInterviewState({ ...interviewState, history: updatedHistory, currentQuestion: d.question, currentLead: d.lead || "", currentObservation: d.observation || "", depth: Math.min(d.depth, OPEN_INTERVIEW_LIMIT), exchangeIndex: d.exchangeIndex });
         setInterviewAnswer("");
       }
     } catch (e: any) { setError(friendlyError(e, "Nie udało się przejść dalej.")); }
     finally { setInterviewBusy(false); }
+  };
+
+  const continueAfterFinalContext = (skip = false) => {
+    const nextContext = skip ? "" : openText.trim();
+    if (skip) setOpenText("");
+    buildPreviewAndGo(clarificationAnswers, nextContext);
   };
 
   const goBack = () => {
@@ -3179,10 +3303,11 @@ ${finalOwnText}`;
     if (stage === "burdens") { setStage("force_map"); return; }
     if (stage === "burden_signal") { setStage("burdens"); return; }
     if (stage === "emotions") { setStage("burdens"); return; }
-    if (stage === "truth_cards") { setStage("emotions"); return; }
+    if (stage === "mid_reflection") { setStage("emotions"); return; }
+    if (stage === "truth_cards") { setStage("mid_reflection"); return; }
     if (stage === "truth_signal") { setStage("truth_cards"); return; }
     if (stage === "short_note") { setStage("truth_cards"); return; }
-    if (stage === "map_summary") { setStage("short_note"); return; }
+    if (stage === "map_summary") { setStage("truth_cards"); return; }
     if (stage === "clarification") {
       if (clarificationIndex > 0) {
         const prevIndex = clarificationIndex - 1;
@@ -3190,15 +3315,25 @@ ${finalOwnText}`;
         setClarificationDraft(clarificationAnswers[clarificationQuestions[prevIndex]?.id] || "");
         return;
       }
-      setStage("map_summary"); return;
+      setStage("interview"); return;
     }
     if (stage === "interview") { setStage("map_summary"); return; }
-    if (stage === "open_text") { if (interviewState && interviewState.history.length > 0) { setStage("interview"); return; } setStage("truth_cards"); return; }
-    if (stage === "preview") { setStage(clarificationQuestions.length ? "clarification" : "map_summary"); return; }
+    if (stage === "open_text") {
+      if (clarificationQuestions.length) {
+        const lastIndex = clarificationQuestions.length - 1;
+        setClarificationIndex(lastIndex);
+        setClarificationDraft(clarificationAnswers[clarificationQuestions[lastIndex]?.id] || "");
+        setStage("clarification");
+        return;
+      }
+      if (interviewState && interviewState.history.length > 0) { setStage("interview"); return; }
+      setStage("truth_cards"); return;
+    }
+    if (stage === "preview") { setStage("open_text"); return; }
     if (stage === "entry") setStage("landing");
   };
 
-  const buildPreviewAndGo = async (clarificationsOverride?: ClarificationAnswerMap) => {
+  const buildPreviewAndGo = async (clarificationsOverride?: ClarificationAnswerMap, finalContextOverride?: string) => {
     if (!path) return;
     if (!analysisConsent) {
       setError("Zaznacz zgodę na przetworzenie treści potrzebnych do przygotowania analizy.");
@@ -3207,10 +3342,9 @@ ${finalOwnText}`;
     const consentAcceptedAt = analysisConsentAcceptedAt || new Date().toISOString();
     if (!analysisConsentAcceptedAt) setAnalysisConsentAcceptedAt(consentAcceptedAt);
     const relationshipMap = relationshipMapPayload(clarificationsOverride);
-    const finalOpenText = buildCompositeOpenText(clarificationsOverride);
+    const finalOpenText = buildCompositeOpenText(clarificationsOverride, finalContextOverride);
     if (hasCrisisContent(finalOpenText)) { setStage("crisis"); return; }
 
-    setOpenText(finalOpenText);
     setBusy(true);
     setError(null);
     setStage("processing");
@@ -3269,7 +3403,7 @@ ${finalOwnText}`;
     try {
       const token = await ensureSession(selectedPath);
       const acceptedAt = new Date().toISOString();
-      await updateSession({ token, path: selectedPath, answers, openText, relationshipMap: relationshipMapPayload(), preview, email, purchaseConsent: { accepted: true, acceptedAt, version: CHECKOUT_CONSENT_VERSION }, stage: "checkout_started" });
+      await updateSession({ token, path: selectedPath, answers, openText: buildCompositeOpenText(), relationshipMap: relationshipMapPayload(), preview, email, purchaseConsent: { accepted: true, acceptedAt, version: CHECKOUT_CONSENT_VERSION }, stage: "checkout_started" });
       const checkout = await createCheckout(token, email, { accepted: true, acceptedAt });
       window.location.href = checkout.url;
     } catch (e: any) { setError(friendlyError(e, "Nie udało się rozpocząć płatności.")); setBusy(false); }
@@ -3513,7 +3647,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
         {stage !== "landing" && !isPublicContentRoute && <GhostButton onClick={resetAll}>Od początku</GhostButton>}
       </div>
 
-      <main className={`ctms-main ${(["questions","checkpoint","interview","open_text","preview","paid","error","crisis"].includes(stage) || Boolean(routeLegalKey)) ? "narrow" : ""}`}>
+      <main className={`ctms-main ${(["questions","checkpoint","mid_reflection","interview","open_text","preview","paid","error","crisis"].includes(stage) || Boolean(routeLegalKey)) ? "narrow" : ""}`}>
         <AnimatePresence mode="wait">
 
           {stage === "landing" && isPublicContentRoute && renderPublicContentRoute()}
@@ -3664,7 +3798,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
             <motion.div key={`${path.key}-force-map`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
                 <div>
-                  <div className="eyebrow">MAPA RELACJI · KROK 1 Z 5</div>
+                  <div className="eyebrow">MAPA RELACJI · KROK 1 Z 4</div>
                   <h2>Układ sił</h2>
                   <p>Nie przesuwasz suwaków. Po prostu zaznaczasz, po której stronie częściej leży ciężar danego elementu.</p>
                 </div>
@@ -3721,7 +3855,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
             <motion.div key={`${path.key}-burdens`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
                 <div>
-                  <div className="eyebrow">MAPA RELACJI · KROK 2 Z 5</div>
+                  <div className="eyebrow">MAPA RELACJI · KROK 2 Z 4</div>
                   <h2>Co najbardziej ciąży?</h2>
                   <p>Wybierz maksymalnie trzy rzeczy. Kolejność kliknięcia oznacza wagę: 1 to największy ciężar.</p>
                 </div>
@@ -3772,7 +3906,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
             <motion.div key={`${path.key}-emotions`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
                 <div>
-                  <div className="eyebrow">MAPA RELACJI · KROK 3 Z 5</div>
+                  <div className="eyebrow">MAPA RELACJI · KROK 3 Z 4</div>
                   <h2>Mapa emocji</h2>
                   <p>Wybierz maksymalnie trzy stany, które najczęściej uruchamia ta sytuacja. Kolejność oznacza siłę: 1 to emocja dominująca.</p>
                 </div>
@@ -3803,18 +3937,37 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                 </div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => setStage("truth_cards")} disabled={emotions.length < 1}>Dalej →</PrimaryButton>
+                  <PrimaryButton onClick={() => setStage("mid_reflection")} disabled={emotions.length < 1}>Dalej →</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
           )}
 
 
+          {stage === "mid_reflection" && path && (() => {
+            const reflection = buildMidwayReflection(path, forceMap, burdens, emotions);
+            return (
+              <motion.div key={`${path.key}-mid-reflection`} initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
+                <Glass className="midway-reflection">
+                  <div className="midway-reflection-kicker">{reflection.kicker}</div>
+                  <div className="midway-reflection-title">{reflection.title}</div>
+                  <blockquote>{reflection.quote}</blockquote>
+                  <div className="midway-reflection-signal">{reflection.signal}</div>
+                  <p>{reflection.next}</p>
+                  <div className="section-actions">
+                    <GhostButton onClick={goBack}>Wróć</GhostButton>
+                    <PrimaryButton onClick={() => setStage("truth_cards")}>Sprawdźmy to dalej →</PrimaryButton>
+                  </div>
+                </Glass>
+              </motion.div>
+            );
+          })()}
+
           {stage === "truth_cards" && path && (
             <motion.div key={`${path.key}-truth-cards`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="section-head compact">
                 <div>
-                  <div className="eyebrow">MAPA RELACJI · KROK 4 Z 5</div>
+                  <div className="eyebrow">MAPA RELACJI · KROK 4 Z 4</div>
                   <h2>Moment prawdy</h2>
                   <p>Zaznacz jedno albo dwa zdania, które najbardziej trafiają w to, czego nie chcesz już obchodzić dookoła.</p>
                 </div>
@@ -3845,7 +3998,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                 </div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => setStage("short_note")} disabled={truthCards.length < 1}>Dalej →</PrimaryButton>
+                  <PrimaryButton onClick={prepareMapSummary} disabled={truthCards.length < 1 || busy}>Dalej →</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
@@ -3926,11 +4079,11 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
               <Glass className="question-panel relationship-map-panel map-summary-clean">
                 <div className="map-summary-clean-copy">
                   <div className="eyebrow">MAPA ZAMKNIĘTA</div>
-                  <h3>Teraz sprawdzimy trzy konkretne sytuacje z życia.</h3>
-                  <p>Mapa ustawiła kierunek. Pytania otwarte mają teraz sprawdzić zachowanie, przykład i skutek — bez dokładania kolejnego diagramu.</p>
+                  <h3>Teraz sprawdzimy trzy konkretne sytuacje i ewentualnie doprecyzujemy jeden niejasny punkt.</h3>
+                  <p>Na samym końcu dostaniesz szerokie pole na własny opis, żeby żaden ważny kontekst nie został poza analizą.</p>
                 </div>
                 <div className="map-step-note strong-note">
-                  Jeszcze {clarificationQuestions.length || 3} {clarificationQuestions.length === 1 ? "konkretna odpowiedź" : "konkretne odpowiedzi"}. Chodzi o przykład, nie o długi opis.
+                  Przed Tobą dokładnie 3 pytania otwarte. Jeśli jeden punkt nadal będzie niejasny, pojawi się krótkie doprecyzowanie. Na końcu dopiszesz własny, szerszy kontekst.
                 </div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
@@ -3968,7 +4121,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
                   <GhostButton onClick={() => saveClarificationAndNext(true)}>Pomiń</GhostButton>
-                  <PrimaryButton onClick={() => saveClarificationAndNext(false)} disabled={busy || clarificationDraft.trim().length < 12}>{clarificationIndex >= clarificationQuestions.length - 1 ? (busy ? "Analizuję..." : "Pokaż pierwszy obraz sytuacji") : "Dalej →"}</PrimaryButton>
+                  <PrimaryButton onClick={() => saveClarificationAndNext(false)} disabled={busy || clarificationDraft.trim().length < 12}>{clarificationIndex >= clarificationQuestions.length - 1 ? "Dalej do własnego opisu →" : "Dalej →"}</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
@@ -4000,40 +4153,61 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
             </motion.div>
           )}
 
-          {stage === "open_text" && path && (
-            <motion.div key={`${path.key}-open`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <Glass className="question-panel">
-                <div className="eyebrow">OSTATNIA WARSTWA</div>
-                <div className="question-copy">
-                  <h3>{interviewState?.finished ? "Jest coś, czego jeszcze nie udało się nazwać, a co może być kluczowe?" : path.openPrompt}</h3>
-                  <p style={{ color: BRAND.muted, fontSize: "14px", marginTop: "10px", lineHeight: 1.65 }}>Podaj jeden konkretny przykład z życia. Nie musi być długi. Ważne, żeby pokazywał zachowanie, nie tylko odczucie.</p>
-                </div>
-                <textarea className="ctms-textarea" value={openText} onChange={(e) => setOpenText(e.target.value)} placeholder="Co konkretnie się dzieje? Opisz fakty..." maxLength={3000} />
-                <div className="text-meta"><div>To jest rdzeń analizy.</div><div>{openText.length}/3000</div></div>
-                <label className="analysis-consent-inline">
-                  <input
-                    type="checkbox"
-                    checked={analysisConsent}
-                    onChange={(event) => {
-                      const accepted = event.target.checked;
-                      setAnalysisConsent(accepted);
-                      setAnalysisConsentAcceptedAt(accepted ? new Date().toISOString() : "");
-                      if (accepted) setError(null);
-                    }}
+          {stage === "open_text" && path && (() => {
+            const context = finalContextForPath(path);
+            return (
+              <motion.div key={`${path.key}-open`} initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                <Glass className="question-panel final-context-panel">
+                  <div className="final-context-head">
+                    <div className="eyebrow">{context.eyebrow}</div>
+                    <h2>{context.title}</h2>
+                    <p>{context.lead}</p>
+                  </div>
+                  <div className="final-context-prompts" aria-label="Co możesz dopisać">
+                    {context.prompts.map((prompt, index) => (
+                      <span key={prompt}><b>0{index + 1}</b>{prompt}</span>
+                    ))}
+                  </div>
+                  <textarea
+                    className="ctms-textarea final-context-textarea"
+                    value={openText}
+                    onChange={(e) => setOpenText(e.target.value)}
+                    placeholder={context.placeholder}
+                    maxLength={5000}
                   />
-                  <span>
-                    Wyrażam zgodę na przetworzenie treści podanych w analizie, w tym informacji mogących dotyczyć zdrowia, życia intymnego lub przemocy, wyłącznie w celu przygotowania mojego odczytu z użyciem technologii OpenAI.
-                    <small> Kontynuując, akceptujesz <a href="/regulamin" target="_blank" rel="noreferrer">Regulamin</a>, <a href="/polityka-prywatnosci" target="_blank" rel="noreferrer">Politykę prywatności</a> i informację <a href="/rodo" target="_blank" rel="noreferrer">RODO</a>.</small>
-                  </span>
-                </label>
-                {error && <div className="error-line" style={{ marginTop: "12px" }}>{error}</div>}
-                <div className="section-actions">
-                  <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => buildPreviewAndGo()} disabled={busy || openText.trim().length < 10 || !analysisConsent}>{busy ? "Analizuję..." : "Pokaż pierwszy obraz sytuacji"}</PrimaryButton>
-                </div>
-              </Glass>
-            </motion.div>
-          )}
+                  <div className="text-meta">
+                    <div>Nie musisz odpowiadać punkt po punkcie. Opisz to własnymi słowami.</div>
+                    <div>{openText.length}/5000</div>
+                  </div>
+                  <div className="final-context-weight-note">
+                    Ten opis nie jest dodatkiem kosmetycznym. Może potwierdzić wcześniejszy kierunek, osłabić go albo ujawnić fakt, którego pytania nie wychwyciły.
+                  </div>
+                  <label className="analysis-consent-inline">
+                    <input
+                      type="checkbox"
+                      checked={analysisConsent}
+                      onChange={(event) => {
+                        const accepted = event.target.checked;
+                        setAnalysisConsent(accepted);
+                        setAnalysisConsentAcceptedAt(accepted ? new Date().toISOString() : "");
+                        if (accepted) setError(null);
+                      }}
+                    />
+                    <span>
+                      Wyrażam zgodę na przetworzenie treści podanych w analizie, w tym informacji mogących dotyczyć zdrowia, życia intymnego lub przemocy, wyłącznie w celu przygotowania mojego odczytu z użyciem technologii OpenAI.
+                      <small> Kontynuując, akceptujesz <a href="/regulamin" target="_blank" rel="noreferrer">Regulamin</a>, <a href="/polityka-prywatnosci" target="_blank" rel="noreferrer">Politykę prywatności</a> i informację <a href="/rodo" target="_blank" rel="noreferrer">RODO</a>.</small>
+                    </span>
+                  </label>
+                  {error && <div className="error-line" style={{ marginTop: "12px" }}>{error}</div>}
+                  <div className="section-actions">
+                    <GhostButton onClick={goBack}>Wróć</GhostButton>
+                    <GhostButton onClick={() => continueAfterFinalContext(true)} disabled={busy || !analysisConsent}>Nie mam nic do dodania</GhostButton>
+                    <PrimaryButton onClick={() => continueAfterFinalContext(false)} disabled={busy || openText.trim().length < 20 || !analysisConsent}>{busy ? "Analizuję..." : "Uwzględnij mój kontekst →"}</PrimaryButton>
+                  </div>
+                </Glass>
+              </motion.div>
+            );
+          })()}
 
           {stage === "crisis" && (
             <motion.div key="crisis" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
