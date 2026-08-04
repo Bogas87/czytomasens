@@ -2557,7 +2557,6 @@ export default function App() {
   const [reportFeedbackMessage, setReportFeedbackMessage] = useState("");
 
   const [selectedPath, setSelectedPath] = useState<EntryKey | null>(null);
-  const [entryPreviewKey, setEntryPreviewKey] = useState<EntryKey>("unease");
   const [questionIndex, setQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [openText, setOpenText] = useState("");
@@ -2603,7 +2602,6 @@ export default function App() {
   };
 
   const path = useMemo(() => ENTRY_CONFIGS.find((x) => x.key === selectedPath) || null, [selectedPath]);
-  const entryPreview = useMemo(() => ENTRY_CONFIGS.find((x) => x.key === entryPreviewKey) || ENTRY_CONFIGS[0], [entryPreviewKey]);
   const currentQuestion = path?.questions[questionIndex] || null;
 
   useEffect(() => {
@@ -3067,7 +3065,7 @@ export default function App() {
     localStorage.removeItem(ANON_PROFILE_KEY);
     localStorage.removeItem("ctms_local_anonymous_id");
     sessionStorage.removeItem(REPORT_ACCESS_KEY);
-    setStage("landing"); setSelectedPath(null); setEntryPreviewKey("unease"); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setAnalysisConsent(false); setAnalysisConsentAcceptedAt(""); setPurchaseConsent(false); setReportAccess(null); setLegalOpen(null); setInterviewState(null); setInterviewAnswer(""); setForceMap({}); setBurdens([]); setEmotions([]); setTruthCards([]); setRelationshipNote(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft(""); setFollowUpOpen(false); setFollowUpIndex(0); setFollowUpAnswers({}); setFollowUpDraft(""); setFollowUpResult(null); setFollowUpDueAt(""); setFollowUpMessage(""); setDynamicFollowUpQuestion(null); setDynamicFollowUpHistory([]); setDynamicFollowUpTeaser(""); setDynamicFollowUpElapsedDays(0); setFollowUpCheckoutBusy(false); setFollowUpPurchaseConsent(false); setAnonymousProfile(null);
+    setStage("landing"); setSelectedPath(null); setQuestionIndex(0); setAnswers({}); setOpenText(""); setEmail(""); setPreview(null); setFullReport(null); setSessionToken(null); setBusy(false); setError(null); setAnalysisConsent(false); setAnalysisConsentAcceptedAt(""); setPurchaseConsent(false); setReportAccess(null); setLegalOpen(null); setInterviewState(null); setInterviewAnswer(""); setForceMap({}); setBurdens([]); setEmotions([]); setTruthCards([]); setRelationshipNote(""); setClarificationQuestions([]); setClarificationAnswers({}); setClarificationIndex(0); setClarificationDraft(""); setFollowUpOpen(false); setFollowUpIndex(0); setFollowUpAnswers({}); setFollowUpDraft(""); setFollowUpResult(null); setFollowUpDueAt(""); setFollowUpMessage(""); setDynamicFollowUpQuestion(null); setDynamicFollowUpHistory([]); setDynamicFollowUpTeaser(""); setDynamicFollowUpElapsedDays(0); setFollowUpCheckoutBusy(false); setFollowUpPurchaseConsent(false); setAnonymousProfile(null);
     window.history.replaceState({}, "", "/");
     setRoutePath("/");
   };
@@ -3748,171 +3746,148 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
 
           {stage === "landing" && !isPublicContentRoute && (
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <section className="ctms-home-stage" data-ui-version="2.4.7">
+              <section className="ctms-home-stage" data-ui-version="2.4.8">
                 <div className="ctms-home-glow" aria-hidden="true" />
                 <Glass className="ctms-home-canvas">
                   <section className="ctms-home-copy">
                     <div className="ctms-home-eyebrow">
-                      <span>PRYWATNY ODCZYT JEDNEJ RELACJI</span>
+                      <span>PRYWATNA ANALIZA JEDNEJ RELACJI</span>
                       <i aria-hidden="true" />
                     </div>
 
-                    <div className="ctms-home-hook">Nie kolejna opinia. Odczyt tego, co naprawdę się powtarza.</div>
+                    <div className="ctms-home-hook">KIEDY SŁOWA JUŻ NIE WYSTARCZAJĄ</div>
 
                     <h1>
-                      Nie oceniaj relacji po jej najlepszym momencie.
-                      <em>Zobacz układ, który wraca.</em>
+                      Nie pytaj dłużej, czy przesadzasz.
+                      <em>Sprawdź, co naprawdę robi ta relacja.</em>
                     </h1>
 
                     <p className="ctms-home-lead">
-                      CzyToMaSens prowadzi od konkretnych faktów, przez rozkład ciężaru, do jednej sceny z życia. Dzięki temu wynik nie opiera się na nastroju ani nadziei, tylko na tym, co druga strona robi, kiedy emocje opadną.
+                      Zaczynamy od konkretnych zdarzeń. Potem sprawdzamy, kto niesie ciężar, co wraca mimo rozmów i czy zachowanie potwierdza słowa. Dzięki temu nie zostajesz z kolejną opinią, tylko z uporządkowanym obrazem sytuacji.
                     </p>
 
                     <div className="ctms-home-actions">
-                      <PrimaryButton onClick={() => setStage("entry")}>Zobacz mój układ relacji</PrimaryButton>
+                      <PrimaryButton onClick={() => setStage("entry")}>Rozpocznij prywatną analizę</PrimaryButton>
                       <div className="ctms-home-privacy">
                         <span aria-hidden="true">●</span>
                         <div>
-                          <strong>Prywatnie. Bez profilu i publicznych odpowiedzi.</strong>
-                          <small>Analiza porządkuje Twoją perspektywę. Nie diagnozuje drugiej osoby.</small>
+                          <strong>Bez profilu, bez publicznych odpowiedzi.</strong>
+                          <small>Analiza porządkuje Twoją perspektywę i nie udaje diagnozy drugiej osoby.</small>
                         </div>
                       </div>
                     </div>
 
-                    <div className="ctms-home-axis" aria-label="Trzy warstwy analizy">
-                      <div><span>01</span><strong>Fakty</strong><small>co wydarzyło się naprawdę</small></div>
-                      <div><span>02</span><strong>Układ</strong><small>kto uruchamia, naprawia i dźwiga</small></div>
-                      <div><span>03</span><strong>Decyzja</strong><small>co może zmienić ocenę i jaki ruch ma sens</small></div>
+                    <div className="ctms-home-value-grid" aria-label="Co porządkuje analiza">
+                      <article className="ctms-home-value-card">
+                        <span>01</span>
+                        <div>
+                          <strong>Fakty przed interpretacją</strong>
+                          <p>Oddzielasz to, co rzeczywiście się wydarzyło, od lęku, nadziei i późniejszych tłumaczeń.</p>
+                        </div>
+                      </article>
+                      <article className="ctms-home-value-card">
+                        <span>02</span>
+                        <div>
+                          <strong>Wzajemność przed deklaracją</strong>
+                          <p>Widzisz, kto inicjuje, naprawia, domyka rozmowy i utrzymuje relację, gdy robi się trudno.</p>
+                        </div>
+                      </article>
+                      <article className="ctms-home-value-card">
+                        <span>03</span>
+                        <div>
+                          <strong>Kierunek zamiast kolejnej obietnicy</strong>
+                          <p>Sprawdzasz, czy relacja naprawdę się zmienia, czy tylko na chwilę ucisza napięcie.</p>
+                        </div>
+                      </article>
                     </div>
                   </section>
 
                   <aside className="ctms-home-reading">
                     <div className="ctms-home-reading-top">
-                      <span>PRÓBA PRAWDY</span>
-                      <small>ODCZYT / 01</small>
+                      <span>ODCZYT, KTÓRY SCHODZI GŁĘBIEJ</span>
+                      <small>BEZ WYROKU</small>
                     </div>
 
-                    <div className="ctms-home-reading-word" aria-hidden="true">WZÓR</div>
+                    <div className="ctms-home-reading-word" aria-hidden="true">SEDNO</div>
 
                     <blockquote>
-                      „Najwięcej mówi nie to, co ktoś obiecuje po napięciu. Najwięcej mówi to, co potrafi utrzymać bez Twojego przypominania.”
+                      „Dobra chwila nie unieważnia wzorca. Przeprosiny nie są zmianą. Uczucie nie zastępuje wzajemności.”
                     </blockquote>
 
-                    <div className="ctms-home-insight">
-                      <span>PUNKT ZWROTNY</span>
-                      <strong>W analizie oddzielamy pojedynczy dobry moment od zachowania, które naprawdę buduje relację.</strong>
-                    </div>
-
-                    <div className="ctms-home-layers">
-                      <div className="ctms-home-layer">
+                    <div className="ctms-home-reading-core">
+                      <article>
                         <span>01</span>
-                        <small>ZDARZENIE</small>
-                        <strong>Co konkretnie się wydarzyło i co było potem.</strong>
-                      </div>
-                      <div className="ctms-home-layer active">
+                        <div>
+                          <small>CO WRACA</small>
+                          <strong>Nie jeden gorszy moment, tylko schemat, który pojawia się mimo rozmów.</strong>
+                          <p>Powtarzalność mówi więcej niż intensywność pojedynczego zdarzenia.</p>
+                        </div>
+                      </article>
+                      <article>
                         <span>02</span>
-                        <small>POWTARZALNOŚĆ</small>
-                        <strong>Co wraca mimo rozmów, przeprosin albo chwilowego spokoju.</strong>
-                      </div>
-                      <div className="ctms-home-layer">
+                        <div>
+                          <small>KTO NIESIE CIĘŻAR</small>
+                          <strong>Kto inicjuje kontakt, naprawia napięcie i pilnuje, żeby relacja się nie rozsypała.</strong>
+                          <p>Wzajemność widać po zachowaniu, nie po samych zapewnieniach.</p>
+                        </div>
+                      </article>
+                      <article>
                         <span>03</span>
-                        <small>KOSZT</small>
-                        <strong>Kto podtrzymuje relację i czym za to płaci.</strong>
-                      </div>
+                        <div>
+                          <small>CO TO KOSZTUJE</small>
+                          <strong>Czy relacja daje oparcie, czy utrzymuje Cię w czujności, analizowaniu i oczekiwaniu.</strong>
+                          <p>Koszt emocjonalny jest częścią obrazu, a nie dodatkiem do niego.</p>
+                        </div>
+                      </article>
                     </div>
 
-                    <div className="ctms-home-reading-foot">
-                      <span>WYNIK</span>
-                      <strong>Jedno zdanie, które nazywa sedno. Jeden warunek, który może zmienić ocenę. Jeden rozsądny następny ruch.</strong>
+                    <div className="ctms-home-verdict">
+                      <small>PO ANALIZIE</small>
+                      <strong>Wiesz, co jest faktem, co tylko interpretacją i jaki następny ruch rzeczywiście coś sprawdzi.</strong>
                     </div>
                   </aside>
                 </Glass>
               </section>
 
-              <ArticlesSection onNavigateHome={() => navigateTo("/artykuly")} onNavigateArticle={(slug) => navigateTo(`/artykuly/${slug}`)} onStartAnalysis={() => setStage("entry")} />
+              <div className="ctms-home-articles">
+                <ArticlesSection onNavigateHome={() => navigateTo("/artykuly")} onNavigateArticle={(slug) => navigateTo(`/artykuly/${slug}`)} onStartAnalysis={() => setStage("entry")} />
+              </div>
             </motion.div>
           )}
 
           {stage === "entry" && (
             <motion.div key="entry" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <section className="ctms-route-stage" data-ui-version="2.4.7">
+              <section className="ctms-route-stage" data-ui-version="2.4.8">
                 <div className="ctms-route-head">
                   <div>
                     <div className="eyebrow">WYBIERZ PUNKT WEJŚCIA</div>
-                    <h2>Co dziś wymaga nazwania?</h2>
-                    <p>Wybierz temat najbliższy Twojej sytuacji. Kliknięcie zaznacza ścieżkę. Samo przesunięcie kursora niczego nie zmienia.</p>
+                    <h2>Co dziś jest najbliżej prawdy?</h2>
+                    <p>Zacznij od problemu, który najlepiej opisuje obecną sytuację. Pozostałe sygnały i tak sprawdzimy po drodze.</p>
                   </div>
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
                 </div>
 
-                <Glass className="ctms-route-canvas">
-                  <section className="ctms-route-matrix" aria-label="Ścieżki analizy">
-                    <div className="ctms-route-matrix-top">
-                      <span>9 ŚCIEŻEK</span>
-                      <small>Jedno kliknięcie wybiera. Szczegóły pojawią się obok, a na telefonie bezpośrednio pod wybraną ścieżką.</small>
-                    </div>
-
-                    <div className="ctms-route-grid-compact">
-                      {ENTRY_CONFIGS.map((entry, index) => {
-                        const active = entryPreview.key === entry.key;
-                        return (
-                          <React.Fragment key={entry.key}>
-                            <button
-                              type="button"
-                              className={`ctms-route-option ${active ? "active" : ""}`}
-                              onClick={() => setEntryPreviewKey(entry.key)}
-                              aria-pressed={active}
-                            >
-                              <span>{String(index + 1).padStart(2, "0")}</span>
-                              <div>
-                                <strong>{entry.title}</strong>
-                                <small>{entry.subtitle}</small>
-                              </div>
-                              <i aria-hidden="true">{active ? "✓" : "+"}</i>
-                            </button>
-
-                            {active && (
-                              <div className="ctms-route-inline-preview">
-                                <div className="ctms-route-inline-kicker">WYBRANA ŚCIEŻKA · {String(index + 1).padStart(2, "0")}</div>
-                                <h3>{entry.title}</h3>
-                                <p>{entry.intro}</p>
-                                <blockquote>{entry.quote}</blockquote>
-                                <PrimaryButton onClick={() => startPath(entry.key)}>
-                                  {busy ? "Przygotowuję..." : "Wybieram tę ścieżkę"}
-                                </PrimaryButton>
-                              </div>
-                            )}
-                          </React.Fragment>
-                        );
-                      })}
-                    </div>
-                  </section>
-
-                  <aside className="ctms-route-preview" key={entryPreview.key}>
-                    <div className="ctms-route-preview-top">
-                      <span>WYBRANA ŚCIEŻKA</span>
-                      <strong>{String(ENTRY_CONFIGS.findIndex((item) => item.key === entryPreview.key) + 1).padStart(2, "0")}</strong>
-                    </div>
-
-                    <div className="ctms-route-preview-copy">
-                      <div className="eyebrow">PUNKT STARTOWY ANALIZY</div>
-                      <h3>{entryPreview.title}</h3>
-                      <p>{entryPreview.subtitle}</p>
-                      <blockquote>{entryPreview.quote}</blockquote>
-                    </div>
-
-                    <div className="ctms-route-preview-focus">
-                      <span>CO SPRAWDZIMY</span>
-                      <p>{entryPreview.intro}</p>
-                    </div>
-
-                    <div className="ctms-route-preview-action">
-                      <PrimaryButton onClick={() => startPath(entryPreview.key)}>
-                        {busy ? "Przygotowuję..." : "Wybieram tę ścieżkę"}
-                      </PrimaryButton>
-                      <small>Ścieżkę można zmienić, wracając do tego ekranu.</small>
-                    </div>
-                  </aside>
+                <Glass className="ctms-route-canvas ctms-route-canvas--direct">
+                  <div className="ctms-route-grid-direct" aria-label="Ścieżki analizy">
+                    {ENTRY_CONFIGS.map((entry, index) => (
+                      <button
+                        type="button"
+                        key={entry.key}
+                        className="ctms-route-card-direct"
+                        onClick={() => startPath(entry.key)}
+                        disabled={busy}
+                        aria-label={`Rozpocznij ścieżkę: ${entry.title}`}
+                      >
+                        <span className="ctms-route-card-no">{String(index + 1).padStart(2, "0")}</span>
+                        <div className="ctms-route-card-copy">
+                          <small>PUNKT WEJŚCIA</small>
+                          <strong>{entry.title}</strong>
+                          <p>{entry.subtitle}</p>
+                        </div>
+                        <i aria-hidden="true">→</i>
+                      </button>
+                    ))}
+                  </div>
                 </Glass>
               </section>
             </motion.div>
