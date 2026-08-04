@@ -304,6 +304,57 @@ function interviewButtonLabel(depth: number): string {
   return "Zamknij ten wątek →";
 }
 
+const CLOSED_QUESTION_PHASES = [
+  {
+    kicker: "PIERWSZY ODCZYT",
+    title: "Co wraca samo",
+    note: "Nie wybieraj wersji, która brzmi najlepiej. Zaznacz tę, która najczęściej wydarza się bez Twojego tłumaczenia.",
+  },
+  {
+    kicker: "UKŁAD RELACJI",
+    title: "Kto niesie ciężar",
+    note: "Patrzymy na powtarzalność, inicjatywę i zachowanie po napięciu, nie na pojedyncze dobre momenty.",
+  },
+  {
+    kicker: "KIERUNEK",
+    title: "Co mówi codzienność",
+    note: "Ta część oddziela intencję od tego, co relacja realnie utrzymuje w zwykłym dniu.",
+  },
+  {
+    kicker: "KOSZT I FAKTY",
+    title: "Co zostaje po emocjach",
+    note: "Ostatnie odpowiedzi sprawdzają, co relacja robi z Tobą i co zobaczyłaby osoba patrząca z boku.",
+  },
+] as const;
+
+function closedQuestionPhase(index: number, total: number) {
+  const normalized = total > 1 ? index / (total - 1) : 0;
+  const phaseIndex = Math.min(CLOSED_QUESTION_PHASES.length - 1, Math.floor(normalized * CLOSED_QUESTION_PHASES.length));
+  return CLOSED_QUESTION_PHASES[phaseIndex];
+}
+
+const INTERVIEW_DEPTH_LENS = [
+  {
+    kicker: "WARSTWA 01 · FAKT",
+    title: "Najpierw odtwarzamy scenę",
+    note: "Bez oceny całej relacji. Liczy się kolejność zdarzeń, słowa i zachowanie obu stron.",
+  },
+  {
+    kicker: "WARSTWA 02 · MECHANIZM",
+    title: "Potem patrzymy, co uruchamia układ",
+    note: "Tu widać, kto wykonuje kolejny ruch, kto przejmuje odpowiedzialność i gdzie pojawia się koszt.",
+  },
+  {
+    kicker: "WARSTWA 03 · PRÓBA PRAWDY",
+    title: "Na końcu odcinamy interpretacje",
+    note: "Zostają fakty, powtarzalność i to, co relacja potrafi utrzymać bez nacisku i dopowiadania.",
+  },
+] as const;
+
+function interviewDepthLens(depth: number) {
+  return INTERVIEW_DEPTH_LENS[Math.max(0, Math.min(INTERVIEW_DEPTH_LENS.length - 1, depth - 1))];
+}
+
 function interviewAnswerExcerpt(value?: string, max = 210): string {
   const clean = String(value || "").replace(/\s+/g, " ").trim();
   if (!clean) return "";
@@ -3709,7 +3760,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
         {stage !== "landing" && !isPublicContentRoute && <GhostButton onClick={resetAll}>Od początku</GhostButton>}
       </div>
 
-      <main className={`ctms-main ${(["questions","checkpoint","mid_reflection","interview","open_text","preview","paid","error","crisis"].includes(stage) || Boolean(routeLegalKey)) ? "narrow" : ""}`}>
+      <main className={`ctms-main ${(["mid_reflection","open_text","preview","paid","error","crisis"].includes(stage) || Boolean(routeLegalKey)) ? "narrow" : ""}`}>
         <AnimatePresence mode="wait">
 
           {stage === "landing" && isPublicContentRoute && renderPublicContentRoute()}
@@ -3806,38 +3857,78 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
             </motion.div>
           )}
 
-          {stage === "questions" && path && currentQuestion && (
-            <motion.div key={currentQuestion.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="section-head compact">
-                <div className="eyebrow">{path.title.toUpperCase()}</div>
-                <div className="progress-wrap">
-                  <span>Pytanie {questionIndex + 1} z {path.questions.length}</span>
-                  <div className="progress-track"><div className="progress-fill" style={{ width: `${((questionIndex + 1) / path.questions.length) * 100}%` }} /></div>
+          {stage === "questions" && path && currentQuestion && (() => {
+            const phase = closedQuestionPhase(questionIndex, path.questions.length);
+            return (
+              <motion.div
+                key={currentQuestion.id}
+                className="closed-question-experience"
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: .32, ease: "easeOut" }}
+              >
+                <div className="section-head compact closed-question-head">
+                  <div className="eyebrow">{path.title.toUpperCase()}</div>
+                  <div className="progress-wrap">
+                    <span>Pytanie {questionIndex + 1} z {path.questions.length}</span>
+                    <div className="progress-track"><div className="progress-fill" style={{ width: `${((questionIndex + 1) / path.questions.length) * 100}%` }} /></div>
+                  </div>
                 </div>
-              </div>
-              <Glass className="question-panel">
-                <div className="question-copy">
-                  <div className="question-lead">{currentQuestion.lead}</div>
-                  <h3>{currentQuestion.text}</h3>
-                </div>
-                <div className="answer-grid answer-grid--editorial">
-                  {currentQuestion.options.map((opt, optionIndex) => (
-                    <button
-                      key={opt.id}
-                      className="answer-card answer-card--editorial"
-                      onClick={() => answerQuestion(currentQuestion.id, opt.id)}
-                    >
-                      <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
-                      <span className="answer-card-label">{opt.label}</span>
-                      <span className="answer-card-mark" aria-hidden="true">→</span>
-                    </button>
-                  ))}
-                </div>
-                <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton><GhostButton onClick={resetAll}>Od początku</GhostButton></div>
-              </Glass>
-            </motion.div>
-          )}
 
+                <Glass className="question-panel closed-question-panel">
+                  <aside className="closed-question-rail">
+                    <div className="closed-question-rail-top">
+                      <span>PYTANIE</span>
+                      <strong>{String(questionIndex + 1).padStart(2, "0")}</strong>
+                    </div>
+                    <div className="closed-question-phase">
+                      <span>{phase.kicker}</span>
+                      <h2>{phase.title}</h2>
+                      <p>{phase.note}</p>
+                    </div>
+                    <div className="closed-question-path">
+                      <span>ŚCIEŻKA</span>
+                      <strong>{path.title}</strong>
+                    </div>
+                  </aside>
+
+                  <section className="closed-question-content">
+                    <div className="closed-question-rule">
+                      <span>WYBIERZ ODPOWIEDŹ NAJBLIŻSZĄ FAKTOM</span>
+                      <i aria-hidden="true" />
+                    </div>
+                    <div className="question-copy closed-question-copy">
+                      <div className="question-lead">{currentQuestion.lead}</div>
+                      <h3>{currentQuestion.text}</h3>
+                    </div>
+
+                    <div className="answer-grid answer-grid--editorial answer-ledger">
+                      {currentQuestion.options.map((opt, optionIndex) => (
+                        <button
+                          key={opt.id}
+                          className="answer-card answer-card--editorial answer-ledger-row"
+                          onClick={() => answerQuestion(currentQuestion.id, opt.id)}
+                        >
+                          <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
+                          <span className="answer-card-label">{opt.label}</span>
+                          <span className="answer-card-action">
+                            <small>TO NAJBLIŻSZE</small>
+                            <b aria-hidden="true">↗</b>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="section-actions closed-question-actions">
+                      <GhostButton onClick={goBack}>Wróć</GhostButton>
+                      <GhostButton onClick={resetAll}>Od początku</GhostButton>
+                    </div>
+                  </section>
+                </Glass>
+              </motion.div>
+            );
+          })()}
 
           {stage === "question_signal" && path && (
             <PauseInsightPanel
@@ -3849,24 +3940,57 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
           )}
 
           {stage === "checkpoint" && path && (
-            <motion.div key={`${path.key}-checkpoint`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <Glass className="question-panel">
-                <div className="eyebrow">{path.checkpoint.title}</div>
-                <div className="question-copy"><h3>{path.checkpoint.text}</h3></div>
-                <div className="answer-grid answer-grid--editorial">
-                  {path.checkpoint.options.map((opt, optionIndex) => (
-                    <button
-                      key={opt.id}
-                      className="answer-card answer-card--editorial"
-                      onClick={() => answerCheckpoint(opt.id)}
-                    >
-                      <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
-                      <span className="answer-card-label">{busy ? "Ładuję..." : opt.label}</span>
-                      <span className="answer-card-mark" aria-hidden="true">→</span>
-                    </button>
-                  ))}
-                </div>
-                <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton></div>
+            <motion.div
+              key={`${path.key}-checkpoint`}
+              className="closed-question-experience checkpoint-experience"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: .32, ease: "easeOut" }}
+            >
+              <Glass className="question-panel closed-question-panel checkpoint-question-panel">
+                <aside className="closed-question-rail">
+                  <div className="closed-question-rail-top checkpoint-mark">
+                    <span>PUNKT</span>
+                    <strong>◆</strong>
+                  </div>
+                  <div className="closed-question-phase">
+                    <span>PUNKT KONTROLNY</span>
+                    <h2>Zatrzymaj pierwszy odruch</h2>
+                    <p>Ta odpowiedź ustawia dalszą część analizy. Wybierz to, co dzieje się najczęściej, nie to, co wydarzyło się raz.</p>
+                  </div>
+                  <div className="closed-question-path">
+                    <span>ŚCIEŻKA</span>
+                    <strong>{path.title}</strong>
+                  </div>
+                </aside>
+
+                <section className="closed-question-content">
+                  <div className="closed-question-rule">
+                    <span>{path.checkpoint.title.toUpperCase()}</span>
+                    <i aria-hidden="true" />
+                  </div>
+                  <div className="question-copy closed-question-copy checkpoint-question-copy">
+                    <h3>{path.checkpoint.text}</h3>
+                  </div>
+                  <div className="answer-grid answer-grid--editorial answer-ledger">
+                    {path.checkpoint.options.map((opt, optionIndex) => (
+                      <button
+                        key={opt.id}
+                        className="answer-card answer-card--editorial answer-ledger-row"
+                        onClick={() => answerCheckpoint(opt.id)}
+                      >
+                        <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
+                        <span className="answer-card-label">{busy ? "Ładuję..." : opt.label}</span>
+                        <span className="answer-card-action">
+                          <small>TO NAJBLIŻSZE</small>
+                          <b aria-hidden="true">↗</b>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="section-actions closed-question-actions"><GhostButton onClick={goBack}>Wróć</GhostButton></div>
+                </section>
               </Glass>
             </motion.div>
           )}
@@ -4235,6 +4359,12 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
             const previousExcerpt = interviewAnswerExcerpt(previousExchange?.user);
             const firstExcerpt = interviewAnswerExcerpt(firstExchange?.user, 150);
             const writingCue = interviewWritingCue(interviewState.path, depth);
+            const lens = interviewDepthLens(depth);
+            const questionLengthClass = interviewState.currentQuestion.length > 240
+              ? "is-very-long"
+              : interviewState.currentQuestion.length > 155
+                ? "is-long"
+                : "";
             return (
               <motion.div
                 key={`interview-${interviewState.exchangeIndex}`}
@@ -4271,6 +4401,12 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                   </aside>
 
                   <section className="interview-editorial-content">
+                    <div className="interview-depth-lens">
+                      <span>{lens.kicker}</span>
+                      <strong>{lens.title}</strong>
+                      <p>{lens.note}</p>
+                    </div>
+
                     {depth > 1 && (
                       <div className="interview-trace-block">
                         <div className="interview-trace-label">ŚLAD Z POPRZEDNIEJ ODPOWIEDZI</div>
@@ -4294,9 +4430,15 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                       </div>
                     )}
 
-                    <div className={`question-copy interview-question-copy ${interviewState.currentQuestion.length > 180 ? "is-long" : ""}`}>
-                      {interviewState.currentLead && <div className="question-lead">{interviewState.currentLead}</div>}
-                      <h3>{interviewState.currentQuestion}</h3>
+                    <div className={`interview-question-focus interview-question-focus--${depth}`}>
+                      <div className="interview-question-focus-mark" aria-hidden="true">
+                        <span>{chapter.number}</span>
+                        <i />
+                      </div>
+                      <div className={`question-copy interview-question-copy ${questionLengthClass}`}>
+                        {interviewState.currentLead && <div className="question-lead">{interviewState.currentLead}</div>}
+                        <h3>{interviewState.currentQuestion}</h3>
+                      </div>
                     </div>
 
                     <div className="interview-writing-desk">
