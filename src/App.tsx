@@ -2853,7 +2853,7 @@ export default function App() {
     const next = { ...answers, [qid]: optionId };
     setAnswers(next);
     if (!path) return;
-    if (questionIndex >= path.questions.length - 1) { setStage("question_signal"); return; }
+    if (questionIndex >= path.questions.length - 1) { setStage("checkpoint"); return; }
     setQuestionIndex((v) => v + 1);
   };
 
@@ -3174,14 +3174,14 @@ ${finalOwnText}`;
     if (stage === "questions") { if (questionIndex === 0) { setStage("entry"); return; } setQuestionIndex((v) => Math.max(0, v - 1)); return; }
     if (stage === "question_signal") { setStage("questions"); return; }
     if (stage === "checkpoint") { setStage("questions"); return; }
-    if (stage === "force_map") { setStage("entry"); return; }
+    if (stage === "force_map") { setStage("checkpoint"); return; }
     if (stage === "force_signal") { setStage("force_map"); return; }
-    if (stage === "burdens") { setStage("force_signal"); return; }
+    if (stage === "burdens") { setStage("force_map"); return; }
     if (stage === "burden_signal") { setStage("burdens"); return; }
-    if (stage === "emotions") { setStage("burden_signal"); return; }
+    if (stage === "emotions") { setStage("burdens"); return; }
     if (stage === "truth_cards") { setStage("emotions"); return; }
     if (stage === "truth_signal") { setStage("truth_cards"); return; }
-    if (stage === "short_note") { setStage("truth_signal"); return; }
+    if (stage === "short_note") { setStage("truth_cards"); return; }
     if (stage === "map_summary") { setStage("short_note"); return; }
     if (stage === "clarification") {
       if (clarificationIndex > 0) {
@@ -3701,7 +3701,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                 </div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => setStage("force_signal")} disabled={forceMapItemsForPath(path.key).some((item) => !forceMap[item.key])}>Dalej →</PrimaryButton>
+                  <PrimaryButton onClick={() => setStage("burdens")} disabled={forceMapItemsForPath(path.key).some((item) => !forceMap[item.key])}>Dalej →</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
@@ -3752,7 +3752,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                 </div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => setStage("burden_signal")} disabled={burdens.length < 1}>Dalej →</PrimaryButton>
+                  <PrimaryButton onClick={() => setStage("emotions")} disabled={burdens.length < 1}>Dalej →</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
@@ -3845,7 +3845,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                 </div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => setStage("truth_signal")} disabled={truthCards.length < 1}>Dalej →</PrimaryButton>
+                  <PrimaryButton onClick={() => setStage("short_note")} disabled={truthCards.length < 1}>Dalej →</PrimaryButton>
                 </div>
               </Glass>
             </motion.div>
@@ -3923,31 +3923,14 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                   <div className="progress-track"><div className="progress-fill" style={{ width: "100%" }} /></div>
                 </div>
               </div>
-              <Glass className="question-panel relationship-map-panel signal-panel">
-                <div className="signal-orbit" aria-hidden="true">
-                  <div className="signal-core">Mapa<br />Relacji</div>
-                  <span className="signal-dot dot-a" />
-                  <span className="signal-dot dot-b" />
-                  <span className="signal-dot dot-c" />
-                </div>
-                <div className="signal-grid">
-                  {buildMapSignals(forceMap, burdens, truthCards, emotions).map((signal) => (
-                    <div key={signal.label} className={`signal-card ${signal.tone}`}>
-                      <span>{signal.label}</span>
-                      <strong>{signal.value}</strong>
-                    </div>
-                  ))}
-                </div>
-                <div className="visual-insight-panel">
-                  <div className="eyebrow">TRZY TROPY DO SPRAWDZENIA</div>
-                  <SignalHierarchy items={buildMapVisualBars(forceMap, burdens, truthCards)} />
-                </div>
-                <div className="cycle-panel">
-                  <div className="eyebrow">MECHANIZM, KTÓRY TRZEBA ZWERYFIKOWAĆ</div>
-                  <MechanismNarrative steps={buildCycleSteps(path.key, burdens, truthCards)} />
+              <Glass className="question-panel relationship-map-panel map-summary-clean">
+                <div className="map-summary-clean-copy">
+                  <div className="eyebrow">MAPA ZAMKNIĘTA</div>
+                  <h3>Teraz sprawdzimy trzy konkretne sytuacje z życia.</h3>
+                  <p>Mapa ustawiła kierunek. Pytania otwarte mają teraz sprawdzić zachowanie, przykład i skutek — bez dokładania kolejnego diagramu.</p>
                 </div>
                 <div className="map-step-note strong-note">
-                  Jeszcze {clarificationQuestions.length || 1} {clarificationQuestions.length === 1 ? "konkretna odpowiedź" : clarificationQuestions.length === 2 ? "konkretne odpowiedzi" : "konkretne odpowiedzi"}. Chodzi o przykład, nie o długi opis.
+                  Jeszcze {clarificationQuestions.length || 3} {clarificationQuestions.length === 1 ? "konkretna odpowiedź" : "konkretne odpowiedzi"}. Chodzi o przykład, nie o długi opis.
                 </div>
                 <div className="section-actions">
                   <GhostButton onClick={goBack}>Wróć</GhostButton>

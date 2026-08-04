@@ -5561,3 +5561,33 @@ select {
   .preview-evidence-main{padding:24px 20px 26px}
   .preview-evidence-main>p{font-size:21px}
 }
+
+/* === Analiza 2.2.1: diagramy tylko w raporcie premium === */
+.map-summary-clean{
+  display:block!important;
+  padding:34px!important;
+}
+.map-summary-clean-copy{
+  max-width:860px;
+  padding:4px 0 28px;
+}
+.map-summary-clean-copy h3{
+  margin:12px 0 14px;
+  font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(25px,2.4vw,38px);
+  line-height:1.16;
+  font-weight:500;
+  color:#f1e9de;
+}
+.map-summary-clean-copy p{
+  margin:0;
+  max-width:780px;
+  color:#bdb5ad;
+  font-size:16px;
+  line-height:1.72;
+}
+@media(max-width:600px){
+  .map-summary-clean{padding:24px!important}
+  .map-summary-clean-copy h3{font-size:25px}
+  .map-summary-clean-copy p{font-size:15px}
+}
