@@ -4076,42 +4076,79 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
           )}
 
           {stage === "burdens" && path && (
-            <motion.div key={`${path.key}-burdens`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="section-head compact">
-                <div>
-                  <div className="eyebrow">MAPA RELACJI · KROK 2 Z 4</div>
-                  <h2>Co najbardziej ciąży?</h2>
-                  <p>Wybierz maksymalnie trzy rzeczy. Kolejność kliknięcia oznacza wagę: 1 to największy ciężar.</p>
-                </div>
+            <motion.div
+              key={`${path.key}-burdens`}
+              className="map-editorial-experience map-editorial-experience--burdens"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: .32, ease: "easeOut" }}
+            >
+              <div className="section-head compact map-editorial-head">
+                <div className="eyebrow">MAPA RELACJI · KROK 2 Z 4</div>
                 <div className="progress-wrap">
-                  <span>{burdens.length}/3</span>
+                  <span>{burdens.length}/3 wybrane</span>
                   <div className="progress-track"><div className="progress-fill" style={{ width: `${(burdens.length / 3) * 100}%` }} /></div>
                 </div>
               </div>
-              <Glass className="question-panel relationship-map-panel">
-                <div className="burden-grid">
-                  {burdenOptionsForPath(path.key).map((label) => {
-                    const selected = burdens.find((item) => item.label === label);
-                    return (
-                      <button
-                        key={label}
-                        type="button"
-                        className={`burden-chip ${selected ? "selected" : ""}`}
-                        onClick={() => toggleBurden(label)}
-                      >
-                        {selected && <span className="burden-rank">{selected.rank}</span>}
-                        <span>{label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="map-step-note">
-                  Bez przeciągania i bez precyzyjnego celowania. Klikasz tylko to, co faktycznie najbardziej ustawia tę relację.
-                </div>
-                <div className="section-actions">
-                  <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => setStage("emotions")} disabled={burdens.length < 1}>Dalej →</PrimaryButton>
-                </div>
+
+              <Glass className="question-panel closed-question-panel map-editorial-panel map-editorial-panel--burdens">
+                <aside className="closed-question-rail map-editorial-rail">
+                  <div className="closed-question-rail-top">
+                    <span>ETAP</span>
+                    <strong>02</strong>
+                  </div>
+                  <div className="closed-question-phase">
+                    <span>WARSTWA CIĘŻARU</span>
+                    <h2>Co naprawdę niesiesz</h2>
+                    <p>Nie wybierasz wszystkiego, co bywa trudne. Wskazujesz trzy rzeczy, które najbardziej ustawiają cały układ.</p>
+                  </div>
+                  <div className="closed-question-path">
+                    <span>ŚCIEŻKA</span>
+                    <strong>{path.title}</strong>
+                  </div>
+                </aside>
+
+                <section className="closed-question-content map-editorial-content">
+                  <div className="closed-question-rule">
+                    <span>WYBIERZ MAKSYMALNIE TRZY · KOLEJNOŚĆ USTALA WAGĘ</span>
+                    <i aria-hidden="true" />
+                  </div>
+                  <div className="map-editorial-intro">
+                    <h3>Co najbardziej ciąży?</h3>
+                    <p>Pierwszy wybór staje się ciężarem głównym. Kolejne dwa pokazują, co go wzmacnia albo podtrzymuje.</p>
+                  </div>
+
+                  <div className="map-choice-ledger map-choice-ledger--burdens">
+                    {burdenOptionsForPath(path.key).map((label, optionIndex) => {
+                      const selected = burdens.find((item) => item.label === label);
+                      return (
+                        <button
+                          key={label}
+                          type="button"
+                          aria-pressed={Boolean(selected)}
+                          className={`map-choice-row map-choice-row--burden ${selected ? "selected" : ""}`}
+                          onClick={() => toggleBurden(label)}
+                        >
+                          <span className="map-choice-no">{String(optionIndex + 1).padStart(2, "0")}</span>
+                          <span className="map-choice-label">{label}</span>
+                          <span className="map-choice-state">
+                            <small>{selected ? `CIĘŻAR NR ${selected.rank}` : "DODAJ DO MAPY"}</small>
+                            <b aria-hidden="true">{selected ? selected.rank : "＋"}</b>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="map-editorial-footnote">
+                    Nie zaznaczaj tego, co brzmi najmocniej. Zaznacz to, co najczęściej wraca i realnie zmienia Twoje zachowanie.
+                  </div>
+                  <div className="section-actions closed-question-actions map-editorial-actions">
+                    <GhostButton onClick={goBack}>Wróć</GhostButton>
+                    <PrimaryButton onClick={() => setStage("emotions")} disabled={burdens.length < 1}>Przejdź do emocji →</PrimaryButton>
+                  </div>
+                </section>
               </Glass>
             </motion.div>
           )}
@@ -4127,42 +4164,79 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
           )}
 
           {stage === "emotions" && path && (
-            <motion.div key={`${path.key}-emotions`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="section-head compact">
-                <div>
-                  <div className="eyebrow">MAPA RELACJI · KROK 3 Z 4</div>
-                  <h2>Mapa emocji</h2>
-                  <p>Wybierz maksymalnie trzy stany, które najczęściej uruchamia ta sytuacja. Kolejność oznacza siłę: 1 to emocja dominująca.</p>
-                </div>
+            <motion.div
+              key={`${path.key}-emotions`}
+              className="map-editorial-experience map-editorial-experience--emotions"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: .32, ease: "easeOut" }}
+            >
+              <div className="section-head compact map-editorial-head">
+                <div className="eyebrow">MAPA RELACJI · KROK 3 Z 4</div>
                 <div className="progress-wrap">
-                  <span>{emotions.length}/3</span>
+                  <span>{emotions.length}/3 wybrane</span>
                   <div className="progress-track"><div className="progress-fill" style={{ width: `${(emotions.length / 3) * 100}%` }} /></div>
                 </div>
               </div>
-              <Glass className="question-panel relationship-map-panel">
-                <div className="burden-grid">
-                  {emotionOptionsForPath(path.key).map((label) => {
-                    const selected = emotions.find((item) => item.label === label);
-                    return (
-                      <button
-                        key={label}
-                        type="button"
-                        className={`burden-chip ${selected ? "selected" : ""}`}
-                        onClick={() => toggleEmotion(label)}
-                      >
-                        {selected && <span className="burden-rank">{selected.rank}</span>}
-                        <span>{label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="map-step-note">
-                  Emocja nie jest dowodem na intencję drugiej osoby. Pokazuje jednak, jaki koszt i jaki stan ta relacja regularnie uruchamia w Tobie.
-                </div>
-                <div className="section-actions">
-                  <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={() => setStage("mid_reflection")} disabled={emotions.length < 1}>Dalej →</PrimaryButton>
-                </div>
+
+              <Glass className="question-panel closed-question-panel map-editorial-panel map-editorial-panel--emotions">
+                <aside className="closed-question-rail map-editorial-rail">
+                  <div className="closed-question-rail-top">
+                    <span>ETAP</span>
+                    <strong>03</strong>
+                  </div>
+                  <div className="closed-question-phase">
+                    <span>ŚLAD EMOCJONALNY</span>
+                    <h2>Co zostaje w Tobie</h2>
+                    <p>Emocja nie rozstrzyga, co druga osoba miała na myśli. Pokazuje za to koszt, jaki układ regularnie zostawia po swojej stronie.</p>
+                  </div>
+                  <div className="closed-question-path">
+                    <span>ŚCIEŻKA</span>
+                    <strong>{path.title}</strong>
+                  </div>
+                </aside>
+
+                <section className="closed-question-content map-editorial-content">
+                  <div className="closed-question-rule">
+                    <span>WSKAŻ DO TRZECH STANÓW · PIERWSZY JEST DOMINUJĄCY</span>
+                    <i aria-hidden="true" />
+                  </div>
+                  <div className="map-editorial-intro">
+                    <h3>Jaki stan ta relacja uruchamia najczęściej?</h3>
+                    <p>Nie wybieraj emocji z jednego dnia. Szukamy tego, co wraca po rozmowach, ciszy, zbliżeniu albo kolejnym rozczarowaniu.</p>
+                  </div>
+
+                  <div className="map-choice-ledger map-choice-ledger--emotions">
+                    {emotionOptionsForPath(path.key).map((label, optionIndex) => {
+                      const selected = emotions.find((item) => item.label === label);
+                      return (
+                        <button
+                          key={label}
+                          type="button"
+                          aria-pressed={Boolean(selected)}
+                          className={`map-choice-row map-choice-row--emotion ${selected ? "selected" : ""}`}
+                          onClick={() => toggleEmotion(label)}
+                        >
+                          <span className="map-choice-no">{String(optionIndex + 1).padStart(2, "0")}</span>
+                          <span className="map-choice-label">{label}</span>
+                          <span className="map-choice-state">
+                            <small>{selected ? `STAN NR ${selected.rank}` : "ZAZNACZ, JEŚLI WRACA"}</small>
+                            <b aria-hidden="true">{selected ? selected.rank : "＋"}</b>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="map-editorial-footnote">
+                    To nie jest diagnoza emocji. To zapis tego, co relacja robi z Twoim spokojem, czujnością i zdolnością do jasnej oceny sytuacji.
+                  </div>
+                  <div className="section-actions closed-question-actions map-editorial-actions">
+                    <GhostButton onClick={goBack}>Wróć</GhostButton>
+                    <PrimaryButton onClick={() => setStage("mid_reflection")} disabled={emotions.length < 1}>Zobacz pierwszy odczyt →</PrimaryButton>
+                  </div>
+                </section>
               </Glass>
             </motion.div>
           )}
@@ -4188,42 +4262,79 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
           })()}
 
           {stage === "truth_cards" && path && (
-            <motion.div key={`${path.key}-truth-cards`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="section-head compact">
-                <div>
-                  <div className="eyebrow">MAPA RELACJI · KROK 4 Z 4</div>
-                  <h2>Moment prawdy</h2>
-                  <p>Zaznacz jedno albo dwa zdania, które najbardziej trafiają w to, czego nie chcesz już obchodzić dookoła.</p>
-                </div>
+            <motion.div
+              key={`${path.key}-truth-cards`}
+              className="map-editorial-experience map-editorial-experience--truth"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: .32, ease: "easeOut" }}
+            >
+              <div className="section-head compact map-editorial-head">
+                <div className="eyebrow">MAPA RELACJI · KROK 4 Z 4</div>
                 <div className="progress-wrap">
-                  <span>{truthCards.length}/2</span>
+                  <span>{truthCards.length}/2 wybrane</span>
                   <div className="progress-track"><div className="progress-fill" style={{ width: `${(truthCards.length / 2) * 100}%` }} /></div>
                 </div>
               </div>
-              <Glass className="question-panel relationship-map-panel">
-                <div className="truth-card-grid">
-                  {truthCardOptionsForPath(path.key).map((text) => {
-                    const selected = truthCards.includes(text);
-                    return (
-                      <button
-                        key={text}
-                        type="button"
-                        className={`truth-card-choice ${selected ? "selected" : ""}`}
-                        onClick={() => toggleTruthCard(text)}
-                      >
-                        <span className="truth-check">{selected ? "✓" : ""}</span>
-                        <span>{text}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="map-step-note">
-                  To nie jest test. Chodzi o rozpoznanie zdania, które robi największe „klik” w Twojej sytuacji.
-                </div>
-                <div className="section-actions">
-                  <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={prepareMapSummary} disabled={truthCards.length < 1 || busy}>Dalej →</PrimaryButton>
-                </div>
+
+              <Glass className="question-panel closed-question-panel map-editorial-panel map-editorial-panel--truth">
+                <aside className="closed-question-rail map-editorial-rail">
+                  <div className="closed-question-rail-top">
+                    <span>ETAP</span>
+                    <strong>04</strong>
+                  </div>
+                  <div className="closed-question-phase">
+                    <span>PRÓBA PRAWDY</span>
+                    <h2>Zdanie, którego nie da się ominąć</h2>
+                    <p>Nie wybierasz diagnozy ani wyroku. Wskazujesz zdanie, które najlepiej opisuje punkt wymagający dalszego sprawdzenia.</p>
+                  </div>
+                  <div className="closed-question-path">
+                    <span>ŚCIEŻKA</span>
+                    <strong>{path.title}</strong>
+                  </div>
+                </aside>
+
+                <section className="closed-question-content map-editorial-content">
+                  <div className="closed-question-rule">
+                    <span>WYBIERZ JEDNO LUB DWA ZDANIA, KTÓRE NAJMOCNIEJ „KLIKAJĄ”</span>
+                    <i aria-hidden="true" />
+                  </div>
+                  <div className="map-editorial-intro map-editorial-intro--truth">
+                    <h3>Moment prawdy</h3>
+                    <p>Przeczytaj każde zdanie wolno. Najważniejsze nie musi być najbardziej ostre — tylko takie, przy którym przestajesz szukać wygodnego obejścia.</p>
+                  </div>
+
+                  <div className="truth-editorial-grid">
+                    {truthCardOptionsForPath(path.key).map((text, optionIndex) => {
+                      const selected = truthCards.includes(text);
+                      return (
+                        <button
+                          key={text}
+                          type="button"
+                          aria-pressed={selected}
+                          className={`truth-editorial-card ${selected ? "selected" : ""}`}
+                          onClick={() => toggleTruthCard(text)}
+                        >
+                          <span className="truth-editorial-no">{String(optionIndex + 1).padStart(2, "0")}</span>
+                          <span className="truth-editorial-quote">„{text}”</span>
+                          <span className="truth-editorial-state">
+                            <small>{selected ? "TO TRAFIA" : "SPRAWDŹ TO ZDANIE"}</small>
+                            <b aria-hidden="true">{selected ? "✓" : "↗"}</b>
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="map-editorial-footnote">
+                    Wybrane zdania nie staną się automatycznie wnioskiem. AI zestawi je później z faktami z pytań otwartych i Twoim końcowym opisem.
+                  </div>
+                  <div className="section-actions closed-question-actions map-editorial-actions">
+                    <GhostButton onClick={goBack}>Wróć</GhostButton>
+                    <PrimaryButton onClick={prepareMapSummary} disabled={truthCards.length < 1 || busy}>Przejdź do konkretów →</PrimaryButton>
+                  </div>
+                </section>
               </Glass>
             </motion.div>
           )}
