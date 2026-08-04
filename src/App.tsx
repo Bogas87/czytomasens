@@ -304,6 +304,36 @@ function interviewButtonLabel(depth: number): string {
   return "Zamknij ten wątek →";
 }
 
+const CLOSED_QUESTION_PHASES = [
+  {
+    kicker: "PIERWSZY ODCZYT",
+    title: "Co wraca samo",
+    note: "Nie wybieraj wersji, która brzmi najlepiej. Zaznacz tę, która najczęściej wydarza się bez Twojego tłumaczenia.",
+  },
+  {
+    kicker: "UKŁAD RELACJI",
+    title: "Kto niesie ciężar",
+    note: "Patrzymy na powtarzalność, inicjatywę i zachowanie po napięciu, nie na pojedyncze dobre momenty.",
+  },
+  {
+    kicker: "KIERUNEK",
+    title: "Co mówi codzienność",
+    note: "Ta część oddziela intencję od tego, co relacja realnie utrzymuje w zwykłym dniu.",
+  },
+  {
+    kicker: "KOSZT I FAKTY",
+    title: "Co zostaje po emocjach",
+    note: "Ostatnie odpowiedzi sprawdzają, co relacja robi z Tobą i co zobaczyłaby osoba patrząca z boku.",
+  },
+] as const;
+
+function closedQuestionPhase(index: number, total: number) {
+  const normalized = total > 1 ? index / (total - 1) : 0;
+  const phaseIndex = Math.min(CLOSED_QUESTION_PHASES.length - 1, Math.floor(normalized * CLOSED_QUESTION_PHASES.length));
+  return CLOSED_QUESTION_PHASES[phaseIndex];
+}
+
+
 function interviewAnswerExcerpt(value?: string, max = 210): string {
   const clean = String(value || "").replace(/\s+/g, " ").trim();
   if (!clean) return "";
@@ -3716,67 +3746,74 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
 
           {stage === "landing" && !isPublicContentRoute && (
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <section className="hero-grid hero-grid--premium">
-                <Glass className="glass-panel hero-panel hero-copy hero-copy--clean">
-                  <div className="eyebrow with-line">DYSKRETNY ODCZYT JEDNEJ RELACJI</div>
-                  <h1>Uporządkuj sytuację, zanim znów wejdziesz w tę samą rozmowę.</h1>
-                  <p className="hero-lead">CzyToMaSens czyta Twoją perspektywę szerzej niż zwykły test: najpierw mapuje układ sił, potem dopytuje o konkretne sytuacje i dopiero na końcu składa pierwszy odczyt relacji.</p>
-                  <p className="hero-lead hero-lead--soft">Nie udajemy, że znamy drugą stronę. Pokazujemy, co z Twoich odpowiedzi wygląda na fakt, co może być nadzieją, co może być lękiem, a co nadal ma w sobie realny potencjał.</p>
-                  <div className="hero-trust-row" aria-label="cechy analizy">
-                    <span>poufna analiza jednej perspektywy</span>
-                    <span>odczyt sytuacji, nie wyrok</span>
-                    <span>z pytaniami zamkniętymi i otwartymi</span>
-                  </div>
-                  <div className="hero-privacy-note">
-                    <strong>Prywatnie i bezpiecznie.</strong> Odpowiedzi służą wyłącznie do przygotowania Twojej analizy. Nie publikujemy ich, nie sprzedajemy i nie budujemy z nich publicznego profilu. Dostęp do analizy masz tylko Ty, chyba że samodzielnie zdecydujesz inaczej.
-                  </div>
-                  <div className="ctms-landing-actions">
-                    <PrimaryButton onClick={() => setStage("entry")}>Rozpocznij prywatną analizę</PrimaryButton>
-                  </div>
-                </Glass>
-                <div className="hero-side-stack hero-side-stack--premium">
-                  <Glass className="glass-panel story-panel map-preview-card hero-reading-card">
-                    <div className="story-kicker">FRAGMENT SPOSOBU ODCZYTU</div>
-                    <h3>Najważniejsze nie jest to, co czujesz w napięciu. Najważniejsze jest to, co wraca po nim.</h3>
-                    <div className="reading-lines reading-lines--substantial">
-                      <div><span>01</span><strong>Co dzieje się po trudnej rozmowie: realna zmiana zachowania, chwilowe uspokojenie czy powrót do tego samego miejsca.</strong></div>
-                      <div><span>02</span><strong>Kto niesie ciężar relacji wtedy, gdy nie ma już wielkich słów: inicjatywa, naprawa, cisza, unikanie, odpowiedzialność.</strong></div>
-                      <div><span>03</span><strong>Co można jeszcze budować, a czego nie warto już przykrywać nadzieją, samotnością albo dobrym wspomnieniem.</strong></div>
+              <section className="ctms-front-stage" data-ui-version="2.4.5">
+                <Glass className="ctms-front-canvas">
+                  <aside className="ctms-front-rail">
+                    <div className="ctms-front-rail-mark">
+                      <span>01</span>
+                      <small>ODCZYT RELACJI</small>
                     </div>
-                    <div className="reading-boundary">To jest odczyt jednej perspektywy. Dlatego wynik nie ma być wyrokiem, tylko uporządkowanym lustrem: co widać, czego nie wiemy i co warto sprawdzić w zachowaniu.</div>
-                  </Glass>
-                </div>
-              </section>
-              
-              <section className="ctms-definition-panel">
-                <Glass className="ctms-definition-card">
-                  <div className="eyebrow">CZYM JEST CZYTOMASENS</div>
-                  <p>CzyToMaSens to prywatny odczyt jednej relacji z Twojej perspektywy. Narzędzie nie zna drugiej strony i tego nie udaje. Dlatego zamiast wydawać wyrok, pokazuje, co z Twoich odpowiedzi układa się w powtarzalny obraz, a co nadal wymaga sprawdzenia w zachowaniu.</p>
-                  <p>Najpierw wskazujesz układ sił i najważniejsze ciężary. Potem dopowiadasz konkretny przykład z życia. Wynik ma pomóc Ci zobaczyć, gdzie są zasoby, gdzie koszt emocjonalny i jaki fakt najmocniej zmieniłby ocenę sytuacji.</p>
-                </Glass>
-              </section>
-              
-              <section className="ctms-feature-editorial-grid process-grid" style={{ marginTop: "24px" }}>
-                <Glass className="feature-card process-card">
-                  <div className="feature-top"><span className="feature-no">01</span><span className="feature-icon">◌</span></div>
-                  <h3>Pierwszy filtr</h3>
-                  <div className="feature-line" />
-                  <p>Na starcie odpowiadasz na kilka pytań zamkniętych. One nie rozstrzygają relacji, tylko ustawiają kontekst: napięcie, zaufanie, powtarzalność problemu, poczucie bezpieczeństwa i gotowość drugiej strony do realnego ruchu.</p>
-                  <div className="process-tags"><span>kontekst</span><span>sygnały</span><span>bezpieczeństwo</span></div>
-                </Glass>
-                <Glass className="feature-card process-card">
-                  <div className="feature-top"><span className="feature-no">02</span><span className="feature-icon">▤</span></div>
-                  <h3>Mapa relacji</h3>
-                  <div className="feature-line" />
-                  <p>Potem wskazujesz, gdzie w relacji leży inicjatywa, odpowiedzialność, unikanie, ciężar emocjonalny i realny wpływ na naprawę. To porządkuje Twoją perspektywę, ale nie zamienia jej w wyrok.</p>
-                  <div className="process-tags"><span>inicjatywa</span><span>ciężar</span><span>odpowiedzialność</span></div>
-                </Glass>
-                <Glass className="feature-card process-card">
-                  <div className="feature-top"><span className="feature-no">03</span><span className="feature-icon">◐</span></div>
-                  <h3>Doprecyzowanie</h3>
-                  <div className="feature-line" />
-                  <p>Na końcu dochodzą pytania otwarte o konkretną sytuację z życia. Dzięki temu analiza nie opiera się wyłącznie na kliknięciach, tylko sprawdza, co naprawdę wraca, gdzie są zasoby i jaki fakt może zmienić ocenę.</p>
-                  <div className="process-tags"><span>pytania otwarte</span><span>fakty</span><span>następny ruch</span></div>
+
+                    <div className="ctms-front-rail-copy">
+                      <div className="eyebrow">PRYWATNA ANALIZA JEDNEJ PERSPEKTYWY</div>
+                      <h1>Zobacz układ, zanim kolejny raz spróbujesz go naprawić.</h1>
+                      <p>Nie szukamy szybkiego werdyktu. Najpierw sprawdzamy, co wraca, kto niesie ciężar i gdzie słowa przestają zgadzać się z zachowaniem.</p>
+                    </div>
+
+                    <div className="ctms-front-rail-foot">
+                      <span>PRYWATNIE I BEZPIECZNIE</span>
+                      <strong>Twoje odpowiedzi służą wyłącznie do przygotowania analizy i nie tworzą publicznego profilu.</strong>
+                    </div>
+                  </aside>
+
+                  <section className="ctms-front-body">
+                    <div className="ctms-front-rule">
+                      <span>CZYTOMASENS</span>
+                      <i aria-hidden="true" />
+                    </div>
+
+                    <blockquote>
+                      „Najwięcej mówi nie to, co ktoś obiecuje w napięciu, tylko to, co potrafi utrzymać, kiedy emocje opadną.”
+                    </blockquote>
+
+                    <div className="ctms-front-ledger">
+                      <div className="ctms-front-ledger-row">
+                        <span>01</span>
+                        <div>
+                          <small>NAJPIERW</small>
+                          <strong>Ustalamy, co naprawdę wraca.</strong>
+                          <p>Pytania zamknięte porządkują napięcie, zaufanie, powtarzalność i poczucie bezpieczeństwa.</p>
+                        </div>
+                      </div>
+
+                      <div className="ctms-front-ledger-row">
+                        <span>02</span>
+                        <div>
+                          <small>POTEM</small>
+                          <strong>Rozkładamy ciężar relacji.</strong>
+                          <p>Sprawdzamy inicjatywę, naprawę, unikanie i to, kto utrzymuje kontakt, kiedy nie ma już wielkich słów.</p>
+                        </div>
+                      </div>
+
+                      <div className="ctms-front-ledger-row">
+                        <span>03</span>
+                        <div>
+                          <small>NA KOŃCU</small>
+                          <strong>Konfrontujemy obraz z konkretną sytuacją.</strong>
+                          <p>Trzy pytania otwarte schodzą od faktu do mechanizmu i próby prawdy, żeby wynik nie opierał się wyłącznie na kliknięciach.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="ctms-front-boundary">
+                      <span>GRANICA ODCZYTU</span>
+                      <p>Analiza zna tylko Twoją perspektywę. Dlatego nie udaje diagnozy drugiej osoby — pokazuje fakty, luki, kontrsygnały i najrozsądniejszy następny ruch.</p>
+                    </div>
+
+                    <div className="ctms-front-actions">
+                      <PrimaryButton onClick={() => setStage("entry")}>Rozpocznij prywatną analizę</PrimaryButton>
+                    </div>
+                  </section>
                 </Glass>
               </section>
 
@@ -3806,38 +3843,78 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
             </motion.div>
           )}
 
-          {stage === "questions" && path && currentQuestion && (
-            <motion.div key={currentQuestion.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="section-head compact">
-                <div className="eyebrow">{path.title.toUpperCase()}</div>
-                <div className="progress-wrap">
-                  <span>Pytanie {questionIndex + 1} z {path.questions.length}</span>
-                  <div className="progress-track"><div className="progress-fill" style={{ width: `${((questionIndex + 1) / path.questions.length) * 100}%` }} /></div>
+          {stage === "questions" && path && currentQuestion && (() => {
+            const phase = closedQuestionPhase(questionIndex, path.questions.length);
+            return (
+              <motion.div
+                key={currentQuestion.id}
+                className="closed-question-experience"
+                initial={{ opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: .32, ease: "easeOut" }}
+              >
+                <div className="section-head compact closed-question-head">
+                  <div className="eyebrow">{path.title.toUpperCase()}</div>
+                  <div className="progress-wrap">
+                    <span>Pytanie {questionIndex + 1} z {path.questions.length}</span>
+                    <div className="progress-track"><div className="progress-fill" style={{ width: `${((questionIndex + 1) / path.questions.length) * 100}%` }} /></div>
+                  </div>
                 </div>
-              </div>
-              <Glass className="question-panel">
-                <div className="question-copy">
-                  <div className="question-lead">{currentQuestion.lead}</div>
-                  <h3>{currentQuestion.text}</h3>
-                </div>
-                <div className="answer-grid answer-grid--editorial">
-                  {currentQuestion.options.map((opt, optionIndex) => (
-                    <button
-                      key={opt.id}
-                      className="answer-card answer-card--editorial"
-                      onClick={() => answerQuestion(currentQuestion.id, opt.id)}
-                    >
-                      <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
-                      <span className="answer-card-label">{opt.label}</span>
-                      <span className="answer-card-mark" aria-hidden="true">→</span>
-                    </button>
-                  ))}
-                </div>
-                <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton><GhostButton onClick={resetAll}>Od początku</GhostButton></div>
-              </Glass>
-            </motion.div>
-          )}
 
+                <Glass className="question-panel closed-question-panel">
+                  <aside className="closed-question-rail">
+                    <div className="closed-question-rail-top">
+                      <span>PYTANIE</span>
+                      <strong>{String(questionIndex + 1).padStart(2, "0")}</strong>
+                    </div>
+                    <div className="closed-question-phase">
+                      <span>{phase.kicker}</span>
+                      <h2>{phase.title}</h2>
+                      <p>{phase.note}</p>
+                    </div>
+                    <div className="closed-question-path">
+                      <span>ŚCIEŻKA</span>
+                      <strong>{path.title}</strong>
+                    </div>
+                  </aside>
+
+                  <section className="closed-question-content">
+                    <div className="closed-question-rule">
+                      <span>WYBIERZ ODPOWIEDŹ NAJBLIŻSZĄ FAKTOM</span>
+                      <i aria-hidden="true" />
+                    </div>
+                    <div className="question-copy closed-question-copy">
+                      <div className="question-lead">{currentQuestion.lead}</div>
+                      <h3>{currentQuestion.text}</h3>
+                    </div>
+
+                    <div className="answer-grid answer-grid--editorial answer-ledger">
+                      {currentQuestion.options.map((opt, optionIndex) => (
+                        <button
+                          key={opt.id}
+                          className="answer-card answer-card--editorial answer-ledger-row"
+                          onClick={() => answerQuestion(currentQuestion.id, opt.id)}
+                        >
+                          <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
+                          <span className="answer-card-label">{opt.label}</span>
+                          <span className="answer-card-action">
+                            <small>TO NAJBLIŻSZE</small>
+                            <b aria-hidden="true">↗</b>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="section-actions closed-question-actions">
+                      <GhostButton onClick={goBack}>Wróć</GhostButton>
+                      <GhostButton onClick={resetAll}>Od początku</GhostButton>
+                    </div>
+                  </section>
+                </Glass>
+              </motion.div>
+            );
+          })()}
 
           {stage === "question_signal" && path && (
             <PauseInsightPanel
@@ -3849,24 +3926,57 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
           )}
 
           {stage === "checkpoint" && path && (
-            <motion.div key={`${path.key}-checkpoint`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <Glass className="question-panel">
-                <div className="eyebrow">{path.checkpoint.title}</div>
-                <div className="question-copy"><h3>{path.checkpoint.text}</h3></div>
-                <div className="answer-grid answer-grid--editorial">
-                  {path.checkpoint.options.map((opt, optionIndex) => (
-                    <button
-                      key={opt.id}
-                      className="answer-card answer-card--editorial"
-                      onClick={() => answerCheckpoint(opt.id)}
-                    >
-                      <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
-                      <span className="answer-card-label">{busy ? "Ładuję..." : opt.label}</span>
-                      <span className="answer-card-mark" aria-hidden="true">→</span>
-                    </button>
-                  ))}
-                </div>
-                <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton></div>
+            <motion.div
+              key={`${path.key}-checkpoint`}
+              className="closed-question-experience checkpoint-experience"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: .32, ease: "easeOut" }}
+            >
+              <Glass className="question-panel closed-question-panel checkpoint-question-panel">
+                <aside className="closed-question-rail">
+                  <div className="closed-question-rail-top checkpoint-mark">
+                    <span>PUNKT</span>
+                    <strong>◆</strong>
+                  </div>
+                  <div className="closed-question-phase">
+                    <span>PUNKT KONTROLNY</span>
+                    <h2>Zatrzymaj pierwszy odruch</h2>
+                    <p>Ta odpowiedź ustawia dalszą część analizy. Wybierz to, co dzieje się najczęściej, nie to, co wydarzyło się raz.</p>
+                  </div>
+                  <div className="closed-question-path">
+                    <span>ŚCIEŻKA</span>
+                    <strong>{path.title}</strong>
+                  </div>
+                </aside>
+
+                <section className="closed-question-content">
+                  <div className="closed-question-rule">
+                    <span>{path.checkpoint.title.toUpperCase()}</span>
+                    <i aria-hidden="true" />
+                  </div>
+                  <div className="question-copy closed-question-copy checkpoint-question-copy">
+                    <h3>{path.checkpoint.text}</h3>
+                  </div>
+                  <div className="answer-grid answer-grid--editorial answer-ledger">
+                    {path.checkpoint.options.map((opt, optionIndex) => (
+                      <button
+                        key={opt.id}
+                        className="answer-card answer-card--editorial answer-ledger-row"
+                        onClick={() => answerCheckpoint(opt.id)}
+                      >
+                        <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
+                        <span className="answer-card-label">{busy ? "Ładuję..." : opt.label}</span>
+                        <span className="answer-card-action">
+                          <small>TO NAJBLIŻSZE</small>
+                          <b aria-hidden="true">↗</b>
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="section-actions closed-question-actions"><GhostButton onClick={goBack}>Wróć</GhostButton></div>
+                </section>
               </Glass>
             </motion.div>
           )}
