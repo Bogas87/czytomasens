@@ -9516,3 +9516,113 @@ select {
     -webkit-line-clamp: 2;
   }
 }
+
+
+/* ==========================================================================
+   ANALIZA 2.4.9 — KOREKTA PROPORCJI FRONTU I CZYTELNOŚCI ODPOWIEDZI MOBILE
+   Tylko warstwa wizualna. Bez zmian w treści, logice i przebiegu analizy.
+   ========================================================================== */
+
+/* Pierwszy ekran: bez sztucznego rozciągania i pustej przestrzeni w prawej kolumnie. */
+.ctms-home-canvas.ctms-glass {
+  min-height: 0 !important;
+  align-items: stretch !important;
+}
+
+.ctms-home-copy,
+.ctms-home-reading {
+  min-height: 0 !important;
+}
+
+.ctms-home-reading {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: flex-start !important;
+}
+
+.ctms-home-reading-core {
+  margin-top: 30px !important;
+}
+
+.ctms-home-verdict {
+  margin-top: 28px !important;
+}
+
+@media (min-width: 901px) {
+  .ctms-home-canvas.ctms-glass {
+    grid-template-columns: minmax(0, 1.02fr) minmax(0, .98fr) !important;
+  }
+
+  .ctms-home-copy,
+  .ctms-home-reading {
+    padding-top: clamp(46px, 4vw, 68px) !important;
+    padding-bottom: clamp(46px, 4vw, 68px) !important;
+  }
+
+  .ctms-home-value-grid {
+    margin-top: 34px !important;
+    padding-top: 0 !important;
+  }
+}
+
+/* Telefon: odpowiedź ma wyglądać jak decyzja, nie jak wiersz z kursorem Windows. */
+@media (max-width: 640px) {
+  .answer-ledger {
+    border-top-color: rgba(255,255,255,.11) !important;
+  }
+
+  .answer-ledger::before {
+    display: none !important;
+  }
+
+  .answer-ledger-row {
+    grid-template-columns: 50px minmax(0, 1fr) !important;
+    gap: 14px !important;
+    min-height: 86px !important;
+    padding: 16px 14px !important;
+    align-items: center !important;
+    border-bottom: 1px solid rgba(255,255,255,.105) !important;
+  }
+
+  .answer-ledger-row .answer-card-no {
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 13px !important;
+    border: 1px solid rgba(226,190,111,.88) !important;
+    background:
+      linear-gradient(180deg, #e2bd70 0%, #bd9347 100%) !important;
+    color: #15100a !important;
+    font-family: Inter, ui-sans-serif, system-ui, sans-serif !important;
+    font-size: 15px !important;
+    line-height: 1 !important;
+    font-weight: 900 !important;
+    letter-spacing: -.02em !important;
+    box-shadow:
+      0 7px 18px rgba(197,160,89,.19),
+      inset 0 1px 0 rgba(255,255,255,.30) !important;
+  }
+
+  .answer-ledger-row .answer-card-label {
+    color: #f3ece4 !important;
+    font-size: 16px !important;
+    line-height: 1.46 !important;
+    font-weight: 600 !important;
+  }
+
+  .answer-card-action {
+    display: none !important;
+  }
+
+  .answer-ledger-row::before {
+    background:
+      linear-gradient(90deg, rgba(197,160,89,.11), rgba(197,160,89,.02) 68%, transparent) !important;
+  }
+
+  .answer-ledger-row:active::before {
+    opacity: 1 !important;
+  }
+
+  .answer-ledger-row:active {
+    transform: scale(.992) !important;
+  }
+}
