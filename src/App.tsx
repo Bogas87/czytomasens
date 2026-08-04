@@ -3746,7 +3746,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
 
           {stage === "landing" && !isPublicContentRoute && (
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <section className="ctms-home-stage" data-ui-version="2.5.0">
+              <section className="ctms-home-stage" data-ui-version="2.5.2">
                 <div className="ctms-home-glow" aria-hidden="true" />
                 <Glass className="ctms-home-canvas">
                   <section className="ctms-home-copy">
@@ -3811,8 +3811,8 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                     <div className="ctms-home-reading-word" aria-hidden="true">LUSTRO</div>
 
                     <div className="ctms-mirror-source">
-                      <small>TO, CO KTOŚ MÓGŁBY NAPISAĆ</small>
-                      <p>„Kiedy jest dobrze, naprawdę wierzę, że wszystko wraca. Potem znowu to ja pytam, inicjuję kontakt i próbuję uspokoić sytuację.”</p>
+                      <small>FRAGMENT SYTUACJI</small>
+                      <p>„Kiedy odpuszczam i przestaję pytać, robi się spokojnie. Gdy próbuję ustalić, dokąd to zmierza, druga osoba znowu się wycofuje, a ja zaczynam zastanawiać się, czy przesadzam.”</p>
                     </div>
 
                     <div className="ctms-mirror-main">
@@ -3821,51 +3821,77 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                         <small>LUSTRO</small>
                       </div>
                       <blockquote>
-                        Nie męczy Cię jedna trudna chwila. Męczy Cię to, że spokój pojawia się dopiero wtedy, gdy ponownie bierzesz relację na siebie.
+                        Nie tracisz spokoju dlatego, że pytasz za dużo. Tracisz go, bo ta relacja jest spokojna głównie wtedy, gdy rezygnujesz z własnej potrzeby jasności.
                       </blockquote>
                       <p>
-                        To przesuwa najważniejsze pytanie z „czy ta osoba coś czuje?” na „czy ta relacja potrafi utrzymać wzajemność bez Twojego ciągłego wysiłku?”.
+                        To nie jest wyrok o uczuciach drugiej osoby. To sygnał, że obecny układ nagradza Twoje milczenie, a koszt niejasności zostawia po Twojej stronie.
                       </p>
                     </div>
 
-                    <div className="ctms-mirror-evidence" aria-label="Jak analiza dochodzi do wniosku">
+                    <div className="ctms-mirror-evidence" aria-label="Jak analiza schodzi głębiej">
                       <article>
                         <span>01</span>
                         <div>
-                          <small>FAKT Z ODPOWIEDZI</small>
-                          <strong>To Ty częściej uruchamiasz kontakt i domykasz napięcie.</strong>
-                          <p>Nie oceniamy intencji. Patrzymy na powtarzalny rozkład działania.</p>
+                          <small>CO WIDAĆ W FAKTACH</small>
+                          <strong>Spokój wraca po Twoim wycofaniu, nie po wspólnym rozwiązaniu problemu.</strong>
+                          <p>To odróżnia prawdziwe domknięcie od chwilowej ciszy, która pojawia się tylko dlatego, że przestajesz naciskać.</p>
                         </div>
                       </article>
                       <article>
                         <span>02</span>
                         <div>
-                          <small>MECHANIZM</small>
-                          <strong>Dobra chwila przynosi ulgę, ale nie zmienia układu odpowiedzialności.</strong>
-                          <p>Ulga może chwilowo uciszyć problem, nie rozwiązując jego źródła.</p>
+                          <small>MECHANIZM POD SPODEM</small>
+                          <strong>Im bardziej potrzebujesz jasności, tym więcej odpowiedzialności przejmujesz za atmosferę.</strong>
+                          <p>Zamiast otrzymać odpowiedź, zaczynasz pilnować tonu, czasu rozmowy i reakcji drugiej osoby.</p>
                         </div>
                       </article>
                       <article>
                         <span>03</span>
                         <div>
-                          <small>GRANICA WNIOSKU</small>
-                          <strong>To jeszcze nie dowód braku uczuć. To dowód braku stabilnego potwierdzenia w zachowaniu.</strong>
-                          <p>Raport oddziela to, co wiadomo, od tego, czego nie wolno dopowiadać.</p>
+                          <small>CO TO KOSZTUJE</small>
+                          <strong>Zaczynasz oceniać własne potrzeby przez pryzmat tego, czy druga osoba je dobrze zniesie.</strong>
+                          <p>Wtedy coraz trudniej odróżnić cierpliwość od rezygnowania z siebie, żeby utrzymać pozorny spokój.</p>
+                        </div>
+                      </article>
+                      <article>
+                        <span>04</span>
+                        <div>
+                          <small>KONTRSYGNAŁ</small>
+                          <strong>Dobre chwile są prawdziwe. Nie unieważniają jednak tego, co powtarza się po trudnym pytaniu.</strong>
+                          <p>Analiza nie kasuje bliskości. Sprawdza, czy bliskość potrafi przetrwać także wtedy, gdy pojawia się potrzeba, granica albo konflikt.</p>
+                        </div>
+                      </article>
+                      <article>
+                        <span>05</span>
+                        <div>
+                          <small>PRÓBA PRAWDY</small>
+                          <strong>Najwięcej pokaże to, co wydarzy się, gdy nazwiesz potrzebę raz i przestaniesz prowadzić drugą osobę do odpowiedzi.</strong>
+                          <p>Nie kolejna rozmowa pełna obietnic, lecz samodzielny ruch drugiej strony rozstrzygnie, czy układ rzeczywiście może się zmienić.</p>
                         </div>
                       </article>
                     </div>
 
-                    <div className="ctms-mirror-shift">
-                      <div>
+                    <div className="ctms-mirror-summary">
+                      <small>PRZYKŁADOWE PODSUMOWANIE</small>
+                      <blockquote>
+                        Ta relacja może mieć uczucie, ale dziś nie daje Ci jeszcze oparcia tam, gdzie najbardziej go potrzebujesz: w jasności, wzajemności i odpowiedzialności po trudnej rozmowie.
+                      </blockquote>
+                    </div>
+
+                    <div className="ctms-mirror-conclusion-grid">
+                      <article>
                         <small>CO MOGŁOBY ZMIENIĆ OCENĘ</small>
-                        <strong>Samodzielny i powtarzalny ruch drugiej strony — bez Twojego przypominania, nacisku i ratowania atmosfery.</strong>
-                      </div>
-                      <span aria-hidden="true">→</span>
+                        <strong>Samodzielna, konkretna i powtarzalna inicjatywa drugiej strony — bez Twojego przypominania, nacisku i ratowania atmosfery.</strong>
+                      </article>
+                      <article>
+                        <small>NAJBLIŻSZY ROZSĄDNY RUCH</small>
+                        <strong>Nazwij jedno oczekiwanie. Nie tłumacz go pięć razy. Potem obserwuj zachowanie, a nie ulgę po kolejnej rozmowie.</strong>
+                      </article>
                     </div>
 
                     <div className="ctms-mirror-promise">
-                      <span>Twoja analiza nie powtórzy tego przykładu.</span>
-                      <p>Jej język, tropy i wniosek powstaną z wybranej ścieżki, zamkniętych odpowiedzi, trzech pogłębiających pytań i opisu konkretnej sytuacji.</p>
+                      <span>To tylko przykład formy. Twój odczyt powstaje od zera.</span>
+                      <p>Język, tropy, kontrsygnały i wniosek wynikają z wybranej ścieżki, odpowiedzi zamkniętych, trzech pytań pogłębiających oraz opisu konkretnego zdarzenia.</p>
                     </div>
                   </aside>
                 </Glass>
@@ -3956,7 +3982,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                       <span>WYBIERZ ODPOWIEDŹ NAJBLIŻSZĄ FAKTOM</span>
                       <i aria-hidden="true" />
                     </div>
-                    <div className="question-copy closed-question-copy">
+                    <div className={`question-copy closed-question-copy ${currentQuestion.text.length > 118 ? "is-long" : currentQuestion.text.length > 88 ? "is-medium" : ""}`}>
                       <div className="question-lead">{currentQuestion.lead}</div>
                       <h3>{currentQuestion.text}</h3>
                     </div>
@@ -3969,7 +3995,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                           onClick={() => answerQuestion(currentQuestion.id, opt.id)}
                         >
                           <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
-                          <span className="answer-card-label">{opt.label}</span>
+                          <span className={`answer-card-label ${opt.label.length > 82 ? "is-long" : opt.label.length > 56 ? "is-medium" : ""}`}>{opt.label}</span>
                           <span className="answer-card-action">
                             <small>TO NAJBLIŻSZE</small>
                             <b aria-hidden="true">↗</b>
@@ -4028,7 +4054,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                     <span>{path.checkpoint.title.toUpperCase()}</span>
                     <i aria-hidden="true" />
                   </div>
-                  <div className="question-copy closed-question-copy checkpoint-question-copy">
+                  <div className={`question-copy closed-question-copy checkpoint-question-copy ${path.checkpoint.text.length > 118 ? "is-long" : path.checkpoint.text.length > 88 ? "is-medium" : ""}`}>
                     <h3>{path.checkpoint.text}</h3>
                   </div>
                   <div className="answer-grid answer-grid--editorial answer-ledger">
@@ -4039,7 +4065,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                         onClick={() => answerCheckpoint(opt.id)}
                       >
                         <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
-                        <span className="answer-card-label">{busy ? "Ładuję..." : opt.label}</span>
+                        <span className={`answer-card-label ${opt.label.length > 82 ? "is-long" : opt.label.length > 56 ? "is-medium" : ""}`}>{busy ? "Ładuję..." : opt.label}</span>
                         <span className="answer-card-action">
                           <small>TO NAJBLIŻSZE</small>
                           <b aria-hidden="true">↗</b>
@@ -4580,7 +4606,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                       </div>
                     )}
 
-                    <div className={`question-copy interview-question-copy ${interviewState.currentQuestion.length > 180 ? "is-long" : ""}`}>
+                    <div className={`question-copy interview-question-copy ${interviewState.currentQuestion.length > 160 ? "is-long" : interviewState.currentQuestion.length > 112 ? "is-medium" : ""}`}>
                       {interviewState.currentLead && <div className="question-lead">{interviewState.currentLead}</div>}
                       <h3>{interviewState.currentQuestion}</h3>
                     </div>
