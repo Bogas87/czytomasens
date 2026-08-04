@@ -304,57 +304,6 @@ function interviewButtonLabel(depth: number): string {
   return "Zamknij ten wątek →";
 }
 
-const CLOSED_QUESTION_PHASES = [
-  {
-    kicker: "PIERWSZY ODCZYT",
-    title: "Co wraca samo",
-    note: "Nie wybieraj wersji, która brzmi najlepiej. Zaznacz tę, która najczęściej wydarza się bez Twojego tłumaczenia.",
-  },
-  {
-    kicker: "UKŁAD RELACJI",
-    title: "Kto niesie ciężar",
-    note: "Patrzymy na powtarzalność, inicjatywę i zachowanie po napięciu, nie na pojedyncze dobre momenty.",
-  },
-  {
-    kicker: "KIERUNEK",
-    title: "Co mówi codzienność",
-    note: "Ta część oddziela intencję od tego, co relacja realnie utrzymuje w zwykłym dniu.",
-  },
-  {
-    kicker: "KOSZT I FAKTY",
-    title: "Co zostaje po emocjach",
-    note: "Ostatnie odpowiedzi sprawdzają, co relacja robi z Tobą i co zobaczyłaby osoba patrząca z boku.",
-  },
-] as const;
-
-function closedQuestionPhase(index: number, total: number) {
-  const normalized = total > 1 ? index / (total - 1) : 0;
-  const phaseIndex = Math.min(CLOSED_QUESTION_PHASES.length - 1, Math.floor(normalized * CLOSED_QUESTION_PHASES.length));
-  return CLOSED_QUESTION_PHASES[phaseIndex];
-}
-
-const INTERVIEW_DEPTH_LENS = [
-  {
-    kicker: "WARSTWA 01 · FAKT",
-    title: "Najpierw odtwarzamy scenę",
-    note: "Bez oceny całej relacji. Liczy się kolejność zdarzeń, słowa i zachowanie obu stron.",
-  },
-  {
-    kicker: "WARSTWA 02 · MECHANIZM",
-    title: "Potem patrzymy, co uruchamia układ",
-    note: "Tu widać, kto wykonuje kolejny ruch, kto przejmuje odpowiedzialność i gdzie pojawia się koszt.",
-  },
-  {
-    kicker: "WARSTWA 03 · PRÓBA PRAWDY",
-    title: "Na końcu odcinamy interpretacje",
-    note: "Zostają fakty, powtarzalność i to, co relacja potrafi utrzymać bez nacisku i dopowiadania.",
-  },
-] as const;
-
-function interviewDepthLens(depth: number) {
-  return INTERVIEW_DEPTH_LENS[Math.max(0, Math.min(INTERVIEW_DEPTH_LENS.length - 1, depth - 1))];
-}
-
 function interviewAnswerExcerpt(value?: string, max = 210): string {
   const clean = String(value || "").replace(/\s+/g, " ").trim();
   if (!clean) return "";
@@ -3760,7 +3709,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
         {stage !== "landing" && !isPublicContentRoute && <GhostButton onClick={resetAll}>Od początku</GhostButton>}
       </div>
 
-      <main className={`ctms-main ${(["mid_reflection","open_text","preview","paid","error","crisis"].includes(stage) || Boolean(routeLegalKey)) ? "narrow" : ""}`}>
+      <main className={`ctms-main ${(["questions","checkpoint","mid_reflection","interview","open_text","preview","paid","error","crisis"].includes(stage) || Boolean(routeLegalKey)) ? "narrow" : ""}`}>
         <AnimatePresence mode="wait">
 
           {stage === "landing" && isPublicContentRoute && renderPublicContentRoute()}
@@ -3857,78 +3806,38 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
             </motion.div>
           )}
 
-          {stage === "questions" && path && currentQuestion && (() => {
-            const phase = closedQuestionPhase(questionIndex, path.questions.length);
-            return (
-              <motion.div
-                key={currentQuestion.id}
-                className="closed-question-experience"
-                initial={{ opacity: 0, y: 18 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: .32, ease: "easeOut" }}
-              >
-                <div className="section-head compact closed-question-head">
-                  <div className="eyebrow">{path.title.toUpperCase()}</div>
-                  <div className="progress-wrap">
-                    <span>Pytanie {questionIndex + 1} z {path.questions.length}</span>
-                    <div className="progress-track"><div className="progress-fill" style={{ width: `${((questionIndex + 1) / path.questions.length) * 100}%` }} /></div>
-                  </div>
+          {stage === "questions" && path && currentQuestion && (
+            <motion.div key={currentQuestion.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <div className="section-head compact">
+                <div className="eyebrow">{path.title.toUpperCase()}</div>
+                <div className="progress-wrap">
+                  <span>Pytanie {questionIndex + 1} z {path.questions.length}</span>
+                  <div className="progress-track"><div className="progress-fill" style={{ width: `${((questionIndex + 1) / path.questions.length) * 100}%` }} /></div>
                 </div>
+              </div>
+              <Glass className="question-panel">
+                <div className="question-copy">
+                  <div className="question-lead">{currentQuestion.lead}</div>
+                  <h3>{currentQuestion.text}</h3>
+                </div>
+                <div className="answer-grid answer-grid--editorial">
+                  {currentQuestion.options.map((opt, optionIndex) => (
+                    <button
+                      key={opt.id}
+                      className="answer-card answer-card--editorial"
+                      onClick={() => answerQuestion(currentQuestion.id, opt.id)}
+                    >
+                      <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
+                      <span className="answer-card-label">{opt.label}</span>
+                      <span className="answer-card-mark" aria-hidden="true">→</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton><GhostButton onClick={resetAll}>Od początku</GhostButton></div>
+              </Glass>
+            </motion.div>
+          )}
 
-                <Glass className="question-panel closed-question-panel">
-                  <aside className="closed-question-rail">
-                    <div className="closed-question-rail-top">
-                      <span>PYTANIE</span>
-                      <strong>{String(questionIndex + 1).padStart(2, "0")}</strong>
-                    </div>
-                    <div className="closed-question-phase">
-                      <span>{phase.kicker}</span>
-                      <h2>{phase.title}</h2>
-                      <p>{phase.note}</p>
-                    </div>
-                    <div className="closed-question-path">
-                      <span>ŚCIEŻKA</span>
-                      <strong>{path.title}</strong>
-                    </div>
-                  </aside>
-
-                  <section className="closed-question-content">
-                    <div className="closed-question-rule">
-                      <span>WYBIERZ ODPOWIEDŹ NAJBLIŻSZĄ FAKTOM</span>
-                      <i aria-hidden="true" />
-                    </div>
-                    <div className="question-copy closed-question-copy">
-                      <div className="question-lead">{currentQuestion.lead}</div>
-                      <h3>{currentQuestion.text}</h3>
-                    </div>
-
-                    <div className="answer-grid answer-grid--editorial answer-ledger">
-                      {currentQuestion.options.map((opt, optionIndex) => (
-                        <button
-                          key={opt.id}
-                          className="answer-card answer-card--editorial answer-ledger-row"
-                          onClick={() => answerQuestion(currentQuestion.id, opt.id)}
-                        >
-                          <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
-                          <span className="answer-card-label">{opt.label}</span>
-                          <span className="answer-card-action">
-                            <small>TO NAJBLIŻSZE</small>
-                            <b aria-hidden="true">↗</b>
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-
-                    <div className="section-actions closed-question-actions">
-                      <GhostButton onClick={goBack}>Wróć</GhostButton>
-                      <GhostButton onClick={resetAll}>Od początku</GhostButton>
-                    </div>
-                  </section>
-                </Glass>
-              </motion.div>
-            );
-          })()}
 
           {stage === "question_signal" && path && (
             <PauseInsightPanel
@@ -3940,57 +3849,24 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
           )}
 
           {stage === "checkpoint" && path && (
-            <motion.div
-              key={`${path.key}-checkpoint`}
-              className="closed-question-experience checkpoint-experience"
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: .32, ease: "easeOut" }}
-            >
-              <Glass className="question-panel closed-question-panel checkpoint-question-panel">
-                <aside className="closed-question-rail">
-                  <div className="closed-question-rail-top checkpoint-mark">
-                    <span>PUNKT</span>
-                    <strong>◆</strong>
-                  </div>
-                  <div className="closed-question-phase">
-                    <span>PUNKT KONTROLNY</span>
-                    <h2>Zatrzymaj pierwszy odruch</h2>
-                    <p>Ta odpowiedź ustawia dalszą część analizy. Wybierz to, co dzieje się najczęściej, nie to, co wydarzyło się raz.</p>
-                  </div>
-                  <div className="closed-question-path">
-                    <span>ŚCIEŻKA</span>
-                    <strong>{path.title}</strong>
-                  </div>
-                </aside>
-
-                <section className="closed-question-content">
-                  <div className="closed-question-rule">
-                    <span>{path.checkpoint.title.toUpperCase()}</span>
-                    <i aria-hidden="true" />
-                  </div>
-                  <div className="question-copy closed-question-copy checkpoint-question-copy">
-                    <h3>{path.checkpoint.text}</h3>
-                  </div>
-                  <div className="answer-grid answer-grid--editorial answer-ledger">
-                    {path.checkpoint.options.map((opt, optionIndex) => (
-                      <button
-                        key={opt.id}
-                        className="answer-card answer-card--editorial answer-ledger-row"
-                        onClick={() => answerCheckpoint(opt.id)}
-                      >
-                        <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
-                        <span className="answer-card-label">{busy ? "Ładuję..." : opt.label}</span>
-                        <span className="answer-card-action">
-                          <small>TO NAJBLIŻSZE</small>
-                          <b aria-hidden="true">↗</b>
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="section-actions closed-question-actions"><GhostButton onClick={goBack}>Wróć</GhostButton></div>
-                </section>
+            <motion.div key={`${path.key}-checkpoint`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+              <Glass className="question-panel">
+                <div className="eyebrow">{path.checkpoint.title}</div>
+                <div className="question-copy"><h3>{path.checkpoint.text}</h3></div>
+                <div className="answer-grid answer-grid--editorial">
+                  {path.checkpoint.options.map((opt, optionIndex) => (
+                    <button
+                      key={opt.id}
+                      className="answer-card answer-card--editorial"
+                      onClick={() => answerCheckpoint(opt.id)}
+                    >
+                      <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
+                      <span className="answer-card-label">{busy ? "Ładuję..." : opt.label}</span>
+                      <span className="answer-card-mark" aria-hidden="true">→</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton></div>
               </Glass>
             </motion.div>
           )}
@@ -4078,48 +3954,42 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
           {stage === "burdens" && path && (
             <motion.div
               key={`${path.key}-burdens`}
-              className="map-editorial-experience map-editorial-experience--burdens"
+              className="ctms-map-stage ctms-map-stage--burdens"
+              data-ui-version="2.4.4"
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: .32, ease: "easeOut" }}
             >
-              <div className="section-head compact map-editorial-head">
-                <div className="eyebrow">MAPA RELACJI · KROK 2 Z 4</div>
-                <div className="progress-wrap">
-                  <span>{burdens.length}/3 wybrane</span>
-                  <div className="progress-track"><div className="progress-fill" style={{ width: `${(burdens.length / 3) * 100}%` }} /></div>
-                </div>
-              </div>
-
-              <Glass className="question-panel closed-question-panel map-editorial-panel map-editorial-panel--burdens">
-                <aside className="closed-question-rail map-editorial-rail">
-                  <div className="closed-question-rail-top">
-                    <span>ETAP</span>
+              <Glass className="ctms-map-canvas">
+                <aside className="ctms-map-rail">
+                  <div className="ctms-map-sequence">
                     <strong>02</strong>
+                    <span>Z 04</span>
                   </div>
-                  <div className="closed-question-phase">
+                  <div className="ctms-map-rail-copy">
                     <span>WARSTWA CIĘŻARU</span>
                     <h2>Co naprawdę niesiesz</h2>
-                    <p>Nie wybierasz wszystkiego, co bywa trudne. Wskazujesz trzy rzeczy, które najbardziej ustawiają cały układ.</p>
+                    <p>Nie zaznaczasz wszystkiego, co jest trudne. Wybierasz trzy elementy, które najmocniej ustawiają całą relację.</p>
                   </div>
-                  <div className="closed-question-path">
-                    <span>ŚCIEŻKA</span>
+                  <div className="ctms-map-rail-foot">
+                    <span>WYBRANA ŚCIEŻKA</span>
                     <strong>{path.title}</strong>
                   </div>
                 </aside>
 
-                <section className="closed-question-content map-editorial-content">
-                  <div className="closed-question-rule">
-                    <span>WYBIERZ MAKSYMALNIE TRZY · KOLEJNOŚĆ USTALA WAGĘ</span>
-                    <i aria-hidden="true" />
-                  </div>
-                  <div className="map-editorial-intro">
-                    <h3>Co najbardziej ciąży?</h3>
-                    <p>Pierwszy wybór staje się ciężarem głównym. Kolejne dwa pokazują, co go wzmacnia albo podtrzymuje.</p>
-                  </div>
+                <section className="ctms-map-body">
+                  <header className="ctms-map-body-head">
+                    <div>
+                      <span>PRIORYTETY RELACJI</span>
+                      <h3>Wskaż ciężar główny i dwa, które go wzmacniają.</h3>
+                    </div>
+                    <div className="ctms-map-counter" aria-label={`${burdens.length} z 3 wybrane`}>
+                      <strong>{burdens.length}</strong>
+                      <span>/ 3</span>
+                    </div>
+                  </header>
 
-                  <div className="map-choice-ledger map-choice-ledger--burdens">
+                  <div className="ctms-burden-ledger">
                     {burdenOptionsForPath(path.key).map((label, optionIndex) => {
                       const selected = burdens.find((item) => item.label === label);
                       return (
@@ -4127,26 +3997,30 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                           key={label}
                           type="button"
                           aria-pressed={Boolean(selected)}
-                          className={`map-choice-row map-choice-row--burden ${selected ? "selected" : ""}`}
+                          className={`ctms-ledger-row ${selected ? `selected rank-${selected.rank}` : ""}`}
                           onClick={() => toggleBurden(label)}
                         >
-                          <span className="map-choice-no">{String(optionIndex + 1).padStart(2, "0")}</span>
-                          <span className="map-choice-label">{label}</span>
-                          <span className="map-choice-state">
-                            <small>{selected ? `CIĘŻAR NR ${selected.rank}` : "DODAJ DO MAPY"}</small>
-                            <b aria-hidden="true">{selected ? selected.rank : "＋"}</b>
+                          <span className="ctms-ledger-index">{String(optionIndex + 1).padStart(2, "0")}</span>
+                          <span className="ctms-ledger-copy">
+                            <small>{selected ? `PRIORYTET ${selected.rank}` : "MOŻLIWY CIĘŻAR"}</small>
+                            <strong>{label}</strong>
+                          </span>
+                          <span className="ctms-ledger-action" aria-hidden="true">
+                            {selected ? selected.rank : "+"}
                           </span>
                         </button>
                       );
                     })}
                   </div>
 
-                  <div className="map-editorial-footnote">
-                    Nie zaznaczaj tego, co brzmi najmocniej. Zaznacz to, co najczęściej wraca i realnie zmienia Twoje zachowanie.
+                  <div className="ctms-map-reading-note">
+                    <span>JAK TO CZYTAĆ</span>
+                    <p>Pierwszy wybór jest osią problemu. Drugi i trzeci pokażą, co go podtrzymuje albo zwiększa jego koszt.</p>
                   </div>
-                  <div className="section-actions closed-question-actions map-editorial-actions">
+
+                  <div className="section-actions ctms-map-actions">
                     <GhostButton onClick={goBack}>Wróć</GhostButton>
-                    <PrimaryButton onClick={() => setStage("emotions")} disabled={burdens.length < 1}>Przejdź do emocji →</PrimaryButton>
+                    <PrimaryButton onClick={() => setStage("emotions")} disabled={burdens.length < 1}>Dalej →</PrimaryButton>
                   </div>
                 </section>
               </Glass>
@@ -4166,48 +4040,42 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
           {stage === "emotions" && path && (
             <motion.div
               key={`${path.key}-emotions`}
-              className="map-editorial-experience map-editorial-experience--emotions"
+              className="ctms-map-stage ctms-map-stage--emotions"
+              data-ui-version="2.4.4"
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: .32, ease: "easeOut" }}
             >
-              <div className="section-head compact map-editorial-head">
-                <div className="eyebrow">MAPA RELACJI · KROK 3 Z 4</div>
-                <div className="progress-wrap">
-                  <span>{emotions.length}/3 wybrane</span>
-                  <div className="progress-track"><div className="progress-fill" style={{ width: `${(emotions.length / 3) * 100}%` }} /></div>
-                </div>
-              </div>
-
-              <Glass className="question-panel closed-question-panel map-editorial-panel map-editorial-panel--emotions">
-                <aside className="closed-question-rail map-editorial-rail">
-                  <div className="closed-question-rail-top">
-                    <span>ETAP</span>
+              <Glass className="ctms-map-canvas">
+                <aside className="ctms-map-rail">
+                  <div className="ctms-map-sequence">
                     <strong>03</strong>
+                    <span>Z 04</span>
                   </div>
-                  <div className="closed-question-phase">
-                    <span>ŚLAD EMOCJONALNY</span>
-                    <h2>Co zostaje w Tobie</h2>
-                    <p>Emocja nie rozstrzyga, co druga osoba miała na myśli. Pokazuje za to koszt, jaki układ regularnie zostawia po swojej stronie.</p>
+                  <div className="ctms-map-rail-copy">
+                    <span>WARSTWA REAKCJI</span>
+                    <h2>Co uruchamia ta relacja</h2>
+                    <p>Emocja nie rozstrzyga, kto ma rację. Pokazuje za to, w jakim stanie najczęściej zostajesz po kontakcie z tą sytuacją.</p>
                   </div>
-                  <div className="closed-question-path">
-                    <span>ŚCIEŻKA</span>
+                  <div className="ctms-map-rail-foot">
+                    <span>WYBRANA ŚCIEŻKA</span>
                     <strong>{path.title}</strong>
                   </div>
                 </aside>
 
-                <section className="closed-question-content map-editorial-content">
-                  <div className="closed-question-rule">
-                    <span>WSKAŻ DO TRZECH STANÓW · PIERWSZY JEST DOMINUJĄCY</span>
-                    <i aria-hidden="true" />
-                  </div>
-                  <div className="map-editorial-intro">
-                    <h3>Jaki stan ta relacja uruchamia najczęściej?</h3>
-                    <p>Nie wybieraj emocji z jednego dnia. Szukamy tego, co wraca po rozmowach, ciszy, zbliżeniu albo kolejnym rozczarowaniu.</p>
-                  </div>
+                <section className="ctms-map-body">
+                  <header className="ctms-map-body-head">
+                    <div>
+                      <span>POLE EMOCJI</span>
+                      <h3>Wybierz trzy stany. Pierwszy jest tym, który wraca najmocniej.</h3>
+                    </div>
+                    <div className="ctms-map-counter" aria-label={`${emotions.length} z 3 wybrane`}>
+                      <strong>{emotions.length}</strong>
+                      <span>/ 3</span>
+                    </div>
+                  </header>
 
-                  <div className="map-choice-ledger map-choice-ledger--emotions">
+                  <div className="ctms-emotion-field">
                     {emotionOptionsForPath(path.key).map((label, optionIndex) => {
                       const selected = emotions.find((item) => item.label === label);
                       return (
@@ -4215,26 +4083,29 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                           key={label}
                           type="button"
                           aria-pressed={Boolean(selected)}
-                          className={`map-choice-row map-choice-row--emotion ${selected ? "selected" : ""}`}
+                          className={`ctms-emotion-signal ${selected ? `selected rank-${selected.rank}` : ""}`}
                           onClick={() => toggleEmotion(label)}
                         >
-                          <span className="map-choice-no">{String(optionIndex + 1).padStart(2, "0")}</span>
-                          <span className="map-choice-label">{label}</span>
-                          <span className="map-choice-state">
-                            <small>{selected ? `STAN NR ${selected.rank}` : "ZAZNACZ, JEŚLI WRACA"}</small>
-                            <b aria-hidden="true">{selected ? selected.rank : "＋"}</b>
+                          <span className="ctms-emotion-code">{String(optionIndex + 1).padStart(2, "0")}</span>
+                          <span className="ctms-emotion-pulse" aria-hidden="true" />
+                          <span className="ctms-emotion-copy">
+                            <small>{selected ? `DOMINUJE JAKO ${selected.rank}` : "STAN DO ROZPOZNANIA"}</small>
+                            <strong>{label}</strong>
                           </span>
+                          <span className="ctms-emotion-mark" aria-hidden="true">{selected ? selected.rank : "↗"}</span>
                         </button>
                       );
                     })}
                   </div>
 
-                  <div className="map-editorial-footnote">
-                    To nie jest diagnoza emocji. To zapis tego, co relacja robi z Twoim spokojem, czujnością i zdolnością do jasnej oceny sytuacji.
+                  <div className="ctms-map-reading-note">
+                    <span>WAŻNE ROZRÓŻNIENIE</span>
+                    <p>Te stany nie są dowodem na intencję drugiej osoby. Są informacją o koszcie, który relacja regularnie uruchamia w Tobie.</p>
                   </div>
-                  <div className="section-actions closed-question-actions map-editorial-actions">
+
+                  <div className="section-actions ctms-map-actions">
                     <GhostButton onClick={goBack}>Wróć</GhostButton>
-                    <PrimaryButton onClick={() => setStage("mid_reflection")} disabled={emotions.length < 1}>Zobacz pierwszy odczyt →</PrimaryButton>
+                    <PrimaryButton onClick={() => setStage("mid_reflection")} disabled={emotions.length < 1}>Dalej →</PrimaryButton>
                   </div>
                 </section>
               </Glass>
@@ -4264,62 +4135,58 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
           {stage === "truth_cards" && path && (
             <motion.div
               key={`${path.key}-truth-cards`}
-              className="map-editorial-experience map-editorial-experience--truth"
+              className="ctms-map-stage ctms-map-stage--truth"
+              data-ui-version="2.4.4"
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: .32, ease: "easeOut" }}
             >
-              <div className="section-head compact map-editorial-head">
-                <div className="eyebrow">MAPA RELACJI · KROK 4 Z 4</div>
-                <div className="progress-wrap">
-                  <span>{truthCards.length}/2 wybrane</span>
-                  <div className="progress-track"><div className="progress-fill" style={{ width: `${(truthCards.length / 2) * 100}%` }} /></div>
-                </div>
-              </div>
-
-              <Glass className="question-panel closed-question-panel map-editorial-panel map-editorial-panel--truth">
-                <aside className="closed-question-rail map-editorial-rail">
-                  <div className="closed-question-rail-top">
-                    <span>ETAP</span>
+              <Glass className="ctms-map-canvas">
+                <aside className="ctms-map-rail">
+                  <div className="ctms-map-sequence">
                     <strong>04</strong>
+                    <span>Z 04</span>
                   </div>
-                  <div className="closed-question-phase">
-                    <span>PRÓBA PRAWDY</span>
-                    <h2>Zdanie, którego nie da się ominąć</h2>
-                    <p>Nie wybierasz diagnozy ani wyroku. Wskazujesz zdanie, które najlepiej opisuje punkt wymagający dalszego sprawdzenia.</p>
+                  <div className="ctms-map-rail-copy">
+                    <span>WARSTWA PRAWDY</span>
+                    <h2>Zdanie, którego nie chcesz już omijać</h2>
+                    <p>Nie szukasz odpowiedzi idealnej. Zaznaczasz jedno albo dwa zdania, które najtrafniej nazywają miejsce, w którym dziś jesteś.</p>
                   </div>
-                  <div className="closed-question-path">
-                    <span>ŚCIEŻKA</span>
+                  <div className="ctms-map-rail-foot">
+                    <span>WYBRANA ŚCIEŻKA</span>
                     <strong>{path.title}</strong>
                   </div>
                 </aside>
 
-                <section className="closed-question-content map-editorial-content">
-                  <div className="closed-question-rule">
-                    <span>WYBIERZ JEDNO LUB DWA ZDANIA, KTÓRE NAJMOCNIEJ „KLIKAJĄ”</span>
-                    <i aria-hidden="true" />
-                  </div>
-                  <div className="map-editorial-intro map-editorial-intro--truth">
-                    <h3>Moment prawdy</h3>
-                    <p>Przeczytaj każde zdanie wolno. Najważniejsze nie musi być najbardziej ostre — tylko takie, przy którym przestajesz szukać wygodnego obejścia.</p>
-                  </div>
+                <section className="ctms-map-body">
+                  <header className="ctms-map-body-head">
+                    <div>
+                      <span>PRÓBA PRAWDY</span>
+                      <h3>Przeczytaj powoli. Wybierz to, przy czym najtrudniej przejść obojętnie.</h3>
+                    </div>
+                    <div className="ctms-map-counter" aria-label={`${truthCards.length} z 2 wybrane`}>
+                      <strong>{truthCards.length}</strong>
+                      <span>/ 2</span>
+                    </div>
+                  </header>
 
-                  <div className="truth-editorial-grid">
+                  <div className="ctms-truth-manifesto">
                     {truthCardOptionsForPath(path.key).map((text, optionIndex) => {
                       const selected = truthCards.includes(text);
+                      const selectedIndex = truthCards.indexOf(text) + 1;
                       return (
                         <button
                           key={text}
                           type="button"
                           aria-pressed={selected}
-                          className={`truth-editorial-card ${selected ? "selected" : ""}`}
+                          className={`ctms-truth-statement ${selected ? "selected" : ""}`}
                           onClick={() => toggleTruthCard(text)}
                         >
-                          <span className="truth-editorial-no">{String(optionIndex + 1).padStart(2, "0")}</span>
-                          <span className="truth-editorial-quote">„{text}”</span>
-                          <span className="truth-editorial-state">
-                            <small>{selected ? "TO TRAFIA" : "SPRAWDŹ TO ZDANIE"}</small>
+                          <span className="ctms-truth-order">{String(optionIndex + 1).padStart(2, "0")}</span>
+                          <span className="ctms-truth-quote" aria-hidden="true">„</span>
+                          <span className="ctms-truth-text">{text}</span>
+                          <span className="ctms-truth-choice">
+                            <small>{selected ? `WYBRANE ${selectedIndex}` : "SPRAWDŹ TO ZDANIE"}</small>
                             <b aria-hidden="true">{selected ? "✓" : "↗"}</b>
                           </span>
                         </button>
@@ -4327,12 +4194,14 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                     })}
                   </div>
 
-                  <div className="map-editorial-footnote">
-                    Wybrane zdania nie staną się automatycznie wnioskiem. AI zestawi je później z faktami z pytań otwartych i Twoim końcowym opisem.
+                  <div className="ctms-map-reading-note">
+                    <span>TO NIE JEST WERDYKT</span>
+                    <p>To punkt, który dalsza analiza zestawi z faktami, zachowaniem drugiej strony i Twoim własnym opisem sytuacji.</p>
                   </div>
-                  <div className="section-actions closed-question-actions map-editorial-actions">
+
+                  <div className="section-actions ctms-map-actions">
                     <GhostButton onClick={goBack}>Wróć</GhostButton>
-                    <PrimaryButton onClick={prepareMapSummary} disabled={truthCards.length < 1 || busy}>Przejdź do konkretów →</PrimaryButton>
+                    <PrimaryButton onClick={prepareMapSummary} disabled={truthCards.length < 1 || busy}>Dalej →</PrimaryButton>
                   </div>
                 </section>
               </Glass>
@@ -4470,12 +4339,6 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
             const previousExcerpt = interviewAnswerExcerpt(previousExchange?.user);
             const firstExcerpt = interviewAnswerExcerpt(firstExchange?.user, 150);
             const writingCue = interviewWritingCue(interviewState.path, depth);
-            const lens = interviewDepthLens(depth);
-            const questionLengthClass = interviewState.currentQuestion.length > 240
-              ? "is-very-long"
-              : interviewState.currentQuestion.length > 155
-                ? "is-long"
-                : "";
             return (
               <motion.div
                 key={`interview-${interviewState.exchangeIndex}`}
@@ -4512,12 +4375,6 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                   </aside>
 
                   <section className="interview-editorial-content">
-                    <div className="interview-depth-lens">
-                      <span>{lens.kicker}</span>
-                      <strong>{lens.title}</strong>
-                      <p>{lens.note}</p>
-                    </div>
-
                     {depth > 1 && (
                       <div className="interview-trace-block">
                         <div className="interview-trace-label">ŚLAD Z POPRZEDNIEJ ODPOWIEDZI</div>
@@ -4541,15 +4398,9 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                       </div>
                     )}
 
-                    <div className={`interview-question-focus interview-question-focus--${depth}`}>
-                      <div className="interview-question-focus-mark" aria-hidden="true">
-                        <span>{chapter.number}</span>
-                        <i />
-                      </div>
-                      <div className={`question-copy interview-question-copy ${questionLengthClass}`}>
-                        {interviewState.currentLead && <div className="question-lead">{interviewState.currentLead}</div>}
-                        <h3>{interviewState.currentQuestion}</h3>
-                      </div>
+                    <div className={`question-copy interview-question-copy ${interviewState.currentQuestion.length > 180 ? "is-long" : ""}`}>
+                      {interviewState.currentLead && <div className="question-lead">{interviewState.currentLead}</div>}
+                      <h3>{interviewState.currentQuestion}</h3>
                     </div>
 
                     <div className="interview-writing-desk">
