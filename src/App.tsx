@@ -2193,8 +2193,8 @@ function PrimaryButton({ children, onClick, disabled }: { children: React.ReactN
   return <button className="ctms-btn ctms-btn-primary" onClick={onClick} disabled={disabled}>{children}</button>;
 }
 
-function GhostButton({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) {
-  return <button className="ctms-btn ctms-btn-ghost" onClick={onClick}>{children}</button>;
+function GhostButton({ children, onClick, disabled }: { children: React.ReactNode; onClick?: () => void; disabled?: boolean }) {
+  return <button className="ctms-btn ctms-btn-ghost" onClick={onClick} disabled={disabled}>{children}</button>;
 }
 
 function PremiumBadge({ preview }: { preview: Preview }) {
