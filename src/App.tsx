@@ -209,6 +209,107 @@ type InterviewState = {
   source?: "api" | "local"; localQuestions?: LocalInterviewQuestion[]; localIndex?: number;
 };
 
+type InterviewChapter = {
+  number: string;
+  eyebrow: string;
+  title: string;
+  purpose: string;
+  writingLabel: string;
+};
+
+const INTERVIEW_CHAPTERS: InterviewChapter[] = [
+  {
+    number: "01",
+    eyebrow: "KADR ZDARZENIA",
+    title: "Zatrzymaj jeden moment",
+    purpose: "Nie oceniaj całej relacji. Odtwórz jedną scenę tak, jak zobaczyłaby ją osoba stojąca obok.",
+    writingLabel: "ZAPIS SCENY",
+  },
+  {
+    number: "02",
+    eyebrow: "RUCH POD SPODEM",
+    title: "Zobacz, co uruchamia ten układ",
+    purpose: "Drugie pytanie bierze konkretny fragment Twojej odpowiedzi i sprawdza, kto wykonuje kolejny ruch oraz jaki ma on koszt.",
+    writingLabel: "CO DZIEJE SIĘ DALEJ",
+  },
+  {
+    number: "03",
+    eyebrow: "PRÓBA PRAWDY",
+    title: "Sprawdź, co zostaje bez tłumaczeń",
+    purpose: "Na końcu odcinamy nadzieję, lęk i wygodne wyjaśnienia. Zostają zachowania, powtarzalność i realny kierunek.",
+    writingLabel: "TWOJA UCZCIWA ODPOWIEDŹ",
+  },
+];
+
+const INTERVIEW_PATH_WRITING_CUES: Record<EntryKey, [string, string, string]> = {
+  unease: [
+    "Zacznij od: kiedy to było, co dokładnie zrobiła druga osoba i co wydarzyło się chwilę później.",
+    "Nazwij swój automatyczny ruch: sprawdzanie, dopytywanie, wycofanie, uspokajanie albo udawanie, że nic się nie stało.",
+    "Napisz, jak wyglądałaby ta sama sytuacja, gdybyś nie dopowiadał/dopowiadała niczego na korzyść ani przeciwko tej osobie.",
+  ],
+  betrayal: [
+    "Oddziel wydarzenie od późniejszych wyjaśnień. Wypisz kolejność faktów.",
+    "Skup się na tym, kto dziś dźwiga odbudowę zaufania i po czym to realnie widać.",
+    "Usuń przeprosiny i deklaracje. Zostaw tylko obecne zachowania oraz ich powtarzalność.",
+  ],
+  uncertain: [
+    "Pokaż jedną sytuację, po której nadal nie było wiadomo, na czym stoisz.",
+    "Napisz, kto korzysta na niejasności i co Ty robisz, żeby mimo niej utrzymać relację.",
+    "Wyobraź sobie, że przestajesz wypełniać luki interpretacją. Co pozostaje jednoznaczne?",
+  ],
+  asymmetry: [
+    "Rozpisz ostatnią sytuację, w której kontakt albo naprawa zależały głównie od Ciebie.",
+    "Nazwij rzecz, którą przejmujesz automatycznie, oraz to, co robi wtedy druga strona.",
+    "Usuń swój wysiłek z równania. Opisz, co utrzymałoby się samo, a co natychmiast by zniknęło.",
+  ],
+  conflict: [
+    "Odtwórz ostatni konflikt od pierwszego zdania do momentu, w którym temat uznano za zamknięty.",
+    "Pokaż, kto naprawia, kto unika i co dzieje się z właściwym problemem po uspokojeniu emocji.",
+    "Sprawdź, czy po kłótni zmienia się zachowanie, czy tylko wraca chwilowy spokój.",
+  ],
+  stagnation: [
+    "Wybierz zwykły dzień, który najlepiej pokazuje, jak dziś naprawdę jesteście ze sobą.",
+    "Nazwij pierwszy element bliskości, który zniknął, oraz to, co weszło w jego miejsce.",
+    "Oddziel więź od wspólnych obowiązków, historii i przyzwyczajenia. Co nadal jest świadomym wyborem?",
+  ],
+  returning: [
+    "Odtwórz ostatni kontakt po rozstaniu bez dopisywania, co mógł oznaczać.",
+    "Zestaw powód poprzedniego rozpadu z tym, co od tamtej pory rzeczywiście się zmieniło.",
+    "Zadaj sobie pytanie, czy wybierasz dzisiejszą osobę, czy najlepszą wersję wspomnienia o niej.",
+  ],
+  triangle: [
+    "Opisz sytuację, w której obecność trzeciej osoby najmocniej zmieniła Twoje zachowanie albo ocenę relacji.",
+    "Nazwij brak, potrzebę lub konflikt, który ta osoba odsłoniła, ale którego sama nie stworzyła.",
+    "Usuń trzecią osobę z historii. Napisz, jaki problem w obecnej relacji nadal zostałby nierozwiązany.",
+  ],
+  loop: [
+    "Odtwórz ostatni pełny cykl: napięcie, zerwanie lub dystans, powrót i pierwsze oznaki starego schematu.",
+    "Nazwij korzyść, która pojawia się przy powrocie i sprawia, że cykl znów wydaje się wart kolejnej próby.",
+    "Wskaż dokładny moment, w którym zwykle można przerwać pętlę, oraz czego wtedy najbardziej się obawiasz.",
+  ],
+};
+
+function interviewChapter(depth: number): InterviewChapter {
+  return INTERVIEW_CHAPTERS[Math.max(0, Math.min(OPEN_INTERVIEW_LIMIT - 1, depth - 1))];
+}
+
+function interviewWritingCue(path: EntryKey, depth: number): string {
+  return INTERVIEW_PATH_WRITING_CUES[path]?.[Math.max(0, Math.min(OPEN_INTERVIEW_LIMIT - 1, depth - 1))]
+    || "Zapisz konkretny przebieg sytuacji: kto, co zrobił, co wydarzyło się potem i co faktycznie się zmieniło.";
+}
+
+function interviewButtonLabel(depth: number): string {
+  if (depth <= 1) return "Pokaż, co jest pod spodem →";
+  if (depth === 2) return "Sprawdźmy, co się nie zgadza →";
+  return "Zamknij ten wątek →";
+}
+
+function interviewAnswerExcerpt(value?: string, max = 210): string {
+  const clean = String(value || "").replace(/\s+/g, " ").trim();
+  if (!clean) return "";
+  return clean.length > max ? `${clean.slice(0, max - 1).trim()}…` : clean;
+}
+
 type SessionCreateResponse = { ok?: boolean; token?: string; sessionId?: string };
 type ReportAccess = { token: string; exp: string; sig: string };
 
@@ -1553,152 +1654,157 @@ function buildAdaptiveLocalQuestion(
   history: InterviewExchange[],
   depth: number
 ): LocalInterviewQuestion {
-  const text = normalizeAnswerText(answer);
   const anchor = shortAnswerAnchor(answer);
-
-  const candidates: LocalInterviewQuestion[] = [];
-
-  if (/nie wiem|trudno powiedzieć|ciężko powiedzieć|chaos|pogubi/.test(text)) {
-    candidates.push({
-      lead: "Zejdźmy z ogólnego wrażenia do jednej sytuacji.",
-      question: "Przypomnij sobie ostatni moment, po którym to poczułeś/poczułaś. Co dokładnie wydarzyło się najpierw, co zrobiła druga strona i co zrobiłeś/zrobiłaś Ty?",
-      observation: "Jedna konkretna sekwencja mówi więcej niż ogólna ocena całej relacji."
-    });
-  }
-
-  if (/obieca|przeprosi|mówi|powiedział|powiedziała|deklar/.test(text)) {
-    candidates.push({
-      lead: "Słowa już znamy. Teraz sprawdźmy ich dalszy ciąg.",
-      question: "Co wydarzyło się w zachowaniu tej osoby przez następne dni po tej obietnicy albo rozmowie? Co było inne bez Twojego przypominania?",
-      observation: "To oddziela chwilowe uspokojenie od zmiany, która naprawdę się utrzymuje."
-    });
-  }
-
-  if (/boję|lęk|strach|niepokój|napięcie|czujn/.test(text)) {
-    candidates.push({
-      lead: "Nie zatrzymujmy się na samym lęku. Sprawdźmy, czego dokładnie pilnuje.",
-      question: "Czego konkretnie obawiasz się, że wydarzy się ponownie, i jaki fakt z ostatnich tygodni najmocniej podtrzymuje tę obawę?",
-      observation: "Lęk może ostrzegać, ale może też powiększać niepewność. Potrzebny jest fakt, który rozdzieli jedno od drugiego."
-    });
-  }
-
-  if (/telefon|kontrol|zazdro|sprawdza|zakaz|tłumacz/.test(text)) {
-    candidates.push({
-      lead: "Tu ważna jest granica między bliskością a kontrolą.",
-      question: "Co możesz zrobić swobodnie bez tłumaczenia się, napięcia albo obawy o reakcję tej osoby, a przy czym odruchowo zaczynasz uważać?",
-      observation: "To pomaga sprawdzić, czy ograniczenie jest chwilowym konfliktem, czy stałym sposobem ustawiania relacji."
-    });
-  }
-
-  if (/cisza|unika|wycof|milczy|znika|dystans/.test(text)) {
-    candidates.push({
-      lead: "Wycofanie ma znaczenie dopiero wtedy, gdy zobaczymy, co dzieje się po nim.",
-      question: "Kto zwykle pierwszy wraca po ciszy albo dystansie i co się wtedy dzieje z problemem: zostaje domknięty czy tylko znika do następnego razu?",
-      observation: "To pokazuje, kto realnie niesie naprawę i czy konflikt cokolwiek zmienia."
-    });
-  }
-
-  if (/zdrad|kłam|ukry|tajemnic/.test(text)) {
-    candidates.push({
-      lead: "Po naruszeniu zaufania najważniejsza jest odpowiedzialność, nie tempo wybaczenia.",
-      question: "Co ta osoba robi dziś, żebyś nie musiał/musiała samodzielnie pilnować bezpieczeństwa tej relacji?",
-      observation: "Odbudowa zaufania wymaga aktywnego udziału osoby, która je naruszyła."
-    });
-  }
-
-  if (/ja robię|ja inicju|ja wracam|wszystko na mnie|sam ciągn|sama ciągn|nierówn/.test(text)) {
-    candidates.push({
-      lead: "Sprawdźmy, co naprawdę podtrzymuje tę relację.",
-      question: "Gdybyś na tydzień przestał/przestała inicjować, przypominać i naprawiać atmosferę, co według Ciebie wydarzyłoby się między Wami?",
-      observation: "Ta odpowiedź często pokazuje różnicę między wzajemnością a relacją utrzymywaną głównie przez jedną osobę."
-    });
-  }
-
-  if (/dobrze|stara się|wspiera|blisko|koch|jest lepiej|popraw/.test(text)) {
-    candidates.push({
-      lead: "Nie chcę zgubić tego, co może być realnym zasobem.",
-      question: "Jaki konkretny gest albo zachowanie z ostatnich tygodni pokazuje, że ta relacja potrafi działać inaczej niż w najgorszych momentach?",
-      observation: "Optymizm ma wartość wtedy, gdy stoi za nim powtarzalne zachowanie, a nie tylko ulga po kryzysie."
-    });
-  }
-
-  const depthFallbacks: LocalInterviewQuestion[] = [
-    {
-      lead: "Teraz potrzebny jest jeden konkretny przykład.",
-      question: `Napisałeś/napisałaś o „${anchor}”. Opisz ostatnią sytuację, w której było to wyraźnie widoczne: co się wydarzyło, co powiedziała druga strona i co zostało potem.`,
-      observation: "Konkret pozwala odróżnić jednorazowy incydent od powtarzalnego mechanizmu."
+  const firstAnchor = shortAnswerAnchor(history[0]?.user || answer);
+  const latestObservation = history[history.length - 1]?.observation || "";
+  const pathQuestions: Record<EntryKey, { second: LocalInterviewQuestion; third: LocalInterviewQuestion }> = {
+    unease: {
+      second: {
+        lead: `Zatrzymuje się jeden fragment: „${anchor}”. Teraz sprawdzamy nie samo uczucie, lecz sekwencję, która je uruchamia.`,
+        question: "Co wydarzyło się bezpośrednio przed tym momentem, jaki ruch wykonała druga osoba i co zrobiłeś/zrobiłaś Ty, żeby odzyskać spokój albo kontrolę nad sytuacją?",
+        observation: latestObservation || "Niepokój zwykle ma konkretny zapalnik i automatyczną odpowiedź po Twojej stronie.",
+      },
+      third: {
+        lead: `Pierwszy kadr brzmiał: „${firstAnchor}”. Ostatnia odpowiedź pokazuje już nie tylko zdarzenie, ale sposób, w jaki próbujesz je unieść.`,
+        question: "Załóż na chwilę, że nie tłumaczysz zachowania tej osoby ani na jej korzyść, ani przeciwko niej. Jak wygląda ten układ wyłącznie z perspektywy działań z ostatnich tygodni i co z tego wynika?",
+        observation: "Ostatnie pytanie oddziela realny sygnał od lęku oraz od nadziei, która może wypełniać brakujące fakty.",
+      },
     },
-    {
-      lead: "Sprawdźmy, co ta sytuacja uruchamia po Twojej stronie.",
-      question: "Co robisz wtedy automatycznie: naciskasz, wycofujesz się, tłumaczysz, kontrolujesz, próbujesz uspokoić drugą osobę czy bierzesz winę na siebie?",
-      observation: "Nie chodzi o ocenę. Chodzi o zobaczenie własnego ruchu w całym cyklu."
+    betrayal: {
+      second: {
+        lead: `W Twoim opisie najwięcej waży fragment „${anchor}”. Po naruszeniu zaufania kluczowe jest to, kto dziś wykonuje pracę naprawczą.`,
+        question: "Jakie dwa konkretne zachowania tej osoby pokazują, że bierze odpowiedzialność za odbudowę zaufania — i jakie zachowanie nadal przerzuca ten ciężar na Ciebie?",
+        observation: latestObservation || "Przeprosiny opisują intencję. Odpowiedzialność widać dopiero w powtarzalnych działaniach.",
+      },
+      third: {
+        lead: `Punkt wyjścia to „${firstAnchor}”. Teraz usuwamy z obrazu słowa, przeprosiny i obietnice.`,
+        question: "Gdybyś oceniał/oceniała sytuację wyłącznie po obecnych zachowaniach, co byłoby dowodem realnej odbudowy, a co pokazuje jedynie chęć zamknięcia tematu?",
+        observation: "To pytanie sprawdza, czy zaufanie odbudowuje wspólna praca, czy tylko Twoje zmęczenie ciągłym wracaniem do sprawy.",
+      },
     },
-    {
-      lead: "Teraz poszukajmy rozjazdu.",
-      question: "Co w tej relacji słyszysz w słowach, a czego nie widzisz później w zachowaniu? Albo odwrotnie: co działa lepiej, niż wynikałoby z Twojego lęku?",
-      observation: "To pytanie chroni zarówno przed nadmiernym usprawiedliwianiem, jak i przed potwierdzaniem najgorszej wersji."
+    uncertain: {
+      second: {
+        lead: `Niejasność skupia się wokół „${anchor}”. Teraz trzeba zobaczyć, kto płaci za brak jednoznaczności i kto z niego korzysta.`,
+        question: "Co Ty robisz więcej dlatego, że sytuacja pozostaje niejasna, a czego druga osoba dzięki tej niejasności nie musi dziś powiedzieć, ustalić albo wziąć na siebie?",
+        observation: latestObservation || "Brak decyzji też ustawia relację — zwykle nierówno rozkładając koszt czekania.",
+      },
+      third: {
+        lead: `Pierwszy konkret to „${firstAnchor}”. Na końcu wyłączamy interpretacje i zostawiamy tylko czytelne ruchy.`,
+        question: "Gdybyś przestał/przestała wypełniać luki nadzieją albo obawą, jakie działania tej osoby byłyby jednoznaczną odpowiedzią — i które z nich faktycznie już się wydarzyły?",
+        observation: "To odróżnia trudną, ale realną drogę do jasności od układu, który trwa właśnie dlatego, że niczego nie trzeba rozstrzygać.",
+      },
     },
-    {
-      lead: "Nazwij koszt, nie tylko problem.",
-      question: "Co ta sytuacja robi z Tobą poza samą relacją: ze snem, koncentracją, poczuciem własnej wartości, spokojem albo codziennym funkcjonowaniem?",
-      observation: "Koszt emocjonalny pomaga ocenić wagę problemu bez dramatyzowania i bez bagatelizowania."
+    asymmetry: {
+      second: {
+        lead: `Fragment „${anchor}” pokazuje nie tylko nierówność, ale prawdopodobnie Twój automatyczny sposób jej wyrównywania.`,
+        question: "Którą część relacji przejmujesz bez zastanowienia — kontakt, rozmowę, naprawę, planowanie czy uspokajanie — i co robi wtedy druga osoba, kiedy Ty tego nie zrobisz od razu?",
+        observation: latestObservation || "Asymetria bywa niewidoczna tak długo, jak jedna strona sprawnie zasypuje każdą lukę.",
+      },
+      third: {
+        lead: `Pierwszy ślad brzmiał „${firstAnchor}”. Teraz na chwilę usuwamy z układu Twój dodatkowy wysiłek.`,
+        question: "Co w tej relacji utrzymałoby się samo przez najbliższy tydzień, a co prawdopodobnie zniknęłoby natychmiast bez Twojej inicjatywy? Oprzyj odpowiedź na wcześniejszych sytuacjach, nie na nadziei.",
+        observation: "To jest próba wzajemności: nie pyta o uczucia, tylko o to, co relacja potrafi utrzymać bez jednostronnego podtrzymywania.",
+      },
     },
-    {
-      lead: "Na końcu potrzebny jest fakt do sprawdzenia.",
-      question: "Jaki jeden konkretny ruch drugiej strony w najbliższych 7 dniach byłby dla Ciebie dowodem realnej zmiany, a nie tylko chwilowej poprawy atmosfery?",
-      observation: "To zamienia analizę w uczciwą obserwację zachowania."
-    }
-  ];
+    conflict: {
+      second: {
+        lead: `Najważniejszy fragment to „${anchor}”. Teraz patrzymy, co dzieje się z właściwym problemem po opadnięciu emocji.`,
+        question: "Kto zwykle wykonuje pierwszy ruch naprawczy, jak druga strona na niego odpowiada i czy temat zostaje naprawdę domknięty, czy tylko znika do następnego konfliktu?",
+        observation: latestObservation || "O jakości relacji mówi nie temperatura kłótni, lecz to, czy po niej powstaje nowy sposób działania.",
+      },
+      third: {
+        lead: `Punktem wyjścia było „${firstAnchor}”. Ostatnia próba ma rozdzielić naprawę od chwilowego uspokojenia.`,
+        question: "Po trzech ostatnich konfliktach wskaż jedną trwałą zmianę w zachowaniu którejkolwiek ze stron. Jeżeli jej nie ma, co faktycznie podtrzymuje przekonanie, że kolejna rozmowa będzie inna?",
+        observation: "To pytanie sprawdza, czy konflikt prowadzi do korekty układu, czy jest tylko kolejną rundą tego samego mechanizmu.",
+      },
+    },
+    stagnation: {
+      second: {
+        lead: `W opisie zatrzymuje się „${anchor}”. Teraz szukamy momentu, w którym bliskość zaczęła być zastępowana funkcjonowaniem obok siebie.`,
+        question: "Co zniknęło jako pierwsze — ciekawość, rozmowa, dotyk, wspólne plany, lekkość — i co każde z Was zrobiło, kiedy to zauważyło?",
+        observation: latestObservation || "Stagnacja nie zaczyna się od nudy, tylko od rzeczy, które przestają być wybierane i przestają być naprawiane.",
+      },
+      third: {
+        lead: `Pierwszy obraz to „${firstAnchor}”. Teraz odkładamy historię, wspólne obowiązki i lęk przed zmianą.`,
+        question: "Co między Wami nadal jest świadomym wyborem obu stron, a co trwa głównie siłą przyzwyczajenia, wygody albo odpowiedzialności za wspólne życie?",
+        observation: "Ostatnie pytanie nie szuka spektakularnych uczuć. Sprawdza, czy w codzienności nadal istnieje wzajemny wybór.",
+      },
+    },
+    returning: {
+      second: {
+        lead: `W ostatnim kontakcie najmocniej brzmi „${anchor}”. Teraz zestawiamy tę chwilę z powodem, dla którego relacja wcześniej się rozpadła.`,
+        question: "Który dawny problem pojawił się także w tym kontakcie, a jaki konkretny fakt pokazuje, że choć jedna ze stron reaguje dziś inaczej niż wcześniej?",
+        observation: latestObservation || "Tęsknota pokazuje znaczenie relacji. Nie pokazuje jeszcze, czy zmienił się mechanizm, który ją zakończył.",
+      },
+      third: {
+        lead: `Pierwszy kadr to „${firstAnchor}”. Na końcu oddzielamy dzisiejszą osobę od najlepszej wersji wspomnienia.`,
+        question: "Gdybyś poznał/poznała tę osobę dzisiaj, z jej obecnym zachowaniem i bez wspólnej historii, czy wybrałbyś/wybrałabyś tę relację? Jakie fakty przesądzają odpowiedź?",
+        observation: "To pytanie sprawdza, czy powrót opiera się na nowej jakości, czy na sile więzi z dawną wersją tej historii.",
+      },
+    },
+    triangle: {
+      second: {
+        lead: `Fragment „${anchor}” pokazuje, że trzecia osoba mogła coś odsłonić, ale niekoniecznie to stworzyć.`,
+        question: "Jaką potrzebę, brak albo część siebie uruchamia przy Tobie ta osoba — i od kiedy tego samego nie znajdujesz albo nie próbujesz budować w obecnej relacji?",
+        observation: latestObservation || "Trzecia osoba często staje się lustrem istniejącego braku, zanim staje się samodzielnym problemem.",
+      },
+      third: {
+        lead: `Początek historii to „${firstAnchor}”. Teraz całkowicie usuwamy trzecią osobę z równania.`,
+        question: "Jaki problem w obecnej relacji pozostałby dokładnie taki sam, gdyby tej osoby nigdy nie było — i co ten fakt mówi o prawdziwym źródle Twojego dylematu?",
+        observation: "Ostatnia odpowiedź powinna pokazać, czy wybór dotyczy dwóch osób, czy przede wszystkim jednej relacji, której nie da się już omijać.",
+      },
+    },
+    loop: {
+      second: {
+        lead: `W cyklu zatrzymuje się fragment „${anchor}”. Teraz szukamy nagrody, która sprawia, że powrót znów wygląda jak rozwiązanie.`,
+        question: "Co dostajesz w pierwszych dniach po powrocie — ulgę, intensywność, uwagę, obietnicę zmiany, poczucie bycia potrzebnym — i kiedy dokładnie zaczyna to znowu znikać?",
+        observation: latestObservation || "Pętla utrzymuje się nie tylko przez ból, ale również przez krótką nagrodę, która pojawia się po kryzysie.",
+      },
+      third: {
+        lead: `Pierwszy pełny cykl zaczął się od „${firstAnchor}”. Na końcu szukamy miejsca, w którym schemat można rozpoznać przed kolejnym powrotem.`,
+        question: "Jaki dokładny moment zawsze poprzedza decyzję, że spróbujecie jeszcze raz — i co musiałoby wydarzyć się inaczej właśnie wtedy, żeby nie był to kolejny obrót tej samej pętli?",
+        observation: "To pytanie nie sprawdza siły uczuć. Sprawdza, czy istnieje realny punkt przerwania mechanizmu.",
+      },
+    },
+  };
 
-  candidates.push(depthFallbacks[Math.min(depth - 1, depthFallbacks.length - 1)]);
-
-  const chosen = candidates.find((candidate) => !questionWasUsed(history, candidate.question))
-    || depthFallbacks.find((candidate) => !questionWasUsed(history, candidate.question))
-    || depthFallbacks[depthFallbacks.length - 1];
-
-  return chosen;
+  const selected = pathQuestions[path.key] || pathQuestions.unease;
+  return depth >= 3 ? selected.third : selected.second;
 }
 
-function buildLocalPersonalizedOpening(path: EntryConfig, seed?: any): LocalInterviewQuestion | null {
+function buildLocalPersonalizedOpening(path: EntryConfig, seed?: any): LocalInterviewQuestion {
   const map = seed?.relationshipMap || {};
   const topBurden = map?.burdens?.[0]?.label || "";
   const topEmotion = map?.emotions?.[0]?.label || "";
   const truth = map?.truthCards?.[0] || "";
-  if (!topBurden && !topEmotion && !truth) return null;
+  const signal = topBurden || topEmotion || path.title.toLowerCase();
+  const lead = topBurden && topEmotion
+    ? `W Twojej mapie spotykają się „${topBurden}” i „${topEmotion}”. Pierwszy krok to sprawdzić je na jednej prawdziwej scenie.`
+    : `Nie zaczynamy od ogólnej oceny. Zatrzymujemy jeden moment związany z „${signal}”.`;
 
-  const lead = [topBurden, topEmotion].filter(Boolean).length
-    ? `W Twoich odpowiedziach najmocniej łączą się „${[topBurden, topEmotion].filter(Boolean).join("” i „")}”.`
-    : "W Twoich wcześniejszych odpowiedziach pojawił się jeden wyraźny wątek, którego nie warto pytać od początku.";
-
-  const questionByPath: Record<EntryKey, string> = {
-    unease: `Podaj ostatnią konkretną sytuację, w której pojawiło się „${topBurden || "poczucie, że coś nie gra"}”. Co dokładnie zrobiła druga osoba, a co było już Twoją interpretacją tego zdarzenia?`,
-    betrayal: `Wskaż ostatnią sytuację, w której „${topBurden || "problem z zaufaniem"}” uruchomił ${topEmotion || "napięcie"}. Co zrobiła wtedy druga osoba i co wydarzyło się później?`,
-    uncertain: `Podaj ostatnią sytuację, która najlepiej pokazuje „${topBurden || "brak jasności"}”. Co zrobiła druga osoba bez Twojej inicjatywy i czego nadal nie dało się z tego jednoznacznie wywnioskować?`,
-    asymmetry: `Opisz ostatni moment, w którym „${topBurden || "nierówne starania"}” były najbardziej widoczne. Co zrobiłeś lub zrobiłaś Ty, co zrobiła druga osoba i co by się stało, gdybyś wtedy niczego nie uruchomił lub nie uruchomiła?`,
-    conflict: `Weź ostatnią kłótnię, w której pojawiło się „${topBurden || "napięcie"}”. Co uruchomiło konflikt, kto wykonał pierwszy ruch naprawczy i co realnie zmieniło się później?`,
-    stagnation: `Podaj ostatni moment, który najlepiej pokazuje „${topBurden || "rutynę"}”. Co próbowała zrobić każda ze stron, żeby między Wami pojawiło się coś więcej niż codzienność?`,
-    returning: `Przywołaj ostatni kontakt po rozstaniu lub oddaleniu, w którym najmocniej pojawiło się „${topBurden || "pragnienie powrotu"}”. Jaki konkretny fakt pokazuje, że kolejna próba miałaby być inna?`,
-    triangle: `Wskaż ostatnią sytuację, w której „${topBurden || "trzecia osoba"}” pokazała Ci coś o obecnej relacji. Co było faktem, a co dopiero porównaniem lub wyobrażeniem?`,
-    loop: `Opisz ostatni pełny cykl, w którym pojawiło się „${topBurden || "powtarzanie tego samego"}”. Co uruchomiło kryzys, co doprowadziło do powrotu i co po poprawie naprawdę się utrzymało?`,
+  const openingByPath: Record<EntryKey, string> = {
+    unease: `Zatrzymaj ostatni moment, po którym pomyślałeś/pomyślałaś: „coś tu nie gra”. Odtwórz go bez interpretacji: gdzie byliście, co dokładnie zrobiła lub powiedziała druga osoba i co wydarzyło się w kolejnych minutach albo godzinach?`,
+    betrayal: `Wróć do ostatniej sytuacji, w której temat zaufania znów stał się obecny — niekoniecznie do samego odkrycia. Co było bodźcem, jak zachowała się druga osoba i co zrobiła później bez Twojego nacisku?`,
+    uncertain: `Wybierz jeden moment, po którym nadal nie wiedziałeś/nie wiedziałaś, na czym stoisz. Co dokładnie się wydarzyło, jaka odpowiedź padła i czego ta odpowiedź nadal nie rozstrzygnęła?`,
+    asymmetry: `Odtwórz ostatnią sytuację, w której relacja ruszyła do przodu głównie dlatego, że Ty coś zainicjowałeś/zainicjowałaś, naprawiłeś/naprawiłaś albo przypomniałeś/przypomniałaś. Co zrobiła każda ze stron — krok po kroku?`,
+    conflict: `Weź ostatni konflikt i odtwórz go jak krótką scenę: pierwsze zdanie, moment eskalacji, zachowanie każdej ze stron i to, co wydarzyło się po uspokojeniu emocji.`,
+    stagnation: `Wybierz jeden zwykły dzień, który najlepiej pokazuje dzisiejszą wersję tej relacji. Jak wyglądał Wasz kontakt od rana do wieczora i w którym momencie najbardziej poczułeś/poczułaś brak żywej bliskości?`,
+    returning: `Odtwórz ostatni kontakt po rozstaniu albo oddaleniu od pierwszej wiadomości do zakończenia spotkania lub rozmowy. Co było faktem, a co dopiero zaczęło budzić nadzieję na powrót?`,
+    triangle: `Zatrzymaj sytuację, w której obecność trzeciej osoby najmocniej wpłynęła na Twoje myślenie o obecnej relacji. Co wydarzyło się realnie, czego zapragnąłeś/zapragnęłaś i co zrobiłeś/zrobiłaś później?`,
+    loop: `Odtwórz ostatni pełny obrót Waszego schematu: co uruchomiło napięcie, kiedy pojawił się dystans, co sprowadziło Was z powrotem i jaki był pierwszy znak, że stary rytm wraca.`,
   };
 
   return {
     lead,
-    question: questionByPath[path.key],
+    question: openingByPath[path.key],
     observation: truth
-      ? `Wybrane przez Ciebie zdanie „${truth}” jest tezą do sprawdzenia, nie gotowym wnioskiem. Teraz potrzebny jest konkretny fakt.`
-      : `Pierwsze pytanie wynika z Twojej mapy, a nie z gotowej listy dla ścieżki „${path.title}”.`,
+      ? `Zdanie „${truth}” zostaje na razie hipotezą. Pierwszy kadr pokaże, jaki fakt rzeczywiście je wspiera albo osłabia.`
+      : `Pierwsze pytanie korzysta z wybranej ścieżki i mapy odpowiedzi, ale nie przesądza jeszcze wyniku.`,
   };
 }
 
 function createLocalInterviewState(path: EntryConfig, seed?: any): InterviewState {
-  const personalizedOpening = buildLocalPersonalizedOpening(path, seed);
-  const localQuestions = [
-    ...(personalizedOpening ? [personalizedOpening] : []),
-    ...(LOCAL_INTERVIEW_QUESTIONS[path.key] || []),
-    ...universalDeepeningQuestions(path),
-  ].filter((item, index, all) => all.findIndex((candidate) => normalizeAnswerText(candidate.question) === normalizeAnswerText(item.question)) === index).slice(0, 6);
-  const first = localQuestions[0];
+  const first = buildLocalPersonalizedOpening(path, seed);
   return {
     path: path.key,
     currentQuestion: first.question,
@@ -1709,7 +1815,7 @@ function createLocalInterviewState(path: EntryConfig, seed?: any): InterviewStat
     finished: false,
     exchangeIndex: 0,
     source: "local",
-    localQuestions,
+    localQuestions: [first],
     localIndex: 0,
   };
 }
@@ -3072,8 +3178,7 @@ export default function App() {
     };
   };
 
-  const buildCompositeOpenText = (clarificationsOverride?: ClarificationAnswerMap, finalContextOverride?: string): string => {
-    const answersSource = clarificationsOverride || clarificationAnswers;
+  const buildCompositeOpenText = (_clarificationsOverride?: ClarificationAnswerMap, finalContextOverride?: string): string => {
     const forceLines = forceMapItemsForPath(path?.key)
       .map((item) => `- ${item.title}: ${forceLabel(forceMap[item.key])}`)
       .join("\n");
@@ -3096,11 +3201,13 @@ export default function App() {
       : "Brak wybranych zdań prawdy.";
     const note = relationshipNote.trim() || "Brak dodatkowej notatki.";
     const interviewLines = interviewState?.history?.length
-      ? interviewState.history.map((e, index) => `Pytanie otwarte ${index + 1}: ${e.ai}\nOdpowiedź: ${e.user}`).join("\n\n")
+      ? interviewState.history.map((e, index) => [
+          `Pytanie otwarte ${index + 1}: ${e.ai}`,
+          e.lead ? `Kontekst pytania: ${e.lead}` : "",
+          `Odpowiedź: ${e.user}`,
+          e.observation ? `Ślad po odpowiedzi: ${e.observation}` : "",
+        ].filter(Boolean).join("\n")).join("\n\n")
       : "Brak dodatkowego wywiadu otwartego.";
-    const clarificationLines = clarificationQuestions.length
-      ? clarificationQuestions.map((q, index) => `Doprecyzowanie ${index + 1}: ${q.text}\nOdpowiedź: ${(answersSource[q.id] || "").trim() || "pominięte"}`).join("\n\n")
-      : "Brak doprecyzowań.";
     const finalContext = typeof finalContextOverride === "string" ? finalContextOverride.trim() : openText.trim();
     const finalOwnText = finalContext || "Użytkownik nie dopisał szerszego kontekstu końcowego.";
     return `ŚCIEŻKA ANALIZY
@@ -3132,17 +3239,15 @@ ${note}
 WYWIAD OTWARTY
 ${interviewLines}
 
-DOPRECYZOWANIA
-${clarificationLines}
-
 SZERSZY KONTEKST UŻYTKOWNIKA — OSTATNIE OKNO
 ${finalOwnText}`;
   };
 
   const prepareMapSummary = () => {
     if (!path) return;
-    const nextQuestions = buildClarificationQuestions(path, forceMap, burdens, truthCards, relationshipNote);
-    setClarificationQuestions(nextQuestions);
+    // Analiza 2.4: trzy pytania otwarte tworzą jeden pogłębiający wywiad.
+    // Osobna seria doprecyzowań została wyłączona, aby nie powtarzać tych samych wątków.
+    setClarificationQuestions([]);
     setClarificationAnswers({});
     setClarificationIndex(0);
     setClarificationDraft("");
@@ -3151,46 +3256,16 @@ ${finalOwnText}`;
     setStage("map_summary");
   };
 
-  const startOpenInterview = async () => {
+  const startOpenInterview = () => {
     if (!path) return;
     setInterviewAnswer("");
     setError(null);
+    setInterviewBusy(false);
+    // Pytania są prowadzone przez kontrolowany, trzyetapowy scenariusz zależny od ścieżki.
+    // Dzięki temu pierwszy kadr nie brzmi tak samo w każdej analizie, a kolejne pytania
+    // korzystają z rzeczywistej odpowiedzi użytkownika zamiast wracać do ogólników.
+    setInterviewState(createLocalInterviewState(path, buildInterviewSeed()));
     setStage("interview");
-    setInterviewBusy(true);
-
-    try {
-      const token = await ensureSession(path.key);
-      const initialContext = buildCompositeOpenText({});
-      const initialData = buildInterviewSeed();
-      const res = await fetch(`${API_BASE}/api/interview/start`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, path: path.key, initialContext, initialData }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (data?.crisis) {
-        setStage("crisis");
-        return;
-      }
-      if (!res.ok || !data?.ok || !data?.question) throw new Error(data?.message || "Nie udało się uruchomić wywiadu adaptacyjnego.");
-
-      setInterviewState({
-        path: path.key,
-        currentQuestion: data.question,
-        currentLead: data.lead || "",
-        currentObservation: data.observation || "",
-        history: [],
-        depth: Number(data.depth || 1),
-        finished: false,
-        exchangeIndex: Number(data.exchangeIndex || 0),
-        source: "api",
-      });
-    } catch {
-      // Bezpieczny fallback: obecny lokalny wywiad zostaje zachowany, gdy API chwilowo nie odpowiada.
-      setInterviewState(createLocalInterviewState(path, buildInterviewSeed()));
-    } finally {
-      setInterviewBusy(false);
-    }
   };
 
   const goToClarification = () => {
@@ -3218,12 +3293,6 @@ ${finalOwnText}`;
   };
 
   const advanceAfterOpenInterview = () => {
-    if (clarificationQuestions.length) {
-      setClarificationIndex(0);
-      setClarificationDraft(clarificationAnswers[clarificationQuestions[0]?.id] || "");
-      setStage("clarification");
-      return;
-    }
     setStage("open_text");
   };
 
@@ -3319,13 +3388,6 @@ ${finalOwnText}`;
     }
     if (stage === "interview") { setStage("map_summary"); return; }
     if (stage === "open_text") {
-      if (clarificationQuestions.length) {
-        const lastIndex = clarificationQuestions.length - 1;
-        setClarificationIndex(lastIndex);
-        setClarificationDraft(clarificationAnswers[clarificationQuestions[lastIndex]?.id] || "");
-        setStage("clarification");
-        return;
-      }
       if (interviewState && interviewState.history.length > 0) { setStage("interview"); return; }
       setStage("truth_cards"); return;
     }
@@ -4127,31 +4189,110 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
             </motion.div>
           )}
 
-          {stage === "interview" && interviewState && (
-            <motion.div key={`interview-${interviewState.exchangeIndex}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <div className="section-head compact">
-                <div className="eyebrow">{(ENTRY_CONFIGS.find((x) => x.key === selectedPath)?.title || "").toUpperCase()}</div>
-                <div className="progress-wrap">
-                  <span>Pytanie otwarte {Math.min(interviewState.depth, OPEN_INTERVIEW_LIMIT)} z {OPEN_INTERVIEW_LIMIT}</span>
-                  <div className="progress-track"><div className="progress-fill" style={{ width: `${(Math.min(interviewState.depth, OPEN_INTERVIEW_LIMIT) / OPEN_INTERVIEW_LIMIT) * 100}%` }} /></div>
+          {stage === "interview" && interviewState && (() => {
+            const depth = Math.max(1, Math.min(OPEN_INTERVIEW_LIMIT, interviewState.depth));
+            const chapter = interviewChapter(depth);
+            const previousExchange = interviewState.history[interviewState.history.length - 1];
+            const firstExchange = interviewState.history[0];
+            const previousExcerpt = interviewAnswerExcerpt(previousExchange?.user);
+            const firstExcerpt = interviewAnswerExcerpt(firstExchange?.user, 150);
+            const writingCue = interviewWritingCue(interviewState.path, depth);
+            return (
+              <motion.div
+                key={`interview-${interviewState.exchangeIndex}`}
+                className={`interview-experience interview-depth-${depth}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: .36, ease: "easeOut" }}
+              >
+                <div className="interview-chapter-nav" aria-label={`Pytanie ${depth} z ${OPEN_INTERVIEW_LIMIT}`}>
+                  {INTERVIEW_CHAPTERS.map((item, index) => {
+                    const itemDepth = index + 1;
+                    const state = itemDepth < depth ? "done" : itemDepth === depth ? "active" : "waiting";
+                    return (
+                      <div className={`interview-chapter-tab ${state}`} key={item.number}>
+                        <span>{item.number}</span>
+                        <strong>{item.eyebrow}</strong>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-              <Glass className="question-panel">
-                <div className="question-copy">
-                  {interviewState.currentLead && <div className="question-lead">{interviewState.currentLead}</div>}
-                  <h3>{interviewState.currentQuestion}</h3>
-                  {interviewState.currentObservation && interviewState.history.length > 0 && (<div style={{ fontSize: "14px", color: BRAND.muted, marginTop: "12px", fontStyle: "italic", lineHeight: 1.6 }}>{interviewState.currentObservation}</div>)}
-                </div>
-                <textarea className="ctms-textarea" value={interviewAnswer} onChange={(e) => setInterviewAnswer(e.target.value)} placeholder="Odpowiedz konkretnie..." maxLength={2000} />
-                <div className="text-meta"><div>{interviewState.history.length > 0 ? `Wymiana ${interviewState.history.length + 1}` : "Pierwsze pytanie"}</div><div>{interviewAnswer.length}/2000</div></div>
-                {error && <div className="error-line" style={{ marginTop: "12px" }}>{error}</div>}
-                <div className="section-actions">
-                  <GhostButton onClick={goBack}>Wróć</GhostButton>
-                  <PrimaryButton onClick={sendInterviewAnswer} disabled={interviewBusy || interviewAnswer.trim().length < 10}>{interviewBusy ? "Analizuję..." : "Dalej →"}</PrimaryButton>
-                </div>
-              </Glass>
-            </motion.div>
-          )}
+
+                <Glass className={`interview-editorial-panel interview-editorial-panel--${depth}`}>
+                  <aside className="interview-chapter-rail">
+                    <div className="interview-rail-number">{chapter.number}</div>
+                    <div className="interview-rail-copy">
+                      <span>{chapter.eyebrow}</span>
+                      <h2>{chapter.title}</h2>
+                      <p>{chapter.purpose}</p>
+                    </div>
+                    <div className="interview-path-mark">
+                      {(ENTRY_CONFIGS.find((x) => x.key === selectedPath)?.title || "Twoja ścieżka")}
+                    </div>
+                  </aside>
+
+                  <section className="interview-editorial-content">
+                    {depth > 1 && (
+                      <div className="interview-trace-block">
+                        <div className="interview-trace-label">ŚLAD Z POPRZEDNIEJ ODPOWIEDZI</div>
+                        {interviewState.currentObservation && (
+                          <blockquote>{interviewState.currentObservation}</blockquote>
+                        )}
+                        {previousExcerpt && <p>„{previousExcerpt}”</p>}
+                      </div>
+                    )}
+
+                    {depth === 3 && firstExcerpt && previousExcerpt && firstExcerpt !== previousExcerpt && (
+                      <div className="interview-frame-pair" aria-label="Dwa fragmenty, które łączy ostatnie pytanie">
+                        <div>
+                          <span>PIERWSZY KADR</span>
+                          <p>„{firstExcerpt}”</p>
+                        </div>
+                        <div>
+                          <span>OSTATNI ŚLAD</span>
+                          <p>„{previousExcerpt}”</p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="question-copy interview-question-copy">
+                      {interviewState.currentLead && <div className="question-lead">{interviewState.currentLead}</div>}
+                      <h3>{interviewState.currentQuestion}</h3>
+                    </div>
+
+                    <div className="interview-writing-desk">
+                      <div className="interview-writing-head">
+                        <span>{chapter.writingLabel}</span>
+                        <em>{writingCue}</em>
+                      </div>
+                      <textarea
+                        className="ctms-textarea interview-textarea"
+                        value={interviewAnswer}
+                        onChange={(e) => setInterviewAnswer(e.target.value)}
+                        placeholder={writingCue}
+                        maxLength={2000}
+                        autoFocus
+                      />
+                      <div className="interview-writing-footer">
+                        <span>Nie pisz ładnie. Pisz tak, żeby dało się zobaczyć, co naprawdę się wydarzyło.</span>
+                        <b>{interviewAnswer.length}/2000</b>
+                      </div>
+                    </div>
+
+                    {error && <div className="error-line interview-error">{error}</div>}
+                    <div className="section-actions interview-actions">
+                      <GhostButton onClick={goBack}>Wróć</GhostButton>
+                      <PrimaryButton onClick={sendInterviewAnswer} disabled={interviewBusy || interviewAnswer.trim().length < 18}>
+                        {interviewBusy ? "Układam kolejne pytanie…" : interviewButtonLabel(depth)}
+                      </PrimaryButton>
+                    </div>
+                  </section>
+                </Glass>
+              </motion.div>
+            );
+          })()}
+
 
           {stage === "open_text" && path && (() => {
             const context = finalContextForPath(path);
