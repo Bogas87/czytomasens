@@ -3736,83 +3736,94 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
   return (
     <div className="ctms-shell">
       <div className="ctms-noise" />
-      <div className="ctms-topbar">
+      <div className={`ctms-topbar ${stage === "landing" ? "ctms-topbar--landing" : ""}`}>
         <LogoBlock />
         {stage !== "landing" && !isPublicContentRoute && <GhostButton onClick={resetAll}>Od początku</GhostButton>}
       </div>
 
-      <main className={`ctms-main ${(["questions","checkpoint","mid_reflection","interview","open_text","preview","paid","error","crisis"].includes(stage) || Boolean(routeLegalKey)) ? "narrow" : ""}`}>
+      <main className={`ctms-main ${stage === "landing" ? "ctms-main--landing" : ""} ${(["questions","checkpoint","mid_reflection","interview","open_text","preview","paid","error","crisis"].includes(stage) || Boolean(routeLegalKey)) ? "narrow" : ""}`}>
         <AnimatePresence mode="wait">
 
           {stage === "landing" && isPublicContentRoute && renderPublicContentRoute()}
 
           {stage === "landing" && !isPublicContentRoute && (
             <motion.div key="landing" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <section className="ctms-home-stage" data-ui-version="2.4.6">
+              <section className="ctms-home-stage" data-ui-version="2.4.7">
                 <div className="ctms-home-glow" aria-hidden="true" />
                 <Glass className="ctms-home-canvas">
                   <section className="ctms-home-copy">
                     <div className="ctms-home-eyebrow">
-                      <span>PRYWATNY ODCZYT RELACJI</span>
+                      <span>PRYWATNY ODCZYT JEDNEJ RELACJI</span>
                       <i aria-hidden="true" />
                     </div>
 
-                    <h1>Przestań zgadywać, co to znaczy. Zobacz, co naprawdę robi ta relacja.</h1>
+                    <div className="ctms-home-hook">Nie kolejna opinia. Odczyt tego, co naprawdę się powtarza.</div>
+
+                    <h1>
+                      Nie oceniaj relacji po jej najlepszym momencie.
+                      <em>Zobacz układ, który wraca.</em>
+                    </h1>
+
                     <p className="ctms-home-lead">
-                      CzyToMaSens nie wydaje szybkiego wyroku. Porządkuje fakty, oddziela słowa od zachowania i pokazuje wzór, który wraca nawet wtedy, gdy emocje opadną.
+                      CzyToMaSens prowadzi od konkretnych faktów, przez rozkład ciężaru, do jednej sceny z życia. Dzięki temu wynik nie opiera się na nastroju ani nadziei, tylko na tym, co druga strona robi, kiedy emocje opadną.
                     </p>
 
                     <div className="ctms-home-actions">
-                      <PrimaryButton onClick={() => setStage("entry")}>Rozpocznij prywatną analizę</PrimaryButton>
+                      <PrimaryButton onClick={() => setStage("entry")}>Zobacz mój układ relacji</PrimaryButton>
                       <div className="ctms-home-privacy">
                         <span aria-hidden="true">●</span>
                         <div>
-                          <strong>Jedna perspektywa. Bez publicznego profilu.</strong>
-                          <small>Wynik porządkuje sytuację, nie diagnozuje drugiej osoby.</small>
+                          <strong>Prywatnie. Bez profilu i publicznych odpowiedzi.</strong>
+                          <small>Analiza porządkuje Twoją perspektywę. Nie diagnozuje drugiej osoby.</small>
                         </div>
                       </div>
                     </div>
 
                     <div className="ctms-home-axis" aria-label="Trzy warstwy analizy">
                       <div><span>01</span><strong>Fakty</strong><small>co wydarzyło się naprawdę</small></div>
-                      <div><span>02</span><strong>Mechanizm</strong><small>co uruchamia ten sam układ</small></div>
-                      <div><span>03</span><strong>Ruch</strong><small>co ma sens zrobić dalej</small></div>
+                      <div><span>02</span><strong>Układ</strong><small>kto uruchamia, naprawia i dźwiga</small></div>
+                      <div><span>03</span><strong>Decyzja</strong><small>co może zmienić ocenę i jaki ruch ma sens</small></div>
                     </div>
                   </section>
 
                   <aside className="ctms-home-reading">
                     <div className="ctms-home-reading-top">
-                      <span>PRZESUNIĘCIE PERSPEKTYWY</span>
+                      <span>PRÓBA PRAWDY</span>
                       <small>ODCZYT / 01</small>
                     </div>
 
                     <div className="ctms-home-reading-word" aria-hidden="true">WZÓR</div>
 
                     <blockquote>
-                      „To, co boli najmocniej, nie zawsze jest tym, co decyduje. Decyduje to, co regularnie wraca.”
+                      „Najwięcej mówi nie to, co ktoś obiecuje po napięciu. Najwięcej mówi to, co potrafi utrzymać bez Twojego przypominania.”
                     </blockquote>
+
+                    <div className="ctms-home-insight">
+                      <span>PUNKT ZWROTNY</span>
+                      <strong>W analizie oddzielamy pojedynczy dobry moment od zachowania, które naprawdę buduje relację.</strong>
+                    </div>
 
                     <div className="ctms-home-layers">
                       <div className="ctms-home-layer">
                         <span>01</span>
-                        <small>SŁOWA</small>
-                        <strong>Co zostało powiedziane, obiecane albo wyjaśnione.</strong>
+                        <small>ZDARZENIE</small>
+                        <strong>Co konkretnie się wydarzyło i co było potem.</strong>
                       </div>
                       <div className="ctms-home-layer active">
                         <span>02</span>
-                        <small>ZACHOWANIE</small>
-                        <strong>Co dzieje się ponownie bez Twojego przypominania.</strong>
+                        <small>POWTARZALNOŚĆ</small>
+                        <strong>Co wraca mimo rozmów, przeprosin albo chwilowego spokoju.</strong>
                       </div>
                       <div className="ctms-home-layer">
                         <span>03</span>
-                        <small>KIERUNEK</small>
-                        <strong>Co realnie rośnie, stoi w miejscu albo wygasa.</strong>
+                        <small>KOSZT</small>
+                        <strong>Kto podtrzymuje relację i czym za to płaci.</strong>
                       </div>
                     </div>
 
                     <div className="ctms-home-reading-foot">
-                      <span>EFEKT</span>
-                      <strong>Nie kolejna opinia. Czytelny obraz układu i jeden rozsądny następny ruch.</strong>
+                      <span>WYNIK</span>
+                      <strong>Jedno zdanie, które nazywa sedno. Jeden warunek, który może zmienić ocenę. Jeden rozsądny następny ruch.</strong>
                     </div>
                   </aside>
                 </Glass>
@@ -3824,12 +3835,12 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
 
           {stage === "entry" && (
             <motion.div key="entry" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-              <section className="ctms-route-stage" data-ui-version="2.4.6">
+              <section className="ctms-route-stage" data-ui-version="2.4.7">
                 <div className="ctms-route-head">
                   <div>
                     <div className="eyebrow">WYBIERZ PUNKT WEJŚCIA</div>
                     <h2>Co dziś wymaga nazwania?</h2>
-                    <p>Wszystkie ścieżki prowadzą przez ten sam standard analizy. Różnią się punktem, od którego zaczynamy zadawać pytania.</p>
+                    <p>Wybierz temat najbliższy Twojej sytuacji. Kliknięcie zaznacza ścieżkę. Samo przesunięcie kursora niczego nie zmienia.</p>
                   </div>
                   <GhostButton onClick={goBack}>Wróć</GhostButton>
                 </div>
@@ -3838,29 +3849,40 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                   <section className="ctms-route-matrix" aria-label="Ścieżki analizy">
                     <div className="ctms-route-matrix-top">
                       <span>9 ŚCIEŻEK</span>
-                      <small>Kliknij, żeby porównać. Analiza rozpocznie się dopiero po potwierdzeniu.</small>
+                      <small>Jedno kliknięcie wybiera. Szczegóły pojawią się obok, a na telefonie bezpośrednio pod wybraną ścieżką.</small>
                     </div>
 
                     <div className="ctms-route-grid-compact">
                       {ENTRY_CONFIGS.map((entry, index) => {
                         const active = entryPreview.key === entry.key;
                         return (
-                          <button
-                            key={entry.key}
-                            type="button"
-                            className={`ctms-route-option ${active ? "active" : ""}`}
-                            onClick={() => setEntryPreviewKey(entry.key)}
-                            onMouseEnter={() => setEntryPreviewKey(entry.key)}
-                            onFocus={() => setEntryPreviewKey(entry.key)}
-                            aria-pressed={active}
-                          >
-                            <span>{String(index + 1).padStart(2, "0")}</span>
-                            <div>
-                              <strong>{entry.title}</strong>
-                              <small>{entry.subtitle}</small>
-                            </div>
-                            <i aria-hidden="true">{active ? "—" : "+"}</i>
-                          </button>
+                          <React.Fragment key={entry.key}>
+                            <button
+                              type="button"
+                              className={`ctms-route-option ${active ? "active" : ""}`}
+                              onClick={() => setEntryPreviewKey(entry.key)}
+                              aria-pressed={active}
+                            >
+                              <span>{String(index + 1).padStart(2, "0")}</span>
+                              <div>
+                                <strong>{entry.title}</strong>
+                                <small>{entry.subtitle}</small>
+                              </div>
+                              <i aria-hidden="true">{active ? "✓" : "+"}</i>
+                            </button>
+
+                            {active && (
+                              <div className="ctms-route-inline-preview">
+                                <div className="ctms-route-inline-kicker">WYBRANA ŚCIEŻKA · {String(index + 1).padStart(2, "0")}</div>
+                                <h3>{entry.title}</h3>
+                                <p>{entry.intro}</p>
+                                <blockquote>{entry.quote}</blockquote>
+                                <PrimaryButton onClick={() => startPath(entry.key)}>
+                                  {busy ? "Przygotowuję..." : "Wybieram tę ścieżkę"}
+                                </PrimaryButton>
+                              </div>
+                            )}
+                          </React.Fragment>
                         );
                       })}
                     </div>
