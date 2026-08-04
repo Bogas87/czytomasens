@@ -3820,9 +3820,17 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                   <div className="question-lead">{currentQuestion.lead}</div>
                   <h3>{currentQuestion.text}</h3>
                 </div>
-                <div className="answer-grid">
-                  {currentQuestion.options.map((opt) => (
-                    <button key={opt.id} className="answer-card" onClick={() => answerQuestion(currentQuestion.id, opt.id)}>{opt.label}</button>
+                <div className="answer-grid answer-grid--editorial">
+                  {currentQuestion.options.map((opt, optionIndex) => (
+                    <button
+                      key={opt.id}
+                      className="answer-card answer-card--editorial"
+                      onClick={() => answerQuestion(currentQuestion.id, opt.id)}
+                    >
+                      <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
+                      <span className="answer-card-label">{opt.label}</span>
+                      <span className="answer-card-mark" aria-hidden="true">→</span>
+                    </button>
                   ))}
                 </div>
                 <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton><GhostButton onClick={resetAll}>Od początku</GhostButton></div>
@@ -3845,9 +3853,17 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
               <Glass className="question-panel">
                 <div className="eyebrow">{path.checkpoint.title}</div>
                 <div className="question-copy"><h3>{path.checkpoint.text}</h3></div>
-                <div className="answer-grid">
-                  {path.checkpoint.options.map((opt) => (
-                    <button key={opt.id} className="answer-card" onClick={() => answerCheckpoint(opt.id)}>{busy ? "Ładuję..." : opt.label}</button>
+                <div className="answer-grid answer-grid--editorial">
+                  {path.checkpoint.options.map((opt, optionIndex) => (
+                    <button
+                      key={opt.id}
+                      className="answer-card answer-card--editorial"
+                      onClick={() => answerCheckpoint(opt.id)}
+                    >
+                      <span className="answer-card-no">{String(optionIndex + 1).padStart(2, "0")}</span>
+                      <span className="answer-card-label">{busy ? "Ładuję..." : opt.label}</span>
+                      <span className="answer-card-mark" aria-hidden="true">→</span>
+                    </button>
                   ))}
                 </div>
                 <div className="section-actions"><GhostButton onClick={goBack}>Wróć</GhostButton></div>
@@ -3874,23 +3890,45 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                   To jest część, która pozwala zobaczyć asymetrię bez pisania długiej historii. Wybierz najbliższą odpowiedź, nie idealną.
                 </div>
                 <div className="force-map-list">
-                  {forceMapItemsForPath(path.key).map((item) => (
-                    <div key={item.key} className="force-map-item">
-                      <div className="force-map-copy">
-                        <strong>{item.title}</strong>
-                        <span>{item.hint}</span>
+                  {forceMapItemsForPath(path.key).map((item, itemIndex) => (
+                    <div
+                      key={item.key}
+                      className="force-map-item force-map-item--editorial"
+                      data-selected={forceMap[item.key] || "none"}
+                    >
+                      <div className="force-map-topline">
+                        <span className="force-map-index">{String(itemIndex + 1).padStart(2, "0")}</span>
+                        <div className="force-map-copy">
+                          <strong>{item.title}</strong>
+                          <span>{item.hint}</span>
+                        </div>
                       </div>
-                      <div className="force-options" role="group" aria-label={item.title}>
-                        {FORCE_OPTIONS.map((opt) => (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            className={`force-option ${forceMap[item.key] === opt.value ? "selected" : ""}`}
-                            onClick={() => setForceValue(item.key, opt.value)}
-                          >
-                            {opt.label}
-                          </button>
-                        ))}
+                      <div className="force-choice-field">
+                        <div className="force-choice-anchors" aria-hidden="true">
+                          <span>BARDZIEJ PO TWOJEJ STRONIE</span>
+                          <span>RÓWNOWAGA</span>
+                          <span>BARDZIEJ PO DRUGIEJ STRONIE</span>
+                        </div>
+                        <div className="force-options" role="group" aria-label={item.title}>
+                          {FORCE_OPTIONS.map((opt, optionIndex) => (
+                            <button
+                              key={opt.value}
+                              type="button"
+                              aria-pressed={forceMap[item.key] === opt.value}
+                              className={`force-option ${forceMap[item.key] === opt.value ? "selected" : ""}`}
+                              onClick={() => setForceValue(item.key, opt.value)}
+                            >
+                              <span className="force-option-code">{["I", "II", "III", "IV", "V"][optionIndex]}</span>
+                              <span className="force-option-label">{opt.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                        {forceMap[item.key] && (
+                          <div className="force-map-selection">
+                            <span>TWÓJ ODCZYT</span>
+                            <strong>{forceLabel(forceMap[item.key])}</strong>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -4256,7 +4294,7 @@ h2{font-family:Georgia,'Times New Roman',serif;font-size:18pt;line-height:1.14;l
                       </div>
                     )}
 
-                    <div className="question-copy interview-question-copy">
+                    <div className={`question-copy interview-question-copy ${interviewState.currentQuestion.length > 180 ? "is-long" : ""}`}>
                       {interviewState.currentLead && <div className="question-lead">{interviewState.currentLead}</div>}
                       <h3>{interviewState.currentQuestion}</h3>
                     </div>
