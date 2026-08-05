@@ -126,7 +126,7 @@ export function Landing({ onStart }: { onStart: () => void }) {
           <li><span>4</span> Wracasz z wynikiem bezpiecznego mikro-testu.</li>
           <li><span>5</span> System porównuje zmianę zachowania z wcześniejszą narracją.</li>
         </ol>
-        <PrimaryButton onClick={onStart}>Rozpocznij analizę</PrimaryButton>
+        <p className="v3-loop-note">Pełny proces nie kończy się opinią — kończy się kryterium i sprawdzeniem go w rzeczywistości.</p>
       </Surface>
 
       <section className="v3-articles-home" aria-label="Poradniki o relacjach">

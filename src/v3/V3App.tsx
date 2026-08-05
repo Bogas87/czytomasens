@@ -402,7 +402,7 @@ export function V3App() {
     await loadInterviewQuestion(nextStep, nextHistory);
   }
 
-  async function runAnalysis() {
+  async function runAnalysis(finalContextOverride?: string) {
     if (!path || !session) return;
     setStage("analyzing");
     setBusy(true);
@@ -413,7 +413,7 @@ export function V3App() {
         answers: answerPayload,
         context,
         interview: interviewHistory,
-        finalContext,
+        finalContext: finalContextOverride ?? finalContext,
       };
       const result = await analyzeV3({
         sessionToken: session.sessionToken,
@@ -540,6 +540,13 @@ export function V3App() {
       <Shell>
         <LoadingPanel
           title={stage === "return" ? "Otwieramy prywatną historię" : "Porównujemy zdarzenia z Twoją narracją"}
+          expectedText={
+            stage === "return"
+              ? "Otworzenie zapisanej historii zwykle trwa kilka sekund."
+              : (finalContext.length + interviewHistory.reduce((sum, item) => sum + item.answer.length, 0) > 5000
+                  ? "Opis jest obszerny. Przygotowanie wyniku może potrwać do około minuty."
+                  : "Zwykle trwa to 20–40 sekund. Nie zamykaj tej karty.")
+          }
           lines={[
             "Oddzielamy obserwowalne zdarzenia od interpretacji.",
             "Szukamy rozbieżności, ale również faktów, które osłabiają pierwszą hipotezę.",
@@ -619,7 +626,11 @@ export function V3App() {
               consent={analysisConsent}
               onChange={setFinalContext}
               onConsent={setAnalysisConsent}
-              onSubmit={runAnalysis}
+              onSubmit={() => runAnalysis()}
+              onSkip={() => {
+                setFinalContext("");
+                void runAnalysis("");
+              }}
             />
           )}
 
@@ -725,7 +736,12 @@ export function V3App() {
               {error && <p>{error}</p>}
               {!successMessage && (
                 <div className="v3-error-actions">
-                  <button className="v3-button v3-button-primary" onClick={() => setStage(preview ? "preview" : "landing")}>Wróć</button>
+                  <button
+                    className="v3-button v3-button-primary"
+                    onClick={() => setStage(preview ? "preview" : (session && path ? "final-context" : "landing"))}
+                  >
+                    Wróć do ostatniego etapu
+                  </button>
                   <button className="v3-button v3-button-secondary" onClick={reset}>Zacznij od początku</button>
                 </div>
               )}

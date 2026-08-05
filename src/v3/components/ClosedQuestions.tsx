@@ -42,7 +42,13 @@ export function ClosedQuestions({
             transition={{ duration: 0.24 }}
           >
             <p className="v3-question-lead">{question.lead}</p>
-            <h1 className={question.text.length > 150 ? "v3-question-title v3-question-title-long" : "v3-question-title"}>
+            <h1 className={
+              question.text.length > 150
+                ? "v3-question-title v3-question-title-long"
+                : question.text.length > 105
+                  ? "v3-question-title v3-question-title-medium"
+                  : "v3-question-title"
+            }>
               {question.text}
             </h1>
 

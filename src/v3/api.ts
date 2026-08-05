@@ -27,7 +27,10 @@ export const API_BASE = readApiBase();
 
 async function jsonRequest<T>(url: string, options: RequestInit = {}, timeoutMs = 45000): Promise<T> {
   const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), timeoutMs);
+  const timeout = window.setTimeout(
+    () => controller.abort(new DOMException("Przekroczono czas oczekiwania", "TimeoutError")),
+    timeoutMs
+  );
   try {
     const response = await fetch(url, {
       ...options,
@@ -47,6 +50,18 @@ async function jsonRequest<T>(url: string, options: RequestInit = {}, timeoutMs 
       throw error;
     }
     return data as T;
+  } catch (error: any) {
+    const aborted =
+      controller.signal.aborted
+      || error?.name === "AbortError"
+      || error?.name === "TimeoutError"
+      || /aborted|timeout/i.test(String(error?.message || ""));
+    if (aborted) {
+      throw new Error(
+        "Przygotowanie wyniku przekroczyło bezpieczny czas oczekiwania. Twoje odpowiedzi są zapisane — wróć i uruchom analizę ponownie."
+      );
+    }
+    throw error;
   } finally {
     window.clearTimeout(timeout);
   }
@@ -116,7 +131,7 @@ export async function analyzeV3(payload: {
   }>(`${API_BASE}/api/v3/analyze`, {
     method: "POST",
     body: JSON.stringify(payload),
-  }, 90000);
+  }, 70000);
   return data;
 }
 

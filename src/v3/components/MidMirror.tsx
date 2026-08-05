@@ -44,11 +44,6 @@ export function MidMirror({
           </article>
         </div>
 
-        <div className="v3-mid-mirror-boundary">
-          To nie jest śledzenie „toku myślenia AI”. To krótka informacja o sygnałach wynikających
-          z dotychczasowych odpowiedzi oraz o materiale, którego nadal brakuje.
-        </div>
-
         <div className="v3-form-actions v3-mid-mirror-actions">
           <PrimaryButton onClick={onContinue} disabled={loading}>Idziemy głębiej</PrimaryButton>
         </div>

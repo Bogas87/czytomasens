@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import type { EntryConfig } from "../data/paths";
@@ -6,11 +5,13 @@ import { PATH_CONTEXT } from "../data/paths";
 import type { InterviewExchange } from "../types";
 import { Kicker, PrimaryButton, Progress, SecondaryButton, Surface } from "./Layout";
 
+const MIN_OPEN_LENGTH = 20;
+
 const chapterMeta = [
   {
     eyebrow: "KADR ZDARZENIA",
     title: "Zatrzymaj jeden moment",
-    purpose: "Najpierw potrzebny jest materiał, który dałoby się zobaczyć albo usłyszeć. Bez diagnozowania intencji.",
+    purpose: "Najpierw potrzebny jest materiał, który dałoby się zobaczyć albo usłyszeć. Bez dopowiadania intencji.",
   },
   {
     eyebrow: "MECHANIZM POD SPODEM",
@@ -20,7 +21,7 @@ const chapterMeta = [
   {
     eyebrow: "PRÓBA PRAWDY",
     title: "Sprawdź najlepszy kontrargument",
-    purpose: "Ostatnie pytanie celowo szuka faktu, który może osłabić pierwsze wyjaśnienie. To chroni analizę przed automatycznym przytaknięciem.",
+    purpose: "Ostatnie pytanie szuka również faktu, który może osłabić pierwsze wyjaśnienie.",
   },
 ];
 
@@ -57,6 +58,8 @@ export function OpenInterview({
   const chapter = chapterMeta[Math.min(step, 2)];
   const effectiveQuestion = question || fallbackQuestion(path, step);
   const previous = history[history.length - 1];
+  const length = draft.trim().length;
+  const canSubmit = length >= MIN_OPEN_LENGTH;
 
   return (
     <Surface className="v3-interview">
@@ -93,7 +96,7 @@ export function OpenInterview({
           </motion.div>
         )}
 
-        <h1 className={effectiveQuestion.length > 180 ? "v3-open-question is-long" : "v3-open-question"}>
+        <h1 className={effectiveQuestion.length > 155 ? "v3-open-question is-long" : "v3-open-question"}>
           {effectiveQuestion}
         </h1>
 
@@ -104,23 +107,32 @@ export function OpenInterview({
             onChange={(event) => onDraft(event.target.value)}
             placeholder={
               step === 0
-                ? "Kiedy to było? Co dokładnie zrobiła lub powiedziała druga osoba? Co zrobiłeś/zrobiłaś Ty? Co wydarzyło się później?"
+                ? "Kiedy to było? Co dokładnie zrobiła lub powiedziała druga osoba? Co zrobiłeś lub zrobiłaś Ty? Co wydarzyło się później?"
                 : step === 1
-                  ? "Zapisz kolejność ruchów obu stron i to, co faktycznie się zmieniło."
-                  : "Podaj również fakt, który może nie pasować do Twojej pierwszej wersji sytuacji."
+                  ? "Zapisz kolejność działań obu stron i to, co faktycznie wydarzyło się po tym zdarzeniu."
+                  : "Podaj również fakt, który może nie pasować do Twojego pierwszego wyjaśnienia sytuacji."
             }
             maxLength={5000}
-            rows={9}
+            rows={8}
           />
-          <small>{draft.trim().length} / 5000</small>
+          <div className="v3-writing-meta">
+            <small>
+              {length === 0
+                ? "Minimum 20 znaków albo wybierz pominięcie pytania."
+                : length < MIN_OPEN_LENGTH
+                  ? `Dopisz jeszcze ${MIN_OPEN_LENGTH - length} znaków albo pomiń pytanie.`
+                  : "Wystarczająca długość odpowiedzi."}
+            </small>
+            <small>{length} / 5000</small>
+          </div>
         </label>
 
         <div className="v3-interview-actions">
-          <PrimaryButton onClick={onSubmit} disabled={loading || draft.trim().length < 24}>
-            {loading ? "Układamy kolejne pytanie…" : step < 2 ? "Idziemy głębiej" : "Zamknij ten wątek"}
+          <PrimaryButton onClick={onSubmit} disabled={loading || !canSubmit}>
+            {loading ? "Przygotowujemy kolejne pytanie…" : step < 2 ? "Przejdź dalej" : "Zamknij ten wątek"}
           </PrimaryButton>
           <SecondaryButton onClick={onSkip} disabled={loading}>
-            Nie mam dość danych
+            Pomiń — nie mam dość danych
           </SecondaryButton>
         </div>
       </div>
@@ -135,6 +147,7 @@ export function FinalContext({
   onChange,
   onConsent,
   onSubmit,
+  onSkip,
 }: {
   path: EntryConfig;
   value: string;
@@ -142,8 +155,12 @@ export function FinalContext({
   onChange: (value: string) => void;
   onConsent: (value: boolean) => void;
   onSubmit: () => void;
+  onSkip: () => void;
 }) {
   const config = PATH_CONTEXT[path.key];
+  const length = value.trim().length;
+  const canSubmit = consent && length >= MIN_OPEN_LENGTH;
+
   return (
     <Surface className="v3-final-context">
       <div className="v3-section-intro">
@@ -159,15 +176,24 @@ export function FinalContext({
       </div>
 
       <label className="v3-writing-surface v3-writing-surface-large">
-        <span>TWÓJ DODATKOWY KONTEKST</span>
+        <span>DODATKOWY KONTEKST — POLE OPCJONALNE</span>
         <textarea
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          placeholder="Możesz dopisać historię relacji, wcześniejsze próby naprawy, ważne okoliczności, własne błędy, kontrprzykłady i wszystko, co zmienia znaczenie opisanych zdarzeń."
+          placeholder="Dopisz wcześniejsze próby naprawy, ważne okoliczności, własne błędy, kontrprzykłady albo inne informacje, które mogą zmienić znaczenie opisanych zdarzeń."
           maxLength={9000}
-          rows={12}
+          rows={9}
         />
-        <small>{value.trim().length} / 9000</small>
+        <div className="v3-writing-meta">
+          <small>
+            {length === 0
+              ? "Możesz uzupełnić minimum 20 znaków albo pominąć ten etap."
+              : length < MIN_OPEN_LENGTH
+                ? `Dopisz jeszcze ${MIN_OPEN_LENGTH - length} znaków albo pomiń ten etap.`
+                : "Kontekst zostanie uwzględniony w analizie."}
+          </small>
+          <small>{length} / 9000</small>
+        </div>
       </label>
 
       <label className="v3-consent">
@@ -177,15 +203,19 @@ export function FinalContext({
           onChange={(event) => onConsent(event.target.checked)}
         />
         <span>
-          Wyrażam wyraźną zgodę na przetworzenie treści podanych w analizie, w tym informacji
-          mogących dotyczyć zdrowia lub życia intymnego, wyłącznie w celu przygotowania wyniku.
+          Wyrażam zgodę na przetworzenie treści podanych w analizie wyłącznie w celu przygotowania wyniku.
           Akceptuję Regulamin i Politykę prywatności.
         </span>
       </label>
 
-      <PrimaryButton onClick={onSubmit} disabled={!consent}>
-        Porównaj moje odpowiedzi z opisaną sytuacją
-      </PrimaryButton>
+      <div className="v3-final-context-actions">
+        <PrimaryButton onClick={onSubmit} disabled={!canSubmit}>
+          Uwzględnij kontekst i przygotuj wynik
+        </PrimaryButton>
+        <SecondaryButton onClick={onSkip} disabled={!consent}>
+          Pomiń dodatkowy kontekst
+        </SecondaryButton>
+      </div>
     </Surface>
   );
 }

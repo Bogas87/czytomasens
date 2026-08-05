@@ -115,15 +115,34 @@ export function Progress({
 export function LoadingPanel({
   title,
   lines,
+  expectedText = "Zwykle trwa to 20–40 sekund. Przy obszernym opisie może potrwać do około minuty.",
 }: {
   title: string;
   lines: string[];
+  expectedText?: string;
 }) {
   const [index, setIndex] = React.useState(0);
+  const [elapsed, setElapsed] = React.useState(0);
+
   React.useEffect(() => {
-    const timer = window.setInterval(() => setIndex((value) => (value + 1) % lines.length), 1800);
-    return () => window.clearInterval(timer);
+    const lineTimer = window.setInterval(
+      () => setIndex((value) => (value + 1) % Math.max(lines.length, 1)),
+      2200
+    );
+    const secondTimer = window.setInterval(() => setElapsed((value) => value + 1), 1000);
+    return () => {
+      window.clearInterval(lineTimer);
+      window.clearInterval(secondTimer);
+    };
   }, [lines.length]);
+
+  const status =
+    elapsed < 20
+      ? "Porządkujemy odpowiedzi"
+      : elapsed < 40
+        ? "Porównujemy sygnały i niewiadome"
+        : "Kończymy pierwszy odczyt";
+
   return (
     <Surface className="v3-loading">
       <div className="v3-loading-mark" aria-hidden="true">
@@ -133,8 +152,13 @@ export function LoadingPanel({
       </div>
       <Kicker>PORZĄDKOWANIE MATERIAŁU</Kicker>
       <h1>{title}</h1>
-      <p>{lines[index]}</p>
-      <div className="v3-loading-line"><span /></div>
+      <p className="v3-loading-current">{lines[index] || "Przygotowujemy wynik."}</p>
+      <div className="v3-loading-meta" aria-live="polite">
+        <strong>{status}</strong>
+        <span>{elapsed} s</span>
+      </div>
+      <p className="v3-loading-expectation">{expectedText}</p>
+      <div className="v3-loading-line" aria-hidden="true"><span /></div>
     </Surface>
   );
 }
