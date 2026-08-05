@@ -7,12 +7,13 @@
     "start": "node src/server.js",
     "dev:api": "nodemon src/server.js",
     "dev:worker": "nodemon src/jobs/worker.js",
-    "start:api": "node src/server.js",
-    "start:worker": "node src/jobs/worker.js",
+    "start:api": "prisma generate && prisma migrate deploy && node src/server.js",
+    "start:worker": "prisma generate && prisma migrate deploy && node src/jobs/worker.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
-    "eval:analysis": "node scripts/run-analysis-evals.js"
+    "eval:analysis": "node scripts/run-analysis-evals.js",
+    "eval:v3": "node scripts/run-v3-evals.js"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
@@ -27,8 +28,5 @@
     "stripe": "^17.7.0",
     "zod": "^3.25.76"
   },
-  "devDependencies": {
-    "nodemon": "^3.1.14",
-    "prisma": "^6.6.0"
-  }
+  "devDependencies": { "nodemon": "^3.1.14", "prisma": "^6.6.0" }
 }

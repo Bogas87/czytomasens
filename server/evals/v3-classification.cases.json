@@ -1,0 +1,500 @@
+[
+  {
+    "id": "c001",
+    "text": "Nie odpisał przez trzy dni.",
+    "accept": [
+      "event"
+    ]
+  },
+  {
+    "id": "c002",
+    "text": "Powiedziała: nie chcę teraz związku.",
+    "accept": [
+      "event"
+    ]
+  },
+  {
+    "id": "c003",
+    "text": "Po kłótni wyszedł z domu.",
+    "accept": [
+      "event"
+    ]
+  },
+  {
+    "id": "c004",
+    "text": "Przerwał mi trzy razy podczas rozmowy.",
+    "accept": [
+      "event"
+    ]
+  },
+  {
+    "id": "c005",
+    "text": "Odwołała spotkanie dwie godziny wcześniej.",
+    "accept": [
+      "event"
+    ]
+  },
+  {
+    "id": "c006",
+    "text": "On mnie nienawidzi.",
+    "accept": [
+      "interpretation"
+    ]
+  },
+  {
+    "id": "c007",
+    "text": "Boi się zaangażowania.",
+    "accept": [
+      "interpretation"
+    ]
+  },
+  {
+    "id": "c008",
+    "text": "Robi to, żeby mnie ukarać.",
+    "accept": [
+      "interpretation"
+    ]
+  },
+  {
+    "id": "c009",
+    "text": "Nie szanuje mnie.",
+    "accept": [
+      "interpretation"
+    ]
+  },
+  {
+    "id": "c010",
+    "text": "Manipuluje mną.",
+    "accept": [
+      "interpretation"
+    ]
+  },
+  {
+    "id": "c011",
+    "text": "Czuję się odrzucona.",
+    "accept": [
+      "emotion"
+    ]
+  },
+  {
+    "id": "c012",
+    "text": "Boję się, że odejdzie.",
+    "accept": [
+      "mixed",
+      "emotion"
+    ]
+  },
+  {
+    "id": "c013",
+    "text": "Czuję ulgę, kiedy pisze.",
+    "accept": [
+      "emotion"
+    ]
+  },
+  {
+    "id": "c014",
+    "text": "Mam złość i smutek.",
+    "accept": [
+      "emotion"
+    ]
+  },
+  {
+    "id": "c015",
+    "text": "Czuję niepokój przed rozmową.",
+    "accept": [
+      "emotion"
+    ]
+  },
+  {
+    "id": "c016",
+    "text": "Na pewno znowu mnie zdradzi.",
+    "accept": [
+      "prediction"
+    ]
+  },
+  {
+    "id": "c017",
+    "text": "To się nigdy nie zmieni.",
+    "accept": [
+      "prediction"
+    ]
+  },
+  {
+    "id": "c018",
+    "text": "Zawsze będzie mnie ignorował.",
+    "accept": [
+      "prediction"
+    ]
+  },
+  {
+    "id": "c019",
+    "text": "Na pewno odejdzie.",
+    "accept": [
+      "prediction"
+    ]
+  },
+  {
+    "id": "c020",
+    "text": "Znowu zrobi to samo.",
+    "accept": [
+      "prediction"
+    ]
+  },
+  {
+    "id": "c021",
+    "text": "Nie odzywa się, bo ma dużo pracy.",
+    "accept": [
+      "mixed",
+      "justification"
+    ]
+  },
+  {
+    "id": "c022",
+    "text": "Ona taka jest, bo miała trudne dzieciństwo.",
+    "accept": [
+      "justification"
+    ]
+  },
+  {
+    "id": "c023",
+    "text": "Potrzebuje czasu.",
+    "accept": [
+      "justification"
+    ]
+  },
+  {
+    "id": "c024",
+    "text": "Jest zmęczony, dlatego nie inicjuje.",
+    "accept": [
+      "unknown",
+      "justification"
+    ]
+  },
+  {
+    "id": "c025",
+    "text": "Taki ma charakter.",
+    "accept": [
+      "justification"
+    ]
+  },
+  {
+    "id": "c026",
+    "text": "Nie odpisał przez trzy dni, więc chce mnie ukarać.",
+    "accept": [
+      "mixed"
+    ]
+  },
+  {
+    "id": "c027",
+    "text": "Przerwał mi trzy razy, bo mnie nie szanuje.",
+    "accept": [
+      "mixed"
+    ]
+  },
+  {
+    "id": "c028",
+    "text": "Powiedziała, że nie chce związku, ale czuję, że boi się bliskości.",
+    "accept": [
+      "mixed"
+    ]
+  },
+  {
+    "id": "c029",
+    "text": "Odwołał spotkanie i na pewno zrobi to ponownie.",
+    "accept": [
+      "mixed"
+    ]
+  },
+  {
+    "id": "c030",
+    "text": "Nie napisał przez tydzień, bo ma dużo pracy.",
+    "accept": [
+      "mixed"
+    ]
+  },
+  {
+    "id": "c031",
+    "text": "Wydaje mi się, że coś jest nie tak.",
+    "accept": [
+      "unknown"
+    ]
+  },
+  {
+    "id": "c032",
+    "text": "Nie wiem, co to znaczy.",
+    "accept": [
+      "unknown"
+    ]
+  },
+  {
+    "id": "c033",
+    "text": "Między nami jest dziwnie.",
+    "accept": [
+      "unknown"
+    ]
+  },
+  {
+    "id": "c034",
+    "text": "Chyba mnie kocha.",
+    "accept": [
+      "unknown"
+    ]
+  },
+  {
+    "id": "c035",
+    "text": "Może to tylko kryzys.",
+    "accept": [
+      "unknown"
+    ]
+  },
+  {
+    "id": "c036",
+    "text": "Napisał do mnie po czterech dniach.",
+    "accept": [
+      "event"
+    ]
+  },
+  {
+    "id": "c037",
+    "text": "Powiedział: oddzwonię jutro, ale nie zadzwonił.",
+    "accept": [
+      "event"
+    ]
+  },
+  {
+    "id": "c038",
+    "text": "Nie przyszedł na umówione spotkanie.",
+    "accept": [
+      "event"
+    ]
+  },
+  {
+    "id": "c039",
+    "text": "Zadzwoniła trzy razy tego samego dnia.",
+    "accept": [
+      "event"
+    ]
+  },
+  {
+    "id": "c040",
+    "text": "Wyszła z rozmowy bez odpowiedzi.",
+    "accept": [
+      "event"
+    ]
+  },
+  {
+    "id": "c041",
+    "text": "Chce mnie kontrolować.",
+    "accept": [
+      "interpretation"
+    ]
+  },
+  {
+    "id": "c042",
+    "text": "Robi to, żeby wzbudzić zazdrość.",
+    "accept": [
+      "interpretation"
+    ]
+  },
+  {
+    "id": "c043",
+    "text": "Nie szanuje moich granic.",
+    "accept": [
+      "interpretation"
+    ]
+  },
+  {
+    "id": "c044",
+    "text": "Nienawidzi mnie za to, co powiedziałem.",
+    "accept": [
+      "interpretation"
+    ]
+  },
+  {
+    "id": "c045",
+    "text": "Boi się odpowiedzialności.",
+    "accept": [
+      "interpretation"
+    ]
+  },
+  {
+    "id": "c046",
+    "text": "Czułem wstyd po tej rozmowie.",
+    "accept": [
+      "emotion"
+    ]
+  },
+  {
+    "id": "c047",
+    "text": "Tęsknię, ale jednocześnie czuję ulgę.",
+    "accept": [
+      "emotion"
+    ]
+  },
+  {
+    "id": "c048",
+    "text": "Boję się jego reakcji.",
+    "accept": [
+      "emotion"
+    ]
+  },
+  {
+    "id": "c049",
+    "text": "Czuję złość, kiedy milczy.",
+    "accept": [
+      "emotion"
+    ]
+  },
+  {
+    "id": "c050",
+    "text": "Niepokój wraca przed każdym spotkaniem.",
+    "accept": [
+      "emotion"
+    ]
+  },
+  {
+    "id": "c051",
+    "text": "Nigdy mnie nie zrozumie.",
+    "accept": [
+      "prediction"
+    ]
+  },
+  {
+    "id": "c052",
+    "text": "Na pewno znów odejdzie.",
+    "accept": [
+      "prediction"
+    ]
+  },
+  {
+    "id": "c053",
+    "text": "Zawsze będzie unikała rozmowy.",
+    "accept": [
+      "prediction"
+    ]
+  },
+  {
+    "id": "c054",
+    "text": "To już nigdy nie będzie dobre.",
+    "accept": [
+      "prediction"
+    ]
+  },
+  {
+    "id": "c055",
+    "text": "Znowu zrobi mi to samo.",
+    "accept": [
+      "prediction"
+    ]
+  },
+  {
+    "id": "c056",
+    "text": "Nie odpisała, bo jest zmęczona.",
+    "accept": [
+      "mixed",
+      "justification"
+    ]
+  },
+  {
+    "id": "c057",
+    "text": "Nie przyszedł, bo ma dużo pracy.",
+    "accept": [
+      "mixed",
+      "justification"
+    ]
+  },
+  {
+    "id": "c058",
+    "text": "Krzyczy, bo miał trudne dzieciństwo.",
+    "accept": [
+      "justification"
+    ]
+  },
+  {
+    "id": "c059",
+    "text": "Nie podejmuje decyzji, bo potrzebuje czasu.",
+    "accept": [
+      "justification"
+    ]
+  },
+  {
+    "id": "c060",
+    "text": "Taki ma charakter i nic z tym nie zrobi.",
+    "accept": [
+      "mixed",
+      "justification",
+      "prediction"
+    ]
+  },
+  {
+    "id": "c061",
+    "text": "Powiedział, że się zmieni, ale po tygodniu znów odwołał spotkanie.",
+    "accept": [
+      "event"
+    ]
+  },
+  {
+    "id": "c062",
+    "text": "Nie odpisała przez dwa dni i czuję się odrzucony.",
+    "accept": [
+      "mixed"
+    ]
+  },
+  {
+    "id": "c063",
+    "text": "Zadzwonił wieczorem, więc na pewno mu zależy.",
+    "accept": [
+      "mixed"
+    ]
+  },
+  {
+    "id": "c064",
+    "text": "Powiedziała, że potrzebuje czasu, dlatego wierzę, że wróci.",
+    "accept": [
+      "mixed"
+    ]
+  },
+  {
+    "id": "c065",
+    "text": "Przerwał mi cztery razy i boję się kolejnej rozmowy.",
+    "accept": [
+      "mixed"
+    ]
+  },
+  {
+    "id": "c066",
+    "text": "Nie umiem tego nazwać.",
+    "accept": [
+      "unknown"
+    ]
+  },
+  {
+    "id": "c067",
+    "text": "Mam mieszane uczucia.",
+    "accept": [
+      "unknown",
+      "emotion"
+    ]
+  },
+  {
+    "id": "c068",
+    "text": "Może coś przeoczyłem.",
+    "accept": [
+      "unknown"
+    ]
+  },
+  {
+    "id": "c069",
+    "text": "To wygląda inaczej niż wcześniej.",
+    "accept": [
+      "unknown"
+    ]
+  },
+  {
+    "id": "c070",
+    "text": "Nie wiem, czy to już wzór.",
+    "accept": [
+      "unknown"
+    ]
+  }
+]

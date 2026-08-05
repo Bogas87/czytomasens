@@ -1,584 +1,74 @@
 "use strict";
-
 const { Worker, UnrecoverableError } = require("bullmq");
 const Redis = require("ioredis");
 const { Resend } = require("resend");
-
 const prisma = require("../db/prisma");
 const openaiService = require("../services/openai.service");
 const caseReasoning = require("../services/case_reasoning.service.js");
+const v3Controller = require("../controllers/v3.controller.js");
+const v3Retention = require("../services/v3/retention.service.js");
 const { createSignedAccess } = require("../security/report-access.js");
-const {
-  historyByRecoveryToken,
-  saveCheckin,
-  updateCaseStateByRecoveryToken,
-  ensureFollowupSchema,
-  dueReminders,
-  markReminderSent,
-  issueRecoveryTokenForProfile,
-  publicUrl,
-} = require("../services/followup.service.js");
+const { historyByRecoveryToken, saveCheckin, updateCaseStateByRecoveryToken, ensureFollowupSchema, dueReminders, markReminderSent, issueRecoveryTokenForProfile, publicUrl } = require("../services/followup.service.js");
 
-const redisUrl = process.env.REDIS_URL;
-
-if (!redisUrl) {
-  throw new Error("Brak REDIS_URL w zmiennych środowiskowych.");
+if(!process.env.REDIS_URL) throw new Error("Brak REDIS_URL.");
+const connection=new Redis(process.env.REDIS_URL,{maxRetriesPerRequest:null});
+const resendKey=(process.env.RESEND_API_KEY||"").trim();
+const resendFrom=(process.env.RESEND_FROM_EMAIL||"").trim();
+const resend=resendKey?new Resend(resendKey):null;
+const clientUrl=(process.env.CLIENT_URL||"https://czytomasens.pl").replace(/\/$/,"");
+const LOCK_STALE_MS=10*60*1000;
+function safeJson(v,f){ if(!v)return f; if(typeof v==="object")return v; try{return JSON.parse(v)}catch{return f} }
+function escapeHtml(v){ return String(v||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+function reportUrl(token){ const a=createSignedAccess(token); return `${clientUrl}?access_token=${encodeURIComponent(a.token)}&exp=${encodeURIComponent(a.exp)}&sig=${encodeURIComponent(a.sig)}`; }
+async function sendReportEmail(token,email){
+  if(!email||!resend||!resendFrom) return;
+  const url=reportUrl(token), safe=escapeHtml(url);
+  await resend.emails.send({from:resendFrom,to:email,subject:"Twój raport CzyToMaSens jest gotowy",html:`<div style="background:#0b0b0b;padding:32px;color:#f5f1ea;font-family:Arial"><div style="max-width:620px;margin:auto;background:#151515;border:1px solid #333;border-radius:22px;padding:32px"><div style="color:#c5a059;letter-spacing:.25em">CZYTOMASENS 3.0</div><h1>Twój raport jest gotowy.</h1><p style="color:#cfc8bd;line-height:1.7">Raport oddziela zdarzenia od interpretacji, pokazuje Mapę Rozbieżności, hipotezę, kontrhipotezę i bezpieczny test rzeczywistości.</p><a href="${safe}" style="display:inline-block;background:#c5a059;color:#111;text-decoration:none;font-weight:700;border-radius:999px;padding:15px 24px">Otwórz raport</a></div></div>`,text:`Twój raport CzyToMaSens jest gotowy: ${url}`});
+  await prisma.session.update({where:{id:token},data:{email_status:"SENT",email_sent_at:new Date(),last_error:null}});
 }
-
-const workerRedis = new Redis(redisUrl, {
-  maxRetriesPerRequest: null,
-});
-
-workerRedis.on("error", (err) => {
-  console.error("[Redis Worker] Błąd połączenia:", err.message);
-});
-
-const resendApiKey = (process.env.RESEND_API_KEY || "").trim();
-const resendFromEmail = (process.env.RESEND_FROM_EMAIL || "").trim();
-const clientUrl = (process.env.CLIENT_URL || "https://www.czytomasens.pl").replace(/\/$/, "");
-
-const resend = resendApiKey ? new Resend(resendApiKey) : null;
-
-const LOCK_STALE_MS = 10 * 60 * 1000;
-const RETENTION_INTERVAL_MS = 24 * 60 * 60 * 1000;
-
-function dataRetentionDays() {
-  const parsed = Number.parseInt(process.env.DATA_RETENTION_DAYS || "90", 10);
-  return Number.isInteger(parsed) && parsed >= 1 && parsed <= 365 ? parsed : 90;
-}
-
-async function runRetentionCleanup() {
-  const days = dataRetentionDays();
-  const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-
-  try {
-    await ensureFollowupSchema();
-    const removedProfiles = await prisma.$executeRawUnsafe(
-      `DELETE FROM ctms_anonymous_profiles WHERE updated_at < now() - interval '${days} days'`
-    );
-    const removedSessions = await prisma.session.deleteMany({
-      where: { created_at: { lt: cutoff } },
-    });
-    console.log(
-      `[Retention] Usunięto sesje: ${removedSessions.count}, profile anonimowe: ${removedProfiles}. Okres: ${days} dni.`
-    );
-  } catch (error) {
-    console.error("[Retention] Błąd czyszczenia starych danych:", error.message);
+async function legacyReport(session,payload,patterns){
+  if(payload?.reportKind==="followup"&&payload?.recoveryToken){
+    const h=await historyByRecoveryToken(payload.recoveryToken); if(!h) throw new Error("Nie znaleziono historii.");
+    const pre=await caseReasoning.updateCaseState({previousState:h.caseState,source:"followup_report_preparation",context:{history:caseReasoning.compactHistoryContext(h),latestConversation:payload.followUpHistory||[],elapsedDays:payload.elapsedDays||0,patterns}});
+    const report=await openaiService.generateComparativeReport({history:{...caseReasoning.compactHistoryContext(h),caseState:caseReasoning.compactCaseStateForModel(pre)},caseState:caseReasoning.compactCaseStateForModel(pre),latestConversation:payload.followUpHistory||[],elapsedDays:payload.elapsedDays||0,patterns});
+    const final=await caseReasoning.updateCaseState({previousState:pre,source:"followup_report_finalization",context:{previousHistory:caseReasoning.compactHistoryContext(h),latestConversation:payload.followUpHistory||[],comparativeReport:report,elapsedDays:payload.elapsedDays||0}});
+    await updateCaseStateByRecoveryToken(payload.recoveryToken,final,{source:"followup_report_finalization",createSnapshot:true,trigger:"followup_report",sourceSessionToken:session.id});
+    await saveCheckin(payload.recoveryToken,payload.elapsedDays||0,payload.followUpHistory||[],report);
+    return {report,payload:{...payload,caseState:final}};
   }
+  const pre=await caseReasoning.updateCaseState({previousState:payload?.caseState,source:"initial_report_preparation",context:{payload,patterns}});
+  const report=await openaiService.generateFullReport({...payload,patterns,caseState:caseReasoning.compactCaseStateForModel(pre)});
+  const final=await caseReasoning.updateCaseState({previousState:pre,source:"initial_report_finalization",context:{payload,patterns,fullReport:report}});
+  return {report,payload:{...payload,caseState:final}};
 }
-
-function buildReportUrl(token) {
-  const access = createSignedAccess(token);
-  return `${clientUrl}?access_token=${encodeURIComponent(access.token)}&exp=${encodeURIComponent(access.exp)}&sig=${encodeURIComponent(access.sig)}`;
-}
-
-function safeJson(value, fallback) {
-  if (!value) return fallback;
-
-  if (typeof value === "object") return value;
-
-  try {
-    return JSON.parse(value);
-  } catch {
-    return fallback;
+const worker=new Worker("reports",async job=>{
+  const token=job.data?.token; if(!token) throw new UnrecoverableError("Brak tokenu.");
+  const lock=await prisma.session.updateMany({where:{id:token,payment_status:"PAID",OR:[{report_status:"QUEUED"},{report_status:"PROCESSING",worker_locked_at:{lt:new Date(Date.now()-LOCK_STALE_MS)}}]},data:{report_status:"PROCESSING",worker_locked_at:new Date()}});
+  if(!lock.count){ const s=await prisma.session.findUnique({where:{id:token}}); if(!s)throw new UnrecoverableError("Brak sesji."); if(s.report_status==="READY"||s.report_status==="FAILED")return; throw new Error("Sesja ma aktywne przetwarzanie."); }
+  const session=await prisma.session.findUnique({where:{id:token}}); if(!session)throw new UnrecoverableError("Brak sesji po locku.");
+  try{
+    const payload=safeJson(session.payload,{}), patterns=safeJson(session.patterns,[]);
+    let report,nextPayload=payload;
+    if(payload.analysisVersion==="3.0") report=await v3Controller.generateReportForWorker(session);
+    else { const legacy=await legacyReport(session,payload,patterns); report=legacy.report; nextPayload=legacy.payload; }
+    await prisma.session.update({where:{id:token},data:{payload:nextPayload,full_report:report,report_status:"READY",report_ready_at:new Date(),worker_locked_at:null,last_error:null,email_status:session.email?"PENDING":"NONE"}});
+    await sendReportEmail(token,session.email);
+  }catch(e){
+    const last=job.attemptsMade+1>=(job.opts.attempts||1);
+    await prisma.session.update({where:{id:token},data:{report_status:last?"FAILED":"QUEUED",last_error:e.message,retry_count:{increment:1},worker_locked_at:null}});
+    throw e;
   }
+},{connection,concurrency:1});
+worker.on("failed",(job,e)=>console.error(`[Worker] ${job?.id}`,e));
+worker.on("completed",job=>console.log(`[Worker] gotowy ${job.id}`));
+async function reminders(){ if(!resend||!resendFrom)return; try{ await ensureFollowupSchema(); for(const item of await dueReminders(100)){ try{ const token=await issueRecoveryTokenForProfile(item.profile_id); const url=publicUrl(token); await resend.emails.send({from:resendFrom,to:item.email,subject:"Co naprawdę się zmieniło?",html:`<div style="font-family:Arial;background:#111;color:#eee;padding:30px"><h2>Czy zmiana się utrzymała?</h2><p>Sprawdź zachowanie, a nie tylko nastrój po rozmowie.</p><a href="${escapeHtml(url)}" style="color:#c5a059">Wróć do prywatnej analizy</a></div>`}); await markReminderSent(item.reminder_id,item.profile_id); }catch(e){console.error("[Reminder]",e.message)} } }catch(e){console.error("[Reminder cycle]",e.message)} }
+reminders(); const reminderTimer=setInterval(reminders,60*60*1000);
+async function retentionCycle(){
+  try{
+    const result=await v3Retention.cleanupExpiredCases();
+    if(result.removed) console.log(`[V3 retention] usunięto ${result.removed} wygasłych historii.`);
+  }catch(e){ console.error("[V3 retention]",e.message); }
 }
-
-function escapeHtml(value) {
-  return String(value || "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function buildEmailHtml(reportUrl) {
-  const safeUrl = escapeHtml(reportUrl);
-
-  return `
-<!doctype html>
-<html lang="pl">
-  <head>
-    <meta charset="utf-8" />
-    <title>Twój raport CzyToMaSens jest gotowy</title>
-  </head>
-  <body style="margin:0;padding:0;background:#0b0b0b;color:#f5f1ea;font-family:Arial,Helvetica,sans-serif;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0b0b0b;padding:32px 16px;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#151515;border:1px solid rgba(255,255,255,0.10);border-radius:22px;overflow:hidden;">
-            <tr>
-              <td style="padding:34px 30px 22px 30px;">
-                <div style="font-size:13px;letter-spacing:0.28em;color:#c5a059;text-transform:uppercase;margin-bottom:16px;">
-                  CzyToMaSens
-                </div>
-
-                <h1 style="margin:0 0 14px 0;font-size:30px;line-height:1.12;color:#f5f1ea;">
-                  Twój raport premium jest gotowy.
-                </h1>
-
-                <p style="margin:0 0 18px 0;font-size:16px;line-height:1.7;color:#cfc8bd;">
-                  System zakończył analizę. Raport możesz otworzyć przez bezpieczny link poniżej.
-                </p>
-
-                <p style="margin:0 0 26px 0;font-size:15px;line-height:1.7;color:#a8a099;">
-                  Link jest ważny 48 godzin. Raport możesz otworzyć na telefonie, komputerze albo wrócić do niego później z tej wiadomości.
-                </p>
-
-                <a href="${safeUrl}" style="display:inline-block;background:#c5a059;color:#111111;text-decoration:none;font-weight:700;border-radius:999px;padding:15px 24px;font-size:15px;">
-                  Otwórz raport
-                </a>
-
-                <p style="margin:28px 0 0 0;font-size:13px;line-height:1.7;color:#827b72;">
-                  Jeśli przycisk nie działa, skopiuj ten link do przeglądarki:<br />
-                  <span style="word-break:break-all;color:#c5a059;">${safeUrl}</span>
-                </p>
-              </td>
-            </tr>
-
-            <tr>
-              <td style="padding:18px 30px 30px 30px;border-top:1px solid rgba(255,255,255,0.08);">
-                <p style="margin:0;font-size:12px;line-height:1.6;color:#777;">
-                  To automatyczna wiadomość z serwisu CzyToMaSens. Raport ma charakter informacyjny i refleksyjny. Nie zastępuje pomocy psychologicznej, prawnej ani medycznej.
-                </p>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
-</html>
-`;
-}
-
-function buildEmailText(reportUrl) {
-  return `Twój raport CzyToMaSens jest gotowy.
-
-Otwórz raport:
-${reportUrl}
-
-Link jest ważny 48 godzin.
-
-Raport ma charakter informacyjny i refleksyjny. Nie zastępuje pomocy psychologicznej, prawnej ani medycznej.`;
-}
-
-async function markEmailFailure(token, message) {
-  await prisma.session.update({
-    where: { id: token },
-    data: {
-      email_status: "FAILED",
-      last_error: `EMAIL: ${message}`,
-    },
-  });
-}
-
-async function sendReportEmail({ token, email }) {
-  if (!email) {
-    await prisma.session.update({
-      where: { id: token },
-      data: {
-        email_status: "NONE",
-      },
-    });
-    console.log(`[Worker] Brak adresu e-mail dla ${token}. Pomijam wysyłkę.`);
-    return;
-  }
-
-  if (!resendApiKey || !resend) {
-    await markEmailFailure(token, "Brak RESEND_API_KEY w zmiennych środowiskowych.");
-    console.error(`[Worker] Nie wysłano e-maila dla ${token}: brak RESEND_API_KEY.`);
-    return;
-  }
-
-  if (!resendFromEmail) {
-    await markEmailFailure(token, "Brak RESEND_FROM_EMAIL w zmiennych środowiskowych.");
-    console.error(`[Worker] Nie wysłano e-maila dla ${token}: brak RESEND_FROM_EMAIL.`);
-    return;
-  }
-
-  const reportUrl = buildReportUrl(token);
-
-  await prisma.session.update({
-    where: { id: token },
-    data: {
-      email_status: "PENDING",
-    },
-  });
-
-  try {
-    const result = await resend.emails.send({
-      from: resendFromEmail,
-      to: email,
-      subject: "Twój raport CzyToMaSens jest gotowy",
-      html: buildEmailHtml(reportUrl),
-      text: buildEmailText(reportUrl),
-    });
-
-    await prisma.session.update({
-      where: { id: token },
-      data: {
-        email_status: "SENT",
-        email_sent_at: new Date(),
-        last_error: null,
-      },
-    });
-
-    console.log(`[Worker] E-mail wysłany dla ${token}. Resend ID: ${result?.data?.id || "brak-id"}`);
-  } catch (error) {
-    console.error(`[Worker] Błąd e-maila dla ${token}:`, error.message);
-    await markEmailFailure(token, error.message);
-  }
-}
-
-console.log("Worker uruchomiony. Oczekuję na zadania...");
-
-
-function buildFollowupEmailHtml(recoveryUrl, stageDays = 7) {
-  const safeUrl = escapeHtml(recoveryUrl);
-  const isSecondCheck = Number(stageDays) >= 21;
-  const heading = isSecondCheck
-    ? "Trzy tygodnie później: czy zmiana się utrzymała?"
-    : "Tydzień później: co naprawdę się zmieniło?";
-  const copy = isSecondCheck
-    ? "To moment na sprawdzenie trwałości. Czy nowy sposób działania utrzymał się bez przypominania, czy wrócił dawny układ i ten sam koszt?"
-    : "Sprawdź nie sam nastrój, lecz zachowanie: czy druga strona zrobiła coś bez nacisku, czy problem wrócił i czy masz dziś więcej jasności.";
-  return `
-<!doctype html>
-<html lang="pl">
-  <body style="margin:0;padding:0;background:#0b0b0b;color:#f5f1ea;font-family:Arial,Helvetica,sans-serif;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#0b0b0b;padding:32px 16px;">
-      <tr><td align="center">
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:620px;background:#151515;border:1px solid rgba(255,255,255,0.10);border-radius:22px;overflow:hidden;">
-          <tr><td style="padding:34px 30px 14px;font-family:Georgia,serif;font-size:34px;font-weight:800;">
-            CzyToMaSens<span style="color:#c5a059">.</span>
-          </td></tr>
-          <tr><td style="padding:0 30px 10px;font-size:22px;font-weight:800;line-height:1.35;">
-            ${heading}
-          </td></tr>
-          <tr><td style="padding:0 30px 20px;color:#c9c1b8;line-height:1.7;font-size:15px;">
-            ${copy}
-          </td></tr>
-          <tr><td style="padding:4px 30px 30px;">
-            <a href="${safeUrl}" style="display:inline-block;padding:14px 22px;background:#c5a059;color:#111;text-decoration:none;border-radius:999px;font-weight:800;">
-              Zrób ponowny odczyt
-            </a>
-          </td></tr>
-          <tr><td style="padding:0 30px 30px;color:#837b72;font-size:12px;line-height:1.6;">
-            Link otwiera prywatną analizę bez konta i hasła. Nie przesyłaj go innym osobom.
-          </td></tr>
-        </table>
-      </td></tr>
-    </table>
-  </body>
-</html>`;
-}
-
-async function processFollowupReminders() {
-  if (!resend) {
-    console.log("[FollowUp] Brak konfiguracji Resend — przypomnienia oczekują.");
-    return;
-  }
-
-  try {
-    await ensureFollowupSchema();
-    const due = await dueReminders(100);
-
-    for (const item of due) {
-      try {
-        const token = await issueRecoveryTokenForProfile(item.profile_id);
-        const recoveryUrl = publicUrl(token);
-        const stageDays = Number(item.stage_days || 7);
-
-        await resend.emails.send({
-          from: resendFromEmail,
-          to: item.email,
-          subject: stageDays >= 21
-            ? "Czy zmiana się utrzymała? Ponowny odczyt po 21 dniach"
-            : "Co naprawdę się zmieniło? Ponowny odczyt po 7 dniach",
-          html: buildFollowupEmailHtml(recoveryUrl, stageDays),
-        });
-
-        await markReminderSent(item.reminder_id, item.profile_id);
-        console.log(`[FollowUp] Przypomnienie ${stageDays} dni wysłane: ${item.reminder_id}`);
-      } catch (error) {
-        console.error(`[FollowUp] Błąd przypomnienia ${item.reminder_id}:`, error.message);
-      }
-    }
-  } catch (error) {
-    console.error("[FollowUp] Błąd cyklu przypomnień:", error.message);
-  }
-}
-
-const reportWorker = new Worker(
-  "reports",
-  async (job) => {
-    const { token } = job.data;
-
-    if (!token) {
-      throw new UnrecoverableError("Brak tokenu w jobie.");
-    }
-
-    console.log(`[Worker] Start zadania ${token} | próba ${job.attemptsMade + 1}/${job.opts.attempts}`);
-
-    const staleBefore = new Date(Date.now() - LOCK_STALE_MS);
-
-    const lockResult = await prisma.session.updateMany({
-      where: {
-        id: token,
-        payment_status: "PAID",
-        OR: [
-          { report_status: "QUEUED" },
-          {
-            report_status: "PROCESSING",
-            worker_locked_at: { lt: staleBefore },
-          },
-        ],
-      },
-      data: {
-        report_status: "PROCESSING",
-        worker_locked_at: new Date(),
-      },
-    });
-
-    if (lockResult.count === 0) {
-      const current = await prisma.session.findUnique({
-        where: { id: token },
-        select: {
-          id: true,
-          payment_status: true,
-          report_status: true,
-          worker_locked_at: true,
-        },
-      });
-
-      if (!current) {
-        throw new UnrecoverableError(`Brak sesji dla tokena ${token}`);
-      }
-
-      if (current.payment_status !== "PAID") {
-        throw new UnrecoverableError(`Sesja ${token} nie jest opłacona.`);
-      }
-
-      if (current.report_status === "READY") {
-        console.log(`[Worker] Raport ${token} już jest gotowy. Pomijam.`);
-        return;
-      }
-
-      if (current.report_status === "FAILED") {
-        console.log(`[Worker] Raport ${token} ma status FAILED. Pomijam.`);
-        return;
-      }
-
-      console.log(`[Worker] Zadanie ${token} ma już aktywne przetwarzanie. Pomijam.`);
-      return;
-    }
-
-    const session = await prisma.session.findUnique({
-      where: { id: token },
-      select: {
-        id: true,
-        email: true,
-        payload: true,
-        patterns: true,
-        payment_status: true,
-      },
-    });
-
-    if (!session) {
-      throw new UnrecoverableError(`Nie znaleziono sesji po przejęciu locka: ${token}`);
-    }
-
-    try {
-      const payload = safeJson(session.payload, {});
-      const patterns = safeJson(session.patterns, []);
-
-      let fullReport;
-      let finalCaseState;
-      let nextPayload = { ...payload };
-
-      if (payload?.reportKind === "followup" && payload?.recoveryToken) {
-        const historyContext = await historyByRecoveryToken(payload.recoveryToken);
-        if (!historyContext) throw new Error("Nie znaleziono historii dla raportu porównawczego.");
-
-        const preReportCaseState = await caseReasoning.updateCaseState({
-          previousState: historyContext.caseState,
-          source: "followup_report_preparation",
-          context: {
-            history: caseReasoning.compactHistoryContext(historyContext),
-            latestConversation: payload.followUpHistory || [],
-            elapsedDays: payload.elapsedDays || 0,
-            patterns,
-          },
-        });
-
-        fullReport = await openaiService.generateComparativeReport({
-          history: {
-            ...caseReasoning.compactHistoryContext(historyContext),
-            caseState: caseReasoning.compactCaseStateForModel(preReportCaseState),
-          },
-          caseState: caseReasoning.compactCaseStateForModel(preReportCaseState),
-          latestConversation: payload.followUpHistory || [],
-          elapsedDays: payload.elapsedDays || 0,
-          patterns,
-        });
-
-        finalCaseState = await caseReasoning.updateCaseState({
-          previousState: preReportCaseState,
-          source: "followup_report_finalization",
-          context: {
-            previousHistory: caseReasoning.compactHistoryContext(historyContext),
-            latestConversation: payload.followUpHistory || [],
-            comparativeReport: fullReport,
-            elapsedDays: payload.elapsedDays || 0,
-          },
-        });
-
-        await updateCaseStateByRecoveryToken(payload.recoveryToken, finalCaseState, {
-          source: "followup_report_finalization",
-          createSnapshot: true,
-          trigger: "followup_report",
-          sourceSessionToken: token,
-        });
-
-        await saveCheckin(
-          payload.recoveryToken,
-          payload.elapsedDays || 0,
-          payload.followUpHistory || [],
-          fullReport
-        );
-
-        nextPayload = { ...payload, caseState: finalCaseState };
-      } else {
-        const preReportCaseState = await caseReasoning.updateCaseState({
-          previousState: payload?.caseState,
-          source: "initial_report_preparation",
-          context: {
-            payload,
-            patterns,
-          },
-        });
-
-        fullReport = await openaiService.generateFullReport({
-          ...payload,
-          patterns,
-          caseState: caseReasoning.compactCaseStateForModel(preReportCaseState),
-        });
-
-        finalCaseState = await caseReasoning.updateCaseState({
-          previousState: preReportCaseState,
-          source: "initial_report_finalization",
-          context: {
-            payload,
-            patterns,
-            fullReport,
-          },
-        });
-
-        nextPayload = { ...payload, caseState: finalCaseState };
-      }
-
-      await prisma.session.update({
-        where: { id: token },
-        data: {
-          payload: nextPayload,
-          full_report: fullReport,
-          report_status: "READY",
-          report_ready_at: new Date(),
-          worker_locked_at: null,
-          last_error: null,
-          email_status: session.email ? "PENDING" : "NONE",
-        },
-      });
-
-      console.log(`[Worker] Raport dla ${token} zapisany.`);
-
-      await sendReportEmail({
-        token,
-        email: session.email,
-      });
-    } catch (error) {
-      console.error(`[Worker] Błąd analizy dla ${token}:`, error.message);
-
-      const isLastAttempt = job.attemptsMade + 1 >= (job.opts.attempts || 1);
-
-      if (isLastAttempt) {
-        await prisma.session.update({
-          where: { id: token },
-          data: {
-            report_status: "FAILED",
-            last_error: error.message,
-            retry_count: { increment: 1 },
-            worker_locked_at: null,
-          },
-        });
-
-        console.log(`[Worker] ${token} oznaczono jako FAILED.`);
-      } else {
-        await prisma.session.update({
-          where: { id: token },
-          data: {
-            report_status: "QUEUED",
-            last_error: `Próba ${job.attemptsMade + 1}: ${error.message}`,
-            retry_count: { increment: 1 },
-            worker_locked_at: null,
-          },
-        });
-
-        console.log(`[Worker] ${token} wraca do kolejki po błędzie.`);
-      }
-
-      throw error;
-    }
-  },
-  {
-    connection: workerRedis,
-    concurrency: 1,
-  }
-);
-
-reportWorker.on("error", (err) => {
-  console.error("[BullMQ Worker] Błąd instancji workera:", err.message);
-});
-
-reportWorker.on("failed", (job, err) => {
-  console.error(`[BullMQ Worker] Job failed ${job?.id || "unknown"}:`, err.message);
-});
-
-reportWorker.on("completed", (job) => {
-  console.log(`[BullMQ Worker] Job completed ${job.id}`);
-});
-
-// Ten sam istniejący worker obsługuje również przypomnienia.
-// Nie trzeba tworzyć nowej usługi Railway.
-processFollowupReminders();
-const followupTimer = setInterval(processFollowupReminders, 60 * 60 * 1000);
-runRetentionCleanup();
-const retentionTimer = setInterval(runRetentionCleanup, RETENTION_INTERVAL_MS);
-
-
-async function shutdown(signal) {
-  console.log(`\n[Worker] Otrzymano ${signal}. Zamykanie procesu...`);
-
-  try {
-    clearInterval(followupTimer);
-    clearInterval(retentionTimer);
-    await reportWorker.close();
-    console.log("[Worker] Worker zamknięty.");
-
-    await prisma.$disconnect();
-    console.log("[Worker] Prisma rozłączona.");
-
-    await workerRedis.quit();
-    console.log("[Worker] Redis rozłączony.");
-
-    process.exit(0);
-  } catch (error) {
-    console.error("[Worker] Błąd przy zamykaniu:", error);
-    process.exit(1);
-  }
-}
-
-process.on("SIGINT", () => shutdown("SIGINT"));
-process.on("SIGTERM", () => shutdown("SIGTERM"));
+retentionCycle(); const retentionTimer=setInterval(retentionCycle,24*60*60*1000);
+async function shutdown(signal){ console.log(`[Worker] ${signal}`); clearInterval(reminderTimer); clearInterval(retentionTimer); await worker.close(); await prisma.$disconnect(); await connection.quit(); process.exit(0); }
+process.on("SIGINT",()=>shutdown("SIGINT")); process.on("SIGTERM",()=>shutdown("SIGTERM"));

@@ -12,7 +12,6 @@ enum PaymentStatus {
   PAID
   FAILED
 }
-
 enum ReportStatus {
   NONE
   QUEUED
@@ -20,43 +19,41 @@ enum ReportStatus {
   READY
   FAILED
 }
-
 enum EmailStatus {
   NONE
   PENDING
   SENT
   FAILED
 }
+enum V3ProtocolStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
 
 model Session {
   id                       String        @id @default(uuid())
   email                    String?
-
   payload                  Json          @default("{}")
   patterns                 Json          @default("[]")
   preview_report           Json?
   full_report              Json?
   interview_state          Json?
-
   payment_status           PaymentStatus @default(PENDING)
   report_status            ReportStatus  @default(NONE)
   email_status             EmailStatus   @default(NONE)
-
   stripe_session_id        String?       @unique
   stripe_payment_intent_id String?       @unique
-
   last_error               String?
   retry_count              Int           @default(0)
   worker_locked_at         DateTime?
-
   created_at               DateTime      @default(now())
   updated_at               DateTime      @updatedAt
   paid_at                  DateTime?
   report_ready_at          DateTime?
   email_sent_at            DateTime?
-
   processed_events         ProcessedStripeEvent[]
-
+  v3_case                  V3Case?
   @@index([payment_status, report_status])
   @@index([report_status, worker_locked_at])
 }
@@ -67,8 +64,81 @@ model ProcessedStripeEvent {
   event_type  String
   session_id  String?
   created_at  DateTime @default(now())
-
   session     Session? @relation(fields: [session_id], references: [id], onDelete: SetNull)
-
   @@index([session_id])
+}
+
+model V3Case {
+  id             String       @id @default(uuid())
+  session_id     String       @unique
+  path           String
+  recovery_hash  String       @unique
+  current_state  Json?
+  boundaries     Json?
+  created_at     DateTime     @default(now())
+  updated_at     DateTime     @updatedAt
+  session        Session      @relation(fields:[session_id], references:[id], onDelete:Cascade)
+  analyses       V3Analysis[]
+  protocols      V3Protocol[]
+  checkins       V3Checkin[]
+  product_events V3ProductEvent[]
+  @@index([path, created_at])
+  @@map("ctms_v3_cases")
+}
+
+model V3Analysis {
+  id          String   @id @default(uuid())
+  case_id     String
+  input       Json
+  case_model  Json
+  preview     Json
+  report      Json?
+  paid_at     DateTime?
+  created_at  DateTime @default(now())
+  case        V3Case   @relation(fields:[case_id], references:[id], onDelete:Cascade)
+  @@index([case_id, created_at])
+  @@map("ctms_v3_analyses")
+}
+
+model V3Protocol {
+  id           String           @id @default(uuid())
+  case_id      String
+  key          String
+  title        String
+  protocol     Json
+  result       Json?
+  status       V3ProtocolStatus @default(ACTIVE)
+  due_at       DateTime
+  completed_at DateTime?
+  created_at   DateTime         @default(now())
+  case         V3Case           @relation(fields:[case_id], references:[id], onDelete:Cascade)
+  checkins     V3Checkin[]
+  @@index([case_id, status])
+  @@map("ctms_v3_protocols")
+}
+
+model V3Checkin {
+  id          String      @id @default(uuid())
+  case_id     String
+  protocol_id String?
+  kind        String
+  input       Json
+  result      Json?
+  created_at  DateTime    @default(now())
+  case        V3Case      @relation(fields:[case_id], references:[id], onDelete:Cascade)
+  protocol    V3Protocol? @relation(fields:[protocol_id], references:[id], onDelete:SetNull)
+  @@index([case_id, created_at])
+  @@map("ctms_v3_checkins")
+}
+
+model V3ProductEvent {
+  id          String   @id @default(uuid())
+  case_id     String?
+  name        String
+  properties  Json     @default("{}")
+  created_at  DateTime @default(now())
+  case        V3Case?  @relation(fields:[case_id], references:[id], onDelete:SetNull)
+  @@index([name, created_at])
+  @@index([case_id, created_at])
+  @@map("ctms_v3_product_events")
 }
