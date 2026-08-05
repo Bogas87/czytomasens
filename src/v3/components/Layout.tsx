@@ -30,6 +30,7 @@ export function Shell({
       <footer className="v3-footer">
         <span>CzyToMaSens nie diagnozuje drugiej osoby.</span>
         <nav>
+          <a href="/artykuly">Poradniki</a>
           <a href="/regulamin">Regulamin</a>
           <a href="/polityka-prywatnosci">Prywatność</a>
           <a href="/kontakt">Kontakt</a>

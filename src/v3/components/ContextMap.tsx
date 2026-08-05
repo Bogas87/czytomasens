@@ -1,4 +1,3 @@
-
 import React from "react";
 import type { EntryKey } from "../data/paths";
 import type { ForceValue, RelationshipContext } from "../types";
@@ -70,14 +69,17 @@ function ToggleList({
     <div className="v3-toggle-grid">
       {options.map((option, index) => {
         const active = selected.includes(option);
+        const blocked = !active && selected.length >= limit;
         return (
           <button
             key={option}
             type="button"
             className={active ? "v3-toggle is-active" : "v3-toggle"}
+            aria-pressed={active}
+            aria-disabled={blocked}
             onClick={() => {
               if (active) return onChange(selected.filter((item) => item !== option));
-              if (selected.length >= limit) return;
+              if (blocked) return;
               onChange([...selected, option]);
             }}
           >
@@ -115,84 +117,96 @@ export function ContextMap({
         </p>
       </div>
 
-      <section className="v3-context-block">
-        <div className="v3-context-head">
-          <span>01</span>
-          <div><h2>Rozkład odpowiedzialności</h2><p>Wybierz po jednej odpowiedzi w każdym wierszu.</p></div>
-        </div>
-        <div className="v3-force-table">
-          {forceItems.map((item) => (
-            <div className="v3-force-row" key={item.key}>
-              <strong>{item.label}</strong>
-              <div>
-                {forceOptions.map((option) => (
-                  <button
-                    type="button"
-                    key={option.value}
-                    className={value.forceMap[item.key] === option.value ? "is-active" : ""}
-                    onClick={() => onChange({
-                      ...value,
-                      forceMap: { ...value.forceMap, [item.key]: option.value },
-                    })}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+      <div className="v3-context-grid">
+        <section className="v3-context-block v3-context-force">
+          <div className="v3-context-head">
+            <span>01</span>
+            <div><h2>Rozkład odpowiedzialności</h2><p>Wybierz po jednej odpowiedzi w każdym wierszu.</p></div>
+          </div>
+          <div className="v3-force-table">
+            {forceItems.map((item) => (
+              <div className="v3-force-row" key={item.key}>
+                <strong>{item.label}</strong>
+                <div className="v3-force-options">
+                  {forceOptions.map((option) => {
+                    const active = value.forceMap[item.key] === option.value;
+                    return (
+                      <button
+                        type="button"
+                        key={option.value}
+                        className={active ? "is-active" : ""}
+                        aria-pressed={active}
+                        onClick={() => onChange({
+                          ...value,
+                          forceMap: { ...value.forceMap, [item.key]: option.value },
+                        })}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
 
-      <section className="v3-context-block">
-        <div className="v3-context-head">
-          <span>02</span>
-          <div><h2>Co najbardziej Cię obciąża?</h2><p>Wybierz maksymalnie trzy elementy.</p></div>
-        </div>
-        <ToggleList
-          options={burdensByPath[path]}
-          selected={value.burdens}
-          limit={3}
-          onChange={(burdens) => onChange({ ...value, burdens })}
-        />
-      </section>
+        <section className="v3-context-block">
+          <div className="v3-context-head">
+            <span>02</span>
+            <div><h2>Co najbardziej Cię obciąża?</h2><p>Wybierz maksymalnie trzy elementy.</p></div>
+          </div>
+          <ToggleList
+            options={burdensByPath[path]}
+            selected={value.burdens}
+            limit={3}
+            onChange={(burdens) => onChange({ ...value, burdens })}
+          />
+        </section>
 
-      <section className="v3-context-block">
-        <div className="v3-context-head">
-          <span>03</span>
-          <div><h2>Co najczęściej się w Tobie uruchamia?</h2><p>Wybierz maksymalnie trzy emocje lub stany.</p></div>
-        </div>
-        <ToggleList
-          options={emotionsByPath[path]}
-          selected={value.emotions}
-          limit={3}
-          onChange={(emotions) => onChange({ ...value, emotions })}
-        />
-      </section>
+        <section className="v3-context-block">
+          <div className="v3-context-head">
+            <span>03</span>
+            <div><h2>Co najczęściej się w Tobie uruchamia?</h2><p>Wybierz maksymalnie trzy emocje lub stany.</p></div>
+          </div>
+          <ToggleList
+            options={emotionsByPath[path]}
+            selected={value.emotions}
+            limit={3}
+            onChange={(emotions) => onChange({ ...value, emotions })}
+          />
+        </section>
 
-      <section className="v3-context-block">
-        <div className="v3-context-head">
-          <span>04</span>
-          <div><h2>Zdanie, którego nie chcesz już omijać</h2><p>Wybierz jedno. Raport później sprawdzi także najlepszy kontrargument.</p></div>
-        </div>
-        <div className="v3-truth-list">
-          {truthsByPath[path].map((truth, index) => (
-            <button
-              type="button"
-              key={truth}
-              className={value.truth === truth ? "is-active" : ""}
-              onClick={() => onChange({ ...value, truth })}
-            >
-              <span>{String(index + 1).padStart(2, "0")}</span>
-              <blockquote>„{truth}”</blockquote>
-            </button>
-          ))}
-        </div>
-      </section>
+        <section className="v3-context-block v3-context-truth">
+          <div className="v3-context-head">
+            <span>04</span>
+            <div><h2>Zdanie, którego nie chcesz już omijać</h2><p>Wybierz jedno. Raport później sprawdzi także najlepszy kontrargument.</p></div>
+          </div>
+          <div className="v3-truth-list">
+            {truthsByPath[path].map((truth, index) => {
+              const active = value.truth === truth;
+              return (
+                <button
+                  type="button"
+                  key={truth}
+                  className={active ? "is-active" : ""}
+                  aria-pressed={active}
+                  onClick={() => onChange({ ...value, truth })}
+                >
+                  <span>{String(index + 1).padStart(2, "0")}</span>
+                  <blockquote>„{truth}”</blockquote>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      </div>
 
-      <PrimaryButton onClick={onContinue} disabled={!complete}>
-        Przejdź do konkretnej historii
-      </PrimaryButton>
+      <div className="v3-form-actions v3-context-actions">
+        <PrimaryButton onClick={onContinue} disabled={!complete}>
+          Przejdź do konkretnej historii
+        </PrimaryButton>
+      </div>
     </Surface>
   );
 }

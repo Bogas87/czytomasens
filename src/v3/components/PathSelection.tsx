@@ -1,4 +1,3 @@
-
 import React from "react";
 import { motion } from "framer-motion";
 import type { EntryConfig, EntryKey } from "../data/paths";
@@ -33,6 +32,7 @@ export function PathSelection({
           Jedno dotknięcie prowadzi od razu dalej.
         </p>
       </div>
+
       <div className="v3-path-grid">
         {paths.map((path, index) => (
           <motion.button
@@ -45,13 +45,18 @@ export function PathSelection({
             transition={{ delay: Math.min(index * 0.035, 0.25) }}
           >
             <span className="v3-path-index">{String(index + 1).padStart(2, "0")}</span>
-            <span className="v3-path-type">{pathLabels[path.key]}</span>
-            <strong>{path.title}</strong>
-            <p>{path.subtitle}</p>
-            <span className="v3-path-go" aria-hidden="true">→</span>
+            <span className="v3-path-card-copy">
+              <span className="v3-path-type">{pathLabels[path.key]}</span>
+              <strong>{path.title}</strong>
+              <span className="v3-path-description">{path.subtitle}</span>
+              <span className="v3-path-go" aria-hidden="true">
+                Przejdź <b>→</b>
+              </span>
+            </span>
           </motion.button>
         ))}
       </div>
+
       <div className="v3-path-note">
         <strong>Nie widzisz idealnej ścieżki?</strong>
         <span>Wybierz tę, która jest najbliżej. Pytania później skorygują kierunek na podstawie Twoich odpowiedzi.</span>

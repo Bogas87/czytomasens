@@ -2,6 +2,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Kicker, PrimaryButton, Surface } from "./Layout";
+import { ArticlesSection } from "../../ArticlesSection";
 
 const pillars = [
   {
@@ -127,6 +128,14 @@ export function Landing({ onStart }: { onStart: () => void }) {
         </ol>
         <PrimaryButton onClick={onStart}>Rozpocznij analizę</PrimaryButton>
       </Surface>
+
+      <section className="v3-articles-home" aria-label="Poradniki o relacjach">
+        <ArticlesSection
+          onNavigateHome={() => { window.location.href = "/artykuly"; }}
+          onNavigateArticle={(slug) => { window.location.href = `/artykuly/${slug}`; }}
+          onStartAnalysis={onStart}
+        />
+      </section>
     </>
   );
 }
