@@ -1,4 +1,3 @@
-
 import React from "react";
 
 export function Shell({
@@ -115,7 +114,7 @@ export function Progress({
 export function LoadingPanel({
   title,
   lines,
-  expectedText = "Zwykle trwa to 20–40 sekund. Przy obszernym opisie może potrwać do około minuty.",
+  expectedText = "Pierwszy odczyt zwykle pojawia się po kilku sekundach.",
 }: {
   title: string;
   lines: string[];
@@ -127,7 +126,7 @@ export function LoadingPanel({
   React.useEffect(() => {
     const lineTimer = window.setInterval(
       () => setIndex((value) => (value + 1) % Math.max(lines.length, 1)),
-      2200
+      2600
     );
     const secondTimer = window.setInterval(() => setElapsed((value) => value + 1), 1000);
     return () => {
@@ -136,29 +135,22 @@ export function LoadingPanel({
     };
   }, [lines.length]);
 
-  const status =
-    elapsed < 20
-      ? "Porządkujemy odpowiedzi"
-      : elapsed < 40
-        ? "Porównujemy sygnały i niewiadome"
-        : "Kończymy pierwszy odczyt";
+  const delayed = elapsed >= 18;
 
   return (
     <Surface className="v3-loading">
-      <div className="v3-loading-mark" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </div>
-      <Kicker>PORZĄDKOWANIE MATERIAŁU</Kicker>
+      <div className="v3-loading-mark" aria-hidden="true"><span /></div>
+      <Kicker>PRZYGOTOWUJEMY PIERWSZY ODCZYT</Kicker>
       <h1>{title}</h1>
-      <p className="v3-loading-current">{lines[index] || "Przygotowujemy wynik."}</p>
-      <div className="v3-loading-meta" aria-live="polite">
-        <strong>{status}</strong>
-        <span>{elapsed} s</span>
-      </div>
-      <p className="v3-loading-expectation">{expectedText}</p>
+      <p className="v3-loading-current" aria-live="polite">
+        {lines[index] || "Porządkujemy odpowiedzi."}
+      </p>
       <div className="v3-loading-line" aria-hidden="true"><span /></div>
+      <p className="v3-loading-expectation">
+        {delayed
+          ? "To trwa dłużej niż zwykle. Odpowiedzi są zapisane i nie trzeba zaczynać od początku."
+          : expectedText}
+      </p>
     </Surface>
   );
 }

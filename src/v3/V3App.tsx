@@ -544,8 +544,8 @@ export function V3App() {
             stage === "return"
               ? "Otworzenie zapisanej historii zwykle trwa kilka sekund."
               : (finalContext.length + interviewHistory.reduce((sum, item) => sum + item.answer.length, 0) > 5000
-                  ? "Opis jest obszerny. Przygotowanie wyniku może potrwać do około minuty."
-                  : "Zwykle trwa to 20–40 sekund. Nie zamykaj tej karty.")
+                  ? "Materiał jest obszerny, ale pierwszy odczyt powinien pojawić się w ciągu kilkunastu sekund."
+                  : "Pierwszy odczyt zwykle pojawia się po kilku sekundach.")
           }
           lines={[
             "Oddzielamy obserwowalne zdarzenia od interpretacji.",
@@ -738,9 +738,15 @@ export function V3App() {
                 <div className="v3-error-actions">
                   <button
                     className="v3-button v3-button-primary"
-                    onClick={() => setStage(preview ? "preview" : (session && path ? "final-context" : "landing"))}
+                    onClick={() => {
+                      if (!preview && session && path) {
+                        void runAnalysis();
+                        return;
+                      }
+                      setStage(preview ? "preview" : (session && path ? "final-context" : "landing"));
+                    }}
                   >
-                    Wróć do ostatniego etapu
+                    {!preview && session && path ? "Spróbuj przygotować wynik ponownie" : "Wróć do ostatniego etapu"}
                   </button>
                   <button className="v3-button v3-button-secondary" onClick={reset}>Zacznij od początku</button>
                 </div>

@@ -1,12 +1,11 @@
-
 import React from "react";
 import type { BoundaryDraft, V3Preview } from "../types";
 import { Kicker, PrimaryButton, Surface } from "./Layout";
 
 function confidenceLabel(value: V3Preview["confidence"]): string {
   if (value === "high") return "wysoka — kilka niezależnych elementów wskazuje ten sam wzór";
-  if (value === "medium") return "umiarkowana — obraz jest spójny, ale wymaga sprawdzenia jednej niewiadomej";
-  return "ograniczona — materiał nadal dopuszcza kilka różnych wyjaśnień";
+  if (value === "medium") return "umiarkowana — obraz jest spójny, ale jedna niewiadoma nadal ma znaczenie";
+  return "ograniczona — materiał dopuszcza więcej niż jedno wyjaśnienie";
 }
 
 export function FreePreview({
@@ -23,12 +22,12 @@ export function FreePreview({
         <h1>{preview.headline}</h1>
         <p>{preview.essence}</p>
         <div className="v3-confidence">
-          <span>Pewność tego odczytu</span>
+          <span>Pewność odczytu</span>
           <strong>{confidenceLabel(preview.confidence)}</strong>
         </div>
       </Surface>
 
-      {preview.safety?.level !== "clear" && (
+      {preview.safety && preview.safety.level !== "clear" && (
         <Surface className="v3-safety-warning">
           <Kicker>BEZPIECZEŃSTWO MA PIERWSZEŃSTWO</Kicker>
           <h2>{preview.safety.message}</h2>
@@ -38,7 +37,7 @@ export function FreePreview({
 
       <section className="v3-preview-grid">
         <article>
-          <span>CO WYNIKA Z OPISANYCH ZDARZEŃ</span>
+          <span>CO WYNIKA Z OPISANEGO MATERIAŁU</span>
           <p>{preview.observedSignal}</p>
         </article>
         <article>
@@ -74,17 +73,17 @@ export function FreePreview({
 
       <Surface className="v3-premium-offer">
         <div>
-          <Kicker>PEŁNY RAPORT NIE JEST DŁUŻSZĄ WERSJĄ TEGO TEKSTU</Kicker>
-          <h2>Kończy analizę decyzją, kryterium i sposobem sprawdzenia jej w rzeczywistości.</h2>
+          <Kicker>PEŁNA ANALIZA</Kicker>
+          <h2>Nie jest dłuższą wersją pierwszego odczytu.</h2>
           <p>{preview.premiumPromise}</p>
         </div>
         <ul>
-          <li>Mapa Rozbieżności: znaczenie, fakty i obszar niewiedzy</li>
-          <li>Hipoteza główna oraz najlepsza kontrhipoteza</li>
-          <li>Ślepy punkt i Profil Obciążenia Relacją</li>
-          <li>Rejestr Granic oraz kryterium realnej poprawy</li>
-          <li>Bezpieczny Protokół Testowania Rzeczywistości</li>
-          <li>Termin powrotu i aktualizacja oceny po wyniku testu</li>
+          <li>pełna Mapa Rozbieżności</li>
+          <li>hipoteza główna i kontrhipoteza</li>
+          <li>ślepy punkt oraz Profil Obciążenia Relacją</li>
+          <li>Rejestr Granic i kryterium realnej poprawy</li>
+          <li>bezpieczny Protokół Testowania Rzeczywistości</li>
+          <li>termin powrotu i aktualizacja oceny</li>
         </ul>
         <PrimaryButton onClick={onPremium}>Przejdź do pełnej analizy</PrimaryButton>
       </Surface>
@@ -121,7 +120,7 @@ export function CheckoutPanel({
     <Surface className="v3-checkout">
       <div className="v3-section-intro">
         <Kicker>REJESTR GRANIC I KRYTERIÓW</Kicker>
-        <h1>Zapisz kryteria zanim emocje albo kolejna dobra rozmowa zmienią ich znaczenie.</h1>
+        <h1>Zapisz kryteria, zanim kolejna dobra rozmowa zmieni ich znaczenie.</h1>
         <p>
           Te zdania wrócą przy ponownej ocenie. System pokaże, czy kryterium zostało spełnione,
           świadomie zmienione czy przesunięte dopiero po kolejnym rozczarowaniu.
@@ -134,7 +133,7 @@ export function CheckoutPanel({
           <textarea
             value={boundaries.improvementProof}
             onChange={(event) => onBoundaries({ ...boundaries, improvementProof: event.target.value })}
-            placeholder="Np. samodzielna inicjatywa i konkretne działanie utrzymane przez kilka tygodni, bez mojego przypominania."
+            placeholder="Np. samodzielna inicjatywa i konkretne działanie utrzymane przez kilka tygodni."
             rows={4}
           />
         </label>
@@ -143,7 +142,7 @@ export function CheckoutPanel({
           <textarea
             value={boundaries.unacceptableBehavior}
             onChange={(event) => onBoundaries({ ...boundaries, unacceptableBehavior: event.target.value })}
-            placeholder="Np. znikania po konflikcie bez powrotu do tematu albo kolejnych obietnic bez działania."
+            placeholder="Np. znikania po konflikcie bez powrotu do tematu."
             rows={4}
           />
         </label>
@@ -160,7 +159,7 @@ export function CheckoutPanel({
           <textarea
             value={boundaries.userCommitment}
             onChange={(event) => onBoundaries({ ...boundaries, userCommitment: event.target.value })}
-            placeholder="Np. nie będę kolejny raz prowadzić całej rozmowy, przypominać i tłumaczyć każdej ciszy."
+            placeholder="Np. nie będę prowadzić całej rozmowy i tłumaczyć każdej ciszy."
             rows={3}
           />
         </label>

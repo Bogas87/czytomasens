@@ -1,4 +1,3 @@
-
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { EntryConfig } from "../data/paths";
@@ -20,58 +19,57 @@ export function ClosedQuestions({
   const total = path.questions.length;
   if (!question) return null;
 
+  const titleClass =
+    question.text.length > 145
+      ? "v3-question-title is-long"
+      : question.text.length > 100
+        ? "v3-question-title is-medium"
+        : "v3-question-title";
+
   return (
     <Surface className="v3-question-shell">
-      <aside className="v3-question-aside">
+      <header className="v3-question-header">
         <Progress current={index + 1} total={total} label="Pytania zamknięte" />
         <Kicker>{path.title}</Kicker>
-        <span className="v3-question-big-no">{String(index + 1).padStart(2, "0")}</span>
-        <p>
-          Nie szukaj odpowiedzi idealnej. Wybierz tę, która najlepiej opisuje powtarzający się układ,
-          a nie najlepszy lub najgorszy dzień.
-        </p>
-      </aside>
+      </header>
 
-      <div className="v3-question-content">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={question.id}
-            initial={{ opacity: 0, x: 14 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -14 }}
-            transition={{ duration: 0.24 }}
-          >
-            <p className="v3-question-lead">{question.lead}</p>
-            <h1 className={
-              question.text.length > 150
-                ? "v3-question-title v3-question-title-long"
-                : question.text.length > 105
-                  ? "v3-question-title v3-question-title-medium"
-                  : "v3-question-title"
-            }>
-              {question.text}
-            </h1>
+      <AnimatePresence mode="wait">
+        <motion.div
+          className="v3-question-content"
+          key={question.id}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.2 }}
+        >
+          <div className="v3-question-counter">PYTANIE {String(index + 1).padStart(2, "0")}</div>
+          <p className="v3-question-lead">{question.lead}</p>
+          <h1 className={titleClass}>{question.text}</h1>
 
-            <div className="v3-answer-list">
-              {question.options.map((option, optionIndex) => {
-                const selected = answers[question.id] === option.id;
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    className={`v3-answer ${selected ? "is-selected" : ""}`}
-                    onClick={() => onAnswer(question.id, option.id, option.score)}
-                  >
-                    <span className="v3-answer-no">{String(optionIndex + 1).padStart(2, "0")}</span>
-                    <span className="v3-answer-copy">{option.label}</span>
-                    <span className="v3-answer-state" aria-hidden="true">{selected ? "✓" : ""}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+          <div className="v3-answer-list">
+            {question.options.map((option, optionIndex) => {
+              const selected = answers[question.id] === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  className={`v3-answer ${selected ? "is-selected" : ""}`}
+                  aria-pressed={selected}
+                  onClick={() => onAnswer(question.id, option.id, option.score)}
+                >
+                  <span className="v3-answer-no">{String(optionIndex + 1).padStart(2, "0")}</span>
+                  <span className="v3-answer-copy">{option.label}</span>
+                  <span className="v3-answer-state" aria-hidden="true">{selected ? "Wybrane" : ""}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="v3-question-help">
+            Wybierz odpowiedź opisującą powtarzający się układ, nie pojedynczy najlepszy lub najgorszy dzień.
+          </p>
+        </motion.div>
+      </AnimatePresence>
     </Surface>
   );
 }

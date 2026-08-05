@@ -60,7 +60,7 @@ exports.analyze = asyncHandler(async (req,res) => {
   const { sessionToken, input } = schema.parse(req.body);
   const item = await getCaseBySession(sessionToken);
   if (!item) return bad(res,"Nie znaleziono sprawy.",404);
-  const caseModel = await methodology.analyzeCase({ sessionToken, input });
+  const caseModel = await methodology.analyzeCaseFast({ sessionToken, input });
   const analysis = await prisma.v3Analysis.create({ data:{ case_id:item.id, input, case_model:caseModel, preview:caseModel.preview } });
   await prisma.v3Case.update({ where:{ id:item.id }, data:{ current_state:caseModel } });
   await prisma.session.update({ where:{ id:sessionToken }, data:{ payload:{ analysisVersion:"3.0", path:input.path, input, caseModel, boundaries:item.boundaries || {} }, preview_report:caseModel.preview, patterns:caseModel.discrepancies } });
@@ -154,9 +154,33 @@ exports.event = asyncHandler(async (req,res) => {
 exports.generateReportForWorker = async function(session) {
   const payload = session.payload || {};
   const item = await getCaseBySession(session.id);
-  if (!item?.current_state) throw new Error("Brak modelu sprawy V3.");
-  const report = await reportService.generateV3FullReport({ sessionToken:session.id, input:payload.input || {}, caseModel:item.current_state, boundaries:item.boundaries || payload.boundaries || {} });
+  if (!item) throw new Error("Brak sprawy V3.");
+  const caseModel = item.current_state
+    || payload.caseModel
+    || await methodology.analyzeCaseFast({ sessionToken:session.id, input:payload.input || { path:item.path, answers:[], context:{}, interview:[], finalContext:"" } });
+  const report = await reportService.generateV3FullReport({
+    sessionToken:session.id,
+    input:payload.input || {},
+    caseModel,
+    boundaries:item.boundaries || payload.boundaries || {},
+  });
   const latest = item.analyses?.[0];
-  if (latest) await prisma.v3Analysis.update({ where:{ id:latest.id }, data:{ report, paid_at:new Date() } });
+  if (latest) {
+    await prisma.v3Analysis.update({ where:{ id:latest.id }, data:{ report, paid_at:new Date() } });
+  } else {
+    await prisma.v3Analysis.create({
+      data:{
+        case_id:item.id,
+        input:payload.input || {},
+        case_model:caseModel,
+        preview:caseModel.preview,
+        report,
+        paid_at:new Date(),
+      },
+    });
+  }
+  if (!item.current_state) {
+    await prisma.v3Case.update({ where:{ id:item.id }, data:{ current_state:caseModel } });
+  }
   return report;
 };

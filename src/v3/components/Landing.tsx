@@ -1,29 +1,28 @@
-
 import React from "react";
 import { motion } from "framer-motion";
-import { Kicker, PrimaryButton, Surface } from "./Layout";
 import { ArticlesSection } from "../../ArticlesSection";
+import { Kicker, PrimaryButton, Surface } from "./Layout";
 
 const pillars = [
   {
     no: "01",
     title: "Empatia bez przytakiwania",
-    text: "Najpierw porządkujemy Twój punkt widzenia. Potem sprawdzamy również to, co może mu przeczyć.",
+    text: "Twój punkt widzenia jest traktowany poważnie, ale nie staje się automatycznie jedyną wersją wydarzeń.",
   },
   {
     no: "02",
-    title: "Fakty zamiast domysłów",
-    text: "Oddzielamy zdarzenia, emocje, interpretacje i usprawiedliwienia. Nie mieszamy ich w jeden werdykt.",
+    title: "Fakty oddzielone od znaczeń",
+    text: "System rozdziela zdarzenia, emocje, interpretacje i niewiadome, zamiast mieszać je w jeden werdykt.",
   },
   {
     no: "03",
-    title: "Ślepe punkty",
-    text: "Pokazujemy miejsca, w których pojedynczy dobry moment może ważyć więcej niż powtarzający się wzór.",
+    title: "Hipoteza i kontrhipoteza",
+    text: "Otrzymujesz główne wyjaśnienie oraz najlepszą alternatywę, która może je uczciwie osłabić.",
   },
   {
     no: "04",
     title: "Sprawdzenie w rzeczywistości",
-    text: "Pełny raport kończy się bezpiecznym testem hipotezy i terminem ponownej oceny.",
+    text: "Pełna analiza kończy się konkretnym kryterium i bezpiecznym sposobem sprawdzenia, co rzeczywiście się zmienia.",
   },
 ];
 
@@ -34,66 +33,50 @@ export function Landing({ onStart }: { onStart: () => void }) {
         <Surface className="v3-hero-copy">
           <Kicker>PRYWATNA ANALIZA JEDNEJ RELACJI</Kicker>
           <motion.h1
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.55 }}
+            transition={{ duration: 0.45 }}
           >
-            Możesz mieć rację.
-            <span> Ale warto sprawdzić, na czym ta racja stoi.</span>
+            Nie potrzebujesz kolejnej opinii.
+            <span> Potrzebujesz sprawdzić, co naprawdę się powtarza.</span>
           </motion.h1>
           <p className="v3-hero-lead">
-            CzyToMaSens nie ocenia drugiej osoby. Porządkuje to, co rzeczywiście się wydarzyło,
-            oddziela to od interpretacji i pokazuje, czego nadal brakuje do uczciwego wniosku.
+            CzyToMaSens porządkuje opisane zdarzenia, oddziela je od interpretacji i pokazuje,
+            czego nadal brakuje do uczciwego wniosku. Bez diagnozowania drugiej osoby i bez przyznawania Ci racji z automatu.
           </p>
-          <div className="v3-hero-promise">
-            <div>
-              <strong>Nie dostaniesz</strong>
-              <span>horoskopu, diagnozy partnera ani procentowej „szansy związku”.</span>
-            </div>
-            <div>
-              <strong>Dostaniesz</strong>
-              <span>hipotezę, kontrhipotezę, Mapę Rozbieżności i sposób sprawdzenia ich w praktyce.</span>
-            </div>
-          </div>
           <div className="v3-hero-actions">
-            <PrimaryButton onClick={onStart}>Zobacz, co naprawdę wynika z mojej historii</PrimaryButton>
-            <small>Bez konta. Jedna perspektywa. Bez publikowania Twoich odpowiedzi.</small>
+            <PrimaryButton onClick={onStart}>Rozpocznij analizę mojej sytuacji</PrimaryButton>
+            <small>Bez konta. Odpowiedzi nie są publikowane. Analiza opiera się na jednej perspektywie.</small>
+          </div>
+          <div className="v3-hero-trust" aria-label="Najważniejsze zasady">
+            <span>Fakty</span>
+            <span>Kontrargument</span>
+            <span>Granice niewiedzy</span>
           </div>
         </Surface>
 
-        <Surface className="v3-hero-mirror" aria-label="Przykładowy fragment sposobu analizy">
+        <Surface className="v3-hero-mirror" aria-label="Przykładowy sposób analizy">
           <div className="v3-mirror-head">
-            <span>PRZYKŁADOWE LUSTRO</span>
-            <strong>Nie chodzi o to, czy czekasz. Chodzi o to, co czekanie zastępuje.</strong>
+            <span>JAK WYGLĄDA PIERWSZY ODCZYT</span>
+            <strong>Nie rozstrzygamy intencji. Sprawdzamy, co potwierdza zachowanie.</strong>
           </div>
-          <div className="v3-mirror-story">
-            <div className="v3-mirror-source">
-              <span>Twoje rozumienie</span>
-              <blockquote>„Potrzebuje czasu, ale wiem, że mu zależy.”</blockquote>
-            </div>
-            <div className="v3-mirror-divider" aria-hidden="true"><span /></div>
-            <div className="v3-mirror-reading">
-              <article>
-                <span>FAKT</span>
-                <p>Od trzech tygodni kontakt inicjujesz głównie Ty.</p>
-              </article>
-              <article>
-                <span>INTERPRETACJA</span>
-                <p>Brak działania tłumaczysz przeciążeniem i lękiem przed zaangażowaniem.</p>
-              </article>
-              <article>
-                <span>NIEWIADOMA</span>
-                <p>Nie wiadomo, czy inicjatywa pojawi się bez Twojego kolejnego impulsu.</p>
-              </article>
-              <article className="v3-mirror-accent">
-                <span>PRÓBA PRAWDY</span>
-                <p>Nie musisz dziś rozstrzygać intencji. Wystarczy sprawdzić zachowanie, którego nie prowadzisz za rękę.</p>
-              </article>
-            </div>
+          <div className="v3-mirror-reading">
+            <article>
+              <span>ZDARZENIE</span>
+              <p>Od trzech tygodni kontakt inicjujesz głównie Ty.</p>
+            </article>
+            <article>
+              <span>ZNACZENIE, KTÓRE TEMU NADAJESZ</span>
+              <p>Brak działania tłumaczysz przeciążeniem i lękiem przed zaangażowaniem.</p>
+            </article>
+            <article>
+              <span>NIEWIADOMA</span>
+              <p>Nie wiadomo, czy inicjatywa pojawi się bez Twojego kolejnego impulsu.</p>
+            </article>
           </div>
           <div className="v3-mirror-close">
-            <strong>Pełna analiza robi jeszcze jedną rzecz:</strong>
-            <p>buduje najlepszą kontrhipotezę, żeby nie zamienić Twojego bólu ani nadziei w automatyczny wyrok.</p>
+            <span>NAJWAŻNIEJSZY RUCH</span>
+            <p>Nie musisz dziś zgadywać, co druga osoba czuje. Potrzebujesz sprawdzić zachowanie, którego nie prowadzisz za rękę.</p>
           </div>
         </Surface>
       </div>
@@ -102,10 +85,10 @@ export function Landing({ onStart }: { onStart: () => void }) {
         {pillars.map((pillar, index) => (
           <motion.article
             key={pillar.no}
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.4 }}
-            transition={{ delay: index * 0.06 }}
+            viewport={{ once: true, amount: 0.35 }}
+            transition={{ delay: index * 0.04 }}
           >
             <span>{pillar.no}</span>
             <h2>{pillar.title}</h2>
@@ -117,16 +100,17 @@ export function Landing({ onStart }: { onStart: () => void }) {
       <Surface className="v3-loop-promise">
         <div>
           <Kicker>NIE KOŃCZYSZ Z KOLEJNĄ OPINIĄ</Kicker>
-          <h2>Opisujesz sytuację. System buduje hipotezę. Ty sprawdzasz ją w rzeczywistości.</h2>
+          <h2>Analiza prowadzi od opisu sytuacji do kryterium, które można sprawdzić w realnym życiu.</h2>
+          <p>
+            Najpierw porządkujemy materiał. Potem pokazujemy, co przemawia za główną wersją,
+            co ją osłabia i jakie zachowanie pozwoli odróżnić zmianę od kolejnej obietnicy.
+          </p>
         </div>
         <ol>
-          <li><span>1</span> Oddzielamy zdarzenia od znaczeń.</li>
-          <li><span>2</span> Pokazujemy główną i alternatywną wersję.</li>
-          <li><span>3</span> Ustalasz własne kryterium poprawy i granicę.</li>
-          <li><span>4</span> Wracasz z wynikiem bezpiecznego mikro-testu.</li>
-          <li><span>5</span> System porównuje zmianę zachowania z wcześniejszą narracją.</li>
+          <li><span>1</span><div><strong>Zdarzenia</strong><small>Co dałoby się zobaczyć, usłyszeć lub umieścić na osi czasu.</small></div></li>
+          <li><span>2</span><div><strong>Rozbieżności</strong><small>Gdzie znaczenie, opisany materiał i niewiedza nie mówią tego samego.</small></div></li>
+          <li><span>3</span><div><strong>Sprawdzenie</strong><small>Co musiałoby wydarzyć się dalej, żeby uczciwie zmienić ocenę.</small></div></li>
         </ol>
-        <p className="v3-loop-note">Pełny proces nie kończy się opinią — kończy się kryterium i sprawdzeniem go w rzeczywistości.</p>
       </Surface>
 
       <section className="v3-articles-home" aria-label="Poradniki o relacjach">

@@ -10,18 +10,18 @@ const MIN_OPEN_LENGTH = 20;
 const chapterMeta = [
   {
     eyebrow: "KADR ZDARZENIA",
-    title: "Zatrzymaj jeden moment",
-    purpose: "Najpierw potrzebny jest materiał, który dałoby się zobaczyć albo usłyszeć. Bez dopowiadania intencji.",
+    title: "Najpierw potrzebny jest jeden konkretny moment.",
+    purpose: "Opisz to, co dałoby się zobaczyć albo usłyszeć. Bez zgadywania intencji drugiej osoby.",
   },
   {
     eyebrow: "MECHANIZM POD SPODEM",
-    title: "Zobacz, kto wykonuje kolejny ruch",
-    purpose: "Drugie pytanie sprawdza odpowiedzialność, reakcję drugiej osoby i koszt, który pojawia się później.",
+    title: "Teraz sprawdzamy, kto wykonał kolejny ruch.",
+    purpose: "Liczy się kolejność działań, odpowiedzialność i to, co wydarzyło się po trudnym momencie.",
   },
   {
     eyebrow: "PRÓBA PRAWDY",
-    title: "Sprawdź najlepszy kontrargument",
-    purpose: "Ostatnie pytanie szuka również faktu, który może osłabić pierwsze wyjaśnienie.",
+    title: "Na końcu szukamy faktu, który może osłabić pierwszą wersję.",
+    purpose: "Dobry odczyt nie tylko potwierdza. Sprawdza również najlepszy kontrargument.",
   },
 ];
 
@@ -63,19 +63,18 @@ export function OpenInterview({
 
   return (
     <Surface className="v3-interview">
-      <aside className="v3-interview-aside">
+      <header className="v3-interview-header">
         <Progress current={step + 1} total={3} label="Pytania otwarte" />
         <Kicker>{chapter.eyebrow}</Kicker>
-        <span className="v3-question-big-no">{String(step + 1).padStart(2, "0")}</span>
-        <h2>{chapter.title}</h2>
-        <p>{chapter.purpose}</p>
-        {focus && (
-          <div className="v3-focus-note">
-            <span>CEL TEGO PYTANIA</span>
-            <strong>{focus}</strong>
-          </div>
-        )}
-      </aside>
+      </header>
+
+      <div className="v3-interview-intro">
+        <span>{String(step + 1).padStart(2, "0")}</span>
+        <div>
+          <h2>{chapter.title}</h2>
+          <p>{chapter.purpose}</p>
+        </div>
+      </div>
 
       <div className="v3-interview-content">
         {previous && step > 0 && (
@@ -88,7 +87,7 @@ export function OpenInterview({
         {observation && (
           <motion.div
             className="v3-observation"
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <span>CO W TYM MATERIALE WYMAGA SPRAWDZENIA</span>
@@ -121,7 +120,7 @@ export function OpenInterview({
                 ? "Minimum 20 znaków albo wybierz pominięcie pytania."
                 : length < MIN_OPEN_LENGTH
                   ? `Dopisz jeszcze ${MIN_OPEN_LENGTH - length} znaków albo pomiń pytanie.`
-                  : "Wystarczająca długość odpowiedzi."}
+                  : "Odpowiedź ma wystarczającą długość."}
             </small>
             <small>{length} / 5000</small>
           </div>
@@ -164,23 +163,23 @@ export function FinalContext({
   return (
     <Surface className="v3-final-context">
       <div className="v3-section-intro">
-        <Kicker>SZERSZY KONTEKST</Kicker>
-        <h1>Co jeszcze powinniśmy uwzględnić, żeby nie wyciągnąć wniosku bez ważnej części historii?</h1>
+        <Kicker>SZERSZY KONTEKST — ETAP OPCJONALNY</Kicker>
+        <h1>Czy jest coś, co mogłoby uczciwie zmienić znaczenie opisanej historii?</h1>
         <p>{config.finalPrompt}</p>
       </div>
 
       <div className="v3-final-context-guides">
-        <div><span>01</span><p>Dodaj fakty, które mogą potwierdzić Twoją obecną ocenę.</p></div>
-        <div><span>02</span><p>Dodaj również to, co może ją uczciwie osłabić.</p></div>
-        <div><span>03</span><p>Nie wpisuj nazwisk, adresów ani danych pozwalających zidentyfikować drugą osobę.</p></div>
+        <div><span>01</span><p>Dodaj fakt, który wspiera Twoją obecną ocenę.</p></div>
+        <div><span>02</span><p>Dodaj również to, co może ją osłabić.</p></div>
+        <div><span>03</span><p>Nie wpisuj nazwisk, adresów ani danych identyfikujących drugą osobę.</p></div>
       </div>
 
       <label className="v3-writing-surface v3-writing-surface-large">
-        <span>DODATKOWY KONTEKST — POLE OPCJONALNE</span>
+        <span>DODATKOWY KONTEKST</span>
         <textarea
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          placeholder="Dopisz wcześniejsze próby naprawy, ważne okoliczności, własne błędy, kontrprzykłady albo inne informacje, które mogą zmienić znaczenie opisanych zdarzeń."
+          placeholder="Dopisz wcześniejsze próby naprawy, ważne okoliczności, własne błędy albo kontrprzykłady."
           maxLength={9000}
           rows={9}
         />
