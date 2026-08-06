@@ -4,37 +4,38 @@ import type { EntryConfig } from "../data/paths";
 import type { AnswerMap } from "../types";
 import { Progress, Surface } from "./Layout";
 
-export function ClosedQuestions({ path, index, answers, onAnswer }: {
-  path: EntryConfig; index: number; answers: AnswerMap;
+export function ClosedQuestions({
+  path,
+  index,
+  answers,
+  onAnswer,
+}: {
+  path: EntryConfig;
+  index: number;
+  answers: AnswerMap;
   onAnswer: (questionId: string, optionId: string, score: number) => void;
 }) {
   const question = path.questions[index];
-  const total = path.questions.length;
   if (!question) return null;
-
-  const titleClass = question.text.length > 145 ? "is-long" : question.text.length > 100 ? "is-medium" : "";
 
   return (
     <Surface className="ctms-question">
-      <header className="ctms-question-top">
-        <Progress current={index + 1} total={total} label="Pytania zamknięte" />
-        <span>{path.title}</span>
-      </header>
+      <div className="ctms-question-header">
+        <Progress current={index + 1} total={path.questions.length} label="Pytania zamknięte" />
+        <span className="ctms-question-path">{path.title}</span>
+      </div>
 
       <AnimatePresence mode="wait">
         <motion.div
-          className="ctms-question-body"
           key={question.id}
+          className="ctms-question-content"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
           transition={{ duration: 0.18 }}
         >
-          <div className="ctms-question-meta">
-            <span>PYTANIE {String(index + 1).padStart(2, "0")}</span>
-            <p>{question.lead}</p>
-          </div>
-          <h1 className={titleClass}>{question.text}</h1>
+          <p className="ctms-question-lead">{question.lead}</p>
+          <h1>{question.text}</h1>
 
           <div className="ctms-answer-list">
             {question.options.map((option, optionIndex) => {
@@ -47,14 +48,17 @@ export function ClosedQuestions({ path, index, answers, onAnswer }: {
                   aria-pressed={selected}
                   onClick={() => onAnswer(question.id, option.id, option.score)}
                 >
-                  <span>{String(optionIndex + 1).padStart(2, "0")}</span>
+                  <span className="ctms-answer-index">{String(optionIndex + 1).padStart(2, "0")}</span>
                   <strong>{option.label}</strong>
-                  <i aria-hidden="true">{selected ? "✓" : ""}</i>
+                  <span className="ctms-answer-check" aria-hidden="true">{selected ? "✓" : ""}</span>
                 </button>
               );
             })}
           </div>
-          <p className="ctms-question-note">Wybierz odpowiedź opisującą powtarzający się układ, a nie pojedynczy dzień.</p>
+
+          <p className="ctms-question-note">
+            Wybierz odpowiedź, która najlepiej opisuje powtarzający się układ, nie pojedynczy dzień.
+          </p>
         </motion.div>
       </AnimatePresence>
     </Surface>

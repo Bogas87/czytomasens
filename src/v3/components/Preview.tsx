@@ -3,8 +3,8 @@ import type { BoundaryDraft, V3Preview } from "../types";
 import { Kicker, PrimaryButton, Surface } from "./Layout";
 
 function confidenceLabel(value: V3Preview["confidence"]): string {
-  if (value === "high") return "wysoka — kilka niezależnych elementów wskazuje ten sam wzór";
-  if (value === "medium") return "umiarkowana — obraz jest spójny, ale jedna niewiadoma nadal ma znaczenie";
+  if (value === "high") return "wysoka — kilka niezależnych elementów wskazuje podobny kierunek";
+  if (value === "medium") return "umiarkowana — obraz jest spójny, ale ważna niewiadoma nadal pozostaje";
   return "ograniczona — materiał dopuszcza więcej niż jedno wyjaśnienie";
 }
 
@@ -16,76 +16,73 @@ export function FreePreview({
   onPremium: () => void;
 }) {
   return (
-    <div className="v3-preview-stack">
-      <Surface className="v3-preview-hero">
-        <Kicker>PIERWSZY ODCZYT</Kicker>
+    <div className="ctms-preview">
+      <Surface className="ctms-preview-hero">
+        <Kicker>BEZPŁATNY PIERWSZY ODCZYT</Kicker>
         <h1>{preview.headline}</h1>
         <p>{preview.essence}</p>
-        <div className="v3-confidence">
+        <div className="ctms-confidence">
           <span>Pewność odczytu</span>
           <strong>{confidenceLabel(preview.confidence)}</strong>
         </div>
       </Surface>
 
       {preview.safety && preview.safety.level !== "clear" && (
-        <Surface className="v3-safety-warning">
+        <Surface className="ctms-safety-warning">
           <Kicker>BEZPIECZEŃSTWO MA PIERWSZEŃSTWO</Kicker>
           <h2>{preview.safety.message}</h2>
           <ul>{preview.safety.signals.map((signal) => <li key={signal}>{signal}</li>)}</ul>
         </Surface>
       )}
 
-      <section className="v3-preview-grid">
+      <section className="ctms-reading-grid">
         <article>
-          <span>CO WYNIKA Z OPISANEGO MATERIAŁU</span>
+          <span>Co wynika z materiału</span>
           <p>{preview.observedSignal}</p>
         </article>
         <article>
-          <span>CZEGO NADAL NIE WIEMY</span>
+          <span>Czego nadal nie wiemy</span>
           <p>{preview.unknown}</p>
         </article>
-        <article className="v3-preview-verify">
-          <span>CO NALEŻY SPRAWDZIĆ</span>
+        <article className="ctms-reading-verify">
+          <span>Co może rozstrzygnąć</span>
           <p>{preview.verify}</p>
         </article>
       </section>
 
       {preview.discrepancySample.length > 0 && (
-        <Surface className="v3-discrepancy-preview">
-          <div className="v3-section-intro compact">
+        <Surface className="ctms-discrepancy-preview">
+          <div className="ctms-section-head">
             <Kicker>FRAGMENT MAPY ROZBIEŻNOŚCI</Kicker>
-            <h2>Znaczenie, materiał i niewiedza nie zawsze mówią to samo.</h2>
+            <h2>Znaczenie, opisane zdarzenia i niewiadome nie zawsze mówią to samo.</h2>
           </div>
-          <div className="v3-discrepancy-head">
-            <span>Twoje rozumienie</span>
-            <span>Co wynika z materiału</span>
-            <span>Czego nie da się ustalić</span>
+          <div className="ctms-discrepancy-list">
+            {preview.discrepancySample.slice(0, 2).map((row, index) => (
+              <article key={`${row.userMeaning}-${index}`}>
+                <div><span>Twoje rozumienie</span><p>{row.userMeaning}</p></div>
+                <div><span>Opisany materiał</span><p>{row.observedMaterial}</p></div>
+                <div><span>Niewiadoma</span><p>{row.unknown}</p></div>
+              </article>
+            ))}
           </div>
-          {preview.discrepancySample.slice(0, 2).map((row, index) => (
-            <div className="v3-discrepancy-row" key={`${row.userMeaning}-${index}`}>
-              <p>{row.userMeaning}</p>
-              <p>{row.observedMaterial}</p>
-              <p>{row.unknown}</p>
-            </div>
-          ))}
         </Surface>
       )}
 
-      <Surface className="v3-premium-offer">
+      <Surface className="ctms-premium-offer">
         <div>
-          <Kicker>PEŁNA ANALIZA</Kicker>
-          <h2>Nie jest dłuższą wersją pierwszego odczytu.</h2>
+          <Kicker>PEŁNY RAPORT</Kicker>
+          <h2>Nie jest dłuższą wersją bezpłatnego odczytu.</h2>
           <p>{preview.premiumPromise}</p>
         </div>
         <ul>
-          <li>pełna Mapa Rozbieżności</li>
-          <li>hipoteza główna i kontrhipoteza</li>
-          <li>ślepy punkt oraz Profil Obciążenia Relacją</li>
-          <li>Rejestr Granic i kryterium realnej poprawy</li>
-          <li>bezpieczny Protokół Testowania Rzeczywistości</li>
-          <li>termin powrotu i aktualizacja oceny</li>
+          <li>pełna Mapa Rozbieżności;</li>
+          <li>hipoteza główna i najmocniejsza kontrhipoteza;</li>
+          <li>Profil Obciążenia i możliwy ślepy punkt;</li>
+          <li>Rejestr Granic i kryterium realnej poprawy;</li>
+          <li>bezpieczny protokół sprawdzania rzeczywistości;</li>
+          <li>prywatny link do późniejszego powrotu.</li>
         </ul>
-        <PrimaryButton onClick={onPremium}>Przejdź do pełnej analizy</PrimaryButton>
+        <PrimaryButton onClick={onPremium}>Przejdź do pełnego raportu</PrimaryButton>
       </Surface>
     </div>
   );
@@ -117,19 +114,16 @@ export function CheckoutPanel({
     && consent;
 
   return (
-    <Surface className="v3-checkout">
-      <div className="v3-section-intro">
-        <Kicker>REJESTR GRANIC I KRYTERIÓW</Kicker>
-        <h1>Zapisz kryteria, zanim kolejna dobra rozmowa zmieni ich znaczenie.</h1>
-        <p>
-          Te zdania wrócą przy ponownej ocenie. System pokaże, czy kryterium zostało spełnione,
-          świadomie zmienione czy przesunięte dopiero po kolejnym rozczarowaniu.
-        </p>
+    <Surface className="ctms-stage ctms-checkout">
+      <div className="ctms-stage-head">
+        <Kicker>PRZED PEŁNYM RAPORTEM</Kicker>
+        <h1>Zapisz kryteria, zanim kolejna rozmowa zmieni ich znaczenie.</h1>
+        <p>Te zdania staną się punktem odniesienia przy późniejszej ocenie rzeczywistej zmiany.</p>
       </div>
 
-      <div className="v3-boundary-form">
-        <label>
-          <span>Co byłoby dla Ciebie realnym dowodem poprawy?</span>
+      <div className="ctms-boundary-form">
+        <label className="ctms-writing-field">
+          <span>Co byłoby realnym dowodem poprawy?</span>
           <textarea
             value={boundaries.improvementProof}
             onChange={(event) => onBoundaries({ ...boundaries, improvementProof: event.target.value })}
@@ -137,8 +131,8 @@ export function CheckoutPanel({
             rows={4}
           />
         </label>
-        <label>
-          <span>Jakiego zachowania nie chcesz już dalej normalizować?</span>
+        <label className="ctms-writing-field">
+          <span>Jakiego zachowania nie chcesz dalej normalizować?</span>
           <textarea
             value={boundaries.unacceptableBehavior}
             onChange={(event) => onBoundaries({ ...boundaries, unacceptableBehavior: event.target.value })}
@@ -146,7 +140,7 @@ export function CheckoutPanel({
             rows={4}
           />
         </label>
-        <label>
+        <label className="ctms-writing-field">
           <span>Po jakim czasie uczciwie wrócisz do oceny?</span>
           <input
             value={boundaries.observationWindow}
@@ -154,8 +148,8 @@ export function CheckoutPanel({
             placeholder="Np. 7 dni, 3 tygodnie, miesiąc"
           />
         </label>
-        <label>
-          <span>Czego Ty nie będziesz robić za drugą stronę?</span>
+        <label className="ctms-writing-field">
+          <span>Czego nie będziesz robić za drugą stronę?</span>
           <textarea
             value={boundaries.userCommitment}
             onChange={(event) => onBoundaries({ ...boundaries, userCommitment: event.target.value })}
@@ -165,8 +159,8 @@ export function CheckoutPanel({
         </label>
       </div>
 
-      <div className="v3-payment-box">
-        <label>
+      <div className="ctms-payment-box">
+        <label className="ctms-writing-field">
           <span>Adres e-mail do bezpiecznego linku z raportem</span>
           <input
             type="email"
@@ -176,19 +170,19 @@ export function CheckoutPanel({
             autoComplete="email"
           />
         </label>
-        <label className="v3-consent">
+        <label className="ctms-consent">
           <input type="checkbox" checked={consent} onChange={(event) => onConsent(event.target.checked)} />
           <span>
-            Wyrażam zgodę na rozpoczęcie przygotowania indywidualnej treści cyfrowej przed upływem
-            terminu odstąpienia i przyjmuję do wiadomości utratę prawa odstąpienia po rozpoczęciu realizacji.
+            Zgadzam się na rozpoczęcie przygotowania indywidualnej treści cyfrowej przed upływem terminu odstąpienia
+            i przyjmuję do wiadomości utratę prawa odstąpienia po rozpoczęciu realizacji.
           </span>
         </label>
-        <div className="v3-price">
-          <div><span>Pełny raport + test rzeczywistości</span><strong>19,99 zł</strong></div>
-          <small>Płatność jednorazowa. Powrót z wynikiem protokołu zapisuje się w prywatnej historii.</small>
+        <div className="ctms-price-row">
+          <div><span>Pełny raport i protokół obserwacji</span><strong>19,99 zł</strong></div>
+          <p>Płatność jednorazowa. Raport będzie dostępny przez bezpieczny link.</p>
         </div>
         <PrimaryButton onClick={onBuy} disabled={!valid || saving}>
-          {saving ? "Zapisujemy kryteria…" : "Kupuję pełną analizę"}
+          {saving ? "Zapisujemy kryteria…" : "Kupuję pełny raport"}
         </PrimaryButton>
       </div>
     </Surface>

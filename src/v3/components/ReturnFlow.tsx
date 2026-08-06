@@ -53,8 +53,8 @@ export function ReturnFlow({
   });
 
   return (
-    <div className="v3-return">
-      <Surface className="v3-return-head">
+    <div className="ctms-return">
+      <Surface className="ctms-return-head">
         <Kicker>PRYWATNA HISTORIA RELACJI</Kicker>
         <h1>Nie zaczynasz od zera. System porównuje nowe zdarzenia z wcześniejszymi kryteriami.</h1>
         <p>
@@ -64,7 +64,7 @@ export function ReturnFlow({
       </Surface>
 
       {caseData.earlyWarning && caseData.earlyWarning.level !== "none" && (
-        <Surface className={`v3-early-warning level-${caseData.earlyWarning.level}`}>
+        <Surface className={`ctms-early-warning level-${caseData.earlyWarning.level}`}>
           <Kicker>{caseData.earlyWarning.level === "important" ? "WAŻNY POWRÓT WZORCA" : "SYGNAŁ DO OBSERWACJI"}</Kicker>
           <h2>{caseData.earlyWarning.message}</h2>
           <ul>{caseData.earlyWarning.evidence.map((item) => <li key={item}>{item}</li>)}</ul>
@@ -73,7 +73,7 @@ export function ReturnFlow({
 
       {mode === "overview" && (
         <>
-          <section className="v3-return-actions">
+          <section className="ctms-return-actions">
             {caseData.activeProtocol && (
               <button type="button" onClick={() => setMode("protocol")}>
                 <span>01</span>
@@ -100,12 +100,12 @@ export function ReturnFlow({
             </button>
           </section>
 
-          <Surface className="v3-history">
-            <div className="v3-section-intro compact">
+          <Surface className="ctms-history">
+            <div className="ctms-section-intro compact">
               <Kicker>OŚ CZASU</Kicker>
               <h2>Co zostało zapisane i co zmieniało się po drodze.</h2>
             </div>
-            <div className="v3-timeline">
+            <div className="ctms-timeline">
               {caseData.analyses.map((analysis) => (
                 <article key={analysis.id}>
                   <time>{formatDate(analysis.createdAt)}</time>
@@ -125,7 +125,7 @@ export function ReturnFlow({
             </div>
           </Surface>
 
-          <Surface className="v3-data-control">
+          <Surface className="ctms-data-control">
             <div>
               <Kicker>KONTROLA NAD DANYMI</Kicker>
               <h2>Możesz usunąć całą historię relacji.</h2>
@@ -137,7 +137,7 @@ export function ReturnFlow({
       )}
 
       {mode === "protocol" && caseData.activeProtocol && (
-        <Surface className="v3-checkin-form">
+        <Surface className="ctms-checkin-form">
           <Kicker>WYNIK TESTU RZECZYWISTOŚCI</Kicker>
           <h1>{caseData.activeProtocol.title}</h1>
           <p>Nie oceniaj całej relacji. Zapisz tylko to, co wydarzyło się w czasie testu.</p>
@@ -174,7 +174,7 @@ export function ReturnFlow({
             <span>Czy wydarzyło się coś nietypowego, co osłabia wartość testu?</span>
             <textarea value={protocolForm.unusualCircumstances} onChange={(e) => setProtocolForm({ ...protocolForm, unusualCircumstances: e.target.value })} rows={3} />
           </label>
-          <div className="v3-form-actions">
+          <div className="ctms-form-actions">
             <PrimaryButton
               disabled={loading || protocolForm.whatHappened.trim().length < 20 || !protocolForm.initiative || !protocolForm.repeatedPattern}
               onClick={async () => {
@@ -190,7 +190,7 @@ export function ReturnFlow({
       )}
 
       {mode === "weekly" && (
-        <Surface className="v3-checkin-form">
+        <Surface className="ctms-checkin-form">
           <Kicker>COTYGODNIOWY CHECK-IN</Kicker>
           <h1>Krótki zapis faktów, nie codzienny monitoring.</h1>
           <p>System wyda ostrzeżenie dopiero wtedy, gdy podobny mechanizm powtórzy się w kilku zapisach.</p>
@@ -216,7 +216,7 @@ export function ReturnFlow({
               <option value="overloading">Bardzo dużo — trudno było funkcjonować poza nim</option>
             </select>
           </label>
-          <div className="v3-form-actions">
+          <div className="ctms-form-actions">
             <PrimaryButton
               disabled={loading || weeklyForm.concreteEvent.trim().length < 20 || !weeklyForm.energyCost}
               onClick={async () => {

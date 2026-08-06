@@ -1,91 +1,113 @@
 import React from "react";
-import { motion } from "framer-motion";
-import { ArticlesSection } from "../../ArticlesSection";
 import { Kicker, PrimaryButton, Surface } from "./Layout";
 
-const values = [
-  ["01", "Empatia bez potakiwania", "Twój punkt widzenia jest traktowany poważnie, ale nie staje się automatycznie jedyną wersją wydarzeń."],
-  ["02", "Fakty przed interpretacją", "Najpierw porządkujemy zachowania, słowa i kolejność zdarzeń. Dopiero później sprawdzamy ich możliwe znaczenie."],
-  ["03", "Hipoteza i kontrhipoteza", "System pokazuje główne wyjaśnienie oraz najmocniejszą alternatywę, która może je uczciwie osłabić."],
-  ["04", "Kryterium do sprawdzenia", "Pełna analiza kończy się konkretem: co musiałoby wydarzyć się dalej, żeby zmienić ocenę sytuacji."],
-] as const;
+const articleLinks = [
+  {
+    href: "/artykuly/czy-ten-zwiazek-ma-sens",
+    title: "Czy ten związek ma jeszcze sens?",
+    description: "Jak odróżnić przejściowy kryzys od relacji, która od dawna nie ma kierunku.",
+  },
+  {
+    href: "/artykuly/czy-warto-ratowac-zwiazek",
+    title: "Czy warto ratować związek?",
+    description: "Kiedy wysiłek jest odbudową, a kiedy tylko odwlekaniem decyzji.",
+  },
+  {
+    href: "/artykuly/czy-ona-on-sie-mna-bawi",
+    title: "Mieszane sygnały w relacji",
+    description: "Co naprawdę wynika z kontaktu, w którym bliskość przeplata się z dystansem.",
+  },
+];
 
 export function Landing({ onStart }: { onStart: () => void }) {
   return (
-    <div className="ctms-home">
+    <div className="ctms-landing">
       <Surface className="ctms-hero">
-        <div className="ctms-hero-main">
-          <Kicker>PRYWATNA ANALIZA JEDNEJ RELACJI</Kicker>
-          <div className="ctms-sequence" aria-label="Sposób analizy">
-            <span>Zdarzenie</span><i>→</i><span>Interpretacja</span><i>→</i><span>Niewiadoma</span>
-          </div>
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35 }}
-          >
-            Możesz mieć rację. <em>Najpierw sprawdźmy, na czym naprawdę opiera się ta ocena.</em>
-          </motion.h1>
+        <div className="ctms-hero-copy">
+          <Kicker>PRYWATNA ANALIZA RELACJI</Kicker>
+          <h1>Oddziel fakty od interpretacji i sprawdź, co naprawdę wraca między Wami.</h1>
           <p>
-            CzyToMaSens porządkuje to, co się wydarzyło, oddziela fakty od dopowiedzeń i pokazuje,
-            czego nadal brakuje do uczciwego wniosku. Bez diagnozowania drugiej osoby i bez automatycznego przyznawania Ci racji.
+            CzyToMaSens porządkuje konkretne zdarzenia, rozkład odpowiedzialności, koszt emocjonalny
+            oraz informacje, których nadal brakuje. Bez diagnozowania drugiej osoby i bez prostych werdyktów.
           </p>
           <div className="ctms-hero-actions">
-            <PrimaryButton onClick={onStart}>Sprawdź moją sytuację</PrimaryButton>
-            <small>Bez konta. Jedna perspektywa. Jasno pokazane granice wiedzy.</small>
+            <PrimaryButton onClick={onStart}>Rozpocznij analizę</PrimaryButton>
+            <span>Bez konta. Pierwszy odczyt jest bezpłatny.</span>
+          </div>
+          <div className="ctms-trust-row" aria-label="Najważniejsze informacje">
+            <span>około 8–12 minut</span>
+            <span>anonimowy zapis</span>
+            <span>telefon i komputer</span>
           </div>
         </div>
 
-        <aside className="ctms-hero-proof" aria-label="Przykładowy fragment analizy">
-          <div className="ctms-proof-head">
-            <span>PRZYKŁADOWY ODCZYT</span>
-            <strong>Nie zgadujemy intencji. Sprawdzamy, co potwierdza zachowanie.</strong>
+        <div className="ctms-hero-sample" aria-label="Przykład sposobu analizy">
+          <Kicker>PRZYKŁAD ODCZYTU</Kicker>
+          <article>
+            <span>Zdarzenie</span>
+            <p>Po trudnej rozmowie kontakt wrócił dopiero po Twojej kolejnej wiadomości.</p>
+          </article>
+          <article>
+            <span>Znaczenie, które temu nadajesz</span>
+            <p>„Gdybym się nie odezwał lub nie odezwała, relacja by się rozpadła”.</p>
+          </article>
+          <article>
+            <span>Niewiadoma</span>
+            <p>Czy to stały brak inicjatywy, czy pojedyncza reakcja na konkretny konflikt?</p>
+          </article>
+          <div className="ctms-sample-conclusion">
+            Raport nie rozstrzyga za Ciebie. Pokazuje, co jest materiałem, a co nadal wymaga sprawdzenia.
           </div>
-          <div className="ctms-proof-list">
-            <article><b>01</b><div><span>CO SIĘ WYDARZYŁO</span><p>Od trzech tygodni kontakt inicjujesz głównie Ty.</p></div></article>
-            <article><b>02</b><div><span>CO TEMU DOPISUJESZ</span><p>Brak działania tłumaczysz przeciążeniem i lękiem przed zaangażowaniem.</p></div></article>
-            <article><b>03</b><div><span>CZEGO NIE WIEMY</span><p>Czy inicjatywa pojawi się bez Twojego kolejnego impulsu.</p></div></article>
-          </div>
-          <div className="ctms-proof-close">
-            <span>NAJBLIŻSZY RUCH</span>
-            <p>Sprawdzić zachowanie, którego nie prowadzisz za rękę.</p>
-          </div>
-        </aside>
+        </div>
       </Surface>
 
-      <section className="ctms-values" aria-label="Najważniejsze cechy analizy">
-        {values.map(([no, title, text], index) => (
-          <motion.article
-            key={no}
-            initial={{ opacity: 0, y: 8 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.3 }}
-            transition={{ delay: index * 0.035 }}
-          >
-            <span>{no}</span>
-            <div><h2>{title}</h2><p>{text}</p></div>
-          </motion.article>
-        ))}
+      <section className="ctms-value-grid" aria-label="Jak działa analiza">
+        <article>
+          <strong>01</strong>
+          <h2>Konkretny materiał</h2>
+          <p>Najpierw zbieramy zachowania, słowa, kolejność i częstotliwość — nie etykiety.</p>
+        </article>
+        <article>
+          <strong>02</strong>
+          <h2>Dwie możliwe wersje</h2>
+          <p>Każdy odczyt zawiera hipotezę główną oraz najmocniejszą kontrhipotezę.</p>
+        </article>
+        <article>
+          <strong>03</strong>
+          <h2>Kryterium sprawdzenia</h2>
+          <p>Dowiesz się, jakie zachowanie może potwierdzić zmianę, a jakie osłabić obecną ocenę.</p>
+        </article>
       </section>
 
-      <Surface className="ctms-flow">
+      <Surface className="ctms-offer-split">
         <div>
-          <Kicker>NIE KOŃCZYSZ Z KOLEJNĄ OPINIĄ</Kicker>
-          <h2>Od opisu sytuacji do kryterium, które można sprawdzić w realnym życiu.</h2>
+          <Kicker>BEZPŁATNY PIERWSZY ODCZYT</Kicker>
+          <h2>Otrzymasz sedno, główny sygnał, najważniejszą niewiadomą i jedno kryterium sprawdzenia.</h2>
         </div>
-        <ol>
-          <li><span>01</span><div><strong>Porządkujemy materiał</strong><small>Co wydarzyło się konkretnie i co jest tylko interpretacją.</small></div></li>
-          <li><span>02</span><div><strong>Sprawdzamy rozbieżności</strong><small>Gdzie Twoja ocena, zachowania i niewiedza nie mówią tego samego.</small></div></li>
-          <li><span>03</span><div><strong>Ustalamy próbę rzeczywistości</strong><small>Co musi wydarzyć się dalej, żeby wzmocnić lub osłabić wniosek.</small></div></li>
-        </ol>
+        <div>
+          <Kicker>PEŁNY RAPORT</Kicker>
+          <p>
+            Rozszerza wynik o Mapę Rozbieżności, Profil Obciążenia, hipotezę i kontrhipotezę,
+            Rejestr Granic oraz bezpieczny protokół obserwacji. Dostępny dopiero po świadomej decyzji o zakupie.
+          </p>
+        </div>
       </Surface>
 
-      <section className="v3-articles-home" aria-label="Poradniki o relacjach">
-        <ArticlesSection
-          onNavigateHome={() => { window.location.href = "/artykuly"; }}
-          onNavigateArticle={(slug) => { window.location.href = `/artykuly/${slug}`; }}
-          onStartAnalysis={onStart}
-        />
+      <section className="ctms-guides" aria-labelledby="ctms-guides-title">
+        <div className="ctms-section-head">
+          <Kicker>PORADNIKI</Kicker>
+          <h2 id="ctms-guides-title">Zanim zaczniesz analizę, możesz uporządkować temat samodzielnie.</h2>
+        </div>
+        <div className="ctms-guides-grid">
+          {articleLinks.map((article) => (
+            <a key={article.href} href={article.href}>
+              <h3>{article.title}</h3>
+              <p>{article.description}</p>
+              <span>Czytaj dalej →</span>
+            </a>
+          ))}
+        </div>
+        <a className="ctms-all-guides" href="/artykuly">Zobacz wszystkie poradniki</a>
       </section>
     </div>
   );

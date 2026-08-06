@@ -1,16 +1,15 @@
 "use strict";
+
 const OpenAI = require("openai");
 const crypto = require("crypto");
 
 let client;
 
 function getClient() {
-  if (!process.env.OPENAI_API_KEY) throw new Error("Brak OPENAI_API_KEY.");
+  const apiKey = String(process.env.OPENAI_API_KEY || "").trim();
+  if (!apiKey) throw new Error("Brak OPENAI_API_KEY.");
   if (!client) {
-    client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-      maxRetries: 1,
-    });
+    client = new OpenAI({ apiKey, maxRetries: 1 });
   }
   return client;
 }
@@ -44,13 +43,14 @@ async function structured({
   safetyId = "anonymous",
   timeoutMs = 60000,
 }) {
-  const api = getClient();
-  const resolvedModel =
-    model
-    || process.env.OPENAI_REPORT_MODEL
-    || process.env.OPENAI_MODEL
-    || "gpt-5.6-sol";
+  const resolvedModel = String(
+    model || process.env.OPENAI_REPORT_MODEL || process.env.OPENAI_MODEL || ""
+  ).trim();
+  if (!resolvedModel) {
+    throw new Error("Brak OPENAI_MODEL lub OPENAI_REPORT_MODEL.");
+  }
 
+  const api = getClient();
   const identifier = crypto
     .createHash("sha256")
     .update(String(safetyId))
@@ -58,10 +58,9 @@ async function structured({
     .slice(0, 32);
 
   const controller = new AbortController();
-  const timer = setTimeout(
-    () => controller.abort(new Error(`OpenAI timeout after ${timeoutMs} ms`)),
-    timeoutMs
-  );
+  const timer = setTimeout(() => {
+    controller.abort(new Error(`OpenAI timeout after ${timeoutMs} ms`));
+  }, timeoutMs);
 
   try {
     try {
@@ -109,7 +108,9 @@ async function structured({
         { signal: controller.signal }
       );
 
-      return JSON.parse(fallback.choices?.[0]?.message?.content || "{}");
+      const content = fallback.choices?.[0]?.message?.content || "";
+      if (!content) throw new Error("Model nie zwrócił treści.");
+      return JSON.parse(content);
     }
   } finally {
     clearTimeout(timer);

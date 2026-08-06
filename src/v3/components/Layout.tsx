@@ -1,35 +1,35 @@
-
 import React from "react";
 
 export function Shell({
   children,
   onBack,
-  backLabel = "Powrót",
 }: {
   children: React.ReactNode;
   onBack?: () => void;
-  backLabel?: string;
 }) {
   return (
-    <div className="v3-shell">
-      <div className="v3-ambient" aria-hidden="true" />
-      <header className="v3-topbar">
-        <a className="v3-brand" href="/" aria-label="CzyToMaSens — strona główna">
-          <span className="v3-brand-dot" />
-          <span className="v3-brand-name">CzyToMaSens<span>.</span></span>
-          <small>analiza rzeczywistości relacyjnej</small>
+    <div className="ctms-shell">
+      <div className="ctms-ambient" aria-hidden="true" />
+      <header className="ctms-header">
+        <a className="ctms-brand" href="/" aria-label="CzyToMaSens — strona główna">
+          CzyToMaSens<span>.</span>
         </a>
-        {onBack && (
-          <button className="v3-back" type="button" onClick={onBack}>
-            <span aria-hidden="true">←</span>
-            <span>{backLabel}</span>
+        {onBack ? (
+          <button className="ctms-back" type="button" onClick={onBack}>
+            <span aria-hidden="true">←</span> Wróć
           </button>
+        ) : (
+          <nav className="ctms-header-nav" aria-label="Nawigacja główna">
+            <a href="/artykuly">Poradniki</a>
+          </nav>
         )}
       </header>
-      <main className="v3-main">{children}</main>
-      <footer className="v3-footer">
-        <span>CzyToMaSens nie diagnozuje drugiej osoby.</span>
-        <nav>
+
+      <main className="ctms-main">{children}</main>
+
+      <footer className="ctms-footer">
+        <span>© {new Date().getFullYear()} CzyToMaSens</span>
+        <nav aria-label="Dokumenty">
           <a href="/artykuly">Poradniki</a>
           <a href="/regulamin">Regulamin</a>
           <a href="/polityka-prywatnosci">Prywatność</a>
@@ -47,28 +47,28 @@ export function Surface({
   children: React.ReactNode;
   className?: string;
 }) {
-  return <section className={`v3-surface ${className}`.trim()}>{children}</section>;
+  return <section className={`ctms-surface ${className}`.trim()}>{children}</section>;
 }
 
 export function Kicker({ children }: { children: React.ReactNode }) {
-  return <div className="v3-kicker">{children}</div>;
+  return <div className="ctms-kicker">{children}</div>;
 }
 
 export function PrimaryButton({
   children,
   onClick,
-  type = "button",
   disabled = false,
+  type = "button",
 }: {
   children: React.ReactNode;
   onClick?: () => void;
-  type?: "button" | "submit";
   disabled?: boolean;
+  type?: "button" | "submit";
 }) {
   return (
-    <button className="v3-button v3-button-primary" type={type} onClick={onClick} disabled={disabled}>
+    <button className="ctms-button ctms-button-primary" type={type} onClick={onClick} disabled={disabled}>
       <span>{children}</span>
-      <span aria-hidden="true">→</span>
+      <span className="ctms-button-arrow" aria-hidden="true">→</span>
     </button>
   );
 }
@@ -76,16 +76,16 @@ export function PrimaryButton({
 export function SecondaryButton({
   children,
   onClick,
-  type = "button",
   disabled = false,
+  type = "button",
 }: {
   children: React.ReactNode;
   onClick?: () => void;
-  type?: "button" | "submit";
   disabled?: boolean;
+  type?: "button" | "submit";
 }) {
   return (
-    <button className="v3-button v3-button-secondary" type={type} onClick={onClick} disabled={disabled}>
+    <button className="ctms-button ctms-button-secondary" type={type} onClick={onClick} disabled={disabled}>
       {children}
     </button>
   );
@@ -100,14 +100,17 @@ export function Progress({
   total: number;
   label: string;
 }) {
-  const percent = total > 0 ? Math.max(0, Math.min(100, (current / total) * 100)) : 0;
+  const safeTotal = Math.max(total, 1);
+  const value = Math.max(0, Math.min(current, safeTotal));
   return (
-    <div className="v3-progress" aria-label={`${label}: ${current} z ${total}`}>
-      <div>
+    <div className="ctms-progress" aria-label={`${label}: ${value} z ${safeTotal}`}>
+      <div className="ctms-progress-copy">
         <span>{label}</span>
-        <strong>{current} / {total}</strong>
+        <strong>{value}/{safeTotal}</strong>
       </div>
-      <div className="v3-progress-track"><div style={{ width: `${percent}%` }} /></div>
+      <div className="ctms-progress-track" aria-hidden="true">
+        <span style={{ width: `${(value / safeTotal) * 100}%` }} />
+      </div>
     </div>
   );
 }
@@ -115,7 +118,7 @@ export function Progress({
 export function LoadingPanel({
   title,
   lines,
-  expectedText = "Zwykle trwa to 20–40 sekund. Przy obszernym opisie może potrwać do około minuty.",
+  expectedText = "Porządkujemy odpowiedzi. Ten etap zwykle kończy się po kilku sekundach.",
 }: {
   title: string;
   lines: string[];
@@ -127,38 +130,25 @@ export function LoadingPanel({
   React.useEffect(() => {
     const lineTimer = window.setInterval(
       () => setIndex((value) => (value + 1) % Math.max(lines.length, 1)),
-      2200
+      1800,
     );
-    const secondTimer = window.setInterval(() => setElapsed((value) => value + 1), 1000);
+    const seconds = window.setInterval(() => setElapsed((value) => value + 1), 1000);
     return () => {
       window.clearInterval(lineTimer);
-      window.clearInterval(secondTimer);
+      window.clearInterval(seconds);
     };
   }, [lines.length]);
 
-  const status =
-    elapsed < 20
-      ? "Porządkujemy odpowiedzi"
-      : elapsed < 40
-        ? "Porównujemy sygnały i niewiadome"
-        : "Kończymy pierwszy odczyt";
-
   return (
-    <Surface className="v3-loading">
-      <div className="v3-loading-mark" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </div>
-      <Kicker>PORZĄDKOWANIE MATERIAŁU</Kicker>
+    <Surface className="ctms-loading">
+      <div className="ctms-loader" aria-hidden="true"><span /><span /><span /></div>
+      <Kicker>PRZYGOTOWANIE ODCZYTU</Kicker>
       <h1>{title}</h1>
-      <p className="v3-loading-current">{lines[index] || "Przygotowujemy wynik."}</p>
-      <div className="v3-loading-meta" aria-live="polite">
-        <strong>{status}</strong>
-        <span>{elapsed} s</span>
+      <p className="ctms-loading-line" aria-live="polite">{lines[index] || "Porządkujemy materiał."}</p>
+      <div className="ctms-loading-meta">
+        <span>{expectedText}</span>
+        <strong>{elapsed} s</strong>
       </div>
-      <p className="v3-loading-expectation">{expectedText}</p>
-      <div className="v3-loading-line" aria-hidden="true"><span /></div>
     </Surface>
   );
 }

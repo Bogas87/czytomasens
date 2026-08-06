@@ -58,7 +58,7 @@ async function jsonRequest<T>(url: string, options: RequestInit = {}, timeoutMs 
       || /aborted|timeout/i.test(String(error?.message || ""));
     if (aborted) {
       throw new Error(
-        "Przygotowanie wyniku przekroczyło bezpieczny czas oczekiwania. Twoje odpowiedzi są zapisane — wróć i uruchom analizę ponownie."
+        "Przygotowanie wyniku trwało zbyt długo. Odpowiedzi są zapisane — wróć do ostatniego etapu i ponów próbę."
       );
     }
     throw error;
@@ -93,7 +93,7 @@ export async function requestMirror(payload: {
       method: "POST",
       body: JSON.stringify(payload),
     },
-    30000
+    16000
   );
   return data.mirror;
 }
@@ -115,7 +115,7 @@ export async function requestInterviewQuestion(payload: {
   }>(`${API_BASE}/api/v3/interview/next`, {
     method: "POST",
     body: JSON.stringify(payload),
-  }, 35000);
+  }, 18000);
   return data;
 }
 
@@ -131,7 +131,7 @@ export async function analyzeV3(payload: {
   }>(`${API_BASE}/api/v3/analyze`, {
     method: "POST",
     body: JSON.stringify(payload),
-  }, 70000);
+  }, 15000);
   return data;
 }
 

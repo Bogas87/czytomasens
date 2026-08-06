@@ -46,7 +46,7 @@ const truthsByPath: Record<EntryKey, string[]> = {
   unease: ["Czuję więcej napięcia niż spokoju.", "Nie mam jeszcze dość faktów.", "Boję się odpowiedzi, którą już częściowo znam."],
   betrayal: ["Przeprosiny nie odbudowały jeszcze zaufania.", "To ja częściej pilnuję odbudowy.", "Nie wiem, czy potrafię uwierzyć w zmianę."],
   uncertain: ["Niejasność stała się sposobem funkcjonowania.", "Czekam na decyzję, której druga osoba nie podejmuje.", "Być może nadaję pojedynczym sygnałom zbyt dużą wagę."],
-  asymmetry: ["Gdy przestaję się starać, relacja wyraźnie słabnie.", "Często robię za dwie osoby.", "Nie sprawdziłem/sprawdziłam jeszcze, co zostaje bez mojego wysiłku."],
+  asymmetry: ["Gdy przestaję się starać, relacja wyraźnie słabnie.", "Często robię za dwie osoby.", "Nie sprawdziłem lub nie sprawdziłam jeszcze, co zostaje bez mojego wysiłku."],
   conflict: ["Po rozmowie wraca spokój, ale nie zawsze zmiana.", "Boję się kolejnego konfliktu bardziej niż niewyjaśnionego problemu.", "Oboje możemy dokładać coś do tego mechanizmu."],
   stagnation: ["Historia i obowiązki nie są tym samym co bliskość.", "Nie wiem, czy jeszcze wybieramy siebie.", "Dobre momenty istnieją, ale nie wiem, czy tworzą kierunek."],
   returning: ["Tęsknota nie jest dowodem zmiany.", "Wciąż porównuję teraźniejszość z najlepszym wspomnieniem.", "Nie wiem, co dziś naprawdę jest inne."],
@@ -66,15 +66,15 @@ function ToggleList({
   onChange: (next: string[]) => void;
 }) {
   return (
-    <div className="v3-toggle-grid">
-      {options.map((option, index) => {
+    <div className="ctms-choice-grid">
+      {options.map((option) => {
         const active = selected.includes(option);
         const blocked = !active && selected.length >= limit;
         return (
           <button
             key={option}
             type="button"
-            className={active ? "v3-toggle is-active" : "v3-toggle"}
+            className={active ? "is-selected" : ""}
             aria-pressed={active}
             aria-disabled={blocked}
             onClick={() => {
@@ -83,9 +83,8 @@ function ToggleList({
               onChange([...selected, option]);
             }}
           >
-            <span>{String(index + 1).padStart(2, "0")}</span>
+            <span>{active ? "✓" : ""}</span>
             <strong>{option}</strong>
-            <small>{active ? "wybrane" : ""}</small>
           </button>
         );
       })}
@@ -108,33 +107,34 @@ export function ContextMap({
   const complete = forceComplete && value.burdens.length >= 1 && value.emotions.length >= 1 && Boolean(value.truth);
 
   return (
-    <Surface className="v3-context">
-      <div className="v3-section-intro">
-        <Kicker>MAPA KONTEKSTU</Kicker>
-        <h1>Zanim poprosimy o historię, sprawdźmy, jak rozkłada się ciężar.</h1>
-        <p>
-          To nie jest scoring. Te wybory pomagają dobrać pytania, które rozstrzygają brakujące informacje.
-        </p>
+    <Surface className="ctms-stage ctms-context">
+      <div className="ctms-stage-head">
+        <Kicker>KROK 3 Z 4</Kicker>
+        <h1>Jak rozkłada się ciężar tej relacji?</h1>
+        <p>Te odpowiedzi nie tworzą punktacji. Pomagają odróżnić sam problem od kosztu jego ciągłego podtrzymywania.</p>
       </div>
 
-      <div className="v3-context-grid">
-        <section className="v3-context-block v3-context-force">
-          <div className="v3-context-head">
+      <div className="ctms-context-stack">
+        <section className="ctms-context-block">
+          <div className="ctms-block-head">
             <span>01</span>
-            <div><h2>Rozkład odpowiedzialności</h2><p>Wybierz po jednej odpowiedzi w każdym wierszu.</p></div>
+            <div>
+              <h2>Rozkład odpowiedzialności</h2>
+              <p>Wybierz jedną odpowiedź w każdym wierszu.</p>
+            </div>
           </div>
-          <div className="v3-force-table">
+          <div className="ctms-force-list">
             {forceItems.map((item) => (
-              <div className="v3-force-row" key={item.key}>
+              <div className="ctms-force-row" key={item.key}>
                 <strong>{item.label}</strong>
-                <div className="v3-force-options">
+                <div className="ctms-force-options">
                   {forceOptions.map((option) => {
                     const active = value.forceMap[item.key] === option.value;
                     return (
                       <button
-                        type="button"
                         key={option.value}
-                        className={active ? "is-active" : ""}
+                        type="button"
+                        className={active ? "is-selected" : ""}
                         aria-pressed={active}
                         onClick={() => onChange({
                           ...value,
@@ -151,50 +151,42 @@ export function ContextMap({
           </div>
         </section>
 
-        <section className="v3-context-block">
-          <div className="v3-context-head">
-            <span>02</span>
-            <div><h2>Co najbardziej Cię obciąża?</h2><p>Wybierz maksymalnie trzy elementy.</p></div>
-          </div>
-          <ToggleList
-            options={burdensByPath[path]}
-            selected={value.burdens}
-            limit={3}
-            onChange={(burdens) => onChange({ ...value, burdens })}
-          />
-        </section>
+        <div className="ctms-context-columns">
+          <section className="ctms-context-block">
+            <div className="ctms-block-head">
+              <span>02</span>
+              <div><h2>Co najbardziej Cię obciąża?</h2><p>Wybierz maksymalnie trzy elementy.</p></div>
+            </div>
+            <ToggleList options={burdensByPath[path]} selected={value.burdens} limit={3} onChange={(burdens) => onChange({ ...value, burdens })} />
+          </section>
 
-        <section className="v3-context-block">
-          <div className="v3-context-head">
-            <span>03</span>
-            <div><h2>Co najczęściej się w Tobie uruchamia?</h2><p>Wybierz maksymalnie trzy emocje lub stany.</p></div>
-          </div>
-          <ToggleList
-            options={emotionsByPath[path]}
-            selected={value.emotions}
-            limit={3}
-            onChange={(emotions) => onChange({ ...value, emotions })}
-          />
-        </section>
+          <section className="ctms-context-block">
+            <div className="ctms-block-head">
+              <span>03</span>
+              <div><h2>Co najczęściej się w Tobie uruchamia?</h2><p>Wybierz maksymalnie trzy stany.</p></div>
+            </div>
+            <ToggleList options={emotionsByPath[path]} selected={value.emotions} limit={3} onChange={(emotions) => onChange({ ...value, emotions })} />
+          </section>
+        </div>
 
-        <section className="v3-context-block v3-context-truth">
-          <div className="v3-context-head">
+        <section className="ctms-context-block">
+          <div className="ctms-block-head">
             <span>04</span>
-            <div><h2>Zdanie, którego nie chcesz już omijać</h2><p>Wybierz jedno. Raport później sprawdzi także najlepszy kontrargument.</p></div>
+            <div><h2>Zdanie, którego nie chcesz już omijać</h2><p>Wybierz jedno. Raport sprawdzi również najmocniejszy kontrargument.</p></div>
           </div>
-          <div className="v3-truth-list">
-            {truthsByPath[path].map((truth, index) => {
+          <div className="ctms-truth-list">
+            {truthsByPath[path].map((truth) => {
               const active = value.truth === truth;
               return (
                 <button
                   type="button"
                   key={truth}
-                  className={active ? "is-active" : ""}
+                  className={active ? "is-selected" : ""}
                   aria-pressed={active}
                   onClick={() => onChange({ ...value, truth })}
                 >
-                  <span>{String(index + 1).padStart(2, "0")}</span>
-                  <blockquote>„{truth}”</blockquote>
+                  <span>{active ? "✓" : ""}</span>
+                  <strong>„{truth}”</strong>
                 </button>
               );
             })}
@@ -202,10 +194,8 @@ export function ContextMap({
         </section>
       </div>
 
-      <div className="v3-form-actions v3-context-actions">
-        <PrimaryButton onClick={onContinue} disabled={!complete}>
-          Przejdź do konkretnej historii
-        </PrimaryButton>
+      <div className="ctms-actions">
+        <PrimaryButton onClick={onContinue} disabled={!complete}>Przejdź do konkretnej historii</PrimaryButton>
       </div>
     </Surface>
   );

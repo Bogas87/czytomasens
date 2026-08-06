@@ -43,7 +43,7 @@ import { PremiumReport } from "./components/PremiumReport";
 import { ReturnFlow } from "./components/ReturnFlow";
 import "./styles/v3.css";
 
-const STORAGE_KEY = "ctms_v3_state_20260805";
+const STORAGE_KEY = "ctms_v3_state_20260806_v31";
 const STORAGE_TTL = 90 * 24 * 60 * 60 * 1000;
 
 type SelectedAnswer = { optionId: string; score: number };
@@ -544,8 +544,8 @@ export function V3App() {
             stage === "return"
               ? "Otworzenie zapisanej historii zwykle trwa kilka sekund."
               : (finalContext.length + interviewHistory.reduce((sum, item) => sum + item.answer.length, 0) > 5000
-                  ? "Opis jest obszerny. Przygotowanie wyniku może potrwać do około minuty."
-                  : "Zwykle trwa to 20–40 sekund. Nie zamykaj tej karty.")
+                  ? "Materiał jest obszerny. Pierwszy odczyt nadal powinien pojawić się w ciągu kilkunastu sekund."
+                  : "Pierwszy odczyt powstaje lokalnie na podstawie odpowiedzi i zwykle pojawia się po kilku sekundach.")
           }
           lines={[
             "Oddzielamy obserwowalne zdarzenia od interpretacji.",
@@ -717,32 +717,38 @@ export function V3App() {
           )}
 
           {stage === "crisis" && preview?.safety && (
-            <Surface className="v3-crisis">
-              <div className="v3-kicker">BEZPIECZEŃSTWO MA PIERWSZEŃSTWO</div>
+            <Surface className="ctms-crisis">
+              <div className="ctms-kicker">BEZPIECZEŃSTWO MA PIERWSZEŃSTWO</div>
               <h1>{preview.safety.message}</h1>
               <p>
                 W tej sytuacji nie proponujemy testu relacyjnego ani eksperymentu z zachowaniem drugiej osoby.
                 Analiza internetowa nie jest właściwym narzędziem do oceny bezpośredniego ryzyka.
               </p>
               <ul>{preview.safety.signals.map((signal) => <li key={signal}>{signal}</li>)}</ul>
-              <button className="v3-button v3-button-secondary" onClick={reset}>Zakończ analizę</button>
+              <button className="ctms-button ctms-button-secondary" onClick={reset}>Zakończ analizę</button>
             </Surface>
           )}
 
           {stage === "error" && (
-            <Surface className="v3-error">
-              <div className="v3-kicker">{successMessage ? "PŁATNOŚĆ PRZYJĘTA" : "NIE UDAŁO SIĘ ZAKOŃCZYĆ OPERACJI"}</div>
+            <Surface className="ctms-error">
+              <div className="ctms-kicker">{successMessage ? "PŁATNOŚĆ PRZYJĘTA" : "NIE UDAŁO SIĘ ZAKOŃCZYĆ OPERACJI"}</div>
               <h1>{successMessage || "Coś poszło nie tak."}</h1>
               {error && <p>{error}</p>}
               {!successMessage && (
-                <div className="v3-error-actions">
+                <div className="ctms-error-actions">
                   <button
-                    className="v3-button v3-button-primary"
-                    onClick={() => setStage(preview ? "preview" : (session && path ? "final-context" : "landing"))}
+                    className="ctms-button ctms-button-primary"
+                    onClick={() => {
+                      if (!preview && session && path) {
+                        void runAnalysis();
+                        return;
+                      }
+                      setStage(preview ? "preview" : (session && path ? "final-context" : "landing"));
+                    }}
                   >
-                    Wróć do ostatniego etapu
+                    {!preview && session && path ? "Spróbuj przygotować wynik ponownie" : "Wróć do ostatniego etapu"}
                   </button>
-                  <button className="v3-button v3-button-secondary" onClick={reset}>Zacznij od początku</button>
+                  <button className="ctms-button ctms-button-secondary" onClick={reset}>Zacznij od początku</button>
                 </div>
               )}
             </Surface>

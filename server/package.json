@@ -1,6 +1,6 @@
 {
   "name": "czytomasens-server",
-  "version": "1.0.0",
+  "version": "3.1.0",
   "private": true,
   "main": "src/server.js",
   "scripts": {
@@ -10,10 +10,12 @@
     "start:api": "prisma generate && prisma migrate deploy && node src/server.js",
     "start:worker": "prisma generate && prisma migrate deploy && node src/jobs/worker.js",
     "prisma:generate": "prisma generate",
+    "prisma:validate": "prisma validate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "eval:analysis": "node scripts/run-analysis-evals.js",
-    "eval:v3": "node scripts/run-v3-evals.js"
+    "eval:v3": "node scripts/run-v3-evals.js",
+    "smoke:v3": "node scripts/smoke-v3-preview.js"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
@@ -28,5 +30,8 @@
     "stripe": "^17.7.0",
     "zod": "^3.25.76"
   },
-  "devDependencies": { "nodemon": "^3.1.14", "prisma": "^6.6.0" }
+  "devDependencies": {
+    "nodemon": "^3.1.14",
+    "prisma": "^6.6.0"
+  }
 }
