@@ -50,14 +50,18 @@ export function Shell({
   );
 }
 
+type SurfaceProps = React.ComponentPropsWithoutRef<"section">;
+
 export function Surface({
   children,
   className = "",
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return <section className={`ctms-surface ${className}`.trim()}>{children}</section>;
+  ...props
+}: SurfaceProps) {
+  return (
+    <section {...props} className={`ctms-surface ${className}`.trim()}>
+      {children}
+    </section>
+  );
 }
 
 export function Kicker({ children }: { children: React.ReactNode }) {
