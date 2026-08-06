@@ -131,7 +131,7 @@ export async function analyzeV3(payload: {
   }>(`${API_BASE}/api/v3/analyze`, {
     method: "POST",
     body: JSON.stringify(payload),
-  }, 30000);
+  }, 70000);
   return data;
 }
 

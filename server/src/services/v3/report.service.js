@@ -18,7 +18,7 @@ async function generateV3FullReport({ sessionToken, input, caseModel, boundaries
   if (caseModel.safety?.level !== "clear") return fallback(caseModel, boundaries);
   const protocol = protocols.choose(caseModel.recommendedProtocol?.key, caseModel);
   try {
-    const result = await structured({ name:"ctms_v3_full_report", schema:schemas.report, model:process.env.OPENAI_REPORT_MODEL, effort:"high", safetyId:sessionToken, system:`Tworzysz raport premium CzyToMaSens 3.0. Nie diagnozuj drugiej osoby. Pokaż materiał, niewiadome, hipotezę, kontrhipotezę i warunki rozstrzygnięcia. Język ma być empatyczny, techniczny i stanowczy bez oskarżania. Nie używaj procentów psychologicznych. Protokół jest z kontrolowanej biblioteki i nie wolno zmieniać jego działania na manipulacyjne.`, user:JSON.stringify({ input, caseModel, boundaries, controlledProtocol:protocol },null,2).slice(0,90000) });
+    const result = await structured({ name:"ctms_v3_full_report", schema:schemas.report, model:process.env.OPENAI_REPORT_MODEL, effort:"high", timeoutMs:90000, safetyId:sessionToken, system:`Tworzysz raport premium CzyToMaSens 3.0. Nie diagnozuj drugiej osoby. Pokaż materiał, niewiadome, hipotezę, kontrhipotezę i warunki rozstrzygnięcia. Język ma być empatyczny, techniczny i stanowczy bez oskarżania. Nie używaj procentów psychologicznych. Protokół jest z kontrolowanej biblioteki i nie wolno zmieniać jego działania na manipulacyjne.`, user:JSON.stringify({ input, caseModel, boundaries, controlledProtocol:protocol },null,2).slice(0,90000) });
     result.safety = caseModel.safety;
     result.recommendedProtocol = protocol;
     result.boundaries = boundariesArray(boundaries);
