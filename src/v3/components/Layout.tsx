@@ -14,27 +14,37 @@ export function Shell({
         <a className="ctms-brand" href="/" aria-label="CzyToMaSens — strona główna">
           CzyToMaSens<span>.</span>
         </a>
+
         {onBack ? (
           <button className="ctms-back" type="button" onClick={onBack}>
             <span aria-hidden="true">←</span> Wróć
           </button>
         ) : (
-          <nav className="ctms-header-nav" aria-label="Nawigacja główna">
-            <a href="/artykuly">Poradniki</a>
-          </nav>
+          <div className="ctms-header-right">
+            <nav className="ctms-header-nav" aria-label="Nawigacja główna">
+              <a href="/#jak-dziala">Jak działa</a>
+              <a href="/#raport">Raport</a>
+              <a href="/artykuly">Poradniki</a>
+            </nav>
+            <span className="ctms-header-trust">Prywatnie · bez konta</span>
+          </div>
         )}
       </header>
 
       <main className="ctms-main">{children}</main>
 
       <footer className="ctms-footer">
-        <span>© {new Date().getFullYear()} CzyToMaSens</span>
-        <nav aria-label="Dokumenty">
+        <div className="ctms-footer-brand">
+          <a className="ctms-brand ctms-brand-footer" href="/">CzyToMaSens<span>.</span></a>
+          <p>Narzędzie do porządkowania własnej perspektywy. Nie zastępuje terapii, diagnozy ani pomocy kryzysowej.</p>
+        </div>
+        <nav aria-label="Dokumenty i informacje">
           <a href="/artykuly">Poradniki</a>
           <a href="/regulamin">Regulamin</a>
           <a href="/polityka-prywatnosci">Prywatność</a>
           <a href="/kontakt">Kontakt</a>
         </nav>
+        <span className="ctms-footer-copy">© {new Date().getFullYear()} CzyToMaSens</span>
       </footer>
     </div>
   );
@@ -106,7 +116,7 @@ export function Progress({
     <div className="ctms-progress" aria-label={`${label}: ${value} z ${safeTotal}`}>
       <div className="ctms-progress-copy">
         <span>{label}</span>
-        <strong>{value}/{safeTotal}</strong>
+        <strong>{String(value).padStart(2, "0")} / {String(safeTotal).padStart(2, "0")}</strong>
       </div>
       <div className="ctms-progress-track" aria-hidden="true">
         <span style={{ width: `${(value / safeTotal) * 100}%` }} />
