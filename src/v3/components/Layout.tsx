@@ -19,10 +19,16 @@ export function Shell({
         </a>
 
         {onBack ? (
-          <button className="ctms-back" type="button" onClick={onBack}>
-            <span aria-hidden="true">←</span>
-            <span>Wróć</span>
-          </button>
+          <div className="ctms-header-actions">
+            <button className="ctms-back" type="button" onClick={onBack}>
+              <span aria-hidden="true">←</span>
+              <span>Wróć</span>
+            </button>
+            <a className="ctms-home-link" href="/">
+              <span aria-hidden="true">⌂</span>
+              <span>Strona główna</span>
+            </a>
+          </div>
         ) : (
           <div className="ctms-header-right">
             <nav className="ctms-header-nav" aria-label="Nawigacja główna">

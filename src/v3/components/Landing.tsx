@@ -6,7 +6,7 @@ const articleLinks = [
     href: "/artykuly/czy-ten-zwiazek-ma-sens",
     title: "Czy ten związek ma jeszcze sens?",
     description: "Jak oddzielić pojedynczy kryzys od relacji, która od dawna nie daje Ci bezpieczeństwa.",
-    imageClass: "ctms-guide-image-one",
+    imageClass: "ctms-guide-image-couple",
   },
   {
     href: "/artykuly/czy-warto-ratowac-zwiazek",
@@ -46,12 +46,12 @@ export function Landing({ onStart }: { onStart: () => void }) {
         <div className="ctms-hero-copy">
           <Kicker>ZROZUM RELACJĘ · ODDZIEL FAKTY OD INTERPRETACJI</Kicker>
           <h1 id="ctms-hero-title">
-            Zobacz, co <em>naprawdę</em><br />wraca między Wami.
+            Zobacz, co <em>naprawdę</em><br />dzieje się między Wami.
           </h1>
           <p>
             CzyToMaSens porządkuje konkretne zdarzenia, oddziela fakty od domysłów i pokazuje
-            powtarzające się mechanizmy relacji. Wiesz, co jest realne, co interpretacją, a co nadal
-            wymaga sprawdzenia.
+            wzorce, które wracają w relacji. Dostajesz spokojny, estetyczny i konkretny odczyt:
+            co jest realne, co tylko dopowiedziane i co naprawdę warto sprawdzić dalej.
           </p>
 
           <div className="ctms-hero-actions">
