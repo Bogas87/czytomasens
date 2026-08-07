@@ -13,10 +13,10 @@ export function Shell({
     <div className={`ctms-shell${immersive ? " is-immersive" : ""}`}>
       <div className="ctms-ambient" aria-hidden="true" />
       <header className="ctms-header">
-        <a className="ctms-brand" href="/" aria-label="CzyToMaSens — strona główna">
+        <button className="ctms-brand ctms-brand-button" type="button" onClick={() => window.location.assign("/")} aria-label="CzyToMaSens — strona główna">
           CzyToMaSens<span>.</span>
           <small>analiza rzeczywistości relacyjnej</small>
-        </a>
+        </button>
 
         {onBack ? (
           <div className="ctms-header-actions">
@@ -24,10 +24,10 @@ export function Shell({
               <span aria-hidden="true">←</span>
               <span>Wróć</span>
             </button>
-            <a className="ctms-home-link" href="/">
+            <button className="ctms-home-link" type="button" onClick={() => window.location.assign("/")}>
               <span aria-hidden="true">⌂</span>
               <span>Strona główna</span>
-            </a>
+            </button>
           </div>
         ) : (
           <div className="ctms-header-right">

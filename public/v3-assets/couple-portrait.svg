@@ -1,37 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1400" fill="none">
-  <defs>
-    <linearGradient id="bgp" x1="0" y1="0" x2="900" y2="1400" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#080B10"/>
-      <stop offset="0.6" stop-color="#0A0F14"/>
-      <stop offset="1" stop-color="#05070A"/>
-    </linearGradient>
-    <radialGradient id="gp" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(650 280) rotate(90) scale(360 250)">
-      <stop stop-color="#F3D28A" stop-opacity="0.56"/>
-      <stop offset="0.45" stop-color="#C98A3E" stop-opacity="0.24"/>
-      <stop offset="1" stop-color="#0D1014" stop-opacity="0"/>
-    </radialGradient>
-    <filter id="b20" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="20"/></filter>
-  </defs>
-  <rect width="900" height="1400" fill="url(#bgp)"/>
-  <rect width="900" height="1400" fill="url(#gp)"/>
-  <rect x="506" y="92" width="12" height="1180" rx="6" fill="#6D4926"/>
-  <rect x="526" y="92" width="5" height="1180" rx="2.5" fill="#F0CF8D" fill-opacity="0.42"/>
-  <rect x="698" y="92" width="12" height="1180" rx="6" fill="#6D4926"/>
-  <rect x="718" y="92" width="5" height="1180" rx="2.5" fill="#F0CF8D" fill-opacity="0.42"/>
-  <rect x="518" y="106" width="180" height="1120" rx="22" fill="#D6A75B" fill-opacity="0.08" stroke="#D6A75B" stroke-opacity="0.24"/>
-  <circle cx="652" cy="272" r="84" fill="#F2C673" fill-opacity="0.22" filter="url(#b20)"/>
-  <ellipse cx="394" cy="1204" rx="170" ry="46" fill="#050709" fill-opacity="0.92" filter="url(#b20)"/>
-  <path d="M278 1160c-8-73 13-130 62-168 32-26 67-38 108-37 40 1 74 17 100 47 34 38 50 92 56 158H278Z" fill="#0A0D10"/>
-  <circle cx="386" cy="782" r="84" fill="#0A0D10"/>
-  <path d="M326 752c10-48 44-84 91-95 30-7 58-4 84 9-16-38-53-65-98-65-56 0-102 41-112 94 8 17 20 36 35 57Z" fill="#12171C" fill-opacity="0.58"/>
-  <path d="M430 1184c4-44 17-84 42-120 30-44 72-70 126-76 40-4 75 4 107 25 45 29 74 84 86 171H430Z" fill="#090C10"/>
-  <circle cx="592" cy="914" r="76" fill="#090C10"/>
-  <path d="M528 886c10-41 43-72 84-79 28-6 55-3 78 8-14-33-48-56-91-56-49 0-91 31-106 75 8 15 20 33 35 52Z" fill="#13181D" fill-opacity="0.56"/>
-  <g opacity="0.27">
-    <circle cx="742" cy="258" r="2.4" fill="#F1D293"/>
-    <circle cx="612" cy="186" r="1.7" fill="#F1D293"/>
-    <circle cx="760" cy="514" r="2.1" fill="#F1D293"/>
-    <circle cx="566" cy="436" r="1.6" fill="#F1D293"/>
-    <circle cx="715" cy="738" r="1.6" fill="#F1D293"/>
-  </g>
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="900" y2="1400" gradientUnits="userSpaceOnUse"><stop stop-color="#071018"/><stop offset="0.6" stop-color="#09121C"/><stop offset="1" stop-color="#05080D"/></linearGradient>
+<radialGradient id="g" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(655 285) rotate(90) scale(400 280)"><stop stop-color="#F0D59D" stop-opacity="0.64"/><stop offset="0.4" stop-color="#D39A4D" stop-opacity="0.25"/><stop offset="1" stop-color="#D39A4D" stop-opacity="0"/></radialGradient>
+<linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#EECF90" stop-opacity="0.16"/><stop offset="1" stop-color="#EECF90" stop-opacity="0.03"/></linearGradient>
+</defs>
+<rect width="900" height="1400" fill="url(#bg)"/><rect width="900" height="1400" fill="url(#g)"/>
+<rect x="510" y="98" width="14" height="1160" rx="7" fill="#7A5228"/><rect x="533" y="98" width="5" height="1160" rx="2.5" fill="#F0CF8D" fill-opacity="0.5"/>
+<rect x="712" y="98" width="14" height="1160" rx="7" fill="#7A5228"/><rect x="735" y="98" width="5" height="1160" rx="2.5" fill="#F0CF8D" fill-opacity="0.5"/>
+<rect x="523" y="112" width="200" height="1110" rx="28" fill="url(#glass)" stroke="#D7A85B" stroke-opacity="0.22"/>
+<ellipse cx="382" cy="1200" rx="182" ry="44" fill="#020407" fill-opacity="0.78"/>
+<circle cx="394" cy="780" r="88" fill="#1A2230"/><path d="M278 1170c10-101 68-174 140-189 55-11 107 6 147 43 35 32 57 78 65 146H278Z" fill="#111A26"/>
+<circle cx="602" cy="910" r="74" fill="#1E2836"/><path d="M506 1176c12-84 64-147 129-165 65-18 138 9 185 74 21 29 35 58 42 91H506Z" fill="#111923"/>
+<path d="M465 1168c16-70 54-120 106-145 51-24 106-24 165-1-26-44-76-72-132-72-88 0-162 65-191 162l52 56Z" fill="#151F2C" fill-opacity="0.68"/>
 </svg>
