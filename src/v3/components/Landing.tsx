@@ -5,17 +5,20 @@ const articleLinks = [
   {
     href: "/artykuly/czy-ten-zwiazek-ma-sens",
     title: "Czy ten związek ma jeszcze sens?",
-    description: "Jak odróżnić przejściowy kryzys od relacji, która od dawna nie ma kierunku.",
+    description: "Jak oddzielić pojedynczy kryzys od relacji, która od dawna nie daje Ci bezpieczeństwa.",
+    imageClass: "ctms-guide-image-one",
   },
   {
     href: "/artykuly/czy-warto-ratowac-zwiazek",
     title: "Czy warto ratować związek?",
-    description: "Kiedy wysiłek jest odbudową, a kiedy tylko odwlekaniem decyzji.",
+    description: "Kiedy wysiłek jest wspólną pracą, a kiedy próbą utrzymania relacji w pojedynkę.",
+    imageClass: "ctms-guide-image-two",
   },
   {
-    href: "/artykuly/czy-ona-on-sie-mna-bawi",
+    href: "/artykuly/mieszane-sygnaly-w-relacji-co-robic-gdy-raz-jest-blisko-a-raz-sie-mna-bawi",
     title: "Mieszane sygnały w relacji",
     description: "Co naprawdę wynika z kontaktu, w którym bliskość przeplata się z dystansem.",
+    imageClass: "ctms-guide-image-three",
   },
 ];
 
@@ -38,14 +41,17 @@ export function Landing({ onStart }: { onStart: () => void }) {
   return (
     <div className="ctms-landing">
       <section className="ctms-hero" aria-labelledby="ctms-hero-title">
+        <div className="ctms-hero-vase" aria-hidden="true" />
+
         <div className="ctms-hero-copy">
           <Kicker>ZROZUM RELACJĘ · ODDZIEL FAKTY OD INTERPRETACJI</Kicker>
           <h1 id="ctms-hero-title">
             Zobacz, co <em>naprawdę</em><br />wraca między Wami.
           </h1>
           <p>
-            CzyToMaSens porządkuje zdarzenia, oddziela fakty od domysłów i pokazuje powtarzające się
-            mechanizmy relacji. Wiesz, co jest realne, co interpretacją, a co nadal wymaga sprawdzenia.
+            CzyToMaSens porządkuje konkretne zdarzenia, oddziela fakty od domysłów i pokazuje
+            powtarzające się mechanizmy relacji. Wiesz, co jest realne, co interpretacją, a co nadal
+            wymaga sprawdzenia.
           </p>
 
           <div className="ctms-hero-actions">
@@ -53,63 +59,66 @@ export function Landing({ onStart }: { onStart: () => void }) {
           </div>
 
           <div className="ctms-hero-proof" aria-label="Informacje o analizie">
-            <div><strong>100% prywatności</strong><span>Twoja historia nie jest publikowana</span></div>
-            <div><strong>Bez rejestracji</strong><span>nie tworzysz profilu, żeby zacząć</span></div>
-            <div><strong>Pierwszy odczyt bezpłatny</strong><span>najpierw sprawdzasz wartość analizy</span></div>
+            <div><span className="ctms-proof-icon">⌑</span><strong>Twoje dane są prywatne</strong><span>historia nie jest publikowana</span></div>
+            <div><span className="ctms-proof-icon">◇</span><strong>Bez rejestracji</strong><span>zaczynasz bez tworzenia profilu</span></div>
+            <div><span className="ctms-proof-icon">✦</span><strong>Pierwszy odczyt bezpłatny</strong><span>najpierw oceniasz wartość analizy</span></div>
           </div>
         </div>
 
         <div className="ctms-hero-visual" aria-label="Przykładowy fragment raportu">
-          <div className="ctms-visual-orbit ctms-visual-orbit-one" aria-hidden="true" />
-          <div className="ctms-visual-orbit ctms-visual-orbit-two" aria-hidden="true" />
           <div className="ctms-report-peek">
-            <div className="ctms-report-peek-head">
-              <div>
-                <span>PODGLĄD ODCZYTU</span>
-                <strong>Co widać po trudnej rozmowie</strong>
+            <div className="ctms-report-peek-content">
+              <div className="ctms-report-peek-head">
+                <div>
+                  <span>PODGLĄD RAPORTU</span>
+                  <strong>Przykładowy fragment odczytu</strong>
+                </div>
+                <i aria-hidden="true">01</i>
               </div>
-              <i aria-hidden="true">01</i>
-            </div>
 
-            <div className="ctms-peek-row">
-              <span>ZDARZENIE</span>
-              <p>Kontakt wrócił dopiero po Twojej kolejnej wiadomości.</p>
-            </div>
-            <div className="ctms-peek-row">
-              <span>INTERPRETACJA</span>
-              <p>„Relacja utrzymuje się głównie dzięki mojej inicjatywie”.</p>
-            </div>
-            <div className="ctms-peek-row">
-              <span>NAJWIĘKSZA NIEWIADOMA</span>
-              <p>Czy to stały brak inicjatywy, czy reakcja na konkretny konflikt?</p>
-            </div>
+              <div className="ctms-peek-row ctms-peek-row-icon">
+                <b aria-hidden="true">Z</b>
+                <div><span>ZDARZENIE</span><p>Kontakt wrócił dopiero po Twojej kolejnej wiadomości.</p></div>
+              </div>
+              <div className="ctms-peek-row ctms-peek-row-icon">
+                <b aria-hidden="true">I</b>
+                <div><span>INTERPRETACJA</span><p>„Relacja utrzymuje się głównie dzięki mojej inicjatywie”.</p></div>
+              </div>
+              <div className="ctms-peek-row ctms-peek-row-icon">
+                <b aria-hidden="true">N</b>
+                <div><span>NAJWIĘKSZA NIEWIADOMA</span><p>Czy to stały brak inicjatywy, czy reakcja na konkretny konflikt?</p></div>
+              </div>
 
-            <div className="ctms-peek-verdict">
-              <span>CO SPRAWDZIĆ DALEJ</span>
-              <strong>Czy własny ruch pojawi się bez kolejnego impulsu z Twojej strony.</strong>
+              <div className="ctms-peek-verdict">
+                <b aria-hidden="true">?</b>
+                <div><span>CO SPRAWDZIĆ DALEJ</span><strong>Czy własny ruch pojawi się bez kolejnego impulsu z Twojej strony.</strong></div>
+              </div>
             </div>
+            <div className="ctms-report-peek-image" aria-hidden="true" />
           </div>
         </div>
       </section>
 
       <section className="ctms-method" id="jak-dziala" aria-labelledby="ctms-method-title">
-        <div className="ctms-method-intro">
+        <div className="ctms-method-heading">
           <Kicker>JAK TO DZIAŁA</Kicker>
-          <h2 id="ctms-method-title">Z chaosu emocji do kryterium, które można sprawdzić w realnym życiu.</h2>
-          <p>Nie dostajesz gotowej tezy. Dostajesz strukturę, która pokazuje, na czym opiera się Twój odczyt i co może go uczciwie zmienić.</p>
+          <h2 id="ctms-method-title">Od emocjonalnego chaosu do rzeczy, które można sprawdzić w realnym życiu.</h2>
         </div>
 
         <div className="ctms-method-steps">
           <article className="ctms-method-step">
             <span className="ctms-method-number">01</span>
+            <i aria-hidden="true">≋</i>
             <div><h3>Konkretny materiał</h3><p>Zachowania, słowa, kolejność zdarzeń i częstotliwość — bez etykiet.</p></div>
           </article>
           <article className="ctms-method-step">
             <span className="ctms-method-number">02</span>
-            <div><h3>Dwie możliwe wersje</h3><p>Hipoteza główna oraz najmocniejsza alternatywa, która może ją osłabić.</p></div>
+            <i aria-hidden="true">⇄</i>
+            <div><h3>Dwie możliwe wersje</h3><p>Hipoteza główna i najmocniejsza alternatywa, która może ją osłabić.</p></div>
           </article>
           <article className="ctms-method-step">
             <span className="ctms-method-number">03</span>
+            <i aria-hidden="true">◎</i>
             <div><h3>Kryterium sprawdzenia</h3><p>Konkretne zachowanie, które potwierdzi zmianę albo pokaże powrót wzorca.</p></div>
           </article>
         </div>
@@ -117,8 +126,10 @@ export function Landing({ onStart }: { onStart: () => void }) {
 
       <Surface className="ctms-offer" id="raport">
         <div className="ctms-offer-free">
+          <div className="ctms-offer-emblem" aria-hidden="true">◒</div>
           <Kicker>BEZPŁATNY PIERWSZY ODCZYT</Kicker>
-          <h2>Zobacz kierunek, zanim zdecydujesz, czy chcesz iść głębiej.</h2>
+          <h2>Zobacz pierwsze wnioski. Bez zobowiązań.</h2>
+          <p>Najpierw dostajesz konkretny fragment własnej analizy, żeby ocenić, czy ten sposób myślenia jest dla Ciebie użyteczny.</p>
           <ul className="ctms-offer-list">
             <li>sedno sytuacji i główny sygnał;</li>
             <li>najważniejsza niewiadoma;</li>
@@ -127,7 +138,10 @@ export function Landing({ onStart }: { onStart: () => void }) {
           </ul>
         </div>
 
+        <div className="ctms-offer-vs" aria-hidden="true">VS</div>
+
         <div className="ctms-offer-premium">
+          <div className="ctms-offer-emblem ctms-offer-emblem-premium" aria-hidden="true">✦</div>
           <div className="ctms-offer-price"><span>PEŁNY RAPORT</span></div>
           <h2>Pełniejszy obraz. Więcej struktury do świadomej decyzji.</h2>
           <p>Mapa Rozbieżności, Profil Obciążenia, hipoteza i kontrhipoteza, Rejestr Granic oraz bezpieczny protokół obserwacji.</p>
@@ -148,10 +162,13 @@ export function Landing({ onStart }: { onStart: () => void }) {
         <div className="ctms-guides-grid">
           {articleLinks.map((article, index) => (
             <a key={article.href} href={article.href}>
-              <span className="ctms-guide-index">0{index + 1}</span>
-              <h3>{article.title}</h3>
-              <p>{article.description}</p>
-              <span className="ctms-guide-link">Czytaj artykuł <i aria-hidden="true">→</i></span>
+              <span className={`ctms-guide-image ${article.imageClass}`} aria-hidden="true" />
+              <div className="ctms-guide-body">
+                <span className="ctms-guide-index">0{index + 1}</span>
+                <h3>{article.title}</h3>
+                <p>{article.description}</p>
+                <span className="ctms-guide-link">Czytaj artykuł <i aria-hidden="true">→</i></span>
+              </div>
             </a>
           ))}
         </div>

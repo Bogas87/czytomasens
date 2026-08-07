@@ -20,16 +20,19 @@ export function FreePreview({
       <Surface className="ctms-preview-hero">
         <div className="ctms-preview-hero-copy">
           <Kicker>TWÓJ PIERWSZY ODCZYT</Kicker>
-          <h1>{preview.headline}</h1>
-          <p>{preview.essence}</p>
+          <h1>Pierwszy odczyt.</h1>
+          <p>
+            To wstępny obraz Twojej sytuacji oparty na informacjach, które podałeś. Nie jest wyrokiem ani etykietą —
+            jest mapą tego, co dziś można zobaczyć i co nadal wymaga sprawdzenia.
+          </p>
           <div className="ctms-confidence">
-            <span>Pewność odczytu</span>
+            <span>PEWNOŚĆ ODCZYTU</span>
             <strong>{confidenceLabel(preview.confidence)}</strong>
           </div>
         </div>
         <aside className="ctms-preview-signal">
-          <span>GŁÓWNY SYGNAŁ</span>
-          <p>{preview.observedSignal}</p>
+          <span>TWÓJ GŁÓWNY SYGNAŁ</span>
+          <p>{preview.headline}</p>
         </aside>
       </Surface>
 
@@ -41,9 +44,17 @@ export function FreePreview({
         </Surface>
       )}
 
-      <section className="ctms-reading-grid">
+      <Surface className="ctms-preview-essence">
+        <span className="ctms-preview-essence-icon" aria-hidden="true">✦</span>
+        <div>
+          <Kicker>KLUCZOWY WNIOSEK</Kicker>
+          <p>{preview.essence}</p>
+        </div>
+      </Surface>
+
+      <section className="ctms-reading-grid ctms-reading-grid-four">
         <article>
-          <span>01 · Co widać</span>
+          <span>01 · Główny sygnał</span>
           <p>{preview.observedSignal}</p>
         </article>
         <article>
@@ -53,6 +64,10 @@ export function FreePreview({
         <article className="ctms-reading-verify">
           <span>03 · Co może zmienić ocenę</span>
           <p>{preview.verify}</p>
+        </article>
+        <article className="ctms-reading-confidence">
+          <span>04 · Co dziś wiemy</span>
+          <p>{confidenceLabel(preview.confidence)}</p>
         </article>
       </section>
 
@@ -77,7 +92,7 @@ export function FreePreview({
       <Surface className="ctms-premium-offer">
         <div>
           <Kicker>PEŁNIEJSZY OBRAZ</Kicker>
-          <h2>Ten odczyt pokazuje kierunek. Pełny raport pokazuje mechanizm i warunki zmiany.</h2>
+          <h2>Ten odczyt pokazuje kierunek. Pełny raport pokazuje mechanizm, koszt i warunki realnej zmiany.</h2>
           <p>{preview.premiumPromise}</p>
         </div>
         <ul>
