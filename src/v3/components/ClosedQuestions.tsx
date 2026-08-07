@@ -20,10 +20,19 @@ export function ClosedQuestions({
 
   return (
     <Surface className="ctms-question">
-      <div className="ctms-question-header">
-        <Progress current={index + 1} total={path.questions.length} label="Pytania zamknięte" />
-        <span className="ctms-question-path">{path.title}</span>
-      </div>
+      <aside className="ctms-question-header">
+        <span className="ctms-question-path">ANALIZA RELACJI</span>
+        <strong className="ctms-question-stage-number">{String(index + 1).padStart(2, "0")}</strong>
+        <Progress current={index + 1} total={path.questions.length} label="Pytanie" />
+        <div className="ctms-question-rail-copy">
+          <span>Wybrana ścieżka</span>
+          <p>{path.title}</p>
+        </div>
+        <div className="ctms-question-rail-note">
+          <strong>Nie ma dobrych ani złych odpowiedzi.</strong>
+          <p>Wybierz to, co najlepiej opisuje powtarzający się układ — nie pojedynczy dzień.</p>
+        </div>
+      </aside>
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -50,15 +59,13 @@ export function ClosedQuestions({
                 >
                   <span className="ctms-answer-index">{String(optionIndex + 1).padStart(2, "0")}</span>
                   <strong>{option.label}</strong>
-                  <span className="ctms-answer-check" aria-hidden="true">{selected ? "✓" : ""}</span>
+                  <span className="ctms-answer-check" aria-hidden="true">{selected ? "✓" : "→"}</span>
                 </button>
               );
             })}
           </div>
 
-          <p className="ctms-question-note">
-            Wybierz odpowiedź, która najlepiej opisuje powtarzający się układ, nie pojedynczy dzień.
-          </p>
+          <p className="ctms-question-note">Wybierz odpowiedź, aby przejść dalej.</p>
         </motion.div>
       </AnimatePresence>
     </Surface>

@@ -9,15 +9,15 @@ const MIN_LENGTH = 20;
 const stepMeta = [
   {
     label: "Konkretne zdarzenie",
-    description: "Opisz jedną sytuację tak, aby można było odtworzyć jej kolejność bez dopowiadania intencji.",
+    description: "Jedna scena, którą da się odtworzyć bez zgadywania intencji.",
   },
   {
     label: "Mechanizm i odpowiedzialność",
-    description: "Sprawdźmy, kto wykonuje kolejny ruch i kto ponosi koszt utrzymania kontaktu lub spokoju.",
+    description: "Kto wykonuje kolejny ruch i kto ponosi koszt utrzymania kontaktu albo spokoju.",
   },
   {
     label: "Kontrsygnał",
-    description: "Poszukaj faktu, który może osłabić Twoje pierwsze wyjaśnienie sytuacji.",
+    description: "Fakt, który może osłabić Twoje pierwsze wyjaśnienie sytuacji.",
   },
 ];
 
@@ -59,15 +59,19 @@ export function OpenInterview({
 
   return (
     <Surface className="ctms-interview">
-      <div className="ctms-interview-header">
-        <Progress current={step + 1} total={3} label="Pytania otwarte" />
+      <aside className="ctms-interview-header">
+        <Progress current={step + 1} total={3} label="Doprecyzowanie" />
         <div>
           <Kicker>{meta.label}</Kicker>
           <p>{meta.description}</p>
         </div>
-      </div>
+        <div className="ctms-interview-side-note">
+          <strong>Twoje słowa są materiałem.</strong>
+          <p>Nie musisz pisać ładnie. Liczy się kolejność zdarzeń i konkret.</p>
+        </div>
+      </aside>
 
-      <div className="ctms-interview-content">
+      <div className="ctms-interview-content" data-focus={focus || undefined}>
         {previous && step > 0 && (
           <aside className="ctms-previous-answer">
             <span>Fragment poprzedniej odpowiedzi</span>
@@ -83,7 +87,6 @@ export function OpenInterview({
         )}
 
         <h1>{currentQuestion}</h1>
-        {focus && <p className="ctms-focus">Cel pytania: {focus.replace(/_/g, " ")}</p>}
 
         <label className="ctms-writing-field">
           <span>Twoja odpowiedź</span>
@@ -94,7 +97,7 @@ export function OpenInterview({
               step === 0
                 ? "Kiedy to było? Co dokładnie powiedziała lub zrobiła druga osoba? Co zrobiłeś lub zrobiłaś Ty? Co wydarzyło się później?"
                 : step === 1
-                  ? "Zapisz kolejność działań obu stron i to, kto wrócił do tematu, przeprosił, wyjaśnił albo naprawił sytuację."
+                  ? "Zapisz kolejność działań obu stron i to, kto wrócił do tematu, wyjaśnił albo naprawił sytuację."
                   : "Podaj również fakt, który nie pasuje do Twojej pierwszej wersji albo pokazuje zachowanie drugiej strony w innym świetle."
             }
             rows={8}
@@ -106,7 +109,7 @@ export function OpenInterview({
                 ? "Minimum 20 znaków albo pomiń pytanie, jeżeli nie masz wystarczających danych."
                 : length < MIN_LENGTH
                   ? `Dopisz jeszcze ${MIN_LENGTH - length} znaków albo pomiń pytanie.`
-                  : "Odpowiedź ma wystarczającą długość."}
+                  : "Wystarczy. Możesz przejść dalej."}
             </span>
             <strong>{length}/5000</strong>
           </div>
@@ -146,15 +149,15 @@ export function FinalContext({
   return (
     <Surface className="ctms-stage ctms-final-context">
       <div className="ctms-stage-head">
-        <Kicker>KROK 4 Z 4</Kicker>
-        <h1>Czy brakuje jeszcze czegoś, co może zmienić znaczenie tej historii?</h1>
+        <Kicker>OSTATNI KONTEKST</Kicker>
+        <h1>Czy jest coś, co mogłoby uczciwie zmienić znaczenie tej historii?</h1>
         <p>{PATH_CONTEXT[path.key].finalPrompt}</p>
       </div>
 
       <div className="ctms-context-hints">
-        <article><strong>Dodaj</strong><p>ważne wcześniejsze próby naprawy, konkretne zmiany albo okoliczności, które potwierdzają Twój odczyt.</p></article>
-        <article><strong>Nie pomijaj</strong><p>własnych błędów i faktów, które uczciwie osłabiają Twoją pierwszą wersję.</p></article>
-        <article><strong>Nie wpisuj</strong><p>nazwisk, adresów, numerów telefonu ani danych pozwalających zidentyfikować drugą osobę.</p></article>
+        <article><strong>Dodaj</strong><p>ważne próby naprawy, konkretne zmiany i fakty, które wspierają Twój odczyt.</p></article>
+        <article><strong>Uwzględnij</strong><p>własne błędy i zdarzenia, które osłabiają pierwszą wersję.</p></article>
+        <article><strong>Pomiń dane osobowe</strong><p>nazwiska, adresy, telefony i inne informacje identyfikujące drugą osobę.</p></article>
       </div>
 
       <label className="ctms-writing-field">
@@ -186,7 +189,7 @@ export function FinalContext({
       </label>
 
       <div className="ctms-actions ctms-actions-split">
-        <PrimaryButton onClick={onSubmit} disabled={!consent || !hasValidText}>Uwzględnij kontekst i przygotuj odczyt</PrimaryButton>
+        <PrimaryButton onClick={onSubmit} disabled={!consent || !hasValidText}>Uwzględnij i przygotuj odczyt</PrimaryButton>
         <SecondaryButton onClick={onSkip} disabled={!consent}>Pomiń dodatkowy kontekst</SecondaryButton>
       </div>
     </Surface>

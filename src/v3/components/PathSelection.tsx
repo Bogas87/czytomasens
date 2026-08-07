@@ -22,13 +22,13 @@ export function PathSelection({
   onSelect: (key: EntryKey) => void;
 }) {
   return (
-    <Surface className="ctms-stage">
-      <div className="ctms-stage-head">
-        <Kicker>KROK 1 Z 4</Kicker>
-        <h1>Od którego miejsca najlepiej zacząć?</h1>
+    <Surface className="ctms-stage ctms-path-stage">
+      <div className="ctms-stage-head ctms-path-head">
+        <Kicker>WYBÓR ŚCIEŻKI</Kicker>
+        <h1>Wybierz to, co dziś najbardziej prosi się o nazwanie.</h1>
         <p>
-          Nie wybierasz diagnozy. Wybierasz temat, który dziś najbardziej wymaga uporządkowania.
-          Pytania później skorygują kierunek.
+          Nie wybierasz diagnozy. Wybierasz punkt wejścia. Każda ścieżka prowadzi do innego zestawu pytań,
+          a odpowiedzi później korygują pierwsze założenie.
         </p>
       </div>
 
@@ -52,7 +52,7 @@ export function PathSelection({
       </div>
 
       <p className="ctms-stage-note">
-        Nie widzisz idealnej ścieżki? Wybierz najbliższą. Odpowiedzi otwarte pozwolą skorygować pierwsze założenie.
+        Nie musisz mieć pewności. Wybierz ścieżkę najbliższą temu, co teraz czujesz i obserwujesz.
       </p>
     </Surface>
   );

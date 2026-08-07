@@ -21,28 +21,28 @@ export function MidMirror({
   return (
     <Surface className="ctms-mirror">
       <div className="ctms-stage-head ctms-stage-head-compact">
-        <Kicker>PIERWSZE LUSTRO</Kicker>
+        <Kicker>TWOJE PIERWSZE LUSTRO</Kicker>
         <h1>{loading ? "Porządkujemy pierwszą część odpowiedzi…" : content.headline}</h1>
-        <p>To krótkie podsumowanie kierunku. Nie jest diagnozą ani końcowym raportem.</p>
+        <p>To punkt zwrotny, nie diagnoza. Pokazuje kierunek, który teraz trzeba uczciwie sprawdzić.</p>
       </div>
 
       <div className="ctms-mirror-grid">
         <article>
-          <span>Co zaczyna się powtarzać</span>
+          <span>01 · Co zaczyna się powtarzać</span>
           <p>{content.observation}</p>
         </article>
         <article>
-          <span>Czego jeszcze nie wiemy</span>
+          <span>02 · Czego jeszcze nie wiemy</span>
           <p>{content.unknown}</p>
         </article>
         <article>
-          <span>Co sprawdzimy dalej</span>
+          <span>03 · Dlatego idziemy dalej</span>
           <p>{content.nextFocus}</p>
         </article>
       </div>
 
       <div className="ctms-actions">
-        <PrimaryButton onClick={onContinue} disabled={loading}>Przejdź dalej</PrimaryButton>
+        <PrimaryButton onClick={onContinue} disabled={loading}>Idziemy głębiej</PrimaryButton>
       </div>
     </Surface>
   );

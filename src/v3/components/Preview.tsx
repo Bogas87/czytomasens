@@ -18,13 +18,19 @@ export function FreePreview({
   return (
     <div className="ctms-preview">
       <Surface className="ctms-preview-hero">
-        <Kicker>BEZPŁATNY PIERWSZY ODCZYT</Kicker>
-        <h1>{preview.headline}</h1>
-        <p>{preview.essence}</p>
-        <div className="ctms-confidence">
-          <span>Pewność odczytu</span>
-          <strong>{confidenceLabel(preview.confidence)}</strong>
+        <div className="ctms-preview-hero-copy">
+          <Kicker>TWÓJ PIERWSZY ODCZYT</Kicker>
+          <h1>{preview.headline}</h1>
+          <p>{preview.essence}</p>
+          <div className="ctms-confidence">
+            <span>Pewność odczytu</span>
+            <strong>{confidenceLabel(preview.confidence)}</strong>
+          </div>
         </div>
+        <aside className="ctms-preview-signal">
+          <span>GŁÓWNY SYGNAŁ</span>
+          <p>{preview.observedSignal}</p>
+        </aside>
       </Surface>
 
       {preview.safety && preview.safety.level !== "clear" && (
@@ -37,15 +43,15 @@ export function FreePreview({
 
       <section className="ctms-reading-grid">
         <article>
-          <span>Co wynika z materiału</span>
+          <span>01 · Co widać</span>
           <p>{preview.observedSignal}</p>
         </article>
         <article>
-          <span>Czego nadal nie wiemy</span>
+          <span>02 · Największa niewiadoma</span>
           <p>{preview.unknown}</p>
         </article>
         <article className="ctms-reading-verify">
-          <span>Co może rozstrzygnąć</span>
+          <span>03 · Co może zmienić ocenę</span>
           <p>{preview.verify}</p>
         </article>
       </section>
@@ -54,7 +60,7 @@ export function FreePreview({
         <Surface className="ctms-discrepancy-preview">
           <div className="ctms-section-head">
             <Kicker>FRAGMENT MAPY ROZBIEŻNOŚCI</Kicker>
-            <h2>Znaczenie, opisane zdarzenia i niewiadome nie zawsze mówią to samo.</h2>
+            <h2>To, co czujesz, i to, co można dziś potwierdzić, nie zawsze jest tym samym.</h2>
           </div>
           <div className="ctms-discrepancy-list">
             {preview.discrepancySample.slice(0, 2).map((row, index) => (
@@ -70,8 +76,8 @@ export function FreePreview({
 
       <Surface className="ctms-premium-offer">
         <div>
-          <Kicker>PEŁNY RAPORT</Kicker>
-          <h2>Nie jest dłuższą wersją bezpłatnego odczytu.</h2>
+          <Kicker>PEŁNIEJSZY OBRAZ</Kicker>
+          <h2>Ten odczyt pokazuje kierunek. Pełny raport pokazuje mechanizm i warunki zmiany.</h2>
           <p>{preview.premiumPromise}</p>
         </div>
         <ul>
@@ -82,7 +88,7 @@ export function FreePreview({
           <li>bezpieczny protokół sprawdzania rzeczywistości;</li>
           <li>prywatny link do późniejszego powrotu.</li>
         </ul>
-        <PrimaryButton onClick={onPremium}>Przejdź do pełnego raportu</PrimaryButton>
+        <PrimaryButton onClick={onPremium}>Zobacz pełniejszy obraz</PrimaryButton>
       </Surface>
     </div>
   );
@@ -117,7 +123,7 @@ export function CheckoutPanel({
     <Surface className="ctms-stage ctms-checkout">
       <div className="ctms-stage-head">
         <Kicker>PRZED PEŁNYM RAPORTEM</Kicker>
-        <h1>Zapisz kryteria, zanim kolejna rozmowa zmieni ich znaczenie.</h1>
+        <h1>Zapisz swoje kryteria, zanim kolejna rozmowa przesunie granicę.</h1>
         <p>Te zdania staną się punktem odniesienia przy późniejszej ocenie rzeczywistej zmiany.</p>
       </div>
 
@@ -160,6 +166,10 @@ export function CheckoutPanel({
       </div>
 
       <div className="ctms-payment-box">
+        <div className="ctms-payment-intro">
+          <Kicker>PEŁNY RAPORT</Kicker>
+          <h2>Raport powstaje dla tej konkretnej historii i zachowuje zapisane wyżej kryteria.</h2>
+        </div>
         <label className="ctms-writing-field">
           <span>Adres e-mail do bezpiecznego linku z raportem</span>
           <input

@@ -35,31 +35,31 @@ export function PremiumReport({
   return (
     <div className="ctms-report">
       <Surface className="ctms-report-cover">
-        <div>
+        <div className="ctms-report-cover-copy">
           <Kicker>PEŁNY RAPORT</Kicker>
           <h1>{report.headline}</h1>
           <p>{report.subheadline}</p>
         </div>
         <aside>
-          <span>Pewność odczytu</span>
+          <span>PEWNOŚĆ ODCZYTU</span>
           <strong>{confidenceLabel(report.confidence)}</strong>
-          <p>Raport opiera się na jednej perspektywie i jakości opisanego materiału.</p>
+          <p>Raport opiera się na jednej perspektywie i jakości opisanego materiału. Niewiadome pozostają oznaczone.</p>
         </aside>
       </Surface>
 
       <Surface className="ctms-report-essence">
-        <Kicker>SEDNO</Kicker>
+        <Kicker>KLUCZOWY WNIOSEK</Kicker>
         <p>{report.essence}</p>
       </Surface>
 
       <section className="ctms-report-grid">
-        <ListCard title="CO WIEMY" items={report.whatWeKnow} />
-        <ListCard title="CZEGO JESZCZE NIE WIEMY" items={report.unknowns} />
+        <ListCard title="01 · CO WIEMY" items={report.whatWeKnow} />
+        <ListCard title="02 · CZEGO JESZCZE NIE WIEMY" items={report.unknowns} />
       </section>
 
       <Surface className="ctms-report-section">
         <div className="ctms-section-head">
-          <Kicker>MAPA ROZBIEŻNOŚCI</Kicker>
+          <Kicker>03 · MAPA ROZBIEŻNOŚCI</Kicker>
           <h2>Twoje rozumienie, opisane zdarzenia i niewiadome.</h2>
         </div>
         <div className="ctms-discrepancy-list">
@@ -75,7 +75,7 @@ export function PremiumReport({
 
       <section className="ctms-hypothesis-grid">
         <article className="ctms-hypothesis-card is-main">
-          <span>HIPOTEZA GŁÓWNA</span>
+          <span>04 · HIPOTEZA GŁÓWNA</span>
           <h2>{report.mainHypothesis.title}</h2>
           <p>{report.mainHypothesis.explanation}</p>
           <strong>Co ją wspiera</strong>
@@ -83,7 +83,7 @@ export function PremiumReport({
           <small>Pewność: {confidenceLabel(report.mainHypothesis.confidence)}</small>
         </article>
         <article className="ctms-hypothesis-card">
-          <span>KONTRHIPOTEZA</span>
+          <span>05 · KONTRHIPOTEZA</span>
           <h2>{report.counterHypothesis.title}</h2>
           <p>{report.counterHypothesis.explanation}</p>
           <strong>Granice tej wersji</strong>
@@ -98,14 +98,14 @@ export function PremiumReport({
       </section>
 
       <Surface className="ctms-report-section ctms-blind-spot">
-        <Kicker>MOŻLIWY ŚLEPY PUNKT</Kicker>
+        <Kicker>06 · MOŻLIWY ŚLEPY PUNKT</Kicker>
         <h2>Nie jest oskarżeniem. Jest miejscem do sprawdzenia.</h2>
         <p>{report.blindSpot}</p>
       </Surface>
 
       <Surface className="ctms-burden">
         <div>
-          <Kicker>PROFIL OBCIĄŻENIA</Kicker>
+          <Kicker>07 · PROFIL OBCIĄŻENIA</Kicker>
           <h2>{report.burdenProfile.level === "overloading" ? "przeciążające" : report.burdenProfile.level === "high" ? "wysokie" : report.burdenProfile.level === "moderate" ? "umiarkowane" : "niskie"}</h2>
           <p>{report.burdenProfile.mainSource}</p>
         </div>
@@ -118,7 +118,7 @@ export function PremiumReport({
 
       <Surface className="ctms-report-section">
         <div className="ctms-section-head">
-          <Kicker>REJESTR GRANIC I KRYTERIÓW</Kicker>
+          <Kicker>08 · REJESTR GRANIC I KRYTERIÓW</Kicker>
           <h2>Punkty odniesienia dla kolejnej oceny.</h2>
         </div>
         <div className="ctms-ledger">
@@ -131,12 +131,12 @@ export function PremiumReport({
         </div>
       </Surface>
 
-      <ListCard title="CO MOŻE ZMIENIĆ OCENĘ" items={report.changeConditions} />
+      <ListCard title="09 · CO MOŻE ZMIENIĆ OCENĘ" items={report.changeConditions} />
 
       {report.safety.protocolAllowed ? (
         <Surface className="ctms-protocol">
           <div className="ctms-section-head">
-            <Kicker>PROTOKÓŁ SPRAWDZANIA RZECZYWISTOŚCI</Kicker>
+            <Kicker>10 · PROTOKÓŁ SPRAWDZANIA RZECZYWISTOŚCI</Kicker>
             <h2>{report.recommendedProtocol.title}</h2>
             <p>{report.recommendedProtocol.hypothesis}</p>
           </div>

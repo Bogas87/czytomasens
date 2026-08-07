@@ -13,6 +13,7 @@ export function Shell({
       <header className="ctms-header">
         <a className="ctms-brand" href="/" aria-label="CzyToMaSens — strona główna">
           CzyToMaSens<span>.</span>
+          <small>analiza rzeczywistości relacyjnej</small>
         </a>
 
         {onBack ? (
@@ -22,11 +23,12 @@ export function Shell({
         ) : (
           <div className="ctms-header-right">
             <nav className="ctms-header-nav" aria-label="Nawigacja główna">
-              <a href="/#jak-dziala">Jak działa</a>
+              <a href="/#jak-dziala">Jak to działa</a>
               <a href="/#raport">Raport</a>
               <a href="/artykuly">Poradniki</a>
+              <a href="/polityka-prywatnosci">Prywatność</a>
             </nav>
-            <span className="ctms-header-trust">Prywatnie · bez konta</span>
+            <a className="ctms-header-trust" href="/#jak-dziala">Zobacz, jak to działa <span aria-hidden="true">→</span></a>
           </div>
         )}
       </header>
@@ -36,15 +38,20 @@ export function Shell({
       <footer className="ctms-footer">
         <div className="ctms-footer-brand">
           <a className="ctms-brand ctms-brand-footer" href="/">CzyToMaSens<span>.</span></a>
-          <p>Narzędzie do porządkowania własnej perspektywy. Nie zastępuje terapii, diagnozy ani pomocy kryzysowej.</p>
+          <p>Analiza oparta na faktach, nie na domysłach. Bez diagnozowania drugiej osoby.</p>
         </div>
         <nav aria-label="Dokumenty i informacje">
+          <a href="/#jak-dziala">Jak to działa</a>
           <a href="/artykuly">Poradniki</a>
           <a href="/regulamin">Regulamin</a>
           <a href="/polityka-prywatnosci">Prywatność</a>
           <a href="/kontakt">Kontakt</a>
         </nav>
-        <span className="ctms-footer-copy">© {new Date().getFullYear()} CzyToMaSens</span>
+        <div className="ctms-footer-copy">
+          <strong>Twoje dane są prywatne.</strong>
+          <span>Nie publikujemy Twojej historii.</span>
+          <small>© {new Date().getFullYear()} CzyToMaSens</small>
+        </div>
       </footer>
     </div>
   );
