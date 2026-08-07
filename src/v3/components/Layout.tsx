@@ -7,8 +7,10 @@ export function Shell({
   children: React.ReactNode;
   onBack?: () => void;
 }) {
+  const immersive = Boolean(onBack);
+
   return (
-    <div className="ctms-shell">
+    <div className={`ctms-shell${immersive ? " is-immersive" : ""}`}>
       <div className="ctms-ambient" aria-hidden="true" />
       <header className="ctms-header">
         <a className="ctms-brand" href="/" aria-label="CzyToMaSens — strona główna">
@@ -18,7 +20,8 @@ export function Shell({
 
         {onBack ? (
           <button className="ctms-back" type="button" onClick={onBack}>
-            <span aria-hidden="true">←</span> Wróć
+            <span aria-hidden="true">←</span>
+            <span>Wróć</span>
           </button>
         ) : (
           <div className="ctms-header-right">
@@ -28,31 +31,35 @@ export function Shell({
               <a href="/artykuly">Poradniki</a>
               <a href="/polityka-prywatnosci">Prywatność</a>
             </nav>
-            <a className="ctms-header-trust" href="/#jak-dziala">Zobacz, jak to działa <span aria-hidden="true">→</span></a>
+            <a className="ctms-header-trust" href="/#jak-dziala">
+              Zobacz, jak to działa <span aria-hidden="true">→</span>
+            </a>
           </div>
         )}
       </header>
 
       <main className="ctms-main">{children}</main>
 
-      <footer className="ctms-footer">
-        <div className="ctms-footer-brand">
-          <a className="ctms-brand ctms-brand-footer" href="/">CzyToMaSens<span>.</span></a>
-          <p>Analiza oparta na faktach, nie na domysłach. Bez diagnozowania drugiej osoby.</p>
-        </div>
-        <nav aria-label="Dokumenty i informacje">
-          <a href="/#jak-dziala">Jak to działa</a>
-          <a href="/artykuly">Poradniki</a>
-          <a href="/regulamin">Regulamin</a>
-          <a href="/polityka-prywatnosci">Prywatność</a>
-          <a href="/kontakt">Kontakt</a>
-        </nav>
-        <div className="ctms-footer-copy">
-          <strong>Twoje dane są prywatne.</strong>
-          <span>Nie publikujemy Twojej historii.</span>
-          <small>© {new Date().getFullYear()} CzyToMaSens</small>
-        </div>
-      </footer>
+      {!immersive && (
+        <footer className="ctms-footer">
+          <div className="ctms-footer-brand">
+            <a className="ctms-brand ctms-brand-footer" href="/">CzyToMaSens<span>.</span></a>
+            <p>Analiza oparta na faktach, nie na domysłach. Bez diagnozowania drugiej osoby.</p>
+          </div>
+          <nav aria-label="Dokumenty i informacje">
+            <a href="/#jak-dziala">Jak to działa</a>
+            <a href="/artykuly">Poradniki</a>
+            <a href="/regulamin">Regulamin</a>
+            <a href="/polityka-prywatnosci">Prywatność</a>
+            <a href="/kontakt">Kontakt</a>
+          </nav>
+          <div className="ctms-footer-copy">
+            <strong>Twoje dane są prywatne.</strong>
+            <span>Nie publikujemy Twojej historii.</span>
+            <small>© {new Date().getFullYear()} CzyToMaSens</small>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
