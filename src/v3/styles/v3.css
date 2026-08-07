@@ -349,7 +349,7 @@
   pointer-events: none;
 }
 .ctms-report-peek-content { position: relative; z-index: 2; padding: 28px 30px; }
-.ctms-report-peek-image { min-width: 0; border-left: 1px solid rgba(222,180,105,.14); background: linear-gradient(90deg, rgba(8,11,14,1), rgba(8,11,14,.05) 45%), linear-gradient(180deg, rgba(7,9,11,.1), rgba(7,9,11,.42)), url("/v3-assets/horizon.webp") center / cover no-repeat; }
+.ctms-report-peek-image { min-width: 0; border-left: 1px solid rgba(222,180,105,.14); background: linear-gradient(90deg, rgba(8,11,14,1), rgba(8,11,14,.05) 45%), linear-gradient(180deg, rgba(7,9,11,.1), rgba(7,9,11,.42)), url("/v3-assets/couple-editorial.svg") center 44% / cover no-repeat; }
 .ctms-report-peek-head { padding-bottom: 18px; display: flex; justify-content: space-between; gap: 18px; border-bottom: 1px solid var(--ctms-line-soft); }
 .ctms-report-peek-head div { display: grid; gap: 5px; }
 .ctms-report-peek-head span,
@@ -402,9 +402,9 @@
 .ctms-guides-grid > a { min-height: 340px; display: grid; grid-template-rows: 175px 1fr; overflow: hidden; border: 1px solid var(--ctms-line-soft); border-radius: 19px; text-decoration: none; background: linear-gradient(145deg, rgba(255,255,255,.027), rgba(255,255,255,.009)); transition: .22s ease; }
 .ctms-guides-grid > a:hover { transform: translateY(-4px); border-color: rgba(222,180,105,.39); box-shadow: 0 24px 60px rgba(0,0,0,.3); }
 .ctms-guide-image { display: block; background-position: center; background-size: cover; filter: saturate(.78) contrast(1.05) brightness(.8); }
-.ctms-guide-image-one { background-image: linear-gradient(180deg, transparent 60%, rgba(7,9,11,.8)), url("/v3-assets/guide-return.webp"); }
+.ctms-guide-image-one { background-image: linear-gradient(180deg, rgba(7,9,11,.04), rgba(7,9,11,.82)), url("/v3-assets/couple-editorial.svg"); background-position: center 42%; }
 .ctms-guide-image-two { background-image: linear-gradient(180deg, transparent 60%, rgba(7,9,11,.8)), url("/v3-assets/guide-boundaries.webp"); }
-.ctms-guide-image-three { background-image: linear-gradient(180deg, transparent 60%, rgba(7,9,11,.8)), url("/v3-assets/guide-reflection.webp"); }
+.ctms-guide-image-three { background-image: linear-gradient(180deg, rgba(7,9,11,.06), rgba(7,9,11,.82)), url("/v3-assets/horizon.webp"); background-position: center; }
 .ctms-guide-body { position: relative; padding: 21px 23px 52px; }
 .ctms-guide-index { color: var(--ctms-gold); font: 400 11px/1 var(--ctms-display); }
 .ctms-guides-grid h3 { margin: 9px 0 7px; color: var(--ctms-ink); font: 400 23px/1.13 var(--ctms-display); }
