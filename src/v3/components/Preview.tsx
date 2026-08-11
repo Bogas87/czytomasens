@@ -103,6 +103,11 @@ export function FreePreview({
           <li>bezpieczny protokół sprawdzania rzeczywistości;</li>
           <li>prywatny link do późniejszego powrotu.</li>
         </ul>
+
+        <p className="ctms-premium-payment-note">
+          Pełny raport: płatność jednorazowa. Bez subskrypcji i automatycznych odnowień.
+        </p>
+
         <PrimaryButton onClick={onPremium}>Zobacz pełniejszy obraz</PrimaryButton>
       </Surface>
     </div>
@@ -152,6 +157,7 @@ export function CheckoutPanel({
             rows={4}
           />
         </label>
+
         <label className="ctms-writing-field">
           <span>Jakiego zachowania nie chcesz dalej normalizować?</span>
           <textarea
@@ -161,6 +167,7 @@ export function CheckoutPanel({
             rows={4}
           />
         </label>
+
         <label className="ctms-writing-field">
           <span>Po jakim czasie uczciwie wrócisz do oceny?</span>
           <input
@@ -169,6 +176,7 @@ export function CheckoutPanel({
             placeholder="Np. 7 dni, 3 tygodnie, miesiąc"
           />
         </label>
+
         <label className="ctms-writing-field">
           <span>Czego nie będziesz robić za drugą stronę?</span>
           <textarea
@@ -185,6 +193,7 @@ export function CheckoutPanel({
           <Kicker>PEŁNY RAPORT</Kicker>
           <h2>Raport powstaje dla tej konkretnej historii i zachowuje zapisane wyżej kryteria.</h2>
         </div>
+
         <label className="ctms-writing-field">
           <span>Adres e-mail do bezpiecznego linku z raportem</span>
           <input
@@ -195,6 +204,7 @@ export function CheckoutPanel({
             autoComplete="email"
           />
         </label>
+
         <label className="ctms-consent">
           <input type="checkbox" checked={consent} onChange={(event) => onConsent(event.target.checked)} />
           <span>
@@ -202,10 +212,12 @@ export function CheckoutPanel({
             i przyjmuję do wiadomości utratę prawa odstąpienia po rozpoczęciu realizacji.
           </span>
         </label>
+
         <div className="ctms-price-row">
           <div><span>Pełny raport i protokół obserwacji</span><strong>19,99 zł</strong></div>
-          <p>Płatność jednorazowa. Raport będzie dostępny przez bezpieczny link.</p>
+          <p>Płatność jednorazowa. Bez subskrypcji i automatycznych odnowień. Raport będzie dostępny przez bezpieczny link.</p>
         </div>
+
         <PrimaryButton onClick={onBuy} disabled={!valid || saving}>
           {saving ? "Zapisujemy kryteria…" : "Kupuję pełny raport"}
         </PrimaryButton>

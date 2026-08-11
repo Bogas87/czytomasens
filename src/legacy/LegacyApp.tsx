@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArticlesSection, ARTICLES } from "../ArticlesSection";
 
@@ -1853,11 +1853,123 @@ function createLocalInterviewState(path: EntryConfig, seed?: any): InterviewStat
 const LEGAL_CONTENT: Record<Exclude<LegalKey, null>, { title: string; body: string }> = {
   regulamin: {
     title: "Regulamin",
-    body: "Data obowiązywania: 05.08.2026 r.\n\n1. Informacje ogólne\n\nSerwis CzyToMaSens jest dostępny pod adresem czytomasens.pl i umożliwia wykonanie prywatnej, automatycznej analizy rzeczywistości relacyjnej na podstawie informacji podanych przez użytkownika.\n\nUsługodawcą jest osoba fizyczna prowadząca serwis CzyToMaSens. Kontakt: kontakt.czytomasens@gmail.com.\n\n2. Charakter usługi\n\nCzyToMaSens jest narzędziem analitycznym i refleksyjnym. Nie świadczy usług psychologicznych, psychoterapeutycznych, medycznych, prawnych ani diagnostycznych. Nie diagnozuje użytkownika ani drugiej osoby i nie zastępuje kontaktu ze specjalistą.\n\nAnaliza powstaje automatycznie na podstawie jednej perspektywy. System może porządkować opisane zdarzenia, interpretacje, emocje, niewiadome i rozbieżności, a także tworzyć hipotezę, kontrhipotezę, rejestr kryteriów oraz bezpieczny protokół obserwacji. Wynik nie jest ustaleniem prawdy o drugiej osobie ani gwarancją przyszłego przebiegu relacji.\n\n3. Korzystanie z serwisu\n\nUżytkownik wybiera ścieżkę, odpowiada na pytania i może opisać własną sytuację. Powinien podawać informacje zgodne ze swoim doświadczeniem, odróżniać obserwowane zdarzenia od przypuszczeń oraz ograniczać dane identyfikujące osoby trzecie do minimum.\n\nSerwis nie przyjmuje w serwisu CzyToMaSens screenów rozmów, eksportów komunikatorów, nagrań prywatnych rozmów ani innych materiałów osób trzecich.\n\n4. Wynik bezpłatny i raport premium\n\nBezpłatny odczyt przedstawia podstawowe sedno, obserwowalny sygnał, niewiadomą i obszar do sprawdzenia. Raport premium jest odpłatną treścią cyfrową przygotowaną indywidualnie. Może obejmować Mapę Rozbieżności, hipotezę, kontrhipotezę, Profil Obciążenia Relacją, Rejestr Granic i Kryteriów oraz kontrolowany Test Rzeczywistości.\n\nPłatność obsługuje Stripe. Dostęp do opłaconego raportu może zostać przekazany przez czasowy, podpisany link wysłany na podany adres e-mail.\n\n5. Historia, testy i powrót\n\nUżytkownik może uruchomić prywatną historię relacji, zapisać własne kryteria, wynik protokołu oraz cotygodniowe check-iny. Link powrotu należy chronić jak prywatny dokument. Osoba posiadająca link może uzyskać dostęp do zapisanej historii.\n\nProtokoły służą zbieraniu obserwowalnych danych. Nie mogą być stosowane jako kara, prowokacja, manipulacja, celowe ignorowanie ani sposób wywołania zazdrości. System może wyłączyć protokół, gdy treść wskazuje na przemoc, groźby, kontrolę, stalking, ryzyko odwetu lub inne zagrożenie bezpieczeństwa.\n\n6. Prawo odstąpienia\n\nBezpośrednio przed zakupem użytkownik może wyrazić zgodę na rozpoczęcie dostarczania treści cyfrowej przed upływem 14 dni i potwierdzić przyjęcie do wiadomości utraty prawa odstąpienia po rozpoczęciu realizacji, w zakresie przewidzianym przez obowiązujące przepisy.\n\n7. Reklamacje\n\nReklamacje dotyczące płatności, dostępu albo działania usługi można składać na adres kontakt.czytomasens@gmail.com. Zgłoszenie powinno zawierać informacje pozwalające odnaleźć transakcję lub sesję bez podawania nadmiarowych danych dotyczących relacji.\n\n8. Odpowiedzialność i bezpieczeństwo\n\nUżytkownik samodzielnie podejmuje decyzje. Serwis nie ponosi odpowiedzialności za decyzje podjęte wyłącznie na podstawie automatycznej analizy. Wnioski zależą od kompletności i prawdziwości podanego materiału.\n\nW przypadku przemocy, groźby, zagrożenia życia lub zdrowia, stalkingu, przymusu albo ostrego kryzysu psychicznego należy przerwać analizę i skorzystać z bezpośredniej, odpowiedniej pomocy."
+    body: `Data obowiązywania: 11.08.2026 r.
+
+1. Informacje ogólne
+
+Serwis CzyToMaSens jest dostępny pod adresem czytomasens.pl i umożliwia wykonanie prywatnej, automatycznej analizy relacji na podstawie informacji przekazanych przez użytkownika.
+
+Usługodawcą jest osoba fizyczna prowadząca serwis CzyToMaSens. Kontakt: kontakt.czytomasens@gmail.com.
+
+Korzystanie z serwisu oznacza akceptację niniejszego Regulaminu w zakresie właściwym dla wybranej funkcji.
+
+2. Charakter usługi
+
+CzyToMaSens jest narzędziem analitycznym i refleksyjnym. Serwis nie świadczy usług psychologicznych, psychoterapeutycznych, psychiatrycznych, medycznych, prawnych ani diagnostycznych.
+
+Analiza i raport służą uporządkowaniu materiału przekazanego przez użytkownika, w szczególności rozdzieleniu obserwowalnych zdarzeń, interpretacji, emocji, niewiadomych, rozbieżności oraz możliwych kierunków dalszej obserwacji.
+
+Wynik nie jest ustaleniem prawdy o drugiej osobie, diagnozą, oceną kliniczną, gwarancją przyszłego przebiegu relacji ani poleceniem zakończenia, kontynuowania lub zmiany relacji.
+
+Decyzje dotyczące relacji użytkownik podejmuje samodzielnie, z uwzględnieniem własnej sytuacji i – gdy jest to potrzebne – pomocy odpowiedniego specjalisty.
+
+3. Ograniczenia analizy
+
+Analiza jest wykonywana wyłącznie na podstawie informacji przekazanych przez użytkownika. Serwis nie zna pełnej historii relacji, perspektywy drugiej osoby, tonu rozmów, intencji uczestników ani okoliczności, których użytkownik nie opisał.
+
+Serwis nie weryfikuje prawdziwości ani kompletności przekazanego materiału. Dodatkowe, odmienne albo dokładniejsze informacje mogą prowadzić do innego odczytu tej samej sytuacji.
+
+Odpowiedzi udzielane bezpośrednio po konflikcie albo w stanie silnego pobudzenia emocjonalnego mogą przedstawiać sytuację głównie z perspektywy aktualnego stanu użytkownika. W takim przypadku wynik należy traktować jako obraz informacji przekazanych w danym momencie, a nie ostateczną ocenę relacji.
+
+4. Zasady korzystania i dane osób trzecich
+
+Użytkownik powinien opisywać przede wszystkim własne doświadczenia i zachowania oraz ograniczać dane pozwalające zidentyfikować osoby trzecie do niezbędnego minimum.
+
+Nie należy podawać nazwisk, adresów, numerów telefonu, prywatnych adresów e-mail, numerów dokumentów ani innych danych identyfikacyjnych drugiej osoby, jeżeli nie są konieczne do wykonania usługi.
+
+Serwis nie jest przeznaczony do przesyłania pełnych treści cudzych wiadomości, eksportów komunikatorów, nagrań prywatnych rozmów ani materiałów pozyskanych bez wiedzy osób, których dotyczą.
+
+Użytkownik odpowiada za treści, które samodzielnie wprowadza do serwisu.
+
+5. Bezpieczeństwo użytkownika
+
+Serwis nie jest narzędziem interwencji kryzysowej ani narzędziem do oceny bezpośredniego zagrożenia.
+
+W przypadku informacji wskazujących na przemoc, groźby, stalking, przymus, kontrolę, realne ryzyko odwetu albo bezpośrednie zagrożenie życia lub zdrowia standardowy tok analizy lub protokół obserwacji może zostać ograniczony albo przerwany.
+
+W takich sytuacjach użytkownik nie powinien wykorzystywać analizy internetowej jako jedynej podstawy działania.
+
+Protokoły obserwacji nie mogą służyć do prowokowania konfliktu, karania ciszą, celowego ignorowania, manipulowania zazdrością, śledzenia drugiej osoby ani wywoływania zachowań, które mogą zwiększać ryzyko.
+
+6. Wynik bezpłatny i raport pełny
+
+Bezpłatny odczyt przedstawia podstawowy obraz sytuacji wynikający z przekazanego materiału.
+
+Pełny raport jest odpłatną treścią cyfrową przygotowywaną dla konkretnej analizy i może zawierać pogłębione wnioski, hipotezę główną, kontrhipotezę, obszary niepewności, kryteria obserwacji, granice użytkownika oraz dalsze elementy analityczne dostępne w serwisie.
+
+Cena pełnego raportu jest każdorazowo podawana użytkownikowi przed złożeniem zamówienia.
+
+Płatność ma charakter jednorazowy. Zakup pełnego raportu nie uruchamia subskrypcji, abonamentu ani automatycznych odnowień.
+
+Płatność może być obsługiwana przez zewnętrznego operatora płatności. Serwis nie przechowuje pełnych danych kart płatniczych.
+
+7. Dostarczenie raportu i prywatny link
+
+Dostęp do opłaconego raportu może zostać przekazany przez prywatny lub czasowy link oraz na adres e-mail podany przez użytkownika.
+
+Link do raportu lub historii należy chronić jak prywatny dokument. Osoba posiadająca aktywny link może uzyskać dostęp do treści dostępnych pod tym linkiem.
+
+Użytkownik odpowiada za udostępnienie takiego linku osobom trzecim.
+
+8. Prawo odstąpienia
+
+Jeżeli pełny raport jest przygotowywany i dostarczany jako treść cyfrowa bezpośrednio po dokonaniu płatności, przed zakupem użytkownik może zostać poproszony o wyraźną zgodę na rozpoczęcie wykonania usługi przed upływem ustawowego terminu odstąpienia oraz o potwierdzenie przyjęcia do wiadomości skutków rozpoczęcia realizacji, zgodnie z obowiązującymi przepisami.
+
+Informacja i zgoda dotycząca rozpoczęcia realizacji są prezentowane bezpośrednio przed zakupem, jeżeli są wymagane dla danego sposobu wykonania usługi.
+
+9. Reklamacje
+
+Reklamacje dotyczące działania serwisu, płatności, dostępu do raportu albo wykonania odpłatnej usługi można składać na adres: kontakt.czytomasens@gmail.com.
+
+Zgłoszenie powinno zawierać informacje pozwalające ustalić problem i – jeżeli jest to konieczne – odnaleźć transakcję lub sesję. Użytkownik nie powinien przesyłać pełnej historii relacji ani danych drugiej osoby, jeżeli nie jest to potrzebne do rozpatrzenia reklamacji.
+
+Reklamacje są rozpatrywane bez zbędnej zwłoki, nie później niż w terminie 7 dni kalendarzowych od dnia ich otrzymania.
+
+Odpowiedź jest przekazywana na adres e-mail wskazany w zgłoszeniu.
+
+W przypadku nieprawidłowego wykonania odpłatnej usługi, zależnie od charakteru problemu i obowiązujących przepisów, dostęp może zostać przywrócony, raport może zostać przygotowany ponownie albo może nastąpić zwrot należnej płatności.
+
+10. Odpowiedzialność
+
+Serwis odpowiada za prawidłowe wykonanie usługi w zakresie wynikającym z obowiązujących przepisów.
+
+Usługodawca nie odpowiada za skutki decyzji użytkownika dotyczących jego relacji, jeżeli wynikają one z indywidualnej oceny użytkownika, działań osób trzecich albo okoliczności pozostających poza kontrolą serwisu.
+
+Usługodawca nie odpowiada za działania lub zaniechania partnera użytkownika ani innych osób trzecich.
+
+Wnioski analizy zależą od treści, kompletności i jakości informacji przekazanych przez użytkownika.
+
+11. Dostępność techniczna
+
+Usługodawca podejmuje uzasadnione działania w celu utrzymania dostępności serwisu, jednak czasowa niedostępność może wystąpić w związku z pracami technicznymi, awariami, działaniem dostawców infrastruktury albo zdarzeniami pozostającymi poza racjonalną kontrolą usługodawcy.
+
+W przypadku problemu technicznego z opłaconą usługą użytkownik może skorzystać z procedury reklamacyjnej.
+
+12. Dane osobowe
+
+Zasady przetwarzania danych osobowych, okres ich przechowywania, informacje o dostawcach technologicznych oraz prawa użytkownika opisuje Polityka prywatności i RODO dostępna w serwisie.
+
+13. Zmiany Regulaminu
+
+Regulamin może zostać zmieniony z ważnych przyczyn prawnych, technicznych, bezpieczeństwa lub związanych ze zmianą sposobu świadczenia usługi.
+
+Aktualna treść Regulaminu jest publikowana w serwisie wraz z datą obowiązywania.
+
+Zmiany nie ograniczają praw nabytych przez użytkownika w związku z usługą wykonaną przed wejściem zmian w życie.`,
   },
   prywatnosc: {
     title: "Polityka prywatności i RODO",
-    body: "Data obowiązywania: 05.08.2026 r.\n\n1. Administrator danych\n\nAdministratorem danych osobowych jest osoba fizyczna prowadząca serwis CzyToMaSens. Kontakt w sprawach danych: kontakt.czytomasens@gmail.com.\n\n2. Zakres danych\n\nSerwis może przetwarzać adres e-mail, odpowiedzi zamknięte, treść pól otwartych, opisane zdarzenia, kryteria i granice użytkownika, wyniki protokołów, check-iny, historię analiz, identyfikatory sesji i prywatnych linków, informacje o statusie płatności, dane techniczne niezbędne do bezpieczeństwa oraz zdarzenia produktowe takie jak przejście etapu lub rozpoczęcie zakupu.\n\nTreść może zawierać informacje szczególnie prywatne, w tym dotyczące zdrowia, życia intymnego lub sytuacji kryzysowych. Użytkownik powinien nie podawać nazwisk, adresów, numerów telefonu, pełnych treści cudzych wiadomości ani innych zbędnych danych osób trzecich.\n\n3. Cele i podstawy przetwarzania\n\nDane są przetwarzane w celu przygotowania analizy i raportu, prowadzenia prywatnej historii, porównywania zmian w czasie, zapisania kryteriów i protokołów, obsługi płatności, dostarczenia raportu, obsługi reklamacji, zabezpieczenia systemu oraz pomiaru działania poszczególnych etapów produktu.\n\nPodstawą przetwarzania jest wykonanie umowy lub działania przed jej zawarciem, obowiązek prawny, prawnie uzasadniony interes administratora związany z bezpieczeństwem i poprawą działania usługi, a w zakresie danych szczególnych kategorii — wyraźna zgoda użytkownika, jeżeli jest wymagana.\n\nAutomatyczna analiza nie wywołuje skutków prawnych wobec użytkownika i nie stanowi decyzji podejmowanej w jego imieniu.\n\n4. Dostawcy\n\nW realizacji usługi mogą uczestniczyć OpenAI jako dostawca technologii modelu językowego, Railway jako dostawca infrastruktury i bazy danych, Stripe jako operator płatności oraz Resend jako dostawca poczty elektronicznej. Serwis nie sprzedaje danych i nie wykorzystuje treści analiz do reklamy. Korzystanie z dostawców spoza Europejskiego Obszaru Gospodarczego może wymagać mechanizmów transferu przewidzianych przez RODO.\n\n5. Historia i prywatny link\n\nHistoria V3 jest powiązana z losowym identyfikatorem i prywatnym tokenem powrotu, a nie z publicznym profilem. Użytkownik odpowiada za zabezpieczenie linku. W aplikacji dostępna jest funkcja usunięcia historii.\n\n6. Okres przechowywania\n\nHistoria V3, odpowiedzi, raporty, kryteria i check-iny są przechowywane maksymalnie przez okres ustawiony dla usługi, domyślnie 90 dni od ostatniej aktywności, a następnie usuwane lub anonimizowane. Użytkownik może usunąć historię wcześniej. Dane konieczne do rozliczeń, obrony roszczeń albo realizacji obowiązków prawnych mogą być przechowywane dłużej w ograniczonym zakresie.\n\nPostęp zapisany lokalnie w przeglądarce może pozostać do 90 dni lub do chwili wyczyszczenia danych strony.\n\n7. Prawa użytkownika\n\nUżytkownik może żądać dostępu, sprostowania, usunięcia, ograniczenia przetwarzania, przeniesienia danych, zgłosić sprzeciw oraz wycofać zgodę ze skutkiem na przyszłość. Ma także prawo złożyć skargę do Prezesa Urzędu Ochrony Danych Osobowych. Żądania można kierować na kontakt.czytomasens@gmail.com.\n\n8. Ograniczenie materiałów osób trzecich\n\nSerwis w serwisu CzyToMaSens nie służy do wgrywania screenów, eksportów komunikatorów, nagrań ani pełnych rozmów osób trzecich. Użytkownik opisuje własne doświadczenie własnymi słowami."
+    body: "Data obowiązywania: 05.08.2026 r.\n\n1. Administrator danych\n\nAdministratorem danych osobowych jest osoba fizyczna prowadząca serwis CzyToMaSens. Kontakt w sprawach danych: kontakt.czytomasens@gmail.com.\n\n2. Zakres danych\n\nSerwis może przetwarzać adres e-mail, odpowiedzi zamknięte, treść pól otwartych, opisane zdarzenia, kryteria i granice użytkownika, wyniki protokołów, check-iny, historię analiz, identyfikatory sesji i prywatnych linków, informacje o statusie płatności, dane techniczne niezbędne do bezpieczeństwa oraz zdarzenia produktowe takie jak przejście etapu lub rozpoczęcie zakupu.\n\nTreść może zawierać informacje szczególnie prywatne, w tym dotyczące zdrowia, życia intymnego lub sytuacji kryzysowych. Użytkownik powinien nie podawać nazwisk, adresów, numerów telefonu, pełnych treści cudzych wiadomości ani innych zbędnych danych osób trzecich.\n\n3. Cele i podstawy przetwarzania\n\nDane są przetwarzane w celu przygotowania analizy i raportu, prowadzenia prywatnej historii, porównywania zmian w czasie, zapisania kryteriów i protokołów, obsługi płatności, dostarczenia raportu, obsługi reklamacji, zabezpieczenia systemu oraz pomiaru działania poszczególnych etapów produktu.\n\nPodstawą przetwarzania jest wykonanie umowy lub działania przed jej zawarciem, obowiązek prawny, prawnie uzasadniony interes administratora związany z bezpieczeństwem i poprawą działania usługi, a w zakresie danych szczególnych kategorii — wyraźna zgoda użytkownika, jeżeli jest wymagana.\n\nAutomatyczna analiza nie wywołuje skutków prawnych wobec użytkownika i nie stanowi decyzji podejmowanej w jego imieniu.\n\n4. Dostawcy\n\nW realizacji usługi mogą uczestniczyć OpenAI jako dostawca technologii modelu językowego, Railway jako dostawca infrastruktury i bazy danych, Stripe jako operator płatności oraz Resend jako dostawca poczty elektronicznej. Serwis nie sprzedaje danych i nie wykorzystuje treści analiz do reklamy. Korzystanie z dostawców spoza Europejskiego Obszaru Gospodarczego może wymagać mechanizmów transferu przewidzianych przez RODO.\n\n5. Historia i prywatny link\n\nHistoria analizy jest powiązana z losowym identyfikatorem i prywatnym tokenem powrotu, a nie z publicznym profilem. Użytkownik odpowiada za zabezpieczenie linku. W aplikacji dostępna jest funkcja usunięcia historii.\n\n6. Okres przechowywania\n\nHistoria analizy, odpowiedzi, raporty, kryteria i check-iny są przechowywane maksymalnie przez okres ustawiony dla usługi, domyślnie 90 dni od ostatniej aktywności, a następnie usuwane lub anonimizowane. Użytkownik może usunąć historię wcześniej. Dane konieczne do rozliczeń, obrony roszczeń albo realizacji obowiązków prawnych mogą być przechowywane dłużej w ograniczonym zakresie.\n\nPostęp zapisany lokalnie w przeglądarce może pozostać do 90 dni lub do chwili wyczyszczenia danych strony.\n\n7. Prawa użytkownika\n\nUżytkownik może żądać dostępu, sprostowania, usunięcia, ograniczenia przetwarzania, przeniesienia danych, zgłosić sprzeciw oraz wycofać zgodę ze skutkiem na przyszłość. Ma także prawo złożyć skargę do Prezesa Urzędu Ochrony Danych Osobowych. Żądania można kierować na kontakt.czytomasens@gmail.com.\n\n8. Ograniczenie materiałów osób trzecich\n\nSerwis w serwisu CzyToMaSens nie służy do wgrywania screenów, eksportów komunikatorów, nagrań ani pełnych rozmów osób trzecich. Użytkownik opisuje własne doświadczenie własnymi słowami."
   },
   rodo: {
     title: "Informacja RODO i pamięć przeglądarki",
@@ -1865,7 +1977,7 @@ const LEGAL_CONTENT: Record<Exclude<LegalKey, null>, { title: string; body: stri
   },
   kontakt: {
     title: "Kontakt",
-    body: "W sprawach technicznych, płatności, raportu, reklamacji, usunięcia historii oraz danych osobowych napisz na: kontakt.czytomasens@gmail.com.\n\nW zgłoszeniu nie przesyłaj pełnej historii relacji ani danych drugiej osoby, jeżeli nie jest to konieczne. Podaj identyfikator płatności lub sesji tylko wtedy, gdy jest potrzebny do rozwiązania problemu.\n\nCzas odpowiedzi: do 14 dni."
+    body: "W sprawach technicznych, płatności, raportu, reklamacji, usunięcia historii oraz danych osobowych napisz na: kontakt.czytomasens@gmail.com.\n\nW zgłoszeniu nie przesyłaj pełnej historii relacji ani danych drugiej osoby, jeżeli nie jest to konieczne. Podaj identyfikator płatności lub sesji tylko wtedy, gdy jest potrzebny do rozwiązania problemu.\n\nCzas odpowiedzi: do 7 dni kalendarzowych."
   }
 };
 
