@@ -127,6 +127,19 @@ function tokenFromHash(): string {
   return match ? decodeURIComponent(match[1]) : "";
 }
 
+function joinCodeFromQuery(): string {
+  try {
+    return (new URLSearchParams(window.location.search).get("kod") || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  } catch {
+    return "";
+  }
+}
+
+function inviteLink(code: string): string {
+  if (typeof window === "undefined") return "";
+  return `${window.location.origin}/dla-par?kod=${encodeURIComponent(code)}`;
+}
+
 function saveToken(token: string) {
   localStorage.setItem(TOKEN_KEY, token);
   window.history.replaceState({}, "", `/dla-par#p=${encodeURIComponent(token)}`);
@@ -146,19 +159,31 @@ function Header() {
 }
 
 function Intro({ onCreated }: { onCreated: (token: string, inviteCode?: string) => void }) {
-  const [mode, setMode] = React.useState<"choose" | "create" | "join">("choose");
+  const presetCode = joinCodeFromQuery();
+  const [mode, setMode] = React.useState<"choose" | "create" | "join">(presetCode ? "join" : "choose");
   const [displayName, setDisplayName] = React.useState("");
-  const [inviteCode, setInviteCode] = React.useState("");
+  const [inviteCode, setInviteCode] = React.useState(presetCode);
   const [consent, setConsent] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
+  const [created, setCreated] = React.useState<{ participantToken: string; inviteCode: string } | null>(null);
+  const [copied, setCopied] = React.useState<"code" | "link" | "">("");
+
+  async function copy(value: string, kind: "code" | "link") {
+    try {
+      await navigator.clipboard?.writeText(value);
+      setCopied(kind);
+      window.setTimeout(() => setCopied(""), 1600);
+    } catch {}
+  }
 
   async function create() {
     setBusy(true); setError("");
     try {
       const data = await createCouple(displayName.trim(), new Date().toISOString());
+      localStorage.setItem(TOKEN_KEY, data.participantToken);
       localStorage.setItem(INVITE_KEY, data.inviteCode);
-      onCreated(data.participantToken, data.inviteCode);
+      setCreated({ participantToken: data.participantToken, inviteCode: data.inviteCode });
     } catch (err: any) { setError(err?.message || "Nie udało się utworzyć analizy."); }
     finally { setBusy(false); }
   }
@@ -167,6 +192,11 @@ function Intro({ onCreated }: { onCreated: (token: string, inviteCode?: string) 
     setBusy(true); setError("");
     try {
       const data = await joinCouple(inviteCode.trim().toUpperCase(), displayName.trim(), new Date().toISOString());
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("kod");
+        window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+      } catch {}
       onCreated(data.participantToken);
     } catch (err: any) { setError(err?.message || "Nie udało się dołączyć."); }
     finally { setBusy(false); }
@@ -191,15 +221,36 @@ function Intro({ onCreated }: { onCreated: (token: string, inviteCode?: string) 
       </section>
 
       <section className="couple-entry-card">
-        {mode === "choose" && (
+        {created ? (
+          <div className="couple-created">
+            <span className="couple-step">PRZESTRZEŃ UTWORZONA</span>
+            <h2>Najpierw zaproś partnera.</h2>
+            <p>
+              Partner może wejść teraz albo później. Nie musi odpowiadać w tym samym czasie co Ty.
+              Kod pozostanie dostępny również podczas Twojej części analizy.
+            </p>
+            <div className="couple-created-code">
+              <span>KOD DLA PARTNERA</span>
+              <strong>{created.inviteCode}</strong>
+            </div>
+            <button className="couple-secondary" type="button" onClick={() => copy(created.inviteCode, "code")}>
+              {copied === "code" ? "Kod skopiowany" : "Kopiuj kod"}
+            </button>
+            <button className="couple-secondary" type="button" onClick={() => copy(inviteLink(created.inviteCode), "link")}>
+              {copied === "link" ? "Link skopiowany" : "Kopiuj prywatny link dla partnera"}
+            </button>
+            <button className="couple-primary" type="button" onClick={() => onCreated(created.participantToken, created.inviteCode)}>
+              Przejdź do mojej części
+            </button>
+          </div>
+        ) : mode === "choose" ? (
           <>
             <span className="couple-step">START</span>
             <h2>Jak wchodzisz do wspólnej analizy?</h2>
             <button className="couple-primary" onClick={() => setMode("create")}>Rozpoczynam i zapraszam partnera</button>
             <button className="couple-secondary" onClick={() => setMode("join")}>Mam kod od partnera</button>
           </>
-        )}
-        {mode !== "choose" && (
+        ) : (
           <>
             <button className="couple-back" onClick={() => setMode("choose")}>← Wróć</button>
             <h2>{mode === "create" ? "Utwórz prywatną przestrzeń dla dwojga" : "Dołącz do wspólnej analizy"}</h2>
@@ -240,17 +291,46 @@ function SafetyAnswer({ value, onChange }: { value: any; onChange: (v: any) => v
     ["coerciveControl", "Partner kontroluje mój telefon, pieniądze, lokalizację lub kontakty w sposób, którego się obawiam."],
   ];
   const current = value || {};
+  const severeKeys = ["physicalViolence", "threats", "sexualCoercion", "coerciveControl"];
+  const severe = severeKeys.some((key) => current[key] === true);
+  const fearOnly = current.fearReaction === true && !severe;
+
   return (
     <div className="couple-safety-grid">
       {rows.map(([key, label]) => (
         <label key={key}>
           <span>{label}</span>
           <div>
-            <button type="button" className={current[key] === false ? "active" : ""} onClick={() => onChange({ ...current, [key]: false })}>Nie</button>
-            <button type="button" className={current[key] === true ? "active risk" : ""} onClick={() => onChange({ ...current, [key]: true })}>Tak</button>
+            <button type="button" className={current[key] === false ? "active" : ""} onClick={() => onChange({ ...current, [key]: false, riskConfirmed: false })}>Nie</button>
+            <button type="button" className={current[key] === true ? "active risk" : ""} onClick={() => onChange({ ...current, [key]: true, riskConfirmed: false })}>Tak</button>
           </div>
         </label>
       ))}
+
+      {fearOnly && (
+        <div className="couple-safety-note elevated">
+          <strong>To ważny sygnał, ale samo zaznaczenie obawy nie zamyka automatycznie procesu.</strong>
+          <span>System będzie ostrożniej prowadził dalsze kroki i nie ujawni partnerowi tej prywatnej odpowiedzi.</span>
+        </div>
+      )}
+
+      {severe && (
+        <div className="couple-safety-note high">
+          <strong>Zaznaczyłeś sytuację, przy której wspólna konfrontacja może być niewłaściwa.</strong>
+          <span>
+            Jeżeli zaznaczenie jest prawidłowe, po przejściu dalej wspólna analiza zostanie zatrzymana i partner nie zobaczy Twoich odpowiedzi.
+            Jeżeli tylko testujesz formularz albo kliknąłeś przez pomyłkę — popraw odpowiedź przed przejściem dalej.
+          </span>
+          <label className="couple-risk-confirm">
+            <input
+              type="checkbox"
+              checked={current.riskConfirmed === true}
+              onChange={(e) => onChange({ ...current, riskConfirmed: e.target.checked })}
+            />
+            <span>Potwierdzam, że zaznaczenie „Tak” opisuje realną sytuację.</span>
+          </label>
+        </div>
+      )}
     </div>
   );
 }
@@ -266,7 +346,28 @@ function Ratings({ value, onChange }: { value: any; onChange: (v: any) => void }
   ))}</div>;
 }
 
-function Intake({ token, state, onState }: { token: string; state: CoupleState; onState: (s: CoupleState) => void }) {
+function InviteDock({ code }: { code: string }) {
+  const [copied, setCopied] = React.useState(false);
+  if (!code) return null;
+  async function copyLink() {
+    try {
+      await navigator.clipboard?.writeText(inviteLink(code));
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {}
+  }
+  return (
+    <aside className="couple-invite-dock">
+      <div>
+        <span>PARTNER MOŻE DOŁĄCZYĆ W DOWOLNEJ CHWILI</span>
+        <strong>{code}</strong>
+      </div>
+      <button type="button" onClick={copyLink}>{copied ? "Link skopiowany" : "Kopiuj link dla partnera"}</button>
+    </aside>
+  );
+}
+
+function Intake({ token, state, inviteCode, onState }: { token: string; state: CoupleState; inviteCode: string; onState: (s: CoupleState) => void }) {
   const savedAnswers = state.participant.answers || {};
   const firstMissing = QUESTIONS.findIndex((q) => savedAnswers[q.id] == null);
   const [index, setIndex] = React.useState(firstMissing >= 0 ? firstMissing : QUESTIONS.length - 1);
@@ -283,7 +384,11 @@ function Intake({ token, state, onState }: { token: string; state: CoupleState; 
   }, [index]);
 
   function valid() {
-    if (q.type === "safety") return value && ["fearReaction","physicalViolence","threats","sexualCoercion","coerciveControl"].every((k) => typeof value[k] === "boolean");
+    if (q.type === "safety") {
+      const allAnswered = value && ["fearReaction","physicalViolence","threats","sexualCoercion","coerciveControl"].every((k) => typeof value[k] === "boolean");
+      const severe = value && ["physicalViolence","threats","sexualCoercion","coerciveControl"].some((k) => value[k] === true);
+      return Boolean(allAnswered && (!severe || value.riskConfirmed === true));
+    }
     if (q.type === "ratings") return value && Object.keys(value).length >= 5;
     return String(value || "").trim().length >= (q.type === "text" ? 8 : 1);
   }
@@ -308,6 +413,7 @@ function Intake({ token, state, onState }: { token: string; state: CoupleState; 
 
   return (
     <main className="couple-stage-wrap">
+      {state.participant.slot === "A" && !state.partner.joined && inviteCode && <InviteDock code={inviteCode} />}
       <div className="couple-progress"><span style={{ width: `${((index + 1) / QUESTIONS.length) * 100}%` }} /></div>
       <section className="couple-question-card">
         <span className="couple-step">PERSPEKTYWA {state.participant.slot} · {index + 1}/{QUESTIONS.length}</span>
@@ -452,7 +558,25 @@ function JointReport({ token, state, onState }: { token: string; state: CoupleSt
 }
 
 function SafetyStop() {
-  return <main className="couple-stage-wrap"><section className="couple-safety-stop"><span className="couple-kicker">WSPÓLNA KONFRONTACJA ZOSTAŁA ZATRZYMANA</span><h1>Bezpieczeństwo ma pierwszeństwo przed symetrią.</h1><p>Na podstawie prywatnych odpowiedzi ten proces nie powinien teraz ujawniać stanowisk ani prowadzić wspólnej konfrontacji. Twoje odpowiedzi nie zostaną pokazane partnerowi.</p><p>Jeżeli istnieje realne zagrożenie życia lub zdrowia, skorzystaj z pomocy odpowiednich służb lub profesjonalnego wsparcia w bezpiecznych warunkach.</p><a className="couple-primary link" href="/">Wróć do strony głównej</a></section></main>;
+  function restart() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(INVITE_KEY);
+    window.history.replaceState({}, "", "/dla-par");
+    window.location.reload();
+  }
+
+  return (
+    <main className="couple-stage-wrap">
+      <section className="couple-safety-stop">
+        <span className="couple-kicker">WSPÓLNA KONFRONTACJA ZOSTAŁA ZATRZYMANA</span>
+        <h1>Bezpieczeństwo ma pierwszeństwo przed symetrią.</h1>
+        <p>Na podstawie prywatnych odpowiedzi ten proces nie powinien teraz ujawniać stanowisk ani prowadzić wspólnej konfrontacji. Twoje odpowiedzi nie zostaną pokazane partnerowi.</p>
+        <p>Jeżeli istnieje realne zagrożenie życia lub zdrowia, skorzystaj z pomocy odpowiednich służb lub profesjonalnego wsparcia w bezpiecznych warunkach.</p>
+        <button className="couple-secondary" type="button" onClick={restart}>Zacznij nową analizę od początku</button>
+        <a className="couple-primary link" href="/">Wróć do strony głównej</a>
+      </section>
+    </main>
+  );
 }
 
 export function CoupleApp() {
@@ -494,7 +618,7 @@ export function CoupleApp() {
     if (state.safetyStopped) return <SafetyStop />;
 
     const s = state.participant.status;
-    if (s === "INTAKE") return <Intake token={token} state={state} onState={setState} />;
+    if (s === "INTAKE") return <Intake token={token} state={state} inviteCode={state.participant.slot === "A" && !state.partner.joined ? inviteCode : ""} onState={setState} />;
     if (s === "REVIEW_SHARE" && !state.participant.shareApproved) return <ShareReview token={token} state={state} onState={setState} />;
     if (s === "CROSS_REFLECTION" && !state.participant.reflectionSubmitted) return <CrossReflection token={token} state={state} onState={setState} />;
     if (state.finalSynthesis) return <JointReport token={token} state={state} onState={setState} />;

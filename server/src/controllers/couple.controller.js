@@ -263,10 +263,22 @@ exports.completeIntake = asyncHandler(async (req, res) => {
   const missing = required.filter((id) => answers[id] == null);
   if (missing.length) return bad(res, `Brakuje odpowiedzi: ${missing.join(", ")}.`, 409);
 
+  const screenSafety = util.safetyFromScreen(answers.safety_screen);
+  const perspectiveAnswers = participant.answers
+    .filter((row) => row.question_id !== "safety_screen")
+    .map((row) => ({ questionId: row.question_id, question: row.question, answer: row.answer, aiNote: row.ai_note }));
+  if (screenSafety.elevated) {
+    perspectiveAnswers.unshift({
+      questionId: "safety_context",
+      question: "Prywatny kontekst bezpieczeństwa",
+      answer: "Użytkownik zaznaczył obawę przed reakcją partnera, bez potwierdzenia pozostałych sygnałów wysokiego ryzyka. Traktuj jako sygnał podwyższonej ostrożności, nie jako automatyczną podstawę do rozstrzygnięcia o zagrożeniu.",
+      aiNote: null,
+    });
+  }
   const perspective = await ai.buildPerspective({
     participantId: participant.id,
     slot: participant.slot,
-    answers: participant.answers.map((row) => ({ questionId: row.question_id, question: row.question, answer: row.answer, aiNote: row.ai_note })),
+    answers: perspectiveAnswers,
   });
   if (perspective?.safety?.level === "high" || perspective?.safety?.protocolAllowed === false) {
     await prisma.$transaction([

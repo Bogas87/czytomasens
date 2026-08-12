@@ -28,8 +28,14 @@ function answerMap(rows) {
 }
 function safetyFromScreen(answer) {
   const value = answer && typeof answer === "object" && !Array.isArray(answer) ? answer : {};
-  const risky = ["fearReaction","physicalViolence","threats","sexualCoercion","coerciveControl"].filter((key) => value[key] === true);
-  return { high: risky.length > 0, signals: risky };
+  const severeKeys = ["physicalViolence","threats","sexualCoercion","coerciveControl"];
+  const severe = severeKeys.filter((key) => value[key] === true);
+  const fear = value.fearReaction === true;
+  return {
+    high: severe.length > 0,
+    elevated: fear && severe.length === 0,
+    signals: [...(fear ? ["fearReaction"] : []), ...severe],
+  };
 }
 function dueDate(days) {
   const date = new Date();
