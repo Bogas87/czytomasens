@@ -32,6 +32,10 @@ const faqs = [
     answer: "Nie. System pracuje wyłącznie na Twoim opisie zdarzeń i jasno oddziela fakty, interpretacje oraz informacje, których nadal brakuje.",
   },
   {
+    question: "Czy muszę podawać dane drugiej osoby?",
+    answer: "Nie. Nie wpisuj nazwisk, adresów, numerów telefonu ani innych danych pozwalających zidentyfikować drugą osobę. Do analizy wystarcza opis sytuacji własnymi słowami.",
+  },
+  {
     question: "Co jest bezpłatne?",
     answer: "Pierwszy odczyt: sedno sytuacji, główny sygnał, najważniejsza niewiadoma i jedno kryterium sprawdzenia. Pełny raport jest opcjonalny.",
   },
@@ -42,7 +46,6 @@ export function Landing({ onStart }: { onStart: () => void }) {
     <div className="ctms-landing">
       <section className="ctms-hero" aria-labelledby="ctms-hero-title">
         <div className="ctms-hero-vase" aria-hidden="true" />
-
         <div className="ctms-hero-copy">
           <Kicker>ZROZUM RELACJĘ · ODDZIEL FAKTY OD INTERPRETACJI</Kicker>
           <h1 id="ctms-hero-title">
@@ -51,16 +54,14 @@ export function Landing({ onStart }: { onStart: () => void }) {
           <p>
             CzyToMaSens porządkuje konkretne zdarzenia, oddziela fakty od domysłów i pokazuje
             wzorce, które wracają w relacji. Dostajesz spokojny, estetyczny i konkretny odczyt:
-            co jest realne, co tylko dopowiedziane i co naprawdę warto sprawdzić dalej.
+            co wynika z Twojego opisu, czego nadal nie wiadomo i co warto sprawdzić dalej.
           </p>
-
           <div className="ctms-hero-actions">
             <PrimaryButton onClick={onStart}>Rozpocznij analizę</PrimaryButton>
           </div>
-
           <div className="ctms-hero-proof" aria-label="Informacje o analizie">
-            <div><span className="ctms-proof-icon">⌑</span><strong>Twoje dane są prywatne</strong><span>historia nie jest publikowana</span></div>
-            <div><span className="ctms-proof-icon">◇</span><strong>Bez rejestracji</strong><span>zaczynasz bez tworzenia profilu</span></div>
+            <div><span className="ctms-proof-icon">⌑</span><strong>Bez publicznego profilu</strong><span>Twoja historia nie jest publikowana</span></div>
+            <div><span className="ctms-proof-icon">◇</span><strong>Bez rejestracji</strong><span>zaczynasz bez tworzenia konta</span></div>
             <div><span className="ctms-proof-icon">✦</span><strong>Pierwszy odczyt bezpłatny</strong><span>najpierw oceniasz wartość analizy</span></div>
           </div>
         </div>
@@ -75,7 +76,6 @@ export function Landing({ onStart }: { onStart: () => void }) {
                 </div>
                 <i aria-hidden="true">01</i>
               </div>
-
               <div className="ctms-peek-row ctms-peek-row-icon">
                 <b aria-hidden="true">Z</b>
                 <div><span>ZDARZENIE</span><p>Kontakt wrócił dopiero po Twojej kolejnej wiadomości.</p></div>
@@ -88,7 +88,6 @@ export function Landing({ onStart }: { onStart: () => void }) {
                 <b aria-hidden="true">N</b>
                 <div><span>NAJWIĘKSZA NIEWIADOMA</span><p>Czy to stały brak inicjatywy, czy reakcja na konkretny konflikt?</p></div>
               </div>
-
               <div className="ctms-peek-verdict">
                 <b aria-hidden="true">?</b>
                 <div><span>CO SPRAWDZIĆ DALEJ</span><strong>Czy własny ruch pojawi się bez kolejnego impulsu z Twojej strony.</strong></div>
@@ -104,7 +103,6 @@ export function Landing({ onStart }: { onStart: () => void }) {
           <Kicker>JAK TO DZIAŁA</Kicker>
           <h2 id="ctms-method-title">Od emocjonalnego chaosu do rzeczy, które można sprawdzić w realnym życiu.</h2>
         </div>
-
         <div className="ctms-method-steps">
           <article className="ctms-method-step">
             <span className="ctms-method-number">01</span>

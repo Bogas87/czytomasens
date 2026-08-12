@@ -22,8 +22,8 @@ export function FreePreview({
           <Kicker>TWÓJ PIERWSZY ODCZYT</Kicker>
           <h1>Pierwszy odczyt.</h1>
           <p>
-            To wstępny obraz Twojej sytuacji oparty na informacjach, które podałeś. Nie jest wyrokiem ani etykietą —
-            jest mapą tego, co dziś można zobaczyć i co nadal wymaga sprawdzenia.
+            To wstępny obraz Twojej sytuacji oparty wyłącznie na informacjach, które podałeś. Nie jest wyrokiem ani etykietą —
+            pokazuje, co wynika z opisanego materiału i czego nadal nie można rozstrzygnąć.
           </p>
           <div className="ctms-confidence">
             <span>PEWNOŚĆ ODCZYTU</span>
@@ -103,12 +103,10 @@ export function FreePreview({
           <li>bezpieczny protokół sprawdzania rzeczywistości;</li>
           <li>prywatny link do późniejszego powrotu.</li>
         </ul>
-
-        <p className="ctms-premium-payment-note">
-          Pełny raport: płatność jednorazowa. Bez subskrypcji i automatycznych odnowień.
-        </p>
-
         <PrimaryButton onClick={onPremium}>Zobacz pełniejszy obraz</PrimaryButton>
+        <p className="ctms-payment-note">
+          Pełny raport jest opcjonalny. Płatność jednorazowa — bez subskrypcji i automatycznych odnowień.
+        </p>
       </Surface>
     </div>
   );
@@ -203,6 +201,7 @@ export function CheckoutPanel({
             placeholder="twoj@email.pl"
             autoComplete="email"
           />
+          <small>Adres służy do dostarczenia prywatnego linku i obsługi tej usługi.</small>
         </label>
 
         <label className="ctms-consent">
@@ -215,7 +214,7 @@ export function CheckoutPanel({
 
         <div className="ctms-price-row">
           <div><span>Pełny raport i protokół obserwacji</span><strong>19,99 zł</strong></div>
-          <p>Płatność jednorazowa. Bez subskrypcji i automatycznych odnowień. Raport będzie dostępny przez bezpieczny link.</p>
+          <p>19,99 zł jednorazowo. Bez subskrypcji, abonamentu i automatycznych odnowień.</p>
         </div>
 
         <PrimaryButton onClick={onBuy} disabled={!valid || saving}>
