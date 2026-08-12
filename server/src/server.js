@@ -13,6 +13,7 @@ const routes = require("./api/routes.js");
 const followupRoutes = require("./routes/followup.routes.js");
 const feedbackRoutes = require("./routes/feedback.routes.js");
 const v3Routes = require("./routes/v3.routes.js");
+const coupleRoutes = require("./routes/couple.routes.js");
 
 const app = express();
 const stripeSecret = String(process.env.STRIPE_SECRET_KEY || "").trim();
@@ -186,6 +187,7 @@ const standardLimiter = rateLimit({
 });
 
 // V3 musi być zamontowane przed ogólnym routerem /api.
+app.use("/api/couple", standardLimiter, coupleRoutes);
 app.use("/api/v3", standardLimiter, v3Routes);
 app.use("/api/followup", standardLimiter, followupRoutes);
 app.use("/api/feedback", standardLimiter, feedbackRoutes);

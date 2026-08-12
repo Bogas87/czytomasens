@@ -58,6 +58,7 @@ export function Landing({ onStart }: { onStart: () => void }) {
           </p>
           <div className="ctms-hero-actions">
             <PrimaryButton onClick={onStart}>Rozpocznij analizę</PrimaryButton>
+            <a className="ctms-couple-cta" href="/dla-par">Wspólna analiza relacji dla dwojga <span aria-hidden="true">→</span></a>
           </div>
           <div className="ctms-hero-proof" aria-label="Informacje o analizie">
             <div><span className="ctms-proof-icon">⌑</span><strong>Bez publicznego profilu</strong><span>Twoja historia nie jest publikowana</span></div>

@@ -152,3 +152,132 @@ model V3ProductEvent {
   @@index([case_id, created_at])
   @@map("ctms_v3_product_events")
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CzyToMaSens — Dwa Spojrzenia / wspólna analiza relacji
+// Dane prywatne A/B są rozdzielone; partner widzi wyłącznie share_approved.
+// ─────────────────────────────────────────────────────────────────────────────
+model CoupleSession {
+  id            String              @id
+  invite_hash   String              @unique
+  status        String              @default("WAITING_PARTNER")
+  version       String              @default("couple-1")
+  created_at    DateTime            @default(now())
+  updated_at    DateTime            @updatedAt
+  participants  CoupleParticipant[]
+  comparisons   CoupleComparison[]
+  experiments   CoupleExperiment[]
+
+  @@index([status, created_at])
+  @@map("ctms_couple_sessions")
+}
+
+model CoupleParticipant {
+  id              String                    @id
+  couple_id       String
+  slot            String
+  token_hash      String                    @unique
+  display_name    String?
+  status          String                    @default("INTAKE")
+  consent         Json?
+  perspective     Json?
+  share_draft     Json?
+  share_approved  Json?
+  created_at      DateTime                  @default(now())
+  updated_at      DateTime                  @updatedAt
+  couple          CoupleSession             @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+  answers         CoupleAnswer[]
+  reflections     CoupleReflection[]
+  experiment_logs CoupleExperimentCheckin[]
+
+  @@unique([couple_id, slot])
+  @@index([couple_id, status])
+  @@map("ctms_couple_participants")
+}
+
+model CoupleAnswer {
+  id             String             @id
+  participant_id String
+  phase          String
+  question_id    String
+  question       String
+  answer         Json
+  ai_note        Json?
+  created_at     DateTime           @default(now())
+  updated_at     DateTime           @updatedAt
+  participant    CoupleParticipant  @relation(fields: [participant_id], references: [id], onDelete: Cascade)
+
+  @@unique([participant_id, phase, question_id])
+  @@index([participant_id, created_at])
+  @@map("ctms_couple_answers")
+}
+
+model CoupleComparison {
+  id          String             @id
+  couple_id   String
+  revision    Int                @default(1)
+  model       Json
+  status      String             @default("PRIVATE_COMPARISON")
+  created_at  DateTime           @default(now())
+  updated_at  DateTime           @updatedAt
+  couple      CoupleSession      @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+  reflections CoupleReflection[]
+  experiments CoupleExperiment[]
+
+  @@unique([couple_id, revision])
+  @@index([couple_id, created_at])
+  @@map("ctms_couple_comparisons")
+}
+
+model CoupleReflection {
+  id             String             @id
+  participant_id String
+  comparison_id  String?
+  kind           String
+  input          Json
+  ai_note        Json?
+  created_at     DateTime           @default(now())
+  updated_at     DateTime           @updatedAt
+  participant    CoupleParticipant  @relation(fields: [participant_id], references: [id], onDelete: Cascade)
+  comparison     CoupleComparison?  @relation(fields: [comparison_id], references: [id], onDelete: SetNull)
+
+  @@unique([participant_id, comparison_id, kind])
+  @@index([comparison_id, created_at])
+  @@map("ctms_couple_reflections")
+}
+
+model CoupleExperiment {
+  id            String                    @id
+  couple_id     String
+  comparison_id String?
+  title         String
+  plan          Json
+  acceptances   Json?
+  result        Json?
+  status        String                    @default("PROPOSED")
+  due_at        DateTime
+  completed_at  DateTime?
+  created_at    DateTime                  @default(now())
+  updated_at    DateTime                  @updatedAt
+  couple        CoupleSession             @relation(fields: [couple_id], references: [id], onDelete: Cascade)
+  comparison    CoupleComparison?         @relation(fields: [comparison_id], references: [id], onDelete: SetNull)
+  checkins      CoupleExperimentCheckin[]
+
+  @@index([couple_id, status])
+  @@map("ctms_couple_experiments")
+}
+
+model CoupleExperimentCheckin {
+  id             String             @id
+  experiment_id  String
+  participant_id String
+  input          Json
+  created_at     DateTime           @default(now())
+  updated_at     DateTime           @updatedAt
+  experiment     CoupleExperiment   @relation(fields: [experiment_id], references: [id], onDelete: Cascade)
+  participant    CoupleParticipant  @relation(fields: [participant_id], references: [id], onDelete: Cascade)
+
+  @@unique([experiment_id, participant_id])
+  @@index([participant_id, created_at])
+  @@map("ctms_couple_experiment_checkins")
+}
