@@ -16,7 +16,7 @@ const articleLinks = [
     imageClass: "ctms-guide-image-two",
   },
   {
-    href: "/artykuly/mieszane-sygnaly-w-relacji-co-robic-gdy-raz-jest-blisko-a-raz-sie-mna-bawi",
+    href: "/artykuly/czy-ona-on-sie-mna-bawi",
     title: "Mieszane sygnały w relacji",
     description: "Co naprawdę wynika z kontaktu, w którym bliskość przeplata się z dystansem.",
     imageClass: "ctms-guide-image-three",
@@ -65,6 +65,7 @@ export function Landing({ onStart }: { onStart: () => void }) {
 
           <div className="ctms-mode-choice" aria-label="Wybierz rodzaj analizy">
             <button className="ctms-mode-card ctms-mode-card-private" type="button" onClick={onStart}>
+              <span className="ctms-mode-mark" aria-hidden="true">1</span>
               <span className="ctms-mode-eyebrow">TYLKO DLA CIEBIE</span>
               <strong>Prywatna analiza relacji</strong>
               <p>Uporządkuj własną sytuację, oddziel fakty od dopowiedzeń i zobacz, czego nadal nie wiesz.</p>
@@ -72,6 +73,7 @@ export function Landing({ onStart }: { onStart: () => void }) {
             </button>
 
             <a className="ctms-mode-card ctms-mode-card-couple" href="/dla-par">
+              <span className="ctms-mode-mark" aria-hidden="true">A ↔ B</span>
               <span className="ctms-mode-eyebrow">DWA SPOJRZENIA</span>
               <strong>Wspólna analiza dla dwojga</strong>
               <p>Każde z Was odpowiada osobno. Dopiero później zestawiacie to, co widzicie podobnie i inaczej.</p>

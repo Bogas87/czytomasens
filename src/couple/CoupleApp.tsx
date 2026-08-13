@@ -89,7 +89,7 @@ const QUESTIONS: Question[] = [
   {
     id: "emotion_need",
     title: "Co wtedy czułeś i czego potrzebowałeś?",
-    helper: "Napisz własnymi słowami. System może zaproponować możliwe wyjaśnienie, ale nie uzna go za fakt bez Twojego potwierdzenia.",
+    helper: "Napisz własnymi słowami. AI może zaproponować hipotezę potrzeby, ale nie przypisze Ci jej bez Twojego potwierdzenia.",
     type: "text",
   },
   {
@@ -155,6 +155,14 @@ function formatPrice(gr: number) {
   return `${(Number(gr || 3999) / 100).toFixed(2).replace(".", ",")} zł`;
 }
 
+function readSavedCoupleToken(): string {
+  try { return localStorage.getItem(TOKEN_KEY) || ""; } catch { return ""; }
+}
+
+function isPaymentReturn(): boolean {
+  try { return new URLSearchParams(window.location.search).has("couple_payment"); } catch { return false; }
+}
+
 function humanClaimClass(value: string) {
   const labels: Record<string, string> = {
     shared_fact: "WSPÓLNY FAKT",
@@ -187,7 +195,7 @@ function PrivacyNote() {
   );
 }
 
-function Intro({ onCreated }: { onCreated: (token: string, inviteCode?: string) => void }) {
+function Intro({ onCreated, savedToken, onContinue }: { onCreated: (token: string, inviteCode?: string) => void; savedToken: string; onContinue: () => void }) {
   const presetCode = joinCodeFromQuery();
   const [mode, setMode] = React.useState<"choose" | "create" | "join">(presetCode ? "join" : "choose");
   const [displayName, setDisplayName] = React.useState("");
@@ -279,16 +287,32 @@ function Intro({ onCreated }: { onCreated: (token: string, inviteCode?: string) 
           </div>
         ) : mode === "choose" ? (
           <div className="couple-entry-start">
-            <span className="couple-step">START</span>
-            <h2>Jak wchodzisz do wspólnej analizy?</h2>
-            <p>Jedna osoba zakłada przestrzeń. Druga może dołączyć z kodu w dowolnym momencie.</p>
-            <button className="couple-primary" onClick={() => setMode("create")}>Rozpoczynam i zapraszam partnera <span>→</span></button>
-            <button className="couple-secondary" onClick={() => setMode("join")}>Mam kod od partnera</button>
+            <span className="couple-step">START · WYBIERZ SWOJĄ ROLĘ</span>
+            <h2>Czy tworzysz analizę, czy dołączasz do partnera?</h2>
+            <p>To ważne rozróżnienie. Pierwsza osoba tworzy wspólną przestrzeń i dostaje kod. Druga osoba wchodzi tym kodem do tej samej analizy.</p>
+            <div className="couple-role-choice">
+              <button className="couple-role-card couple-role-card-a" type="button" onClick={() => setMode("create")}>
+                <b>A</b>
+                <span><strong>Jestem pierwszą osobą</strong><small>Tworzę nową analizę i zapraszam partnera.</small></span>
+                <i aria-hidden="true">→</i>
+              </button>
+              <button className="couple-role-card couple-role-card-b" type="button" onClick={() => setMode("join")}>
+                <b>B</b>
+                <span><strong>Jestem drugą osobą</strong><small>Mam kod zaproszenia od partnera.</small></span>
+                <i aria-hidden="true">→</i>
+              </button>
+            </div>
+            {savedToken && (
+              <button className="couple-continue-card" type="button" onClick={onContinue}>
+                <span><strong>Masz rozpoczętą analizę na tym urządzeniu.</strong><small>Wróć do niej zamiast tworzyć kolejną parę.</small></span>
+                <i aria-hidden="true">Kontynuuj →</i>
+              </button>
+            )}
           </div>
         ) : (
           <div className="couple-entry-form">
             <button className="couple-back" onClick={() => setMode("choose")}>← Wróć</button>
-            <h2>{mode === "create" ? "Utwórz prywatną przestrzeń dla dwojga" : "Dołącz do wspólnej analizy"}</h2>
+            <h2>{mode === "create" ? "Pierwsza osoba · utwórz wspólną przestrzeń" : "Druga osoba · wpisz kod od partnera"}</h2>
             <PrivacyNote />
             <label>
               <span>Jak mamy Cię oznaczać? <small>(opcjonalnie)</small></span>
@@ -593,7 +617,17 @@ function JointReport({ token, state, onState }: { token: string; state: CoupleSt
 
       {report.conversationProtocol && <section className="couple-report-section couple-protocol"><div className="couple-section-head"><span className="couple-kicker">05 · PROTOKÓŁ JEDNEJ ROZMOWY</span><h2>Najpierw poprawnie odtwórz perspektywę. Dopiero potem się nie zgadzaj.</h2></div><div className="couple-protocol-card"><p className="couple-protocol-opening">{report.conversationProtocol.opening}</p><ol>{report.conversationProtocol.rules.map((x,i)=><li key={i}>{x}</li>)}</ol><div className="couple-protocol-questions"><div><span>PYTANIE DO A</span><p>{report.conversationProtocol.questionA}</p></div><div><span>PYTANIE DO B</span><p>{report.conversationProtocol.questionB}</p></div></div><small>{report.conversationProtocol.closing}</small></div></section>}
 
-      <section className="couple-experiment-card"><span className="couple-step">06 · EKSPERYMENT RELACYJNY</span><h2>{report.experiment.title}</h2><p><strong>Hipoteza:</strong> {report.experiment.hypothesis}</p><div className="couple-exp-parts"><div><span>A</span><p>{report.experiment.behaviorA}</p></div><div><span>B</span><p>{report.experiment.behaviorB}</p></div></div><p><strong>Po czym sprawdzicie efekt:</strong> {report.experiment.successCriteria.join(" · ")}</p>{exp?.status === "PROPOSED" && <div className="couple-actions"><button className="couple-secondary" onClick={() => accept(false)} disabled={busy}>Nie akceptuję</button><button className="couple-primary" onClick={() => accept(true)} disabled={busy}>Akceptuję swoją część <span>→</span></button></div>}{exp?.status === "ACTIVE" && <div className="couple-active-exp"><strong>Eksperyment jest aktywny.</strong><span>Weryfikacja: {due?.toLocaleDateString("pl-PL")}</span></div>}{exp?.status === "ACTIVE" && dueNow && !exp.myCheckin && <div className="couple-checkin"><label><span>Co rzeczywiście wydarzyło się w czasie eksperymentu?</span><textarea rows={4} value={checkin.whatHappened || ""} onChange={(e)=>setCheckin({...checkin,whatHappened:e.target.value})}/></label><label><span>Czy partner wykonał uzgodnione zachowanie? Podaj konkretny przykład.</span><textarea rows={4} value={checkin.partnerBehavior || ""} onChange={(e)=>setCheckin({...checkin,partnerBehavior:e.target.value})}/></label><label><span>Co Ty zrobiłeś inaczej?</span><textarea rows={4} value={checkin.myBehavior || ""} onChange={(e)=>setCheckin({...checkin,myBehavior:e.target.value})}/></label><label><span>Czy napięcie w tym obszarze realnie się zmieniło?</span><textarea rows={4} value={checkin.effect || ""} onChange={(e)=>setCheckin({...checkin,effect:e.target.value})}/></label><button className="couple-primary" disabled={busy || Object.values(checkin).join(" ").length < 40} onClick={submitCheckin}>Zapisz niezależną weryfikację <span>→</span></button></div>}{exp?.result && <div className="couple-result"><span>WERYFIKACJA DWÓCH STRON</span><pre>{JSON.stringify(exp.result, null, 2)}</pre></div>}</section>
+      <section className="couple-experiment-card"><span className="couple-step">06 · EKSPERYMENT RELACYJNY</span><h2>{report.experiment.title}</h2><p><strong>Hipoteza:</strong> {report.experiment.hypothesis}</p><div className="couple-exp-parts"><div><span>A</span><p>{report.experiment.behaviorA}</p></div><div><span>B</span><p>{report.experiment.behaviorB}</p></div></div><p><strong>Po czym sprawdzicie efekt:</strong> {report.experiment.successCriteria.join(" · ")}</p>{exp?.status === "PROPOSED" && <div className="couple-actions"><button className="couple-secondary" onClick={() => accept(false)} disabled={busy}>Nie akceptuję</button><button className="couple-primary" onClick={() => accept(true)} disabled={busy}>Akceptuję swoją część <span>→</span></button></div>}{exp?.status === "ACTIVE" && <div className="couple-active-exp"><strong>Eksperyment jest aktywny.</strong><span>Weryfikacja: {due?.toLocaleDateString("pl-PL")}</span></div>}{exp?.status === "ACTIVE" && dueNow && !exp.myCheckin && <div className="couple-checkin"><label><span>Co rzeczywiście wydarzyło się w czasie eksperymentu?</span><textarea rows={4} value={checkin.whatHappened || ""} onChange={(e)=>setCheckin({...checkin,whatHappened:e.target.value})}/></label><label><span>Czy partner wykonał uzgodnione zachowanie? Podaj konkretny przykład.</span><textarea rows={4} value={checkin.partnerBehavior || ""} onChange={(e)=>setCheckin({...checkin,partnerBehavior:e.target.value})}/></label><label><span>Co Ty zrobiłeś inaczej?</span><textarea rows={4} value={checkin.myBehavior || ""} onChange={(e)=>setCheckin({...checkin,myBehavior:e.target.value})}/></label><label><span>Czy napięcie w tym obszarze realnie się zmieniło?</span><textarea rows={4} value={checkin.effect || ""} onChange={(e)=>setCheckin({...checkin,effect:e.target.value})}/></label><button className="couple-primary" disabled={busy || Object.values(checkin).join(" ").length < 40} onClick={submitCheckin}>Zapisz niezależną weryfikację <span>→</span></button></div>}{exp?.result && <div className="couple-result">
+        <span>WERYFIKACJA DWÓCH STRON</span>
+        <h3>{String((exp.result as any).whatChanged || "Sprawdziliście tę samą zmianę z dwóch perspektyw.")}</h3>
+        <div className="couple-result-grid">
+          <article><strong>CO OBOJE ZAUWAŻYLIŚCIE</strong>{((exp.result as any).agreement || []).map((x: string,i: number)=><p key={i}>{x}</p>)}</article>
+          <article><strong>GDZIE NADAL WIDZICIE TO INACZEJ</strong>{((exp.result as any).difference || []).map((x: string,i: number)=><p key={i}>{x}</p>)}</article>
+          <article><strong>CO WYNIKA Z ZACHOWANIA</strong>{((exp.result as any).evidence || []).map((x: string,i: number)=><p key={i}>{x}</p>)}</article>
+        </div>
+        <p><strong>Aktualizacja hipotezy:</strong> {String((exp.result as any).updatedHypothesis || "")}</p>
+        <p><strong>Następny krok:</strong> {String((exp.result as any).nextStep || "")}</p>
+      </div>}</section>
       <section className="couple-next-question"><span>NASTĘPNA ROZMOWA</span><h2>{report.nextConversationQuestion}</h2>{report.humanSupport?.recommended && <p>W tym obszarze warto rozważyć wsparcie człowieka: {report.humanSupport.reason}</p>}</section>
     </main>
   );
@@ -605,8 +639,12 @@ function SafetyStop() {
 }
 
 export function CoupleApp() {
-  const [token, setToken] = React.useState(() => tokenFromHash() || localStorage.getItem(TOKEN_KEY) || "");
-  const [inviteCode, setInviteCode] = React.useState(() => localStorage.getItem(INVITE_KEY) || "");
+  const initialSavedToken = React.useMemo(() => readSavedCoupleToken(), []);
+  const [savedToken, setSavedToken] = React.useState(initialSavedToken);
+  const [token, setToken] = React.useState(() => tokenFromHash() || (isPaymentReturn() ? initialSavedToken : ""));
+  const [inviteCode, setInviteCode] = React.useState(() => {
+    try { return localStorage.getItem(INVITE_KEY) || ""; } catch { return ""; }
+  });
   const [state, setState] = React.useState<CoupleState | null>(null);
   const [loading, setLoading] = React.useState(Boolean(token));
   const [error, setError] = React.useState("");
@@ -618,6 +656,7 @@ export function CoupleApp() {
     fetchCoupleState(token).then(setState).catch((err) => {
       setError(err?.message || "Nie udało się otworzyć wspólnej analizy.");
       localStorage.removeItem(TOKEN_KEY);
+      setSavedToken("");
       setToken("");
     }).finally(() => setLoading(false));
   }, [token]);
@@ -648,12 +687,12 @@ export function CoupleApp() {
   }, [token]);
 
   function started(nextToken: string, code?: string) {
-    saveToken(nextToken); setToken(nextToken);
+    saveToken(nextToken); setSavedToken(nextToken); setToken(nextToken);
     if (code) { setInviteCode(code); localStorage.setItem(INVITE_KEY, code); }
   }
 
   function renderFlow() {
-    if (!token) return <Intro onCreated={started} />;
+    if (!token) return <Intro onCreated={started} savedToken={savedToken} onContinue={() => savedToken && setToken(savedToken)} />;
     if (loading || !state) return <main className="couple-loading"><div className="couple-loader"/><p>Otwieramy Twoją prywatną część…</p>{error && <span>{error}</span>}</main>;
     if (state.safetyStopped) return <SafetyStop />;
     const s = state.participant.status;
