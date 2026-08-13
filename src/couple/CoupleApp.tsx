@@ -89,7 +89,7 @@ const QUESTIONS: Question[] = [
   {
     id: "emotion_need",
     title: "Co wtedy czułeś i czego potrzebowałeś?",
-    helper: "Napisz własnymi słowami. AI może zaproponować hipotezę potrzeby, ale nie przypisze Ci jej bez Twojego potwierdzenia.",
+    helper: "Napisz własnymi słowami. System może podsunąć możliwe wyjaśnienie, ale nie uzna go za fakt bez Twojego potwierdzenia.",
     type: "text",
   },
   {
@@ -193,10 +193,10 @@ function Header() {
 function PrivacyNote() {
   return (
     <div className="couple-privacy-note couple-privacy-note-strong" role="note" aria-label="Prywatność odpowiedzi">
-      <div className="couple-privacy-shield" aria-hidden="true">◇</div>
+      <span className="couple-privacy-label">PRYWATNA PRZESTRZEŃ</span>
       <div>
-        <strong>Partner nie zobaczy Twojej surowej odpowiedzi.</strong>
-        <p>To, co wpisujesz tutaj, służy do zbudowania Twojej prywatnej perspektywy. Drugiej osobie pokazujemy dopiero neutralne podsumowanie, które wcześniej zobaczysz i zaakceptujesz.</p>
+        <strong>Partner nie zobaczy tego, co wpisujesz tutaj.</strong>
+        <p>Twoja pełna odpowiedź zostaje po Twojej stronie. Do wspólnej części trafia dopiero spokojne podsumowanie, które najpierw zobaczysz i zaakceptujesz.</p>
         <small>Nie wpisuj nazwisk, adresów, telefonów ani innych danych pozwalających zidentyfikować drugą osobę.</small>
       </div>
     </div>
@@ -261,9 +261,9 @@ function Intro({ onCreated, savedToken, onContinue }: { onCreated: (token: strin
             interpretacją, niewiadomą i powtarzalną reakcją. Nie szuka zwycięzcy.
           </p>
           <div className="couple-hero-proof">
-            <div><b>01</b><strong>Osobno</strong><span>Bez podglądu odpowiedzi podczas wywiadu.</span></div>
-            <div><b>02</b><strong>Porównanie</strong><span>Wspólny grunt, rozbieżności i niewiadome.</span></div>
-            <div><b>03</b><strong>Zmiana</strong><span>Nie tylko rozmowa — także weryfikacja zachowania.</span></div>
+            <div><strong>Osobno</strong><span>Bez podglądu odpowiedzi podczas wywiadu.</span></div>
+            <div><strong>Porównanie</strong><span>Wspólny grunt, rozbieżności i niewiadome.</span></div>
+            <div><strong>Dalej</strong><span>Jedna rzecz do sprawdzenia w realnym zachowaniu.</span></div>
           </div>
         </div>
         <div className="couple-hero-visual" aria-hidden="true">
@@ -295,18 +295,18 @@ function Intro({ onCreated, savedToken, onContinue }: { onCreated: (token: strin
           </div>
         ) : mode === "choose" ? (
           <div className="couple-entry-start">
-            <span className="couple-step">START · WYBIERZ SWOJĄ ROLĘ</span>
-            <h2>Czy tworzysz analizę, czy dołączasz do partnera?</h2>
-            <p>To ważne rozróżnienie. Pierwsza osoba tworzy wspólną przestrzeń i dostaje kod. Druga osoba wchodzi tym kodem do tej samej analizy.</p>
+            <span className="couple-step">NA POCZĄTEK</span>
+            <h2>Jak wchodzisz do tej analizy?</h2>
+            <p>Pierwsza osoba tworzy wspólną przestrzeń i dostaje kod. Druga osoba dołącza do tej samej analizy tym kodem — w dowolnym momencie.</p>
             <div className="couple-role-choice">
               <button className="couple-role-card couple-role-card-a" type="button" onClick={() => setMode("create")}>
                 <b>A</b>
-                <span><strong>Jestem pierwszą osobą</strong><small>Tworzę nową analizę i zapraszam partnera.</small></span>
+                <span><strong>Zaczynam tę analizę</strong><small>Tworzę nową przestrzeń i zapraszam drugą osobę.</small></span>
                 <i aria-hidden="true">→</i>
               </button>
               <button className="couple-role-card couple-role-card-b" type="button" onClick={() => setMode("join")}>
                 <b>B</b>
-                <span><strong>Jestem drugą osobą</strong><small>Mam kod zaproszenia od partnera.</small></span>
+                <span><strong>Dołączam do analizy</strong><small>Mam kod zaproszenia od drugiej osoby.</small></span>
                 <i aria-hidden="true">→</i>
               </button>
             </div>
@@ -435,10 +435,10 @@ function Intake({ token, state, inviteCode, onState }: { token: string; state: C
           <div className="couple-progress"><span style={{ width: `${((index + 1) / QUESTIONS.length) * 100}%` }} /></div>
           <p>{index + 1} z {QUESTIONS.length}</p>
           <div className="couple-rail-topic"><small>PERSPEKTYWA</small><b>{state.participant.slot}</b></div>
-          <div className="couple-rail-trust"><span>PRYWATNE</span><strong>Partner nie widzi surowych odpowiedzi</strong><p>To, co wpisujesz, pozostaje w Twojej prywatnej części. Do wspólnej części trafia dopiero zaakceptowane podsumowanie.</p></div>
+          <div className="couple-rail-trust"><span>PRYWATNIE</span><strong>Twoja pełna odpowiedź zostaje po Twojej stronie.</strong><p>Do wspólnej części trafia dopiero podsumowanie, które najpierw zaakceptujesz.</p></div>
         </aside>
         <div className="couple-question-content">
-          <span className="couple-kicker">TWOJA PERSPEKTYWA · ETAP {index + 1}</span>
+          <span className="couple-kicker">TWOJA PERSPEKTYWA</span>
           <h1>{q.title}</h1>
           <p className="couple-question-lead">{q.helper}</p>
           <PrivacyNote/>

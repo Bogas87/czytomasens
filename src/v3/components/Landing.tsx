@@ -53,7 +53,7 @@ export function Landing({ onStart }: { onStart: () => void }) {
         <div className="ctms-hero-vase" aria-hidden="true" />
 
         <div className="ctms-hero-copy">
-          <Kicker>DWA SPOSOBY · JEDEN CEL: WIĘCEJ JASNOŚCI</Kicker>
+          <Kicker>DWA SPOSOBY · JEDEN CEL</Kicker>
           <h1 id="ctms-hero-title">
             Zobacz, co <em>naprawdę</em><br />dzieje się między Wami.
           </h1>
@@ -65,26 +65,26 @@ export function Landing({ onStart }: { onStart: () => void }) {
 
           <div className="ctms-mode-choice" aria-label="Wybierz rodzaj analizy">
             <button className="ctms-mode-card ctms-mode-card-private" type="button" onClick={onStart}>
-              <span className="ctms-mode-mark" aria-hidden="true">1</span>
-              <span className="ctms-mode-eyebrow">TYLKO DLA CIEBIE</span>
-              <strong>Prywatna analiza relacji</strong>
-              <p>Uporządkuj własną sytuację, oddziel fakty od dopowiedzeń i zobacz, czego nadal nie wiesz.</p>
+              <span className="ctms-mode-mark">DLA MNIE</span>
+              <span className="ctms-mode-eyebrow">PRYWATNA ANALIZA</span>
+              <strong>Najpierw uporządkuj własną perspektywę.</strong>
+              <p>Pracujesz samodzielnie. Oddzielasz zdarzenia od interpretacji i sprawdzasz, czego nadal nie wiesz.</p>
               <span className="ctms-mode-link">Rozpocznij prywatnie <i aria-hidden="true">→</i></span>
             </button>
 
             <a className="ctms-mode-card ctms-mode-card-couple" href="/dla-par">
-              <span className="ctms-mode-mark" aria-hidden="true">A ↔ B</span>
+              <span className="ctms-mode-mark">DLA DWOJGA</span>
               <span className="ctms-mode-eyebrow">DWA SPOJRZENIA</span>
-              <strong>Wspólna analiza dla dwojga</strong>
-              <p>Każde z Was odpowiada osobno. Dopiero później zestawiacie to, co widzicie podobnie i inaczej.</p>
+              <strong>Zobaczcie tę samą relację z dwóch stron.</strong>
+              <p>Każde z Was odpowiada osobno. Wspólna część pokazuje miejsca zgodne, różne i nadal nierozstrzygnięte.</p>
               <span className="ctms-mode-link">Rozpocznij dla dwojga <i aria-hidden="true">→</i></span>
             </a>
           </div>
 
           <div className="ctms-hero-proof" aria-label="Informacje o analizie">
-            <div><span className="ctms-proof-icon">⌑</span><strong>Bez publicznego profilu</strong><span>Twoja historia nie jest publikowana</span></div>
-            <div><span className="ctms-proof-icon">◇</span><strong>Bez rejestracji</strong><span>zaczynasz bez tworzenia konta</span></div>
-            <div><span className="ctms-proof-icon">✦</span><strong>Pierwszy odczyt bezpłatny</strong><span>najpierw oceniasz wartość analizy</span></div>
+            <div><strong>Bez publicznego profilu</strong><span>Twoja historia nie jest publikowana.</span></div>
+            <div><strong>Bez rejestracji</strong><span>Zaczynasz bez tworzenia konta.</span></div>
+            <div><strong>Najpierw bezpłatny odczyt</strong><span>Pełny raport jest opcjonalny.</span></div>
           </div>
         </div>
 
@@ -146,7 +146,7 @@ export function Landing({ onStart }: { onStart: () => void }) {
 
       <Surface className="ctms-offer" id="raport">
         <div className="ctms-offer-free">
-          <div className="ctms-offer-emblem" aria-hidden="true">◒</div>
+
           <Kicker>BEZPŁATNY PIERWSZY ODCZYT</Kicker>
           <h2>Najpierw zobacz, czy to wnosi coś do Twojego myślenia.</h2>
           <p>Krótki raport ma dać realną wartość, nie tylko zachęcić do zakupu. Dopiero później decydujesz, czy potrzebujesz pełniejszego obrazu.</p>
@@ -161,7 +161,7 @@ export function Landing({ onStart }: { onStart: () => void }) {
         <div className="ctms-offer-vs" aria-hidden="true">VS</div>
 
         <div className="ctms-offer-premium">
-          <div className="ctms-offer-emblem ctms-offer-emblem-premium" aria-hidden="true">✦</div>
+
           <div className="ctms-offer-price"><span>PEŁNY RAPORT</span></div>
           <h2>Pełniejszy obraz wtedy, kiedy chcesz wejść głębiej.</h2>
           <p>Więcej kontekstu, kontrhipotezy, granice, obszary niepewności i dalszy sposób sprawdzania sytuacji w zachowaniu.</p>
