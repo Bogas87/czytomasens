@@ -1,5 +1,17 @@
 import React from "react";
 
+function clearIndividualAnalysisState() {
+  try {
+    for (const key of Object.keys(window.localStorage)) {
+      if (key.startsWith("ctms_v3_") || key.startsWith("ctms_one_person_")) {
+        window.localStorage.removeItem(key);
+      }
+    }
+  } catch {
+    // Brak dostępu do storage nie może blokować nawigacji.
+  }
+}
+
 export function Shell({
   children,
   onBack,
@@ -12,12 +24,7 @@ export function Shell({
   const immersive = Boolean(onBack);
 
   const handleHome = () => {
-    try {
-      window.localStorage.clear();
-      window.sessionStorage.clear();
-    } catch {
-      // Brak dostępu do storage nie może blokować powrotu na landing.
-    }
+    clearIndividualAnalysisState();
     if (onHome) onHome();
     window.location.replace("/");
   };
@@ -28,7 +35,7 @@ export function Shell({
       <header className="ctms-header">
         <button className="ctms-brand ctms-brand-button" type="button" onClick={handleHome} aria-label="CzyToMaSens — strona główna">
           CzyToMaSens<span>.</span>
-          <small>analiza rzeczywistości relacyjnej</small>
+          <small>spokojna analiza relacji</small>
         </button>
 
         {onBack ? (
@@ -63,8 +70,9 @@ export function Shell({
         <footer className="ctms-footer">
           <div className="ctms-footer-brand">
             <a className="ctms-brand ctms-brand-footer" href="/">CzyToMaSens<span>.</span></a>
-            <p>Analiza oparta na faktach, nie na domysłach. Bez diagnozowania drugiej osoby.</p>
+            <p>Pomagamy porządkować zdarzenia, interpretacje i niewiadome — bez diagnozowania drugiej osoby.</p>
           </div>
+
           <nav aria-label="Dokumenty i informacje">
             <a href="/#jak-dziala">Jak to działa</a>
             <a href="/artykuly">Poradniki</a>
@@ -72,9 +80,10 @@ export function Shell({
             <a href="/polityka-prywatnosci">Prywatność</a>
             <a href="/kontakt">Kontakt</a>
           </nav>
+
           <div className="ctms-footer-copy">
-            <strong>Twoje dane są prywatne.</strong>
-            <span>Nie publikujemy Twojej historii.</span>
+            <strong>Twoja historia nie jest publikowana.</strong>
+            <span>Nie wpisuj danych identyfikujących drugą osobę.</span>
             <small>© {new Date().getFullYear()} CzyToMaSens</small>
           </div>
         </footer>
@@ -149,6 +158,7 @@ export function Progress({
 }) {
   const safeTotal = Math.max(total, 1);
   const value = Math.max(0, Math.min(current, safeTotal));
+
   return (
     <div className="ctms-progress" aria-label={`${label}: ${value} z ${safeTotal}`}>
       <div className="ctms-progress-copy">
@@ -180,6 +190,7 @@ export function LoadingPanel({
       1800,
     );
     const seconds = window.setInterval(() => setElapsed((value) => value + 1), 1000);
+
     return () => {
       window.clearInterval(lineTimer);
       window.clearInterval(seconds);

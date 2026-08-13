@@ -1,5 +1,6 @@
 import React from "react";
-import { Kicker, PrimaryButton, Surface } from "./Layout";
+import { Kicker, Surface } from "./Layout";
+import "../../shared/product-consolidation.css";
 
 const articleLinks = [
   {
@@ -29,7 +30,11 @@ const faqs = [
   },
   {
     question: "Czy analiza diagnozuje drugą osobę?",
-    answer: "Nie. System pracuje wyłącznie na Twoim opisie zdarzeń i jasno oddziela fakty, interpretacje oraz informacje, których nadal brakuje.",
+    answer: "Nie. System pracuje na tym, co opisujesz, i oddziela zdarzenia od interpretacji, emocji oraz informacji, których nadal brakuje. Nie przypisuje partnerowi diagnozy ani ukrytych intencji jako faktu.",
+  },
+  {
+    question: "Czym różni się analiza prywatna od Dwóch Spojrzeń?",
+    answer: "W analizie prywatnej porządkujesz własną sytuację bez udziału drugiej osoby. W Dwóch Spojrzeniach każde z Was odpowiada osobno, a dopiero później system zestawia punkty wspólne, różnice i niewiadome. Surowe odpowiedzi nie są automatycznie pokazywane partnerowi.",
   },
   {
     question: "Czy muszę podawać dane drugiej osoby?",
@@ -37,7 +42,7 @@ const faqs = [
   },
   {
     question: "Co jest bezpłatne?",
-    answer: "Pierwszy odczyt: sedno sytuacji, główny sygnał, najważniejsza niewiadoma i jedno kryterium sprawdzenia. Pełny raport jest opcjonalny.",
+    answer: "W obu trybach najpierw otrzymujesz krótki odczyt, który pozwala ocenić, czy ten sposób porządkowania sytuacji jest dla Ciebie użyteczny. Pełne raporty są opcjonalne.",
   },
 ];
 
@@ -46,20 +51,34 @@ export function Landing({ onStart }: { onStart: () => void }) {
     <div className="ctms-landing">
       <section className="ctms-hero" aria-labelledby="ctms-hero-title">
         <div className="ctms-hero-vase" aria-hidden="true" />
+
         <div className="ctms-hero-copy">
-          <Kicker>ZROZUM RELACJĘ · ODDZIEL FAKTY OD INTERPRETACJI</Kicker>
+          <Kicker>DWA SPOSOBY · JEDEN CEL: WIĘCEJ JASNOŚCI</Kicker>
           <h1 id="ctms-hero-title">
             Zobacz, co <em>naprawdę</em><br />dzieje się między Wami.
           </h1>
           <p>
-            CzyToMaSens porządkuje konkretne zdarzenia, oddziela fakty od domysłów i pokazuje
-            wzorce, które wracają w relacji. Dostajesz spokojny, estetyczny i konkretny odczyt:
-            co wynika z Twojego opisu, czego nadal nie wiadomo i co warto sprawdzić dalej.
+            Czasem potrzebujesz najpierw uporządkować własną perspektywę. Czasem warto zobaczyć,
+            jak tę samą relację opisuje druga osoba. Wybierz sposób, który odpowiada temu,
+            czego potrzebujesz dzisiaj.
           </p>
-          <div className="ctms-hero-actions">
-            <PrimaryButton onClick={onStart}>Rozpocznij analizę</PrimaryButton>
-            <a className="ctms-couple-cta" href="/dla-par">Wspólna analiza relacji dla dwojga <span aria-hidden="true">→</span></a>
+
+          <div className="ctms-mode-choice" aria-label="Wybierz rodzaj analizy">
+            <button className="ctms-mode-card ctms-mode-card-private" type="button" onClick={onStart}>
+              <span className="ctms-mode-eyebrow">TYLKO DLA CIEBIE</span>
+              <strong>Prywatna analiza relacji</strong>
+              <p>Uporządkuj własną sytuację, oddziel fakty od dopowiedzeń i zobacz, czego nadal nie wiesz.</p>
+              <span className="ctms-mode-link">Rozpocznij prywatnie <i aria-hidden="true">→</i></span>
+            </button>
+
+            <a className="ctms-mode-card ctms-mode-card-couple" href="/dla-par">
+              <span className="ctms-mode-eyebrow">DWA SPOJRZENIA</span>
+              <strong>Wspólna analiza dla dwojga</strong>
+              <p>Każde z Was odpowiada osobno. Dopiero później zestawiacie to, co widzicie podobnie i inaczej.</p>
+              <span className="ctms-mode-link">Rozpocznij dla dwojga <i aria-hidden="true">→</i></span>
+            </a>
           </div>
+
           <div className="ctms-hero-proof" aria-label="Informacje o analizie">
             <div><span className="ctms-proof-icon">⌑</span><strong>Bez publicznego profilu</strong><span>Twoja historia nie jest publikowana</span></div>
             <div><span className="ctms-proof-icon">◇</span><strong>Bez rejestracji</strong><span>zaczynasz bez tworzenia konta</span></div>
@@ -67,13 +86,13 @@ export function Landing({ onStart }: { onStart: () => void }) {
           </div>
         </div>
 
-        <div className="ctms-hero-visual" aria-label="Przykładowy fragment raportu">
+        <div className="ctms-hero-visual" aria-label="Przykładowy fragment analizy">
           <div className="ctms-report-peek">
             <div className="ctms-report-peek-content">
               <div className="ctms-report-peek-head">
                 <div>
-                  <span>PODGLĄD RAPORTU</span>
-                  <strong>Przykładowy fragment odczytu</strong>
+                  <span>PRZYKŁADOWY SPOSÓB MYŚLENIA</span>
+                  <strong>Nie etykieta. Najpierw to, co da się sprawdzić.</strong>
                 </div>
                 <i aria-hidden="true">01</i>
               </div>
@@ -113,7 +132,7 @@ export function Landing({ onStart }: { onStart: () => void }) {
           <article className="ctms-method-step">
             <span className="ctms-method-number">02</span>
             <i aria-hidden="true">⇄</i>
-            <div><h3>Dwie możliwe wersje</h3><p>Hipoteza główna i najmocniejsza alternatywa, która może ją osłabić.</p></div>
+            <div><h3>Więcej niż jedna wersja</h3><p>Sprawdzamy nie tylko pierwszy wniosek, ale również to, co może go osłabiać albo zmieniać.</p></div>
           </article>
           <article className="ctms-method-step">
             <span className="ctms-method-number">03</span>
@@ -127,13 +146,13 @@ export function Landing({ onStart }: { onStart: () => void }) {
         <div className="ctms-offer-free">
           <div className="ctms-offer-emblem" aria-hidden="true">◒</div>
           <Kicker>BEZPŁATNY PIERWSZY ODCZYT</Kicker>
-          <h2>Zobacz pierwsze wnioski. Bez zobowiązań.</h2>
-          <p>Najpierw dostajesz konkretny fragment własnej analizy, żeby ocenić, czy ten sposób myślenia jest dla Ciebie użyteczny.</p>
+          <h2>Najpierw zobacz, czy to wnosi coś do Twojego myślenia.</h2>
+          <p>Krótki raport ma dać realną wartość, nie tylko zachęcić do zakupu. Dopiero później decydujesz, czy potrzebujesz pełniejszego obrazu.</p>
           <ul className="ctms-offer-list">
             <li>sedno sytuacji i główny sygnał;</li>
             <li>najważniejsza niewiadoma;</li>
             <li>jedno kryterium sprawdzenia;</li>
-            <li>fragment Mapy Rozbieżności.</li>
+            <li>pierwszy fragment uporządkowanej mapy.</li>
           </ul>
         </div>
 
@@ -142,8 +161,8 @@ export function Landing({ onStart }: { onStart: () => void }) {
         <div className="ctms-offer-premium">
           <div className="ctms-offer-emblem ctms-offer-emblem-premium" aria-hidden="true">✦</div>
           <div className="ctms-offer-price"><span>PEŁNY RAPORT</span></div>
-          <h2>Pełniejszy obraz. Więcej struktury do świadomej decyzji.</h2>
-          <p>Mapa Rozbieżności, Profil Obciążenia, hipoteza i kontrhipoteza, Rejestr Granic oraz bezpieczny protokół obserwacji.</p>
+          <h2>Pełniejszy obraz wtedy, kiedy chcesz wejść głębiej.</h2>
+          <p>Więcej kontekstu, kontrhipotezy, granice, obszary niepewności i dalszy sposób sprawdzania sytuacji w zachowaniu.</p>
           <ul className="ctms-offer-list ctms-offer-list-premium">
             <li>co wspiera Twój obecny odczyt;</li>
             <li>co może go osłabić;</li>

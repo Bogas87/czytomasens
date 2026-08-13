@@ -13,6 +13,7 @@ import {
 } from "./api";
 import type { CoupleFreePreview, CoupleState, ShareSummary, TurnCoach } from "./types";
 import "./couple.css";
+import "../shared/product-consolidation.css";
 
 const TOKEN_KEY = "ctms_couple_participant_v1";
 const INVITE_KEY = "ctms_couple_invite_v1";
@@ -88,7 +89,7 @@ const QUESTIONS: Question[] = [
   {
     id: "emotion_need",
     title: "Co wtedy czułeś i czego potrzebowałeś?",
-    helper: "Napisz własnymi słowami. AI może zaproponować hipotezę potrzeby, ale nie przypisze Ci jej bez Twojego potwierdzenia.",
+    helper: "Napisz własnymi słowami. System może zaproponować możliwe wyjaśnienie, ale nie uzna go za fakt bez Twojego potwierdzenia.",
     type: "text",
   },
   {
@@ -154,13 +155,23 @@ function formatPrice(gr: number) {
   return `${(Number(gr || 3999) / 100).toFixed(2).replace(".", ",")} zł`;
 }
 
+function humanClaimClass(value: string) {
+  const labels: Record<string, string> = {
+    shared_fact: "WSPÓLNY FAKT",
+    disputed: "SPORNE",
+    interpretation: "INTERPRETACJA",
+    unknown: "NIEWIADOMA",
+  };
+  return labels[value] || value;
+}
+
 function Header() {
   return (
     <header className="couple-header">
       <a href="/" className="couple-brand">CzyToMaSens<span>·</span><small>DWA SPOJRZENIA</small></a>
       <nav className="couple-nav">
-        <a href="/#jak-to-dziala">Jak to działa</a>
-        <a href="/prywatnosc">Prywatność</a>
+        <a href="/#jak-dziala">Jak to działa</a>
+        <a href="/polityka-prywatnosci">Prywatność</a>
         <a href="/">Analiza prywatna</a>
       </nav>
     </header>
@@ -402,7 +413,7 @@ function Intake({ token, state, inviteCode, onState }: { token: string; state: C
           {q.type === "choice" && <div className="couple-choice-grid">{q.options?.map((o) => <button type="button" key={o.value} className={value === o.value ? "active" : ""} onClick={() => setValue(o.value)}>{o.label}<span>→</span></button>)}</div>}
           {q.type === "ratings" && <Ratings value={value} onChange={setValue} />}
           {q.type === "safety" && <SafetyAnswer value={value} onChange={setValue} />}
-          {coach && <div className="couple-coach"><span>REALITY CHECK</span><p>{coach.neutralReflection}</p>{coach.flags.slice(0, 2).map((f, i) => <small key={i}>{f.observation}</small>)}<strong>{coach.followUpQuestion}</strong><textarea rows={4} value={followUp} onChange={(e) => setFollowUp(e.target.value)} placeholder="Doprecyzuj ten jeden punkt…" /></div>}
+          {coach && <div className="couple-coach"><span>SPRAWDZENIE ODCZYTU</span><p>{coach.neutralReflection}</p>{coach.flags.slice(0, 2).map((f, i) => <small key={i}>{f.observation}</small>)}<strong>{coach.followUpQuestion}</strong><textarea rows={4} value={followUp} onChange={(e) => setFollowUp(e.target.value)} placeholder="Doprecyzuj ten jeden punkt…" /></div>}
           {error && <p className="couple-error">{error}</p>}
           <div className="couple-actions">
             {index > 0 && <button className="couple-secondary" onClick={() => setIndex(index - 1)} disabled={busy}>Wstecz</button>}
@@ -431,7 +442,7 @@ function ShareReview({ token, state, onState }: { token: string; state: CoupleSt
           <span className="couple-step">TYLKO DLA CIEBIE</span>
           <h2>Jak system rozumie Twoją narrację</h2>
           <p>{perspective?.summary}</p>
-          {perspective?.realityCheck && <div className="couple-reality-box"><span>REALITY CHECK</span><p><strong>Najmocniejszy fakt:</strong> {perspective.realityCheck.strongestFact}</p><p><strong>Najmocniejszy wniosek:</strong> {perspective.realityCheck.strongestInference}</p><p><strong>Kalibracja pewności:</strong> {perspective.realityCheck.certaintyCalibration}</p>{perspective.realityCheck.alternativeExplanations?.slice(0,3).map((x,i)=><small key={i}>{i+1}. {x}</small>)}</div>}
+          {perspective?.realityCheck && <div className="couple-reality-box"><span>SPRAWDZENIE ODCZYTU</span><p><strong>Najmocniejszy fakt:</strong> {perspective.realityCheck.strongestFact}</p><p><strong>Najmocniejszy wniosek:</strong> {perspective.realityCheck.strongestInference}</p><p><strong>Na ile ten wniosek opiera się na materiale:</strong> {perspective.realityCheck.certaintyCalibration}</p>{perspective.realityCheck.alternativeExplanations?.slice(0,3).map((x,i)=><small key={i}>{i+1}. {x}</small>)}</div>}
           {(perspective?.narrativeFlags || []).slice(0, 5).map((f, i) => <div className="couple-flag" key={i}><strong>{f.observation}</strong><span>{f.question}</span></div>)}
           <small className="couple-private-note">Te obserwacje dotyczą konkretnych wypowiedzi, nie Twojej osobowości. Partner ich nie zobaczy.</small>
         </div>
@@ -574,7 +585,7 @@ function JointReport({ token, state, onState }: { token: string; state: CoupleSt
 
       <section className="couple-report-section"><div className="couple-section-head"><span className="couple-kicker">01 · WSPÓLNA RZECZYWISTOŚĆ</span><h2>To możecie uznać bez rozstrzygania intencji.</h2></div><div className="couple-joint-grid"><article><span>WSPÓLNY GRUNT</span>{report.commonGround.map((x,i)=><p key={i}>{x}</p>)}</article><article><span>PO KONFRONTACJI · A</span><p>{report.updatedUnderstandingA}</p></article><article><span>PO KONFRONTACJI · B</span><p>{report.updatedUnderstandingB}</p></article><article><span>NADAL SPORNE</span>{report.remainingDisagreements.map((x,i)=><p key={i}>{x}</p>)}</article></div></section>
 
-      {(report.realityChecks?.length || 0) > 0 && <section className="couple-report-section"><div className="couple-section-head"><span className="couple-kicker">02 · REALITY CHECK</span><h2>Fakt, interpretacja, spór czy nadal niewiadoma?</h2></div><div className="couple-reality-ledger">{report.realityChecks!.map((x,i)=><article key={i} data-kind={x.classification}><span>{x.classification.replace("_"," ")}</span><h3>{x.claim}</h3><p>{x.note}</p><small>{x.question}</small></article>)}</div></section>}
+      {(report.realityChecks?.length || 0) > 0 && <section className="couple-report-section"><div className="couple-section-head"><span className="couple-kicker">02 · SPRAWDZENIE ODCZYTU</span><h2>Fakt, interpretacja, spór czy nadal niewiadoma?</h2></div><div className="couple-reality-ledger">{report.realityChecks!.map((x,i)=><article key={i} data-kind={x.classification}><span>{humanClaimClass(x.classification)}</span><h3>{x.claim}</h3><p>{x.note}</p><small>{x.question}</small></article>)}</div></section>}
 
       <section className="couple-report-section couple-cycle-section"><div className="couple-section-head"><span className="couple-kicker">03 · CYKL RELACYJNY</span><h2>Nie tylko co robicie. Jak wzajemnie uruchamiacie kolejną reakcję.</h2></div><div className="couple-cycle-narrative"><p>{report.cycle}</p></div>{(report.cycleBreakpoints?.length || 0)>0 && <div className="couple-break-grid">{report.cycleBreakpoints!.map((x,i)=><article key={i}><span>MOMENT {i+1}</span><h3>{x.moment}</h3><p><b>A może:</b> {x.optionA}</p><p><b>B może:</b> {x.optionB}</p></article>)}</div>}</section>
 

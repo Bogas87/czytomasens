@@ -1,0 +1,378 @@
+/*
+  CzyToMaSens — PRODUCT CONSOLIDATION 1
+  Wspólna warstwa proporcji i dostępności dla analizy prywatnej oraz "Dwa Spojrzenia".
+  Ten plik ma być ostatnią warstwą wizualną, zamiast kolejnych losowych hotfixów w v3.css.
+*/
+
+:root {
+  --ctms-product-bg: #06080a;
+  --ctms-product-bg-deep: #030506;
+  --ctms-product-panel: rgba(14,17,20,.94);
+  --ctms-product-panel-2: rgba(19,22,25,.96);
+  --ctms-product-line: rgba(255,255,255,.09);
+  --ctms-product-line-gold: rgba(222,180,105,.29);
+  --ctms-product-gold: #d7a85b;
+  --ctms-product-gold-2: #f1cf8b;
+  --ctms-product-ink: #f5efe5;
+  --ctms-product-ink-soft: #d7cec2;
+  --ctms-product-muted: #96918a;
+  --ctms-product-display: "Baskerville","Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --ctms-product-body: Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --ctms-product-content: 1580px;
+  --ctms-product-reading: 1240px;
+  --ctms-product-radius-xl: 30px;
+  --ctms-product-radius-lg: 22px;
+}
+
+/* ---------- HOME: dwa równorzędne wejścia ---------- */
+
+.ctms-mode-choice {
+  margin-top: 31px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ctms-mode-card {
+  position: relative;
+  min-width: 0;
+  min-height: 174px;
+  padding: 20px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border: 1px solid rgba(255,255,255,.095);
+  border-radius: 18px;
+  color: var(--ctms-ink);
+  background:
+    radial-gradient(circle at 90% 0%, rgba(215,168,91,.055), transparent 40%),
+    linear-gradient(145deg, rgba(255,255,255,.035), rgba(255,255,255,.012));
+  text-align: left;
+  text-decoration: none;
+  box-shadow: inset 0 1px rgba(255,255,255,.025);
+  transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+
+button.ctms-mode-card {
+  width: 100%;
+  cursor: pointer;
+  font: inherit;
+}
+
+.ctms-mode-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(222,180,105,.42);
+  background:
+    radial-gradient(circle at 90% 0%, rgba(215,168,91,.10), transparent 42%),
+    linear-gradient(145deg, rgba(255,255,255,.045), rgba(255,255,255,.016));
+  box-shadow: 0 18px 44px rgba(0,0,0,.20), inset 0 1px rgba(255,255,255,.035);
+}
+
+.ctms-mode-card-couple {
+  border-color: rgba(222,180,105,.20);
+}
+
+.ctms-mode-eyebrow {
+  color: var(--ctms-gold-2);
+  font: 800 8.5px/1.35 var(--ctms-body);
+  letter-spacing: .17em;
+}
+
+.ctms-mode-card > strong {
+  display: block;
+  margin-top: 10px;
+  color: var(--ctms-ink);
+  font: 400 20px/1.15 var(--ctms-display);
+  letter-spacing: -.018em;
+}
+
+.ctms-mode-card > p {
+  max-width: 310px;
+  margin: 9px 0 18px;
+  color: var(--ctms-muted);
+  font: 500 11.5px/1.58 var(--ctms-body);
+}
+
+.ctms-mode-link {
+  margin-top: auto;
+  color: var(--ctms-ink-soft);
+  font: 720 10.5px/1.2 var(--ctms-body);
+}
+
+.ctms-mode-link i {
+  margin-left: 7px;
+  color: var(--ctms-gold);
+  font-style: normal;
+}
+
+.ctms-mode-card:focus-visible,
+.couple-shell button:focus-visible,
+.couple-shell a:focus-visible,
+.couple-shell input:focus-visible,
+.couple-shell textarea:focus-visible,
+.ctms-shell button:focus-visible,
+.ctms-shell a:focus-visible,
+.ctms-shell input:focus-visible,
+.ctms-shell textarea:focus-visible {
+  outline: 2px solid rgba(241,207,139,.92);
+  outline-offset: 3px;
+}
+
+/* Hero left side needs a little more room for two mode cards */
+.ctms-hero-copy {
+  max-width: 760px;
+}
+
+/* ---------- DWA SPOJRZENIA: mapowanie na ten sam system ---------- */
+
+.couple-shell {
+  --c-bg: var(--ctms-product-bg);
+  --c-bg-deep: var(--ctms-product-bg-deep);
+  --c-panel: var(--ctms-product-panel);
+  --c-panel2: var(--ctms-product-panel-2);
+  --c-line: var(--ctms-product-line);
+  --c-gold-line: var(--ctms-product-line-gold);
+  --c-gold: var(--ctms-product-gold);
+  --c-gold2: var(--ctms-product-gold-2);
+  --c-ink: var(--ctms-product-ink);
+  --c-ink2: var(--ctms-product-ink-soft);
+  --c-muted: var(--ctms-product-muted);
+  --c-display: var(--ctms-product-display);
+  --c-body: var(--ctms-product-body);
+  --c-content: var(--ctms-product-content);
+  --c-reading: var(--ctms-product-reading);
+}
+
+/* Header follows the same visual cadence as private V3 */
+.couple-header {
+  min-height: 78px;
+  width: min(calc(100% - 64px), var(--ctms-product-content));
+}
+
+.couple-brand {
+  font-size: 27px;
+}
+
+.couple-brand small {
+  color: #938d84;
+  font-size: 8.5px;
+  letter-spacing: .15em;
+}
+
+.couple-nav {
+  gap: 26px;
+}
+
+.couple-nav a {
+  font-size: 11.5px;
+}
+
+/* Landing proportions */
+.couple-intro {
+  width: min(calc(100% - 64px), var(--ctms-product-content));
+  padding-top: 36px;
+}
+
+.couple-hero {
+  min-height: 650px;
+  grid-template-columns: minmax(0,.96fr) minmax(560px,1.04fr);
+  gap: clamp(54px,6vw,104px);
+}
+
+.couple-hero-copy {
+  max-width: 730px;
+  padding-left: 34px;
+}
+
+.couple-hero-copy h1 {
+  font-size: clamp(56px,4.8vw,80px);
+  line-height: 1.015;
+}
+
+.couple-hero-copy > p {
+  max-width: 650px;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+/* Questions: exact visual rhythm developed for the individual mode */
+.couple-stage-wrap:not(.couple-wide) {
+  width: min(calc(100% - 64px), 1380px);
+}
+
+.couple-question-card {
+  min-height: 640px;
+  grid-template-columns: 300px minmax(0,1fr);
+  border-radius: 26px;
+  border-color: rgba(255,255,255,.095);
+  background:
+    radial-gradient(circle at 91% 15%, rgba(214,168,91,.055), transparent 25%),
+    linear-gradient(135deg, rgba(15,18,21,.985), rgba(8,11,14,.985));
+  box-shadow: 0 34px 90px rgba(0,0,0,.32);
+}
+
+.couple-question-rail {
+  padding: 38px 30px;
+}
+
+.couple-question-number {
+  margin: 13px 0 18px;
+  font-size: 54px;
+  line-height: .92;
+}
+
+.couple-question-content {
+  min-width: 0;
+  padding: 48px clamp(34px,4vw,62px) 42px;
+  align-self: center;
+}
+
+.couple-question-content h1 {
+  max-width: 760px;
+  margin: 0;
+  font: 400 clamp(28px,1.85vw,34px)/1.15 var(--c-display);
+  letter-spacing: -.026em;
+  text-wrap: balance;
+}
+
+.couple-question-helper,
+.couple-question-content > p {
+  max-width: 760px;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.couple-question-content textarea,
+.couple-entry-card textarea,
+.couple-entry-card input,
+.couple-share-card textarea,
+.couple-cross-card textarea,
+.couple-checkin textarea {
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* Reports should be readable, not micro-typography */
+.couple-free-copy > p,
+.couple-preview-sheet p,
+.couple-premium-offer p,
+.couple-premium-list span,
+.couple-map-card p,
+.couple-cycle-card p,
+.couple-partner-view p,
+.couple-joint-grid p,
+.couple-report-section p,
+.couple-report-section small,
+.couple-reality-ledger p,
+.couple-reality-ledger small,
+.couple-experiment-card p,
+.couple-private-card p,
+.couple-share-card p {
+  font-size: 13px;
+  line-height: 1.62;
+}
+
+.couple-free-copy h1,
+.couple-joint-hero h1,
+.couple-report-hero h1 {
+  text-wrap: balance;
+}
+
+/* Human-scale labels can stay small, body copy may not */
+.couple-map-card > span,
+.couple-section-head .couple-kicker,
+.couple-sheet-head,
+.couple-step,
+.couple-kicker {
+  letter-spacing: .16em;
+}
+
+/* ---------- RESPONSIVE ---------- */
+
+@media (max-width: 1180px) {
+  .ctms-mode-choice {
+    grid-template-columns: 1fr;
+  }
+
+  .ctms-mode-card {
+    min-height: 138px;
+  }
+
+  .ctms-mode-card > p {
+    max-width: 520px;
+  }
+
+  .couple-question-card {
+    grid-template-columns: 260px minmax(0,1fr);
+  }
+}
+
+@media (max-width: 1020px) {
+  .couple-question-card {
+    grid-template-columns: 1fr;
+  }
+
+  .couple-question-rail {
+    min-height: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--c-line);
+  }
+
+  .couple-question-content {
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .ctms-mode-choice {
+    gap: 10px;
+  }
+
+  .ctms-mode-card {
+    min-height: 0;
+    padding: 18px 17px;
+  }
+
+  .ctms-mode-card > strong {
+    font-size: 19px;
+  }
+
+  .ctms-mode-card > p {
+    margin-bottom: 15px;
+    font-size: 12px;
+  }
+
+  .couple-header,
+  .couple-intro,
+  .couple-stage-wrap:not(.couple-wide) {
+    width: min(calc(100% - 28px), 100%);
+  }
+
+  .couple-question-card {
+    min-height: 0;
+    border-radius: 20px;
+  }
+
+  .couple-question-rail {
+    padding: 22px 18px 18px;
+  }
+
+  .couple-question-number {
+    margin: 9px 0 10px;
+    font-size: 40px;
+  }
+
+  .couple-question-content {
+    padding: 26px 17px 22px;
+  }
+
+  .couple-question-content h1 {
+    font-size: 28px;
+    line-height: 1.15;
+  }
+
+  .couple-question-helper,
+  .couple-question-content > p {
+    font-size: 12.5px;
+  }
+}
