@@ -177,20 +177,28 @@ function Header() {
   return (
     <header className="couple-header">
       <a href="/" className="couple-brand">CzyToMaSens<span>·</span><small>DWA SPOJRZENIA</small></a>
-      <nav className="couple-nav">
-        <a href="/#jak-dziala">Jak to działa</a>
-        <a href="/polityka-prywatnosci">Prywatność</a>
-        <a href="/">Analiza prywatna</a>
-      </nav>
+      <div className="couple-header-actions">
+        <nav className="couple-nav">
+          <a href="/#jak-dziala">Jak to działa</a>
+          <a href="/polityka-prywatnosci">Prywatność</a>
+        </nav>
+        <a className="couple-home-quick" href="/" aria-label="Wróć do strony głównej CzyToMaSens">
+          <span aria-hidden="true">⌂</span> Strona główna
+        </a>
+      </div>
     </header>
   );
 }
 
 function PrivacyNote() {
   return (
-    <div className="couple-privacy-note">
-      <span>MINIMALIZUJ DANE</span>
-      <p>Nie wpisuj nazwisk, adresów, telefonów, e-maili ani danych pozwalających zidentyfikować partnera. Do analizy wystarczą role A/B i opis zachowania.</p>
+    <div className="couple-privacy-note couple-privacy-note-strong" role="note" aria-label="Prywatność odpowiedzi">
+      <div className="couple-privacy-shield" aria-hidden="true">◇</div>
+      <div>
+        <strong>Partner nie zobaczy Twojej surowej odpowiedzi.</strong>
+        <p>To, co wpisujesz tutaj, służy do zbudowania Twojej prywatnej perspektywy. Drugiej osobie pokazujemy dopiero neutralne podsumowanie, które wcześniej zobaczysz i zaakceptujesz.</p>
+        <small>Nie wpisuj nazwisk, adresów, telefonów ani innych danych pozwalających zidentyfikować drugą osobę.</small>
+      </div>
     </div>
   );
 }
@@ -427,13 +435,14 @@ function Intake({ token, state, inviteCode, onState }: { token: string; state: C
           <div className="couple-progress"><span style={{ width: `${((index + 1) / QUESTIONS.length) * 100}%` }} /></div>
           <p>{index + 1} z {QUESTIONS.length}</p>
           <div className="couple-rail-topic"><small>PERSPEKTYWA</small><b>{state.participant.slot}</b></div>
-          <div className="couple-rail-trust"><span>PRYWATNE</span><p>Partner nie widzi tej odpowiedzi. Surowy tekst nie jest udostępniany drugiej stronie.</p></div>
+          <div className="couple-rail-trust"><span>PRYWATNE</span><strong>Partner nie widzi surowych odpowiedzi</strong><p>To, co wpisujesz, pozostaje w Twojej prywatnej części. Do wspólnej części trafia dopiero zaakceptowane podsumowanie.</p></div>
         </aside>
         <div className="couple-question-content">
           <span className="couple-kicker">TWOJA PERSPEKTYWA · ETAP {index + 1}</span>
           <h1>{q.title}</h1>
           <p className="couple-question-lead">{q.helper}</p>
-          {q.type === "text" && <><PrivacyNote/><textarea className="couple-main-textarea" rows={7} value={typeof value === "string" ? value : (value?.primary || "")} onChange={(e) => setValue(e.target.value)} placeholder="Napisz własnymi słowami…" /></>}
+          <PrivacyNote/>
+          {q.type === "text" && <textarea className="couple-main-textarea" rows={7} value={typeof value === "string" ? value : (value?.primary || "")} onChange={(e) => setValue(e.target.value)} placeholder="Napisz własnymi słowami…" />}
           {q.type === "choice" && <div className="couple-choice-grid">{q.options?.map((o) => <button type="button" key={o.value} className={value === o.value ? "active" : ""} onClick={() => setValue(o.value)}>{o.label}<span>→</span></button>)}</div>}
           {q.type === "ratings" && <Ratings value={value} onChange={setValue} />}
           {q.type === "safety" && <SafetyAnswer value={value} onChange={setValue} />}
