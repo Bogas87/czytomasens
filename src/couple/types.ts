@@ -40,8 +40,20 @@ export type TurnCoach = {
   };
 };
 
+export type RealityCheck = {
+  strongestFact: string;
+  strongestInference: string;
+  alternativeExplanations: string[];
+  evidenceMissing: string[];
+  certaintyCalibration: string;
+};
+
 export type PerspectivePrivate = {
   summary: string;
+  facts: string[];
+  interpretations: string[];
+  unknowns: string[];
+  realityCheck: RealityCheck | null;
   narrativeFlags: NarrativeFlag[];
   safety: {
     level: "clear" | "elevated" | "high";
@@ -66,13 +78,49 @@ export type ComparisonPublic = {
   crossQuestions: string[];
 };
 
+export type CoupleFreePreview = {
+  headline: string;
+  commonGround: string;
+  perceptionGap: string;
+  unknown: string;
+  counts: { shared: number; gaps: number; disputed: number; predictions: number };
+  cycleTeaser: string;
+};
+
+export type CouplePremium = {
+  available: boolean;
+  paid: boolean;
+  paymentStatus: "PENDING" | "PAID" | "FAILED" | "UNAVAILABLE" | string;
+  billingSessionId: string;
+  priceGr: number;
+  paidAt: string | null;
+};
+
 export type FinalSynthesis = {
+  executiveSummary?: string;
   commonGround: string[];
   updatedUnderstandingA: string;
   updatedUnderstandingB: string;
   remainingDisagreements: string[];
   sharedReality: string[];
+  realityChecks?: Array<{
+    claim: string;
+    classification: "shared_fact" | "disputed" | "interpretation" | "unknown";
+    note: string;
+    question: string;
+  }>;
+  blindSpots?: string[];
+  strengths?: string[];
+  repairPriorities?: Array<{ title: string; why: string; firstStep: string }>;
   cycle: string;
+  cycleBreakpoints?: Array<{ moment: string; optionA: string; optionB: string }>;
+  conversationProtocol?: {
+    opening: string;
+    rules: string[];
+    questionA: string;
+    questionB: string;
+    closing: string;
+  };
   nextConversationQuestion: string;
   humanSupport: { recommended: boolean; reason: string };
   experiment: {
@@ -118,6 +166,8 @@ export type CoupleState = {
     displayName: string;
     shareApproved: ShareSummary | null;
   };
+  freePreview: CoupleFreePreview | null;
+  premium: CouplePremium;
   comparison: ComparisonPublic | null;
   finalSynthesis: FinalSynthesis | null;
   experiment: CoupleExperiment | null;

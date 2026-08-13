@@ -75,13 +75,67 @@ function mapExperiment(participant, experiment) {
   };
 }
 
-function mapState(participant) {
+function freePreviewFor(model) {
+  const shared = Array.isArray(model?.sharedReality) ? model.sharedReality : [];
+  const gaps = Array.isArray(model?.perceptionGaps) ? model.perceptionGaps : [];
+  const disputed = Array.isArray(model?.disputedClaims) ? model.disputedClaims : [];
+  const unknowns = Array.isArray(model?.unknowns) ? model.unknowns : [];
+  const predictions = Array.isArray(model?.predictionChecks) ? model.predictionChecks : [];
+  return {
+    headline: "Pierwszy wspólny odczyt jest gotowy.",
+    commonGround: shared[0]?.agreement || "W obu perspektywach pojawia się wspólny obszar, który można już nazwać bez rozstrzygania winy.",
+    perceptionGap: gaps[0]?.neutralFrame || "System wykrył różnicę w znaczeniu nadawanym temu samemu obszarowi relacji.",
+    unknown: unknowns[0] || disputed[0]?.question || "Pozostała ważna niewiadoma, której nie da się rozstrzygnąć na podstawie jednej narracji.",
+    counts: {
+      shared: shared.length,
+      gaps: gaps.length,
+      disputed: disputed.length,
+      predictions: predictions.length,
+    },
+    cycleTeaser: model?.cycleHypothesis?.label || "Powtarzalna sekwencja reakcji do sprawdzenia",
+  };
+}
+
+async function ensureCoupleBilling(couple) {
+  const comparison = latestComparison(couple);
+  const bothApproved = approvedParticipants(couple).length === 2;
+  if (!comparison || !bothApproved) return null;
+  const priceGr = util.couplePriceGr();
+  return prisma.session.upsert({
+    where: { id: couple.id },
+    create: {
+      id: couple.id,
+      payload: { reportKind: "couple", coupleId: couple.id, product: "two-perspectives-premium", priceGr },
+      preview_report: { kind: "couple-free-preview", coupleId: couple.id },
+      report_status: "READY",
+    },
+    update: { report_status: "READY" },
+    select: { id: true, payment_status: true, paid_at: true },
+  });
+}
+
+async function requirePremium(participant) {
+  const billing = await ensureCoupleBilling(participant.couple);
+  return Boolean(billing && billing.payment_status === "PAID");
+}
+
+async function mapState(participant) {
   const couple = participant.couple;
   const partner = couple.participants.find((p) => p.id !== participant.id) || null;
   const comparison = latestComparison(couple);
   const bothApproved = approvedParticipants(couple).length === 2;
   const model = comparison?.model || {};
   const ownPerspective = participant.perspective || null;
+  const billing = await ensureCoupleBilling(couple);
+  const paid = billing?.payment_status === "PAID";
+  const premium = {
+    available: Boolean(billing),
+    paid,
+    paymentStatus: billing?.payment_status || "UNAVAILABLE",
+    billingSessionId: billing?.id || "",
+    priceGr: util.couplePriceGr(),
+    paidAt: billing?.paid_at || null,
+  };
   return {
     pairId: couple.id,
     pairStatus: couple.status,
@@ -95,6 +149,10 @@ function mapState(participant) {
       shareApproved: participant.share_approved || null,
       privatePerspective: ownPerspective ? {
         summary: ownPerspective.summary || "",
+        facts: ownPerspective.facts || [],
+        interpretations: ownPerspective.interpretations || [],
+        unknowns: ownPerspective.unknowns || [],
+        realityCheck: ownPerspective.realityCheck || null,
         narrativeFlags: ownPerspective.narrativeFlags || [],
         safety: ownPerspective.safety || { level: "clear", signals: [], protocolAllowed: true },
       } : null,
@@ -104,11 +162,13 @@ function mapState(participant) {
       joined: Boolean(partner),
       status: partner?.status || "NOT_JOINED",
       displayName: partner?.display_name || (partner ? `Perspektywa ${partner.slot}` : "Druga osoba"),
-      shareApproved: bothApproved ? (partner?.share_approved || null) : null,
+      shareApproved: bothApproved && paid ? (partner?.share_approved || null) : null,
     },
-    comparison: bothApproved ? publicComparisonFor(participant.slot, comparison) : null,
-    finalSynthesis: bothApproved ? (model.finalSynthesis || null) : null,
-    experiment: mapExperiment(participant, couple.experiments?.[0] || null),
+    freePreview: bothApproved && comparison ? freePreviewFor(model) : null,
+    premium,
+    comparison: bothApproved && paid ? publicComparisonFor(participant.slot, comparison) : null,
+    finalSynthesis: bothApproved && paid ? (model.finalSynthesis || null) : null,
+    experiment: paid ? mapExperiment(participant, couple.experiments?.[0] || null) : null,
     safetyStopped: couple.status === "SAFETY_STOP" || participant.status === "SAFETY_STOP",
   };
 }
@@ -143,6 +203,8 @@ exports.create = asyncHandler(async (req, res) => {
     displayName: z.string().trim().max(40).optional().default(""),
     consentAcceptedAt: z.string().datetime(),
     consentVersion: z.string().min(5).max(80),
+    analysisConsent: z.literal(true),
+    sensitiveDataConsent: z.literal(true),
   }).parse(req.body || {});
   const pairId = util.newId();
   const participantId = util.newId();
@@ -161,12 +223,12 @@ exports.create = asyncHandler(async (req, res) => {
           token_hash: util.hash(participantToken),
           display_name: data.displayName || "Perspektywa A",
           status: "INTAKE",
-          consent: { acceptedAt: data.consentAcceptedAt, version: data.consentVersion },
+          consent: { acceptedAt: data.consentAcceptedAt, version: data.consentVersion, analysisConsent: true, sensitiveDataConsent: true },
         },
       },
     },
   });
-  const state = mapState(await refreshed(participantToken));
+  const state = await mapState(await refreshed(participantToken));
   res.json({ ok: true, pairId, participantToken, inviteCode, state });
 });
 
@@ -176,6 +238,8 @@ exports.join = asyncHandler(async (req, res) => {
     displayName: z.string().trim().max(40).optional().default(""),
     consentAcceptedAt: z.string().datetime(),
     consentVersion: z.string().min(5).max(80),
+    analysisConsent: z.literal(true),
+    sensitiveDataConsent: z.literal(true),
   }).parse(req.body || {});
   const normalized = util.normalizeInvite(data.inviteCode);
   const couple = await prisma.coupleSession.findUnique({ where: { invite_hash: util.hash(normalized) }, include: { participants: true } });
@@ -187,18 +251,18 @@ exports.join = asyncHandler(async (req, res) => {
     prisma.coupleParticipant.create({ data: {
       id: util.newId(), couple_id: couple.id, slot: "B", token_hash: util.hash(participantToken),
       display_name: data.displayName || "Perspektywa B", status: "INTAKE",
-      consent: { acceptedAt: data.consentAcceptedAt, version: data.consentVersion },
+      consent: { acceptedAt: data.consentAcceptedAt, version: data.consentVersion, analysisConsent: true, sensitiveDataConsent: true },
     } }),
     prisma.coupleSession.update({ where: { id: couple.id }, data: { status: "INTAKE" } }),
   ]);
-  res.json({ ok: true, pairId: couple.id, participantToken, state: mapState(await refreshed(participantToken)) });
+  res.json({ ok: true, pairId: couple.id, participantToken, state: await mapState(await refreshed(participantToken)) });
 });
 
 exports.state = asyncHandler(async (req, res) => {
   const token = participantTokenSchema.parse(req.params.token);
   const participant = await participantByToken(token);
   if (!participant) return bad(res, "Nie znaleziono prywatnej części analizy.", 404);
-  res.json({ ok: true, state: mapState(participant) });
+  res.json({ ok: true, state: await mapState(participant) });
 });
 
 exports.answer = asyncHandler(async (req, res) => {
@@ -226,14 +290,20 @@ exports.answer = asyncHandler(async (req, res) => {
         prisma.coupleParticipant.update({ where: { id: participant.id }, data: { status: "SAFETY_STOP" } }),
         prisma.coupleSession.update({ where: { id: participant.couple_id }, data: { status: "SAFETY_STOP" } }),
       ]);
-      return res.json({ ok: true, coach: null, state: mapState(await refreshed(data.participantToken)) });
+      return res.json({ ok: true, coach: null, state: await mapState(await refreshed(data.participantToken)) });
     }
   } else {
     const recent = participant.answers.slice(-4).map((row) => ({ questionId: row.question_id, answer: row.answer, aiNote: row.ai_note }));
     const answerText = typeof data.answer === "string" ? data.answer : JSON.stringify(data.answer);
     if (answerText.length >= 18 && ["why_now","concrete_event","meaning","emotion_need","big_unknown","own_response","predict_partner","resource","change_evidence"].includes(data.questionId)) {
       try {
-        coach = await ai.analyzeTurn({ participantId: participant.id, questionId: data.questionId, question: data.question, answer: data.answer, context: recent });
+        coach = await ai.analyzeTurn({
+          participantId: participant.id,
+          questionId: data.questionId,
+          question: util.sanitizeTextForAI(data.question),
+          answer: util.sanitizeForAI(data.answer),
+          context: util.sanitizeForAI(recent),
+        });
       } catch (error) {
         console.error("[COUPLE] analyzeTurn fallback:", error.message);
       }
@@ -250,7 +320,7 @@ exports.answer = asyncHandler(async (req, res) => {
       ]);
     }
   }
-  res.json({ ok: true, coach, state: mapState(await refreshed(data.participantToken)) });
+  res.json({ ok: true, coach, state: await mapState(await refreshed(data.participantToken)) });
 });
 
 exports.completeIntake = asyncHandler(async (req, res) => {
@@ -278,18 +348,18 @@ exports.completeIntake = asyncHandler(async (req, res) => {
   const perspective = await ai.buildPerspective({
     participantId: participant.id,
     slot: participant.slot,
-    answers: perspectiveAnswers,
+    answers: util.sanitizeForAI(perspectiveAnswers),
   });
   if (perspective?.safety?.level === "high" || perspective?.safety?.protocolAllowed === false) {
     await prisma.$transaction([
       prisma.coupleParticipant.update({ where: { id: participant.id }, data: { perspective, share_draft: perspective.shareDraft, status: "SAFETY_STOP" } }),
       prisma.coupleSession.update({ where: { id: participant.couple_id }, data: { status: "SAFETY_STOP" } }),
     ]);
-    return res.json({ ok: true, state: mapState(await refreshed(participantToken)) });
+    return res.json({ ok: true, state: await mapState(await refreshed(participantToken)) });
   }
   await prisma.coupleParticipant.update({ where: { id: participant.id }, data: { perspective, share_draft: perspective.shareDraft, status: "REVIEW_SHARE" } });
   await buildComparisonIfReady(participant.couple_id);
-  res.json({ ok: true, state: mapState(await refreshed(participantToken)) });
+  res.json({ ok: true, state: await mapState(await refreshed(participantToken)) });
 });
 
 exports.approveShare = asyncHandler(async (req, res) => {
@@ -309,7 +379,7 @@ exports.approveShare = asyncHandler(async (req, res) => {
       prisma.coupleComparison.update({ where: { id: couple.comparisons[0].id }, data: { status: "SHARED_COMPARISON" } }),
     ]);
   }
-  res.json({ ok: true, state: mapState(await refreshed(participantToken)) });
+  res.json({ ok: true, state: await mapState(await refreshed(participantToken)) });
 });
 
 exports.reflection = asyncHandler(async (req, res) => {
@@ -319,6 +389,7 @@ exports.reflection = asyncHandler(async (req, res) => {
   if (participant.couple.status !== "CROSS_REFLECTION") return bad(res, "Ta faza nie jest jeszcze dostępna.", 409);
   const comparison = latestComparison(participant.couple);
   if (!comparison) return bad(res, "Brak porównania dwóch perspektyw.", 409);
+  if (!(await requirePremium(participant))) return bad(res, "Pełna wspólna analiza wymaga odblokowania Dwa Spojrzenia Premium.", 402);
   await prisma.coupleReflection.upsert({
     where: { participant_id_comparison_id_kind: { participant_id: participant.id, comparison_id: comparison.id, kind: "cross" } },
     create: { id: util.newId(), participant_id: participant.id, comparison_id: comparison.id, kind: "cross", input },
@@ -338,11 +409,11 @@ exports.reflection = asyncHandler(async (req, res) => {
   if (a?.share_approved && b?.share_approved && ra && rb && comp) {
     const finalSynthesis = await ai.buildFinalSynthesis({
       pairId: couple.id,
-      comparison: comp.model,
-      shareA: a.share_approved,
-      shareB: b.share_approved,
-      reflectionA: ra.input,
-      reflectionB: rb.input,
+      comparison: util.sanitizeForAI(comp.model),
+      shareA: util.sanitizeForAI(a.share_approved),
+      shareB: util.sanitizeForAI(b.share_approved),
+      reflectionA: util.sanitizeForAI(ra.input),
+      reflectionB: util.sanitizeForAI(rb.input),
     });
     if (finalSynthesis.safety?.protocolAllowed === false || finalSynthesis.safety?.level === "high") {
       await prisma.$transaction([
@@ -363,13 +434,14 @@ exports.reflection = asyncHandler(async (req, res) => {
       ]);
     }
   }
-  res.json({ ok: true, state: mapState(await refreshed(participantToken)) });
+  res.json({ ok: true, state: await mapState(await refreshed(participantToken)) });
 });
 
 exports.experimentAccept = asyncHandler(async (req, res) => {
   const { participantToken, experimentId, accepted } = z.object({ participantToken: participantTokenSchema, experimentId: z.string().uuid(), accepted: z.boolean() }).parse(req.body || {});
   const participant = await participantByToken(participantToken);
   if (!participant) return bad(res, "Nie znaleziono prywatnej części analizy.", 404);
+  if (!(await requirePremium(participant))) return bad(res, "Ta część jest dostępna w Dwa Spojrzenia Premium.", 402);
   const experiment = participant.couple.experiments.find((e) => e.id === experimentId);
   if (!experiment) return bad(res, "Nie znaleziono eksperymentu.", 404);
   const acceptances = { ...(experiment.acceptances || {}), [participant.slot]: accepted };
@@ -383,13 +455,14 @@ exports.experimentAccept = asyncHandler(async (req, res) => {
     prisma.coupleExperiment.update({ where: { id: experiment.id }, data: experimentUpdate }),
     prisma.coupleSession.update({ where: { id: participant.couple_id }, data: { status: pairStatus } }),
   ]);
-  res.json({ ok: true, state: mapState(await refreshed(participantToken)) });
+  res.json({ ok: true, state: await mapState(await refreshed(participantToken)) });
 });
 
 exports.experimentCheckin = asyncHandler(async (req, res) => {
   const { participantToken, experimentId, input } = z.object({ participantToken: participantTokenSchema, experimentId: z.string().uuid(), input: z.record(z.string().trim().max(12000)) }).parse(req.body || {});
   const participant = await participantByToken(participantToken);
   if (!participant) return bad(res, "Nie znaleziono prywatnej części analizy.", 404);
+  if (!(await requirePremium(participant))) return bad(res, "Ta część jest dostępna w Dwa Spojrzenia Premium.", 402);
   const experiment = participant.couple.experiments.find((e) => e.id === experimentId);
   if (!experiment || experiment.status !== "ACTIVE") return bad(res, "Eksperyment nie jest aktywny.", 409);
   await prisma.coupleExperimentCheckin.upsert({
@@ -404,7 +477,12 @@ exports.experimentCheckin = asyncHandler(async (req, res) => {
     const ca = refreshedExperiment.checkins.find((c) => c.participant_id === a?.id);
     const cb = refreshedExperiment.checkins.find((c) => c.participant_id === b?.id);
     if (ca && cb) {
-      const result = await ai.evaluateExperiment({ pairId: participant.couple_id, plan: refreshedExperiment.plan, checkinA: ca.input, checkinB: cb.input });
+      const result = await ai.evaluateExperiment({
+        pairId: participant.couple_id,
+        plan: util.sanitizeForAI(refreshedExperiment.plan),
+        checkinA: util.sanitizeForAI(ca.input),
+        checkinB: util.sanitizeForAI(cb.input),
+      });
       await prisma.$transaction([
         prisma.coupleExperiment.update({ where: { id: refreshedExperiment.id }, data: { result, status: "COMPLETED", completed_at: new Date() } }),
         prisma.coupleSession.update({ where: { id: participant.couple_id }, data: { status: "FOLLOWUP_COMPLETE" } }),
@@ -412,5 +490,5 @@ exports.experimentCheckin = asyncHandler(async (req, res) => {
       ]);
     }
   }
-  res.json({ ok: true, state: mapState(await refreshed(participantToken)) });
+  res.json({ ok: true, state: await mapState(await refreshed(participantToken)) });
 });

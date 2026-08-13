@@ -46,6 +46,10 @@ ZASADY BEZWZGLĘDNE:
 8. Hipotezy o potrzebach i motywach zawsze oznaczaj jako hipotezy do potwierdzenia przez autora.
 9. Pytania mają utrzymywać jeden temat. Jeśli użytkownik otwiera kilka nowych wątków, odłóż je zamiast rozwijać wszystko naraz.
 10. Wspólny raport ma pomagać w rozumieniu, sprawdzaniu i zmianie zachowania, a nie wydawać werdykt o związku.
+11. Nie przytakuj automatycznie narratorowi. Dla ważnej interpretacji sprawdź, jakie dane ją wspierają, czego brakuje oraz co najmniej dwie rozsądne alternatywne hipotezy, jeśli materiał na nie pozwala.
+12. Alternatywna hipoteza nie jest prawdą zastępczą. Oznaczaj ją jako możliwość do sprawdzenia.
+13. Nie twórz „wyniku związku”, procentu kompatybilności ani rankingu winy.
+14. Raport nie może być bronią przeciw partnerowi. Formułuj różnice jako pytania, obserwacje procesu i rozbieżności perspektyw, nie diagnozy osoby.
 `;
 
 function safeText(value) {
@@ -95,7 +99,7 @@ async function buildPerspective({ participantId, slot, answers }) {
   const schema = {
     type: "object",
     additionalProperties: false,
-    required: ["summary","facts","interpretations","emotions","declaredNeeds","needHypotheses","unknowns","ownContribution","predictedPartnerView","goals","resources","narrativeFlags","shareDraft","safety"],
+    required: ["summary","facts","interpretations","emotions","declaredNeeds","needHypotheses","unknowns","ownContribution","predictedPartnerView","goals","resources","realityCheck","narrativeFlags","shareDraft","safety"],
     properties: {
       summary: { type: "string" },
       facts: { type: "array", items: { type: "string" } },
@@ -115,6 +119,18 @@ async function buildPerspective({ participantId, slot, answers }) {
       predictedPartnerView: { type: "array", items: { type: "string" } },
       goals: { type: "array", items: { type: "string" } },
       resources: { type: "array", items: { type: "string" } },
+      realityCheck: {
+        type: "object",
+        additionalProperties: false,
+        required: ["strongestFact","strongestInference","alternativeExplanations","evidenceMissing","certaintyCalibration"],
+        properties: {
+          strongestFact: { type: "string" },
+          strongestInference: { type: "string" },
+          alternativeExplanations: { type: "array", maxItems: 3, items: { type: "string" } },
+          evidenceMissing: { type: "array", items: { type: "string" } },
+          certaintyCalibration: { type: "string" },
+        },
+      },
       narrativeFlags: { type: "array", maxItems: 12, items: narrativeFlagSchema },
       shareDraft: shareDraftSchema,
       safety: safetySchema,
@@ -126,7 +142,8 @@ async function buildPerspective({ participantId, slot, answers }) {
     system: `${SYSTEM_CORE}
 Tworzysz PRYWATNY model perspektywy jednej osoby (${slot}).
 Surowe odpowiedzi NIE trafią do partnera. Przygotuj też shareDraft — neutralne podsumowanie w pierwszej osobie, które autor później może edytować i zatwierdzić.
-Nie przemycaj do shareDraft interpretacji jako faktów. NarrativeFlags opisuj językiem obserwacji, np. „wniosek wykracza poza opisany fakt”, a nie „nadinterpretujesz”.`,
+Nie przemycaj do shareDraft interpretacji jako faktów. NarrativeFlags opisuj językiem obserwacji, np. „wniosek wykracza poza opisany fakt”, a nie „nadinterpretujesz”.
+Pracuj logicznie w dwóch krokach: najpierw EKSTRAKCJA (co faktycznie opisano), potem REALITY CHECK (co narrator z tego wnioskuje, jakie są rozsądne alternatywy i czego brakuje do pewności). W realityCheck nie wymyślaj sztucznych kontrhipotez; mają wynikać z materiału albo z typowych, neutralnych możliwości.`,
     user: JSON.stringify({ slot, answers }),
     effort: "medium",
     safetyId: participantId,
@@ -180,14 +197,21 @@ Jeśli bezpieczeństwo jest wysokiego ryzyka, protocolAllowed=false i nie twórz
 async function buildFinalSynthesis({ pairId, comparison, shareA, shareB, reflectionA, reflectionB }) {
   const schema = {
     type:"object", additionalProperties:false,
-    required:["commonGround","updatedUnderstandingA","updatedUnderstandingB","remainingDisagreements","sharedReality","cycle","nextConversationQuestion","humanSupport","experiment","safety"],
+    required:["executiveSummary","commonGround","updatedUnderstandingA","updatedUnderstandingB","remainingDisagreements","sharedReality","realityChecks","blindSpots","strengths","repairPriorities","cycle","cycleBreakpoints","conversationProtocol","nextConversationQuestion","humanSupport","experiment","safety"],
     properties:{
+      executiveSummary:{type:"string"},
       commonGround:{type:"array",items:{type:"string"}},
       updatedUnderstandingA:{type:"string"},
       updatedUnderstandingB:{type:"string"},
       remainingDisagreements:{type:"array",items:{type:"string"}},
       sharedReality:{type:"array",items:{type:"string"}},
+      realityChecks:{type:"array",items:{type:"object",additionalProperties:false,required:["claim","classification","note","question"],properties:{claim:{type:"string"},classification:{type:"string",enum:["shared_fact","disputed","interpretation","unknown"]},note:{type:"string"},question:{type:"string"}}}},
+      blindSpots:{type:"array",items:{type:"string"}},
+      strengths:{type:"array",items:{type:"string"}},
+      repairPriorities:{type:"array",minItems:2,maxItems:5,items:{type:"object",additionalProperties:false,required:["title","why","firstStep"],properties:{title:{type:"string"},why:{type:"string"},firstStep:{type:"string"}}}},
       cycle:{type:"string"},
+      cycleBreakpoints:{type:"array",minItems:1,maxItems:4,items:{type:"object",additionalProperties:false,required:["moment","optionA","optionB"],properties:{moment:{type:"string"},optionA:{type:"string"},optionB:{type:"string"}}}},
+      conversationProtocol:{type:"object",additionalProperties:false,required:["opening","rules","questionA","questionB","closing"],properties:{opening:{type:"string"},rules:{type:"array",minItems:3,maxItems:6,items:{type:"string"}},questionA:{type:"string"},questionB:{type:"string"},closing:{type:"string"}}},
       nextConversationQuestion:{type:"string"},
       humanSupport:{type:"object",additionalProperties:false,required:["recommended","reason"],properties:{recommended:{type:"boolean"},reason:{type:"string"}}},
       experiment:{
@@ -204,6 +228,8 @@ async function buildFinalSynthesis({ pairId, comparison, shareA, shareB, reflect
     system:`${SYSTEM_CORE}
 To DRUGA SYNTEZA — po tym, jak obie osoby przeczytały zatwierdzoną perspektywę partnera i odniosły się do niej.
 Najcenniejszą zmianą jest aktualizacja rozumienia, nie zgoda. Dopuszczaj wynik: „rozumiemy się lepiej, ale nadal się nie zgadzamy”.
+Pełny raport ma być rozbudowany, ale precyzyjny: oddziel wspólny fakt, spór, interpretację i niewiadomą; pokaż możliwe ślepe punkty, zasoby, priorytety naprawy oraz konkretne miejsca przerwania cyklu.
+conversationProtocol ma prowadzić jedną bezpieczną rozmowę: najpierw parafraza i zrozumienie, dopiero potem odpowiedź. Żadnych diagnoz i żadnego wskazywania zwycięzcy.
 Eksperyment ma testować jedną hipotezę w realnym zachowaniu. Zachowanie A i B musi być konkretne, małe, niezależne od deklaracji i możliwe do osobnej oceny przez oboje.
 Jeśli bezpieczeństwo nie pozwala na wspólny eksperyment, protocolAllowed=false i eksperyment ma być neutralnym zatrzymaniem procesu, bez konfrontacji.`,
     user:JSON.stringify({ comparison, approvedShareA:shareA, approvedShareB:shareB, reflectionA, reflectionB }),

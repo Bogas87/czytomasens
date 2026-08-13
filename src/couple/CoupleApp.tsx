@@ -4,13 +4,14 @@ import {
   approveCoupleShare,
   completeCoupleIntake,
   createCouple,
+  createCoupleCheckout,
   fetchCoupleState,
   joinCouple,
   submitCoupleAnswer,
   submitCrossReflection,
   submitExperimentCheckin,
 } from "./api";
-import type { CoupleState, ShareSummary, TurnCoach } from "./types";
+import type { CoupleFreePreview, CoupleState, ShareSummary, TurnCoach } from "./types";
 import "./couple.css";
 
 const TOKEN_KEY = "ctms_couple_participant_v1";
@@ -149,12 +150,29 @@ function blankShare(): ShareSummary {
   return { summary: "", whatISee: "", whatMatters: "", whatINeed: "", whatIDontKnow: "" };
 }
 
+function formatPrice(gr: number) {
+  return `${(Number(gr || 3999) / 100).toFixed(2).replace(".", ",")} zł`;
+}
+
 function Header() {
   return (
     <header className="couple-header">
       <a href="/" className="couple-brand">CzyToMaSens<span>·</span><small>DWA SPOJRZENIA</small></a>
-      <a href="/" className="couple-home-link">Strona główna</a>
+      <nav className="couple-nav">
+        <a href="/#jak-to-dziala">Jak to działa</a>
+        <a href="/prywatnosc">Prywatność</a>
+        <a href="/">Analiza prywatna</a>
+      </nav>
     </header>
+  );
+}
+
+function PrivacyNote() {
+  return (
+    <div className="couple-privacy-note">
+      <span>MINIMALIZUJ DANE</span>
+      <p>Nie wpisuj nazwisk, adresów, telefonów, e-maili ani danych pozwalających zidentyfikować partnera. Do analizy wystarczą role A/B i opis zachowania.</p>
+    </div>
   );
 }
 
@@ -163,7 +181,8 @@ function Intro({ onCreated }: { onCreated: (token: string, inviteCode?: string) 
   const [mode, setMode] = React.useState<"choose" | "create" | "join">(presetCode ? "join" : "choose");
   const [displayName, setDisplayName] = React.useState("");
   const [inviteCode, setInviteCode] = React.useState(presetCode);
-  const [consent, setConsent] = React.useState(false);
+  const [serviceConsent, setServiceConsent] = React.useState(false);
+  const [dataConsent, setDataConsent] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [error, setError] = React.useState("");
   const [created, setCreated] = React.useState<{ participantToken: string; inviteCode: string } | null>(null);
@@ -202,21 +221,35 @@ function Intro({ onCreated }: { onCreated: (token: string, inviteCode?: string) 
     finally { setBusy(false); }
   }
 
+  const consentReady = serviceConsent && dataConsent;
+
   return (
     <main className="couple-intro">
       <section className="couple-hero">
-        <span className="couple-kicker">WSPÓLNA ANALIZA RELACJI DLA DWOJGA</span>
-        <h1>Ta sama relacja.<br/><em>Dwie prywatne perspektywy.</em></h1>
-        <p>
-          Każde z Was odpowiada osobno. System nie szuka zwycięzcy. Rekonstruuje wspólną rzeczywistość,
-          wykrywa rozbieżności, nadinterpretacje, bagatelizowanie, unikanie i pętle rozmowy, a później
-          prowadzi Was przez kontrolowane odniesienie się do perspektywy drugiej osoby.
-        </p>
-        <div className="couple-principles">
-          <div><strong>01</strong><span>Surowe odpowiedzi pozostają prywatne.</span></div>
-          <div><strong>02</strong><span>Partner widzi tylko podsumowanie, które zatwierdzisz.</span></div>
-          <div><strong>03</strong><span>AI nie rozstrzyga, kto mówi prawdę.</span></div>
-          <div><strong>04</strong><span>Zmianę sprawdzacie później w realnym zachowaniu.</span></div>
+        <div className="couple-hero-copy">
+          <span className="couple-kicker">WSPÓLNA ANALIZA RELACJI DLA DWOJGA</span>
+          <h1>Ta sama relacja.<br/><em>Dwie perspektywy.</em></h1>
+          <p>
+            Każde z Was odpowiada osobno. System porównuje nie tylko treść, ale również to, co jest faktem,
+            interpretacją, niewiadomą i powtarzalną reakcją. Nie szuka zwycięzcy.
+          </p>
+          <div className="couple-hero-proof">
+            <div><b>01</b><strong>Osobno</strong><span>Bez podglądu odpowiedzi podczas wywiadu.</span></div>
+            <div><b>02</b><strong>Porównanie</strong><span>Wspólny grunt, rozbieżności i niewiadome.</span></div>
+            <div><b>03</b><strong>Zmiana</strong><span>Nie tylko rozmowa — także weryfikacja zachowania.</span></div>
+          </div>
+        </div>
+        <div className="couple-hero-visual" aria-hidden="true">
+          <div className="couple-visual-report">
+            <div className="couple-visual-copy">
+              <span>DWA SPOJRZENIA</span>
+              <h2>Jedno zdarzenie.<br/>Dwa znaczenia.</h2>
+              <div><b>A</b><p>„Brak wiadomości odbieram jako brak priorytetu.”</p></div>
+              <div><b>B</b><p>„Powtarzające się pytania odbieram jako presję.”</p></div>
+              <small>System nie rozstrzyga intencji. Szuka pytania, które można bezpiecznie sprawdzić.</small>
+            </div>
+            <div className="couple-visual-image" />
+          </div>
         </div>
       </section>
 
@@ -225,57 +258,45 @@ function Intro({ onCreated }: { onCreated: (token: string, inviteCode?: string) 
           <div className="couple-created">
             <span className="couple-step">PRZESTRZEŃ UTWORZONA</span>
             <h2>Najpierw zaproś partnera.</h2>
-            <p>
-              Partner może wejść teraz albo później. Nie musi odpowiadać w tym samym czasie co Ty.
-              Kod pozostanie dostępny również podczas Twojej części analizy.
-            </p>
-            <div className="couple-created-code">
-              <span>KOD DLA PARTNERA</span>
-              <strong>{created.inviteCode}</strong>
+            <p>Partner może wejść teraz albo później. Nie musi odpowiadać w tym samym czasie co Ty.</p>
+            <div className="couple-created-code"><span>KOD DLA PARTNERA</span><strong>{created.inviteCode}</strong></div>
+            <div className="couple-entry-actions">
+              <button className="couple-secondary" type="button" onClick={() => copy(created.inviteCode, "code")}>{copied === "code" ? "Kod skopiowany" : "Kopiuj kod"}</button>
+              <button className="couple-secondary" type="button" onClick={() => copy(inviteLink(created.inviteCode), "link")}>{copied === "link" ? "Link skopiowany" : "Kopiuj link"}</button>
             </div>
-            <button className="couple-secondary" type="button" onClick={() => copy(created.inviteCode, "code")}>
-              {copied === "code" ? "Kod skopiowany" : "Kopiuj kod"}
-            </button>
-            <button className="couple-secondary" type="button" onClick={() => copy(inviteLink(created.inviteCode), "link")}>
-              {copied === "link" ? "Link skopiowany" : "Kopiuj prywatny link dla partnera"}
-            </button>
-            <button className="couple-primary" type="button" onClick={() => onCreated(created.participantToken, created.inviteCode)}>
-              Przejdź do mojej części
-            </button>
+            <button className="couple-primary" type="button" onClick={() => onCreated(created.participantToken, created.inviteCode)}>Przejdź do mojej części <span>→</span></button>
           </div>
         ) : mode === "choose" ? (
-          <>
+          <div className="couple-entry-start">
             <span className="couple-step">START</span>
             <h2>Jak wchodzisz do wspólnej analizy?</h2>
-            <button className="couple-primary" onClick={() => setMode("create")}>Rozpoczynam i zapraszam partnera</button>
+            <p>Jedna osoba zakłada przestrzeń. Druga może dołączyć z kodu w dowolnym momencie.</p>
+            <button className="couple-primary" onClick={() => setMode("create")}>Rozpoczynam i zapraszam partnera <span>→</span></button>
             <button className="couple-secondary" onClick={() => setMode("join")}>Mam kod od partnera</button>
-          </>
+          </div>
         ) : (
-          <>
+          <div className="couple-entry-form">
             <button className="couple-back" onClick={() => setMode("choose")}>← Wróć</button>
             <h2>{mode === "create" ? "Utwórz prywatną przestrzeń dla dwojga" : "Dołącz do wspólnej analizy"}</h2>
+            <PrivacyNote />
             <label>
               <span>Jak mamy Cię oznaczać? <small>(opcjonalnie)</small></span>
-              <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={40} placeholder="Np. A, Krzysiek, Partner 1" />
+              <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} maxLength={40} placeholder="Np. A, Partner 1" />
             </label>
-            {mode === "join" && (
-              <label>
-                <span>Kod zaproszenia</span>
-                <input value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} maxLength={12} placeholder="NP. 8KQ7M2XZ" />
-              </label>
-            )}
+            {mode === "join" && <label><span>Kod zaproszenia</span><input value={inviteCode} onChange={(e) => setInviteCode(e.target.value)} maxLength={12} placeholder="NP. 8KQ7M2XZ" /></label>}
             <label className="couple-consent">
-              <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
-              <span>
-                Rozumiem, że to prowadzona analiza relacji, a nie psychoterapia. AI może porównywać moje prywatne odpowiedzi
-                z odpowiedziami partnera, ale partner zobaczy wyłącznie treści, które później zatwierdzę do udostępnienia.
-              </span>
+              <input type="checkbox" checked={serviceConsent} onChange={(e) => setServiceConsent(e.target.checked)} />
+              <span>Rozumiem, że jest to narzędzie analityczne wspierające rozmowę, a nie psychoterapia, diagnoza ani rozstrzygnięcie, kto ma rację.</span>
+            </label>
+            <label className="couple-consent">
+              <input type="checkbox" checked={dataConsent} onChange={(e) => setDataConsent(e.target.checked)} />
+              <span>Wyrażam wyraźną zgodę na przetwarzanie danych, które dobrowolnie podam w analizie, w tym — jeśli sam je ujawnię — danych dotyczących zdrowia lub życia seksualnego, wyłącznie w celu przeprowadzenia tej analizy.</span>
             </label>
             {error && <p className="couple-error">{error}</p>}
-            <button className="couple-primary" disabled={!consent || busy || (mode === "join" && inviteCode.trim().length < 6)} onClick={mode === "create" ? create : join}>
-              {busy ? "Tworzymy bezpieczną przestrzeń…" : mode === "create" ? "Utwórz Dwa Spojrzenia" : "Dołącz"}
+            <button className="couple-primary" disabled={!consentReady || busy || (mode === "join" && inviteCode.trim().length < 6)} onClick={mode === "create" ? create : join}>
+              {busy ? "Tworzymy prywatną przestrzeń…" : mode === "create" ? "Utwórz Dwa Spojrzenia" : "Dołącz"} <span>→</span>
             </button>
-          </>
+          </div>
         )}
       </section>
     </main>
@@ -294,77 +315,33 @@ function SafetyAnswer({ value, onChange }: { value: any; onChange: (v: any) => v
   const severeKeys = ["physicalViolence", "threats", "sexualCoercion", "coerciveControl"];
   const severe = severeKeys.some((key) => current[key] === true);
   const fearOnly = current.fearReaction === true && !severe;
-
   return (
     <div className="couple-safety-grid">
       {rows.map(([key, label]) => (
-        <label key={key}>
-          <span>{label}</span>
-          <div>
-            <button type="button" className={current[key] === false ? "active" : ""} onClick={() => onChange({ ...current, [key]: false, riskConfirmed: false })}>Nie</button>
-            <button type="button" className={current[key] === true ? "active risk" : ""} onClick={() => onChange({ ...current, [key]: true, riskConfirmed: false })}>Tak</button>
-          </div>
-        </label>
+        <label key={key}><span>{label}</span><div>
+          <button type="button" className={current[key] === false ? "active" : ""} onClick={() => onChange({ ...current, [key]: false, riskConfirmed: false })}>Nie</button>
+          <button type="button" className={current[key] === true ? "active risk" : ""} onClick={() => onChange({ ...current, [key]: true, riskConfirmed: false })}>Tak</button>
+        </div></label>
       ))}
-
-      {fearOnly && (
-        <div className="couple-safety-note elevated">
-          <strong>To ważny sygnał, ale samo zaznaczenie obawy nie zamyka automatycznie procesu.</strong>
-          <span>System będzie ostrożniej prowadził dalsze kroki i nie ujawni partnerowi tej prywatnej odpowiedzi.</span>
-        </div>
-      )}
-
-      {severe && (
-        <div className="couple-safety-note high">
-          <strong>Zaznaczyłeś sytuację, przy której wspólna konfrontacja może być niewłaściwa.</strong>
-          <span>
-            Jeżeli zaznaczenie jest prawidłowe, po przejściu dalej wspólna analiza zostanie zatrzymana i partner nie zobaczy Twoich odpowiedzi.
-            Jeżeli tylko testujesz formularz albo kliknąłeś przez pomyłkę — popraw odpowiedź przed przejściem dalej.
-          </span>
-          <label className="couple-risk-confirm">
-            <input
-              type="checkbox"
-              checked={current.riskConfirmed === true}
-              onChange={(e) => onChange({ ...current, riskConfirmed: e.target.checked })}
-            />
-            <span>Potwierdzam, że zaznaczenie „Tak” opisuje realną sytuację.</span>
-          </label>
-        </div>
-      )}
+      {fearOnly && <div className="couple-safety-note elevated"><strong>To ważny sygnał, ale nie automatyczny werdykt.</strong><span>System będzie ostrożniej prowadził kolejne kroki. Ta odpowiedź pozostaje prywatna.</span></div>}
+      {severe && <div className="couple-safety-note high"><strong>Ta odpowiedź może zatrzymać wspólną konfrontację.</strong><span>Jeśli zaznaczenie opisuje realną sytuację, partner nie zobaczy Twoich prywatnych odpowiedzi.</span><label className="couple-risk-confirm"><input type="checkbox" checked={current.riskConfirmed === true} onChange={(e) => onChange({ ...current, riskConfirmed: e.target.checked })}/><span>Potwierdzam, że zaznaczenie „Tak” opisuje realną sytuację.</span></label></div>}
     </div>
   );
 }
 
 function Ratings({ value, onChange }: { value: any; onChange: (v: any) => void }) {
-  const items = [
-    ["closeness", "Bliskość"], ["trust", "Zaufanie"], ["safety", "Bezpieczeństwo rozmowy"],
-    ["mutuality", "Wzajemność"], ["hope", "Nadzieja na zmianę"],
-  ];
+  const items = [["closeness", "Bliskość"], ["trust", "Zaufanie"], ["safety", "Bezpieczeństwo rozmowy"], ["mutuality", "Wzajemność"], ["hope", "Nadzieja na zmianę"]];
   const current = value || {};
-  return <div className="couple-ratings">{items.map(([key, label]) => (
-    <label key={key}><span>{label}</span><input type="range" min="1" max="10" value={current[key] || 5} onChange={(e) => onChange({ ...current, [key]: Number(e.target.value) })}/><strong>{current[key] || 5}/10</strong></label>
-  ))}</div>;
+  return <div className="couple-ratings">{items.map(([key, label]) => <label key={key}><span>{label}</span><input type="range" min="1" max="10" value={current[key] || 5} onChange={(e) => onChange({ ...current, [key]: Number(e.target.value) })}/><strong>{current[key] || 5}<small>/10</small></strong></label>)}</div>;
 }
 
 function InviteDock({ code }: { code: string }) {
   const [copied, setCopied] = React.useState(false);
   if (!code) return null;
   async function copyLink() {
-    try {
-      await navigator.clipboard?.writeText(inviteLink(code));
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 1600);
-    } catch {}
+    try { await navigator.clipboard?.writeText(inviteLink(code)); setCopied(true); window.setTimeout(() => setCopied(false), 1600); } catch {}
   }
-  return (
-    <aside className="couple-invite-dock">
-      <div>
-        <span>PARTNER MOŻE DOŁĄCZYĆ W DOWOLNEJ CHWILI</span>
-        <strong>{code}</strong>
-      </div>
-      <button type="button" onClick={copyLink}>{copied ? "Link skopiowany" : "Kopiuj link dla partnera"}</button>
-    </aside>
-  );
+  return <aside className="couple-invite-dock"><div><span>PARTNER MOŻE DOŁĄCZYĆ W DOWOLNEJ CHWILI</span><strong>{code}</strong></div><button type="button" onClick={copyLink}>{copied ? "Link skopiowany" : "Kopiuj link dla partnera"}</button></aside>;
 }
 
 function Intake({ token, state, inviteCode, onState }: { token: string; state: CoupleState; inviteCode: string; onState: (s: CoupleState) => void }) {
@@ -378,10 +355,7 @@ function Intake({ token, state, inviteCode, onState }: { token: string; state: C
   const [error, setError] = React.useState("");
   const q = QUESTIONS[index];
 
-  React.useEffect(() => {
-    setValue(state.participant.answers[q?.id] ?? "");
-    setCoach(null); setFollowUp(""); setError("");
-  }, [index]);
+  React.useEffect(() => { setValue(state.participant.answers[q?.id] ?? ""); setCoach(null); setFollowUp(""); setError(""); }, [index, q?.id]);
 
   function valid() {
     if (q.type === "safety") {
@@ -400,10 +374,7 @@ function Intake({ token, state, inviteCode, onState }: { token: string; state: C
       const result = await submitCoupleAnswer({ participantToken: token, questionId: q.id, question: q.title, answer: combined, phase: "intake" });
       onState(result.state);
       if (result.state.safetyStopped) return;
-      if (result.coach?.shouldFollowUp && !followUp && q.type === "text") {
-        setCoach(result.coach);
-        return;
-      }
+      if (result.coach?.shouldFollowUp && !followUp && q.type === "text") { setCoach(result.coach); return; }
       setCoach(null); setFollowUp("");
       if (index < QUESTIONS.length - 1) setIndex(index + 1);
       else onState(await completeCoupleIntake(token));
@@ -412,31 +383,31 @@ function Intake({ token, state, inviteCode, onState }: { token: string; state: C
   }
 
   return (
-    <main className="couple-stage-wrap">
+    <main className="couple-stage-wrap couple-stage-question">
       {state.participant.slot === "A" && !state.partner.joined && inviteCode && <InviteDock code={inviteCode} />}
-      <div className="couple-progress"><span style={{ width: `${((index + 1) / QUESTIONS.length) * 100}%` }} /></div>
       <section className="couple-question-card">
-        <span className="couple-step">PERSPEKTYWA {state.participant.slot} · {index + 1}/{QUESTIONS.length}</span>
-        <h1>{q.title}</h1>
-        <p>{q.helper}</p>
-        {q.type === "text" && <textarea rows={7} value={typeof value === "string" ? value : (value?.primary || "")} onChange={(e) => setValue(e.target.value)} placeholder="Napisz własnymi słowami…" />}
-        {q.type === "choice" && <div className="couple-choice-grid">{q.options?.map((o) => <button type="button" key={o.value} className={value === o.value ? "active" : ""} onClick={() => setValue(o.value)}>{o.label}</button>)}</div>}
-        {q.type === "ratings" && <Ratings value={value} onChange={setValue} />}
-        {q.type === "safety" && <SafetyAnswer value={value} onChange={setValue} />}
-
-        {coach && (
-          <div className="couple-coach">
-            <span>AI ZATRZYMUJE SIĘ NA JEDNYM PUNKCIE</span>
-            <p>{coach.neutralReflection}</p>
-            {coach.flags.slice(0, 2).map((f, i) => <small key={i}>{f.observation}</small>)}
-            <strong>{coach.followUpQuestion}</strong>
-            <textarea rows={4} value={followUp} onChange={(e) => setFollowUp(e.target.value)} placeholder="Doprecyzuj ten jeden punkt…" />
+        <aside className="couple-question-rail">
+          <span className="couple-step">ANALIZA DLA DWOJGA</span>
+          <strong className="couple-question-number">{String(index + 1).padStart(2, "0")}</strong>
+          <div className="couple-progress"><span style={{ width: `${((index + 1) / QUESTIONS.length) * 100}%` }} /></div>
+          <p>{index + 1} z {QUESTIONS.length}</p>
+          <div className="couple-rail-topic"><small>PERSPEKTYWA</small><b>{state.participant.slot}</b></div>
+          <div className="couple-rail-trust"><span>PRYWATNE</span><p>Partner nie widzi tej odpowiedzi. Surowy tekst nie jest udostępniany drugiej stronie.</p></div>
+        </aside>
+        <div className="couple-question-content">
+          <span className="couple-kicker">TWOJA PERSPEKTYWA · ETAP {index + 1}</span>
+          <h1>{q.title}</h1>
+          <p className="couple-question-lead">{q.helper}</p>
+          {q.type === "text" && <><PrivacyNote/><textarea className="couple-main-textarea" rows={7} value={typeof value === "string" ? value : (value?.primary || "")} onChange={(e) => setValue(e.target.value)} placeholder="Napisz własnymi słowami…" /></>}
+          {q.type === "choice" && <div className="couple-choice-grid">{q.options?.map((o) => <button type="button" key={o.value} className={value === o.value ? "active" : ""} onClick={() => setValue(o.value)}>{o.label}<span>→</span></button>)}</div>}
+          {q.type === "ratings" && <Ratings value={value} onChange={setValue} />}
+          {q.type === "safety" && <SafetyAnswer value={value} onChange={setValue} />}
+          {coach && <div className="couple-coach"><span>REALITY CHECK</span><p>{coach.neutralReflection}</p>{coach.flags.slice(0, 2).map((f, i) => <small key={i}>{f.observation}</small>)}<strong>{coach.followUpQuestion}</strong><textarea rows={4} value={followUp} onChange={(e) => setFollowUp(e.target.value)} placeholder="Doprecyzuj ten jeden punkt…" /></div>}
+          {error && <p className="couple-error">{error}</p>}
+          <div className="couple-actions">
+            {index > 0 && <button className="couple-secondary" onClick={() => setIndex(index - 1)} disabled={busy}>Wstecz</button>}
+            <button className="couple-primary" onClick={submit} disabled={busy || !valid() || Boolean(coach && followUp.trim().length < 4)}>{busy ? "Analizuję odpowiedź…" : index === QUESTIONS.length - 1 && !coach ? "Zakończ moją część" : coach ? "Doprecyzuj i idź dalej" : "Dalej"}<span>→</span></button>
           </div>
-        )}
-        {error && <p className="couple-error">{error}</p>}
-        <div className="couple-actions">
-          {index > 0 && <button className="couple-secondary" onClick={() => setIndex(index - 1)} disabled={busy}>Wstecz</button>}
-          <button className="couple-primary" onClick={submit} disabled={busy || !valid() || Boolean(coach && followUp.trim().length < 4)}>{busy ? "Analizuję odpowiedź…" : index === QUESTIONS.length - 1 && !coach ? "Zakończ moją część" : coach ? "Doprecyzuj i idź dalej" : "Dalej"}</button>
         </div>
       </section>
     </main>
@@ -444,17 +415,7 @@ function Intake({ token, state, inviteCode, onState }: { token: string; state: C
 }
 
 function Waiting({ state, inviteCode, onRefresh }: { state: CoupleState; inviteCode: string; onRefresh: () => void }) {
-  return (
-    <main className="couple-stage-wrap">
-      <section className="couple-wait-card">
-        <span className="couple-kicker">TWOJA CZĘŚĆ JEST ZAPISANA</span>
-        <h1>{state.partner.joined ? "Druga perspektywa jeszcze powstaje." : "Zaproś drugą osobę."}</h1>
-        <p>Nie pokazujemy postępu partnera pytanie po pytaniu. Wspólna część otworzy się dopiero po zakończeniu wymaganej fazy przez oboje.</p>
-        {!state.partner.joined && inviteCode && <div className="couple-invite"><span>KOD DLA PARTNERA</span><strong>{inviteCode}</strong><button onClick={() => navigator.clipboard?.writeText(inviteCode)}>Kopiuj kod</button></div>}
-        <button className="couple-primary" onClick={onRefresh}>Sprawdź, czy możemy iść dalej</button>
-      </section>
-    </main>
-  );
+  return <main className="couple-stage-wrap"><section className="couple-wait-card"><span className="couple-kicker">TWOJA CZĘŚĆ JEST ZAPISANA</span><h1>{state.partner.joined ? "Druga perspektywa jeszcze powstaje." : "Zaproś drugą osobę."}</h1><p>Nie pokazujemy postępu partnera pytanie po pytaniu. Wspólna część otworzy się dopiero po zakończeniu wymaganej fazy przez oboje.</p>{!state.partner.joined && inviteCode && <div className="couple-invite"><span>KOD DLA PARTNERA</span><strong>{inviteCode}</strong><button onClick={() => navigator.clipboard?.writeText(inviteLink(inviteCode))}>Kopiuj link</button></div>}<button className="couple-primary" onClick={onRefresh}>Sprawdź, czy możemy iść dalej <span>→</span></button></section></main>;
 }
 
 function ShareReview({ token, state, onState }: { token: string; state: CoupleState; onState: (s: CoupleState) => void }) {
@@ -464,50 +425,135 @@ function ShareReview({ token, state, onState }: { token: string; state: CoupleSt
   async function approve() { setBusy(true); try { onState(await approveCoupleShare(token, share)); } finally { setBusy(false); } }
   return (
     <main className="couple-stage-wrap couple-wide">
+      <section className="couple-review-head"><span className="couple-kicker">PIERWSZY ODCZYT PRYWATNY</span><h1>Najpierw sprawdź, czy system dobrze rozumie Ciebie.</h1><p>To nie jest jeszcze raport wspólny. Oddzielamy Twoją narrację od tego, co później wolno pokazać partnerowi.</p></section>
       <section className="couple-review-grid">
         <div className="couple-private-card">
           <span className="couple-step">TYLKO DLA CIEBIE</span>
           <h2>Jak system rozumie Twoją narrację</h2>
           <p>{perspective?.summary}</p>
-          {(perspective?.narrativeFlags || []).slice(0, 6).map((f, i) => <div className="couple-flag" key={i}><strong>{f.observation}</strong><span>{f.question}</span></div>)}
-          <small>Te obserwacje dotyczą konkretnych wypowiedzi, nie Twojej osobowości. Partner ich nie zobaczy.</small>
+          {perspective?.realityCheck && <div className="couple-reality-box"><span>REALITY CHECK</span><p><strong>Najmocniejszy fakt:</strong> {perspective.realityCheck.strongestFact}</p><p><strong>Najmocniejszy wniosek:</strong> {perspective.realityCheck.strongestInference}</p><p><strong>Kalibracja pewności:</strong> {perspective.realityCheck.certaintyCalibration}</p>{perspective.realityCheck.alternativeExplanations?.slice(0,3).map((x,i)=><small key={i}>{i+1}. {x}</small>)}</div>}
+          {(perspective?.narrativeFlags || []).slice(0, 5).map((f, i) => <div className="couple-flag" key={i}><strong>{f.observation}</strong><span>{f.question}</span></div>)}
+          <small className="couple-private-note">Te obserwacje dotyczą konkretnych wypowiedzi, nie Twojej osobowości. Partner ich nie zobaczy.</small>
         </div>
         <div className="couple-share-card">
           <span className="couple-step">DO ZATWIERDZENIA</span>
-          <h1>Tak przedstawimy Twoją perspektywę partnerowi.</h1>
+          <h2>Tak przedstawimy Twoją perspektywę partnerowi.</h2>
           <p>Możesz poprawić każde pole. Surowe wpisy z wywiadu nie są udostępniane.</p>
-          {([
-            ["summary", "Sedno mojej perspektywy"], ["whatISee", "Co widzę w sytuacji"], ["whatMatters", "Co jest dla mnie ważne"],
-            ["whatINeed", "Czego potrzebuję / czego oczekuję"], ["whatIDontKnow", "Czego nadal nie wiem"],
-          ] as Array<[keyof ShareSummary,string]>).map(([key,label]) => <label key={key}><span>{label}</span><textarea rows={3} value={share[key]} onChange={(e) => setShare({ ...share, [key]: e.target.value })}/></label>)}
-          <button className="couple-primary" disabled={busy || Object.values(share).some((x) => x.trim().length < 4)} onClick={approve}>{busy ? "Zapisuję…" : "Zatwierdzam do wspólnej analizy"}</button>
+          {([ ["summary", "Sedno mojej perspektywy"], ["whatISee", "Co widzę w sytuacji"], ["whatMatters", "Co jest dla mnie ważne"], ["whatINeed", "Czego potrzebuję / czego oczekuję"], ["whatIDontKnow", "Czego nadal nie wiem"] ] as Array<[keyof ShareSummary,string]>).map(([key,label]) => <label key={key}><span>{label}</span><textarea rows={3} value={share[key]} onChange={(e) => setShare({ ...share, [key]: e.target.value })}/></label>)}
+          <button className="couple-primary" disabled={busy || Object.values(share).some((x) => x.trim().length < 4)} onClick={approve}>{busy ? "Zapisuję…" : "Zatwierdzam do wspólnej analizy"}<span>→</span></button>
         </div>
       </section>
     </main>
   );
 }
 
+function PreviewStat({ value, label }: { value: number; label: string }) {
+  return <div className="couple-preview-stat"><strong>{String(value).padStart(2, "0")}</strong><span>{label}</span></div>;
+}
+
+function FreePreviewPremium({ state, onRefresh }: { state: CoupleState; onRefresh: () => void }) {
+  const preview = state.freePreview as CoupleFreePreview;
+  const [email, setEmail] = React.useState("");
+  const [consent, setConsent] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState("");
+  const price = formatPrice(state.premium.priceGr);
+
+  async function checkout() {
+    setBusy(true); setError("");
+    try {
+      const data = await createCoupleCheckout({ billingSessionId: state.premium.billingSessionId, email: email.trim(), consentAcceptedAt: new Date().toISOString() });
+      const url = data.checkoutUrl || data.url;
+      if (!url) throw new Error("Nie otrzymano adresu płatności.");
+      window.location.assign(url);
+    } catch (err: any) { setError(err?.message || "Nie udało się rozpocząć płatności."); setBusy(false); }
+  }
+
+  return (
+    <main className="couple-stage-wrap couple-wide couple-preview-page">
+      <section className="couple-preview-hero">
+        <div className="couple-preview-copy">
+          <span className="couple-kicker">RAPORT FREE · DWIE PERSPEKTYWY ZESTAWIONE</span>
+          <h1>{preview.headline}</h1>
+          <p>To krótki odczyt wspólnej mapy. Pokazuje tylko najważniejsze sygnały — bez ujawniania prywatnych odpowiedzi i bez rozstrzygania, kto ma rację.</p>
+          <div className="couple-preview-stats">
+            <PreviewStat value={preview.counts.shared} label="obszarów wspólnych" />
+            <PreviewStat value={preview.counts.gaps} label="różnic perspektyw" />
+            <PreviewStat value={preview.counts.disputed} label="punktów spornych" />
+            <PreviewStat value={preview.counts.predictions} label="testów rozumienia" />
+          </div>
+        </div>
+        <div className="couple-preview-sheet">
+          <div className="couple-sheet-head"><span>PODGLĄD ODCZYTU</span><b>FREE</b></div>
+          <div className="couple-sheet-row"><i>Z</i><div><span>WSPÓLNY GRUNT</span><p>{preview.commonGround}</p></div></div>
+          <div className="couple-sheet-row"><i>↔</i><div><span>RÓŻNICA ZNACZENIA</span><p>{preview.perceptionGap}</p></div></div>
+          <div className="couple-sheet-row"><i>?</i><div><span>NAJWIĘKSZA NIEWIADOMA</span><p>{preview.unknown}</p></div></div>
+          <div className="couple-sheet-locked"><span>WYKRYTY CYKL · FRAGMENT ZABLOKOWANY</span><strong>{preview.cycleTeaser}</strong></div>
+        </div>
+      </section>
+
+      <section className="couple-premium-offer">
+        <div className="couple-offer-copy">
+          <span className="couple-kicker">DWA SPOJRZENIA PREMIUM</span>
+          <h2>Nie kończymy na porównaniu dwóch ankiet.</h2>
+          <p>Premium otwiera właściwą pracę dla pary: pełną mapę dwóch narracji, kontrolowane odniesienie, drugą syntezę i sprawdzenie zmiany w realnym zachowaniu.</p>
+          <div className="couple-premium-list">
+            <div><b>01</b><span><strong>Pełna mapa rzeczywistości</strong>Fakty wspólne, interpretacje, spory i niewiadome.</span></div>
+            <div><b>02</b><span><strong>Test rozumienia partnera</strong>Co zakładałeś o partnerze vs co rzeczywiście powiedział.</span></div>
+            <div><b>03</b><span><strong>Mapa cyklu relacyjnego</strong>Jak reakcja jednej osoby uruchamia reakcję drugiej.</span></div>
+            <div><b>04</b><span><strong>Moderowana konfrontacja</strong>Najpierw zrozumienie, dopiero później odpowiedź.</span></div>
+            <div><b>05</b><span><strong>Pełny raport Premium</strong>Ślepe punkty, priorytety naprawy, miejsca przerwania cyklu i protokół rozmowy.</span></div>
+            <div><b>06</b><span><strong>Eksperyment relacyjny</strong>Jedna zmiana zachowania i późniejsza niezależna weryfikacja przez oboje.</span></div>
+          </div>
+        </div>
+        <div className="couple-pay-card">
+          <span>PEŁNY PROCES DLA CAŁEJ PARY</span>
+          <div className="couple-price"><strong>{price}</strong><small>jednorazowo</small></div>
+          <p>Jedna płatność odblokowuje Premium obu osobom. Bez subskrypcji i bez automatycznych odnowień.</p>
+          <label><span>E-mail do płatności i potwierdzenia</span><input type="email" value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="twoj@email.pl" /></label>
+          <label className="couple-consent couple-payment-consent"><input type="checkbox" checked={consent} onChange={(e)=>setConsent(e.target.checked)}/><span>Chcę rozpocząć dostarczanie treści cyfrowej od razu. Przyjmuję do wiadomości, że po rozpoczęciu spełniania świadczenia mogę utracić prawo odstąpienia zgodnie z obowiązującymi zasadami.</span></label>
+          {error && <p className="couple-error">{error}</p>}
+          <button className="couple-primary couple-buy" disabled={busy || !consent || !/^\S+@\S+\.\S+$/.test(email.trim())} onClick={checkout}>{busy ? "Przechodzę do płatności…" : `Odblokuj Premium · ${price}`}<span>→</span></button>
+          <small className="couple-pay-note">Płatność jednorazowa · dla całej pary · brak subskrypcji</small>
+          <button className="couple-text-button" onClick={onRefresh}>Płatność już wykonana? Sprawdź dostęp</button>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+function ComparisonMap({ state }: { state: CoupleState }) {
+  const comparison = state.comparison;
+  if (!comparison) return null;
+  return (
+    <section className="couple-comparison-map">
+      <div className="couple-section-head"><span className="couple-kicker">PEŁNA MAPA DWÓCH PERSPEKTYW</span><h2>Zanim odpowiesz partnerowi, zobacz strukturę różnicy.</h2></div>
+      <div className="couple-map-grid">
+        <article className="couple-map-card"><span>WSPÓLNA RZECZYWISTOŚĆ</span>{comparison.sharedReality.slice(0,4).map((x,i)=><div key={i}><strong>{x.topic}</strong><p>{x.agreement}</p></div>)}</article>
+        <article className="couple-map-card"><span>RÓŻNICE PERSPEKTYW</span>{comparison.perceptionGaps.slice(0,4).map((x,i)=><div key={i}><strong>{x.topic}</strong><p>{x.neutralFrame}</p></div>)}</article>
+        <article className="couple-map-card"><span>SPORNE / NIEWERYFIKOWALNE</span>{comparison.disputedClaims.slice(0,4).map((x,i)=><div key={i}><strong>{x.status}</strong><p>{x.question}</p></div>)}</article>
+        <article className="couple-map-card couple-cycle-card"><span>HIPOTEZA CYKLU</span><h3>{comparison.cycleHypothesis.label}</h3>{comparison.cycleHypothesis.sequence.slice(0,5).map((x,i)=><p key={i}><b>{x.actor}</b> {x.trigger} → {x.reaction} → {x.effect}</p>)}<small>{comparison.cycleHypothesis.question}</small></article>
+      </div>
+    </section>
+  );
+}
+
 function CrossReflection({ token, state, onState }: { token: string; state: CoupleState; onState: (s: CoupleState) => void }) {
   const qs = state.comparison?.crossQuestions || [];
   const partner = state.partner.shareApproved;
+  const [shieldAccepted, setShieldAccepted] = React.useState(false);
+  const [shieldOpen, setShieldOpen] = React.useState(false);
   const [input, setInput] = React.useState<Record<string,string>>({});
   const [busy, setBusy] = React.useState(false);
   async function submit() { setBusy(true); try { onState(await submitCrossReflection(token, input)); } finally { setBusy(false); } }
+  if (!shieldOpen) {
+    return <main className="couple-stage-wrap couple-wide"><ComparisonMap state={state}/><section className="couple-shield"><span className="couple-kicker">ZASADA WSPÓLNEJ TARCZY</span><h1>Raport ma otworzyć rozmowę, nie wygrać kłótnię.</h1><p>Za chwilę zobaczysz zatwierdzoną perspektywę partnera. Nie jest ona diagnozą Ciebie ani dowodem jego racji. Twoim pierwszym zadaniem będzie sprawdzić, czy dobrze ją rozumiesz.</p><label className="couple-shield-check"><input type="checkbox" checked={shieldAccepted} onChange={(e)=>setShieldAccepted(e.target.checked)}/><span>Rozumiem, że materiał nie wskazuje winnego i nie będę traktować fragmentów raportu jako diagnozy lub „dowodu” przeciw partnerowi.</span></label><button className="couple-primary" disabled={!shieldAccepted} onClick={()=>setShieldOpen(true)}>Pokaż zatwierdzoną perspektywę partnera <span>→</span></button></section></main>;
+  }
   return (
     <main className="couple-stage-wrap couple-wide">
-      <section className="couple-partner-view">
-        <span className="couple-kicker">PERSPEKTYWA DRUGIEJ OSOBY · ZATWIERDZONA PRZEZ AUTORA</span>
-        <h1>Najpierw zrozum. Dopiero potem odpowiadaj.</h1>
-        {partner && <div className="couple-share-read"><h2>{partner.summary}</h2><p><strong>Jak to widzi:</strong> {partner.whatISee}</p><p><strong>Co jest ważne:</strong> {partner.whatMatters}</p><p><strong>Czego potrzebuje:</strong> {partner.whatINeed}</p><p><strong>Czego nie wie:</strong> {partner.whatIDontKnow}</p></div>}
-      </section>
-      <section className="couple-cross-card">
-        <h2>Twoje odniesienie</h2>
-        {qs.map((q, i) => <label key={i}><span>{i + 1}. {q}</span><textarea rows={4} value={input[`q${i}`] || ""} onChange={(e) => setInput({ ...input, [`q${i}`]: e.target.value })}/></label>)}
-        <label><span>Co w tej perspektywie było dla Ciebie naprawdę nowe?</span><textarea rows={4} value={input.newInformation || ""} onChange={(e) => setInput({ ...input, newInformation: e.target.value })}/></label>
-        <label><span>Z czym nadal się nie zgadzasz — nawet jeśli już lepiej rozumiesz drugą stronę?</span><textarea rows={4} value={input.disagreement || ""} onChange={(e) => setInput({ ...input, disagreement: e.target.value })}/></label>
-        <label><span>Co z tego konfliktu należy do Twojej części i możesz zmienić niezależnie od partnera?</span><textarea rows={4} value={input.myPart || ""} onChange={(e) => setInput({ ...input, myPart: e.target.value })}/></label>
-        <button className="couple-primary" disabled={busy || Object.values(input).join(" ").trim().length < 40} onClick={submit}>{busy ? "Budujemy drugą syntezę…" : "Zapisz moje odniesienie"}</button>
-      </section>
+      <ComparisonMap state={state}/>
+      <section className="couple-partner-view"><span className="couple-kicker">PERSPEKTYWA DRUGIEJ OSOBY · ZATWIERDZONA PRZEZ AUTORA</span><h1>Najpierw zrozum. Dopiero potem odpowiadaj.</h1>{partner && <div className="couple-share-read"><h2>{partner.summary}</h2><div className="couple-share-columns"><p><strong>Jak to widzi</strong>{partner.whatISee}</p><p><strong>Co jest ważne</strong>{partner.whatMatters}</p><p><strong>Czego potrzebuje</strong>{partner.whatINeed}</p><p><strong>Czego nie wie</strong>{partner.whatIDontKnow}</p></div></div>}</section>
+      <section className="couple-cross-card"><span className="couple-kicker">TWOJE ODNIESIENIE</span><h2>Odpowiedz na różnicę, nie na wyobrażenie o partnerze.</h2>{qs.map((q, i) => <label key={i}><span>{i + 1}. {q}</span><textarea rows={4} value={input[`q${i}`] || ""} onChange={(e) => setInput({ ...input, [`q${i}`]: e.target.value })}/></label>)}<label><span>Co w tej perspektywie było dla Ciebie naprawdę nowe?</span><textarea rows={4} value={input.newInformation || ""} onChange={(e) => setInput({ ...input, newInformation: e.target.value })}/></label><label><span>Z czym nadal się nie zgadzasz — nawet jeśli już lepiej rozumiesz drugą stronę?</span><textarea rows={4} value={input.disagreement || ""} onChange={(e) => setInput({ ...input, disagreement: e.target.value })}/></label><label><span>Co z tego konfliktu należy do Twojej części i możesz zmienić niezależnie od partnera?</span><textarea rows={4} value={input.myPart || ""} onChange={(e) => setInput({ ...input, myPart: e.target.value })}/></label><button className="couple-primary" disabled={busy || Object.values(input).join(" ").trim().length < 40} onClick={submit}>{busy ? "Budujemy drugą syntezę…" : "Zapisz moje odniesienie"}<span>→</span></button></section>
     </main>
   );
 }
@@ -523,60 +569,28 @@ function JointReport({ token, state, onState }: { token: string; state: CoupleSt
   const due = exp ? new Date(exp.dueAt) : null;
   const dueNow = due ? Date.now() >= due.getTime() : false;
   return (
-    <main className="couple-stage-wrap couple-wide">
-      <section className="couple-joint-hero">
-        <span className="couple-kicker">WSPÓLNY MODEL RELACJI · NIE WERDYKT</span>
-        <h1>Co zmieniło się po zobaczeniu dwóch perspektyw?</h1>
-        <p>{report.cycle}</p>
-      </section>
-      <section className="couple-joint-grid">
-        <article><span>WSPÓLNY GRUNT</span>{report.commonGround.map((x,i)=><p key={i}>{x}</p>)}</article>
-        <article><span>PERSPEKTYWA A PO KONFRONTACJI</span><p>{report.updatedUnderstandingA}</p></article>
-        <article><span>PERSPEKTYWA B PO KONFRONTACJI</span><p>{report.updatedUnderstandingB}</p></article>
-        <article><span>NADAL SPORNE</span>{report.remainingDisagreements.map((x,i)=><p key={i}>{x}</p>)}</article>
-      </section>
-      <section className="couple-experiment-card">
-        <span className="couple-step">EKSPERYMENT RELACYJNY</span>
-        <h2>{report.experiment.title}</h2>
-        <p><strong>Hipoteza:</strong> {report.experiment.hypothesis}</p>
-        <div className="couple-exp-parts"><div><span>A</span><p>{report.experiment.behaviorA}</p></div><div><span>B</span><p>{report.experiment.behaviorB}</p></div></div>
-        <p><strong>Po czym sprawdzicie efekt:</strong> {report.experiment.successCriteria.join(" · ")}</p>
-        {exp?.status === "PROPOSED" && <div className="couple-actions"><button className="couple-secondary" onClick={() => accept(false)} disabled={busy}>Nie akceptuję</button><button className="couple-primary" onClick={() => accept(true)} disabled={busy}>Akceptuję swoją część</button></div>}
-        {exp?.status === "ACTIVE" && <div className="couple-active-exp"><strong>Eksperyment jest aktywny.</strong><span>Weryfikacja: {due?.toLocaleDateString("pl-PL")}</span></div>}
-        {exp?.status === "ACTIVE" && dueNow && !exp.myCheckin && <div className="couple-checkin">
-          <label><span>Co rzeczywiście wydarzyło się w czasie eksperymentu?</span><textarea rows={4} value={checkin.whatHappened || ""} onChange={(e)=>setCheckin({...checkin,whatHappened:e.target.value})}/></label>
-          <label><span>Czy partner wykonał uzgodnione zachowanie? Podaj konkretny przykład.</span><textarea rows={4} value={checkin.partnerBehavior || ""} onChange={(e)=>setCheckin({...checkin,partnerBehavior:e.target.value})}/></label>
-          <label><span>Co Ty zrobiłeś inaczej?</span><textarea rows={4} value={checkin.myBehavior || ""} onChange={(e)=>setCheckin({...checkin,myBehavior:e.target.value})}/></label>
-          <label><span>Czy napięcie w tym obszarze realnie się zmieniło?</span><textarea rows={4} value={checkin.effect || ""} onChange={(e)=>setCheckin({...checkin,effect:e.target.value})}/></label>
-          <button className="couple-primary" disabled={busy || Object.values(checkin).join(" ").length < 40} onClick={submitCheckin}>Zapisz niezależną weryfikację</button>
-        </div>}
-        {exp?.result && <div className="couple-result"><span>WERYFIKACJA DWÓCH STRON</span><pre>{JSON.stringify(exp.result, null, 2)}</pre></div>}
-      </section>
-      <section className="couple-next-question"><span>NASTĘPNA ROZMOWA</span><h2>{report.nextConversationQuestion}</h2></section>
+    <main className="couple-stage-wrap couple-wide couple-premium-report">
+      <section className="couple-report-cover"><div><span className="couple-kicker">DWA SPOJRZENIA PREMIUM · WSPÓLNY MODEL RELACJI</span><h1>Nie kto ma rację.<br/><em>Co naprawdę dzieje się między Wami.</em></h1><p>{report.executiveSummary || report.cycle}</p></div><aside><span>RAPORT PREMIUM</span><strong>A ↔ B</strong><small>Wspólny odczyt powstał dopiero po osobnej analizie dwóch perspektyw.</small></aside></section>
+
+      <section className="couple-report-section"><div className="couple-section-head"><span className="couple-kicker">01 · WSPÓLNA RZECZYWISTOŚĆ</span><h2>To możecie uznać bez rozstrzygania intencji.</h2></div><div className="couple-joint-grid"><article><span>WSPÓLNY GRUNT</span>{report.commonGround.map((x,i)=><p key={i}>{x}</p>)}</article><article><span>PO KONFRONTACJI · A</span><p>{report.updatedUnderstandingA}</p></article><article><span>PO KONFRONTACJI · B</span><p>{report.updatedUnderstandingB}</p></article><article><span>NADAL SPORNE</span>{report.remainingDisagreements.map((x,i)=><p key={i}>{x}</p>)}</article></div></section>
+
+      {(report.realityChecks?.length || 0) > 0 && <section className="couple-report-section"><div className="couple-section-head"><span className="couple-kicker">02 · REALITY CHECK</span><h2>Fakt, interpretacja, spór czy nadal niewiadoma?</h2></div><div className="couple-reality-ledger">{report.realityChecks!.map((x,i)=><article key={i} data-kind={x.classification}><span>{x.classification.replace("_"," ")}</span><h3>{x.claim}</h3><p>{x.note}</p><small>{x.question}</small></article>)}</div></section>}
+
+      <section className="couple-report-section couple-cycle-section"><div className="couple-section-head"><span className="couple-kicker">03 · CYKL RELACYJNY</span><h2>Nie tylko co robicie. Jak wzajemnie uruchamiacie kolejną reakcję.</h2></div><div className="couple-cycle-narrative"><p>{report.cycle}</p></div>{(report.cycleBreakpoints?.length || 0)>0 && <div className="couple-break-grid">{report.cycleBreakpoints!.map((x,i)=><article key={i}><span>MOMENT {i+1}</span><h3>{x.moment}</h3><p><b>A może:</b> {x.optionA}</p><p><b>B może:</b> {x.optionB}</p></article>)}</div>}</section>
+
+      <section className="couple-report-section"><div className="couple-section-head"><span className="couple-kicker">04 · CO MOŻE POMÓC</span><h2>Priorytety naprawy zamiast ogólnego „lepiej rozmawiajcie”.</h2></div><div className="couple-priority-grid">{(report.repairPriorities || []).map((x,i)=><article key={i}><span>{String(i+1).padStart(2,"0")}</span><h3>{x.title}</h3><p>{x.why}</p><strong>{x.firstStep}</strong></article>)}</div>{(report.strengths?.length || 0)>0 && <div className="couple-strengths"><span>ZASOBY, NA KTÓRYCH MOŻECIE OPRZEĆ ZMIANĘ</span>{report.strengths!.map((x,i)=><p key={i}>{x}</p>)}</div>}</section>
+
+      {report.conversationProtocol && <section className="couple-report-section couple-protocol"><div className="couple-section-head"><span className="couple-kicker">05 · PROTOKÓŁ JEDNEJ ROZMOWY</span><h2>Najpierw poprawnie odtwórz perspektywę. Dopiero potem się nie zgadzaj.</h2></div><div className="couple-protocol-card"><p className="couple-protocol-opening">{report.conversationProtocol.opening}</p><ol>{report.conversationProtocol.rules.map((x,i)=><li key={i}>{x}</li>)}</ol><div className="couple-protocol-questions"><div><span>PYTANIE DO A</span><p>{report.conversationProtocol.questionA}</p></div><div><span>PYTANIE DO B</span><p>{report.conversationProtocol.questionB}</p></div></div><small>{report.conversationProtocol.closing}</small></div></section>}
+
+      <section className="couple-experiment-card"><span className="couple-step">06 · EKSPERYMENT RELACYJNY</span><h2>{report.experiment.title}</h2><p><strong>Hipoteza:</strong> {report.experiment.hypothesis}</p><div className="couple-exp-parts"><div><span>A</span><p>{report.experiment.behaviorA}</p></div><div><span>B</span><p>{report.experiment.behaviorB}</p></div></div><p><strong>Po czym sprawdzicie efekt:</strong> {report.experiment.successCriteria.join(" · ")}</p>{exp?.status === "PROPOSED" && <div className="couple-actions"><button className="couple-secondary" onClick={() => accept(false)} disabled={busy}>Nie akceptuję</button><button className="couple-primary" onClick={() => accept(true)} disabled={busy}>Akceptuję swoją część <span>→</span></button></div>}{exp?.status === "ACTIVE" && <div className="couple-active-exp"><strong>Eksperyment jest aktywny.</strong><span>Weryfikacja: {due?.toLocaleDateString("pl-PL")}</span></div>}{exp?.status === "ACTIVE" && dueNow && !exp.myCheckin && <div className="couple-checkin"><label><span>Co rzeczywiście wydarzyło się w czasie eksperymentu?</span><textarea rows={4} value={checkin.whatHappened || ""} onChange={(e)=>setCheckin({...checkin,whatHappened:e.target.value})}/></label><label><span>Czy partner wykonał uzgodnione zachowanie? Podaj konkretny przykład.</span><textarea rows={4} value={checkin.partnerBehavior || ""} onChange={(e)=>setCheckin({...checkin,partnerBehavior:e.target.value})}/></label><label><span>Co Ty zrobiłeś inaczej?</span><textarea rows={4} value={checkin.myBehavior || ""} onChange={(e)=>setCheckin({...checkin,myBehavior:e.target.value})}/></label><label><span>Czy napięcie w tym obszarze realnie się zmieniło?</span><textarea rows={4} value={checkin.effect || ""} onChange={(e)=>setCheckin({...checkin,effect:e.target.value})}/></label><button className="couple-primary" disabled={busy || Object.values(checkin).join(" ").length < 40} onClick={submitCheckin}>Zapisz niezależną weryfikację <span>→</span></button></div>}{exp?.result && <div className="couple-result"><span>WERYFIKACJA DWÓCH STRON</span><pre>{JSON.stringify(exp.result, null, 2)}</pre></div>}</section>
+      <section className="couple-next-question"><span>NASTĘPNA ROZMOWA</span><h2>{report.nextConversationQuestion}</h2>{report.humanSupport?.recommended && <p>W tym obszarze warto rozważyć wsparcie człowieka: {report.humanSupport.reason}</p>}</section>
     </main>
   );
 }
 
 function SafetyStop() {
-  function restart() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(INVITE_KEY);
-    window.history.replaceState({}, "", "/dla-par");
-    window.location.reload();
-  }
-
-  return (
-    <main className="couple-stage-wrap">
-      <section className="couple-safety-stop">
-        <span className="couple-kicker">WSPÓLNA KONFRONTACJA ZOSTAŁA ZATRZYMANA</span>
-        <h1>Bezpieczeństwo ma pierwszeństwo przed symetrią.</h1>
-        <p>Na podstawie prywatnych odpowiedzi ten proces nie powinien teraz ujawniać stanowisk ani prowadzić wspólnej konfrontacji. Twoje odpowiedzi nie zostaną pokazane partnerowi.</p>
-        <p>Jeżeli istnieje realne zagrożenie życia lub zdrowia, skorzystaj z pomocy odpowiednich służb lub profesjonalnego wsparcia w bezpiecznych warunkach.</p>
-        <button className="couple-secondary" type="button" onClick={restart}>Zacznij nową analizę od początku</button>
-        <a className="couple-primary link" href="/">Wróć do strony głównej</a>
-      </section>
-    </main>
-  );
+  function restart() { localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(INVITE_KEY); window.history.replaceState({}, "", "/dla-par"); window.location.reload(); }
+  return <main className="couple-stage-wrap"><section className="couple-safety-stop"><span className="couple-kicker">WSPÓLNA KONFRONTACJA ZOSTAŁA ZATRZYMANA</span><h1>Bezpieczeństwo ma pierwszeństwo przed symetrią.</h1><p>Na podstawie prywatnych odpowiedzi ten proces nie powinien teraz ujawniać stanowisk ani prowadzić wspólnej konfrontacji. Twoje odpowiedzi nie zostaną pokazane partnerowi.</p><p>Jeżeli istnieje realne zagrożenie życia lub zdrowia, skorzystaj z pomocy odpowiednich służb lub profesjonalnego wsparcia w bezpiecznych warunkach.</p><div className="couple-actions"><button className="couple-secondary" type="button" onClick={restart}>Zacznij nową analizę od początku</button><a className="couple-primary link" href="/">Wróć do strony głównej <span>→</span></a></div></section></main>;
 }
 
 export function CoupleApp() {
@@ -601,11 +615,26 @@ export function CoupleApp() {
     if (!token || !state || state.safetyStopped || state.finalSynthesis) return;
     const waiting = ["WAITING_PARTNER", "WAITING_SHARE", "REVIEW_SHARE", "CROSS_REFLECTION"].includes(state.pairStatus);
     if (!waiting) return;
-    const timer = window.setInterval(() => {
-      fetchCoupleState(token).then(setState).catch(() => undefined);
-    }, 15000);
+    const timer = window.setInterval(() => { fetchCoupleState(token).then(setState).catch(() => undefined); }, 12000);
     return () => window.clearInterval(timer);
   }, [token, state?.pairStatus, state?.finalSynthesis, state?.safetyStopped]);
+
+  React.useEffect(() => {
+    if (!token) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("couple_payment") !== "success") return;
+    params.delete("couple_payment");
+    window.history.replaceState({}, "", `/dla-par${params.toString() ? `?${params.toString()}` : ""}#p=${encodeURIComponent(token)}`);
+    let attempts = 0;
+    const poll = window.setInterval(() => {
+      attempts += 1;
+      fetchCoupleState(token).then((next) => {
+        setState(next);
+        if (next.premium?.paid || attempts >= 15) window.clearInterval(poll);
+      }).catch(() => { if (attempts >= 15) window.clearInterval(poll); });
+    }, 2000);
+    return () => window.clearInterval(poll);
+  }, [token]);
 
   function started(nextToken: string, code?: string) {
     saveToken(nextToken); setToken(nextToken);
@@ -616,14 +645,14 @@ export function CoupleApp() {
     if (!token) return <Intro onCreated={started} />;
     if (loading || !state) return <main className="couple-loading"><div className="couple-loader"/><p>Otwieramy Twoją prywatną część…</p>{error && <span>{error}</span>}</main>;
     if (state.safetyStopped) return <SafetyStop />;
-
     const s = state.participant.status;
     if (s === "INTAKE") return <Intake token={token} state={state} inviteCode={state.participant.slot === "A" && !state.partner.joined ? inviteCode : ""} onState={setState} />;
     if (s === "REVIEW_SHARE" && !state.participant.shareApproved) return <ShareReview token={token} state={state} onState={setState} />;
-    if (s === "CROSS_REFLECTION" && !state.participant.reflectionSubmitted) return <CrossReflection token={token} state={state} onState={setState} />;
-    if (state.finalSynthesis) return <JointReport token={token} state={state} onState={setState} />;
+    if (state.freePreview && state.premium.available && !state.premium.paid) return <FreePreviewPremium state={state} onRefresh={() => fetchCoupleState(token).then(setState)} />;
+    if (s === "CROSS_REFLECTION" && state.premium.paid && !state.participant.reflectionSubmitted) return <CrossReflection token={token} state={state} onState={setState} />;
+    if (state.finalSynthesis && state.premium.paid) return <JointReport token={token} state={state} onState={setState} />;
     return <Waiting state={state} inviteCode={state.participant.slot === "A" ? inviteCode : ""} onRefresh={() => fetchCoupleState(token).then(setState)} />;
   }
 
-  return <div className="couple-shell"><Header />{renderFlow()}<footer className="couple-footer">CzyToMaSens · Dwa Spojrzenia <span>To narzędzie porządkuje dwie perspektywy. Nie zastępuje psychoterapii, diagnozy ani interwencji kryzysowej.</span></footer></div>;
+  return <div className="couple-shell"><div className="couple-ambient"/><Header />{renderFlow()}<footer className="couple-footer"><div><strong>CzyToMaSens · Dwa Spojrzenia</strong><span>Prowadzona analiza dwóch perspektyw.</span></div><p>Nie zastępuje psychoterapii, diagnozy ani interwencji kryzysowej. Nie wskazuje winnego i nie służy do oceniania partnera.</p></footer></div>;
 }

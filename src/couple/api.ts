@@ -14,11 +14,11 @@ function readApiBase(): string {
 
 const API_BASE = readApiBase();
 
-async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 60000): Promise<T> {
+async function requestJson<T>(url: string, options: RequestInit = {}, timeoutMs = 60000): Promise<T> {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(`${API_BASE}/api/couple${path}`, {
+    const response = await fetch(url, {
       ...options,
       signal: controller.signal,
       cache: "no-store",
@@ -36,17 +36,34 @@ async function request<T>(path: string, options: RequestInit = {}, timeoutMs = 6
   }
 }
 
+function request<T>(path: string, options: RequestInit = {}, timeoutMs = 60000): Promise<T> {
+  return requestJson<T>(`${API_BASE}/api/couple${path}`, options, timeoutMs);
+}
+
 export async function createCouple(displayName: string, consentAcceptedAt: string) {
   return request<{ ok: true; pairId: string; participantToken: string; inviteCode: string; state: CoupleState }>("/create", {
     method: "POST",
-    body: JSON.stringify({ displayName, consentAcceptedAt, consentVersion: "2026-08-12-couple-v1" }),
+    body: JSON.stringify({
+      displayName,
+      consentAcceptedAt,
+      consentVersion: "2026-08-12-couple-v2",
+      analysisConsent: true,
+      sensitiveDataConsent: true,
+    }),
   });
 }
 
 export async function joinCouple(inviteCode: string, displayName: string, consentAcceptedAt: string) {
   return request<{ ok: true; pairId: string; participantToken: string; state: CoupleState }>("/join", {
     method: "POST",
-    body: JSON.stringify({ inviteCode, displayName, consentAcceptedAt, consentVersion: "2026-08-12-couple-v1" }),
+    body: JSON.stringify({
+      inviteCode,
+      displayName,
+      consentAcceptedAt,
+      consentVersion: "2026-08-12-couple-v2",
+      analysisConsent: true,
+      sensitiveDataConsent: true,
+    }),
   });
 }
 
@@ -103,4 +120,21 @@ export async function submitExperimentCheckin(participantToken: string, experime
     body: JSON.stringify({ participantToken, experimentId, input }),
   }, 90000);
   return data.state;
+}
+
+export async function createCoupleCheckout(payload: {
+  billingSessionId: string;
+  email: string;
+  consentAcceptedAt: string;
+}) {
+  return requestJson<{ ok: true; checkoutUrl?: string; url?: string; amountGr: number }>(`${API_BASE}/api/create-checkout`, {
+    method: "POST",
+    body: JSON.stringify({
+      token: payload.billingSessionId,
+      email: payload.email,
+      consentAccepted: true,
+      consentAcceptedAt: payload.consentAcceptedAt,
+      consentVersion: "2026-07-31",
+    }),
+  }, 30000);
 }
