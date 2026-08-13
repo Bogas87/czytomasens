@@ -579,6 +579,12 @@ button.ctms-mode-card { width: 100%; cursor: pointer; font: inherit; }
 
 /* Safety / ratings czytelniejsze */
 .couple-safety-grid > label { font-size: 14px !important; }
+.couple-safety-grid > label > span {
+  color: var(--ctms-product-ink-soft) !important;
+  font-size: 12.5px !important;
+  line-height: 1.52 !important;
+  font-weight: 500 !important;
+}
 .couple-safety-grid button { font-size: 13px !important; }
 .couple-ratings label > span { font-size: 13.5px !important; }
 .couple-ratings strong { font-size: 16px !important; }
