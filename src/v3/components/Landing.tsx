@@ -45,28 +45,28 @@ const faqs = [
 
 export function Landing({ onStart }: { onStart: () => void }) {
   return (
-    <div className="ctms-landing">
-      <section className="ctms-hero ctms-hero-2031" aria-labelledby="ctms-hero-title">
+    <div className="ctms-landing ctms-landing-signature">
+      <section className="ctms-hero ctms-hero-signature" aria-labelledby="ctms-hero-title">
         <div className="ctms-hero-copy">
-          <Kicker>PRYWATNA PRZESTRZEŃ DO SPOKOJNEGO MYŚLENIA</Kicker>
+          <Kicker>PRYWATNA PRZESTRZEŃ DO MYŚLENIA</Kicker>
           <h1 id="ctms-hero-title">Co chcesz dziś <em>zrozumieć?</em></h1>
-          <p>
-            Bez etykietowania i bez udawania pewności. Najpierw porządkujemy to, co się wydarzyło,
-            co z tego wynika i czego nadal uczciwie nie wiadomo.
+          <p className="ctms-hero-lead">
+            Kiedy emocje mieszają fakty z domysłami, trudno zobaczyć własną sytuację wyraźnie.
+            Tutaj porządkujesz to spokojnie — bez oceniania i bez udawania pewności.
           </p>
 
           <div className="ctms-mode-choice" aria-label="Wybierz rodzaj analizy">
             <button className="ctms-mode-card ctms-mode-card-private" type="button" onClick={onStart}>
               <span className="ctms-mode-mark">DLA MNIE</span>
-              <strong>Chcę uporządkować własną perspektywę.</strong>
-              <p>Przechodzisz przez analizę samodzielnie. Pomaga oddzielić zdarzenia od interpretacji i zobaczyć, co rzeczywiście powtarza się w relacji.</p>
+              <strong>Chcę najpierw zrozumieć własną perspektywę.</strong>
+              <p>Przechodzisz przez analizę samodzielnie i sprawdzasz, co naprawdę dzieje się w relacji.</p>
               <span className="ctms-mode-link">Rozpocznij prywatnie <i aria-hidden="true">→</i></span>
             </button>
 
             <a className="ctms-mode-card ctms-mode-card-couple" href="/dla-par">
               <span className="ctms-mode-mark">DLA NAS</span>
-              <strong>Chcemy zobaczyć dwie perspektywy obok siebie.</strong>
-              <p>Każde z Was odpowiada osobno. Dopiero później spotykają się punkty wspólne, różnice i rzeczy nadal nierozstrzygnięte.</p>
+              <strong>Chcemy zobaczyć tę samą relację z dwóch stron.</strong>
+              <p>Każde z Was odpowiada osobno. Dopiero później spotykają się obie perspektywy.</p>
               <span className="ctms-mode-link">Rozpocznij dla dwojga <i aria-hidden="true">→</i></span>
             </a>
           </div>
@@ -77,12 +77,27 @@ export function Landing({ onStart }: { onStart: () => void }) {
             <span>pierwszy odczyt bezpłatny</span>
           </div>
         </div>
+
+        <figure className="ctms-hero-human">
+          <img
+            src="/v3-assets/couple-editorial-premium.webp"
+            alt="Dwie osoby stojące naprzeciw siebie w spokojnym, ciemnym wnętrzu"
+            loading="eager"
+            decoding="async"
+          />
+          <figcaption>
+            <span>RELACJA RZADKO MA TYLKO JEDNĄ WERSJĘ</span>
+            <strong>Nie szukamy winnego. Szukamy tego, co można zobaczyć wyraźniej.</strong>
+            <p>Fakt, interpretacja, emocja i niewiadoma nie muszą znaczyć tego samego.</p>
+          </figcaption>
+        </figure>
       </section>
 
       <section className="ctms-method" id="jak-dziala" aria-labelledby="ctms-method-title">
         <div className="ctms-method-heading">
-          <Kicker>JAK TO DZIAŁA</Kicker>
+          <Kicker>JAK PRACUJEMY</Kicker>
           <h2 id="ctms-method-title">Mniej etykiet. Więcej rzeczy, które można sprawdzić w realnym życiu.</h2>
+          <p>Nie próbujemy opisać całej relacji jednym słowem. Rozkładamy konkretną sytuację na części, które da się odróżnić.</p>
         </div>
         <div className="ctms-method-steps">
           <article className="ctms-method-step">
@@ -102,8 +117,11 @@ export function Landing({ onStart }: { onStart: () => void }) {
 
       <section className="ctms-reading-room" aria-labelledby="ctms-reading-room-title">
         <div className="ctms-reading-room-copy">
-          <Kicker>PRZYKŁAD</Kicker>
-          <h2 id="ctms-reading-room-title">Nie „on mnie ignoruje”. Najpierw: co naprawdę się wydarzyło?</h2>
+          <div className="ctms-reading-room-title">
+            <Kicker>NA KONKRECIE</Kicker>
+            <h2 id="ctms-reading-room-title">Zamiast „on mnie ignoruje” — najpierw zobacz, co naprawdę się wydarzyło.</h2>
+            <p>Jedno zdanie potrafi mieszać obserwację, znaczenie i przewidywanie. Rozdzielenie ich często zmienia sposób patrzenia na całą sytuację.</p>
+          </div>
           <dl>
             <div><dt>Zdarzenie</dt><dd>Kontakt wrócił dopiero po Twojej kolejnej wiadomości.</dd></div>
             <div><dt>Interpretacja</dt><dd>„Relacja utrzymuje się głównie dzięki mojej inicjatywie”.</dd></div>
@@ -116,8 +134,8 @@ export function Landing({ onStart }: { onStart: () => void }) {
       <Surface className="ctms-offer" id="raport">
         <div className="ctms-offer-intro">
           <Kicker>NAJPIERW WARTOŚĆ</Kicker>
-          <h2>Najpierw sprawdź, czy ten sposób myślenia Ci pomaga.</h2>
-          <p>Bezpłatny odczyt ma już porządkować sytuację. Pełny raport jest kolejnym poziomem pracy, nie opłatą za dokończenie zdania.</p>
+          <h2>Najpierw sprawdź, czy ten sposób myślenia naprawdę Ci pomaga.</h2>
+          <p>Bezpłatny odczyt ma już uporządkować sytuację. Pełny raport jest kolejnym poziomem pracy, nie opłatą za dokończenie zdania.</p>
         </div>
         <div className="ctms-offer-columns">
           <div className="ctms-offer-free">
