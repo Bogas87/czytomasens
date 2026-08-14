@@ -7,19 +7,16 @@ const articleLinks = [
     href: "/artykuly/czy-ten-zwiazek-ma-sens",
     title: "Czy ten związek ma jeszcze sens?",
     description: "Jak oddzielić pojedynczy kryzys od relacji, która od dawna nie daje Ci bezpieczeństwa.",
-    imageClass: "ctms-guide-image-couple",
   },
   {
     href: "/artykuly/czy-warto-ratowac-zwiazek",
     title: "Czy warto ratować związek?",
     description: "Kiedy wysiłek jest wspólną pracą, a kiedy próbą utrzymania relacji w pojedynkę.",
-    imageClass: "ctms-guide-image-two",
   },
   {
     href: "/artykuly/czy-ona-on-sie-mna-bawi",
     title: "Mieszane sygnały w relacji",
     description: "Co naprawdę wynika z kontaktu, w którym bliskość przeplata się z dystansem.",
-    imageClass: "ctms-guide-image-three",
   },
 ];
 
@@ -49,26 +46,21 @@ const faqs = [
 export function Landing({ onStart }: { onStart: () => void }) {
   return (
     <div className="ctms-landing">
-      <section className="ctms-hero" aria-labelledby="ctms-hero-title">
-        <div className="ctms-hero-vase" aria-hidden="true" />
-
+      <section className="ctms-hero ctms-hero-2031" aria-labelledby="ctms-hero-title">
         <div className="ctms-hero-copy">
-          <Kicker>DWA SPOSOBY · JEDEN CEL</Kicker>
-          <h1 id="ctms-hero-title">
-            Zobacz, co <em>naprawdę</em><br />dzieje się między Wami.
-          </h1>
+          <Kicker>PRYWATNA PRZESTRZEŃ DO MYŚLENIA</Kicker>
+          <h1 id="ctms-hero-title">Co chcesz dziś <em>zrozumieć?</em></h1>
           <p>
-            Czasem potrzebujesz najpierw uporządkować własną perspektywę. Czasem warto zobaczyć,
-            jak tę samą relację opisuje druga osoba. Wybierz sposób, który odpowiada temu,
-            czego potrzebujesz dzisiaj.
+            Nie szukamy winnego i nie stawiamy diagnoz. Porządkujemy to, co się wydarzyło,
+            co z tego wynika i czego nadal nie da się uczciwie rozstrzygnąć.
           </p>
 
           <div className="ctms-mode-choice" aria-label="Wybierz rodzaj analizy">
             <button className="ctms-mode-card ctms-mode-card-private" type="button" onClick={onStart}>
               <span className="ctms-mode-mark">DLA MNIE</span>
               <span className="ctms-mode-eyebrow">PRYWATNA ANALIZA</span>
-              <strong>Najpierw uporządkuj własną perspektywę.</strong>
-              <p>Pracujesz samodzielnie. Oddzielasz zdarzenia od interpretacji i sprawdzasz, czego nadal nie wiesz.</p>
+              <strong>Najpierw zobacz własną sytuację wyraźniej.</strong>
+              <p>Pracujesz samodzielnie. Oddzielasz zdarzenia od interpretacji i sprawdzasz, co naprawdę powtarza się w relacji.</p>
               <span className="ctms-mode-link">Rozpocznij prywatnie <i aria-hidden="true">→</i></span>
             </button>
 
@@ -76,119 +68,105 @@ export function Landing({ onStart }: { onStart: () => void }) {
               <span className="ctms-mode-mark">DLA DWOJGA</span>
               <span className="ctms-mode-eyebrow">DWA SPOJRZENIA</span>
               <strong>Zobaczcie tę samą relację z dwóch stron.</strong>
-              <p>Każde z Was odpowiada osobno. Wspólna część pokazuje miejsca zgodne, różne i nadal nierozstrzygnięte.</p>
+              <p>Każde z Was odpowiada osobno. Dopiero później spotykają się punkty wspólne, różnice i rzeczy nadal nierozstrzygnięte.</p>
               <span className="ctms-mode-link">Rozpocznij dla dwojga <i aria-hidden="true">→</i></span>
             </a>
           </div>
 
-          <div className="ctms-hero-proof" aria-label="Informacje o analizie">
+          <div className="ctms-hero-proof" aria-label="Najważniejsze zasady">
             <div><strong>Bez publicznego profilu</strong><span>Twoja historia nie jest publikowana.</span></div>
             <div><strong>Bez rejestracji</strong><span>Zaczynasz bez tworzenia konta.</span></div>
-            <div><strong>Najpierw bezpłatny odczyt</strong><span>Pełny raport jest opcjonalny.</span></div>
+            <div><strong>Najpierw wartość</strong><span>Pierwszy odczyt jest bezpłatny.</span></div>
           </div>
         </div>
 
-        <div className="ctms-hero-visual" aria-label="Przykładowy fragment analizy">
-          <div className="ctms-report-peek">
-            <div className="ctms-report-peek-content">
-              <div className="ctms-report-peek-head">
-                <div>
-                  <span>PRZYKŁADOWY SPOSÓB MYŚLENIA</span>
-                  <strong>Nie etykieta. Najpierw to, co da się sprawdzić.</strong>
-                </div>
-                <i aria-hidden="true">01</i>
-              </div>
-              <div className="ctms-peek-row ctms-peek-row-icon">
-                <b aria-hidden="true">Z</b>
-                <div><span>ZDARZENIE</span><p>Kontakt wrócił dopiero po Twojej kolejnej wiadomości.</p></div>
-              </div>
-              <div className="ctms-peek-row ctms-peek-row-icon">
-                <b aria-hidden="true">I</b>
-                <div><span>INTERPRETACJA</span><p>„Relacja utrzymuje się głównie dzięki mojej inicjatywie”.</p></div>
-              </div>
-              <div className="ctms-peek-row ctms-peek-row-icon">
-                <b aria-hidden="true">N</b>
-                <div><span>NAJWIĘKSZA NIEWIADOMA</span><p>Czy to stały brak inicjatywy, czy reakcja na konkretny konflikt?</p></div>
-              </div>
-              <div className="ctms-peek-verdict">
-                <b aria-hidden="true">?</b>
-                <div><span>CO SPRAWDZIĆ DALEJ</span><strong>Czy własny ruch pojawi się bez kolejnego impulsu z Twojej strony.</strong></div>
-              </div>
-            </div>
-            <div className="ctms-report-peek-image" aria-hidden="true" />
+        <aside className="ctms-hero-editorial" aria-label="O czym jest CzyToMaSens">
+          <div className="ctms-hero-editorial-image" aria-hidden="true" />
+          <div className="ctms-hero-editorial-copy">
+            <span>JEDNA RELACJA · WIELE ZNACZEŃ</span>
+            <blockquote>Nie chodzi o to, kto ma rację. Chodzi o to, co naprawdę dzieje się między ludźmi.</blockquote>
+            <p>CzyToMaSens pomaga oddzielić zachowanie od dopowiedzenia i emocję od faktu — bez odbierania znaczenia żadnej z tych rzeczy.</p>
           </div>
-        </div>
+        </aside>
       </section>
 
       <section className="ctms-method" id="jak-dziala" aria-labelledby="ctms-method-title">
         <div className="ctms-method-heading">
-          <Kicker>JAK TO DZIAŁA</Kicker>
-          <h2 id="ctms-method-title">Od emocjonalnego chaosu do rzeczy, które można sprawdzić w realnym życiu.</h2>
+          <Kicker>JAK PRACUJEMY</Kicker>
+          <h2 id="ctms-method-title">Mniej etykiet. Więcej rzeczy, które można sprawdzić w realnym życiu.</h2>
         </div>
         <div className="ctms-method-steps">
           <article className="ctms-method-step">
             <span className="ctms-method-number">01</span>
-            <i aria-hidden="true">≋</i>
-            <div><h3>Konkretny materiał</h3><p>Zachowania, słowa, kolejność zdarzeń i częstotliwość — bez etykiet.</p></div>
+            <div><h3>Zdarzenie</h3><p>Co dokładnie się wydarzyło, w jakiej kolejności i jak często wraca.</p></div>
           </article>
           <article className="ctms-method-step">
             <span className="ctms-method-number">02</span>
-            <i aria-hidden="true">⇄</i>
-            <div><h3>Więcej niż jedna wersja</h3><p>Sprawdzamy nie tylko pierwszy wniosek, ale również to, co może go osłabiać albo zmieniać.</p></div>
+            <div><h3>Znaczenie</h3><p>Co temu nadajesz, co temu przeczy i czego nadal zwyczajnie nie wiadomo.</p></div>
           </article>
           <article className="ctms-method-step">
             <span className="ctms-method-number">03</span>
-            <i aria-hidden="true">◎</i>
-            <div><h3>Kryterium sprawdzenia</h3><p>Konkretne zachowanie, które potwierdzi zmianę albo pokaże powrót wzorca.</p></div>
+            <div><h3>Sprawdzenie</h3><p>Jakie konkretne zachowanie pokaże zmianę albo powrót starego wzorca.</p></div>
           </article>
         </div>
       </section>
 
-      <Surface className="ctms-offer" id="raport">
-        <div className="ctms-offer-free">
-
-          <Kicker>BEZPŁATNY PIERWSZY ODCZYT</Kicker>
-          <h2>Najpierw zobacz, czy to wnosi coś do Twojego myślenia.</h2>
-          <p>Krótki raport ma dać realną wartość, nie tylko zachęcić do zakupu. Dopiero później decydujesz, czy potrzebujesz pełniejszego obrazu.</p>
-          <ul className="ctms-offer-list">
-            <li>sedno sytuacji i główny sygnał;</li>
-            <li>najważniejsza niewiadoma;</li>
-            <li>jedno kryterium sprawdzenia;</li>
-            <li>pierwszy fragment uporządkowanej mapy.</li>
-          </ul>
+      <section className="ctms-reading-room" aria-labelledby="ctms-reading-room-title">
+        <div className="ctms-reading-room-visual" aria-hidden="true" />
+        <div className="ctms-reading-room-copy">
+          <Kicker>PRZYKŁADOWY SPOSÓB MYŚLENIA</Kicker>
+          <h2 id="ctms-reading-room-title">Nie „on mnie ignoruje”. Najpierw: co naprawdę się wydarzyło?</h2>
+          <dl>
+            <div><dt>Zdarzenie</dt><dd>Kontakt wrócił dopiero po Twojej kolejnej wiadomości.</dd></div>
+            <div><dt>Interpretacja</dt><dd>„Relacja utrzymuje się głównie dzięki mojej inicjatywie”.</dd></div>
+            <div><dt>Niewiadoma</dt><dd>Czy to stały brak inicjatywy, czy reakcja na konkretny konflikt?</dd></div>
+            <div><dt>Co sprawdzić</dt><dd>Czy własny ruch pojawi się bez kolejnego impulsu z Twojej strony.</dd></div>
+          </dl>
         </div>
+      </section>
 
-        <div className="ctms-offer-vs" aria-hidden="true">VS</div>
-
-        <div className="ctms-offer-premium">
-
-          <div className="ctms-offer-price"><span>PEŁNY RAPORT</span></div>
-          <h2>Pełniejszy obraz wtedy, kiedy chcesz wejść głębiej.</h2>
-          <p>Więcej kontekstu, kontrhipotezy, granice, obszary niepewności i dalszy sposób sprawdzania sytuacji w zachowaniu.</p>
-          <ul className="ctms-offer-list ctms-offer-list-premium">
-            <li>co wspiera Twój obecny odczyt;</li>
-            <li>co może go osłabić;</li>
-            <li>gdzie kończy się fakt, a zaczyna dopowiedzenie;</li>
-            <li>co sprawdzić w zachowaniu, nie w deklaracjach.</li>
-          </ul>
+      <Surface className="ctms-offer" id="raport">
+        <div className="ctms-offer-intro">
+          <Kicker>NAJPIERW SPRAWDŹ, CZY TO CI POMAGA</Kicker>
+          <h2>Bez sztucznego niedosytu.</h2>
+          <p>Bezpłatny odczyt ma już porządkować sytuację. Pełny raport jest kolejnym poziomem pracy, nie opłatą za zakończenie zdania.</p>
+        </div>
+        <div className="ctms-offer-columns">
+          <div className="ctms-offer-free">
+            <span className="ctms-offer-label">PIERWSZY ODCZYT</span>
+            <h3>Krótko, ale konkretnie.</h3>
+            <ul className="ctms-offer-list">
+              <li>sedno sytuacji i główny sygnał;</li>
+              <li>najważniejsza niewiadoma;</li>
+              <li>jedno kryterium sprawdzenia;</li>
+              <li>pierwszy fragment uporządkowanej mapy.</li>
+            </ul>
+          </div>
+          <div className="ctms-offer-premium">
+            <span className="ctms-offer-label">PEŁNY RAPORT</span>
+            <h3>Głębiej, kiedy tego potrzebujesz.</h3>
+            <ul className="ctms-offer-list ctms-offer-list-premium">
+              <li>co wspiera Twój obecny odczyt;</li>
+              <li>co może go osłabić;</li>
+              <li>gdzie kończy się fakt, a zaczyna dopowiedzenie;</li>
+              <li>co sprawdzić w zachowaniu, nie w deklaracjach.</li>
+            </ul>
+          </div>
         </div>
       </Surface>
 
       <section className="ctms-guides" aria-labelledby="ctms-guides-title">
         <div className="ctms-section-head">
-          <Kicker>PORADNIKI</Kicker>
-          <h2 id="ctms-guides-title">Materiały do spokojnego uporządkowania najczęstszych dylematów.</h2>
+          <Kicker>BIBLIOTEKA RELACJI</Kicker>
+          <h2 id="ctms-guides-title">Teksty do spokojnego myślenia, nie gotowe recepty.</h2>
         </div>
-        <div className="ctms-guides-grid">
+        <div className="ctms-guides-grid ctms-guides-grid-editorial">
           {articleLinks.map((article, index) => (
             <a key={article.href} href={article.href}>
-              <span className={`ctms-guide-image ${article.imageClass}`} aria-hidden="true" />
-              <div className="ctms-guide-body">
-                <span className="ctms-guide-index">0{index + 1}</span>
-                <h3>{article.title}</h3>
-                <p>{article.description}</p>
-                <span className="ctms-guide-link">Czytaj artykuł <i aria-hidden="true">→</i></span>
-              </div>
+              <span className="ctms-guide-index">0{index + 1}</span>
+              <h3>{article.title}</h3>
+              <p>{article.description}</p>
+              <span className="ctms-guide-link">Czytaj <i aria-hidden="true">→</i></span>
             </a>
           ))}
         </div>
