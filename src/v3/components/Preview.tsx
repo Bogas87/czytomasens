@@ -16,14 +16,14 @@ export function FreePreview({
   onPremium: () => void;
 }) {
   return (
-    <div className="ctms-preview">
+    <div className="ctms-preview ctms-preview-prestige">
       <Surface className="ctms-preview-hero">
         <div className="ctms-preview-hero-copy">
           <Kicker>TWÓJ PIERWSZY ODCZYT</Kicker>
-          <h1>Pierwszy odczyt.</h1>
+          <h1>Pierwszy wgląd.<br /><em>Więcej jasności.</em></h1>
           <p>
-            To wstępny obraz Twojej sytuacji oparty wyłącznie na informacjach, które podałeś. Nie jest wyrokiem ani etykietą —
-            pokazuje, co wynika z opisanego materiału i czego nadal nie można rozstrzygnąć.
+            To skrócony obraz oparty wyłącznie na materiale, który podałeś. Nie jest wyrokiem ani etykietą —
+            pokazuje, co dziś wynika z opisu i czego nadal nie można rozstrzygnąć.
           </p>
           <div className="ctms-confidence">
             <span>PEWNOŚĆ ODCZYTU</span>
@@ -31,7 +31,7 @@ export function FreePreview({
           </div>
         </div>
         <aside className="ctms-preview-signal">
-          <span>TWÓJ GŁÓWNY SYGNAŁ</span>
+          <span>GŁÓWNY SYGNAŁ</span>
           <p>{preview.headline}</p>
         </aside>
       </Surface>
@@ -45,28 +45,32 @@ export function FreePreview({
       )}
 
       <Surface className="ctms-preview-essence">
-        <span className="ctms-preview-essence-icon" aria-hidden="true">✦</span>
+        <div className="ctms-preview-essence-mark" aria-hidden="true">01</div>
         <div>
-          <Kicker>KLUCZOWY WNIOSEK</Kicker>
+          <Kicker>SEDNO ODCZYTU</Kicker>
           <p>{preview.essence}</p>
         </div>
       </Surface>
 
       <section className="ctms-reading-grid ctms-reading-grid-four">
         <article>
-          <span>01 · Główny sygnał</span>
+          <span>01 · ZDARZENIE / SYGNAŁ</span>
+          <h3>Co dziś widać?</h3>
           <p>{preview.observedSignal}</p>
         </article>
         <article>
-          <span>02 · Największa niewiadoma</span>
+          <span>02 · NAJWIĘKSZA NIEWIADOMA</span>
+          <h3>Czego jeszcze nie wiemy?</h3>
           <p>{preview.unknown}</p>
         </article>
         <article className="ctms-reading-verify">
-          <span>03 · Co może zmienić ocenę</span>
+          <span>03 · CO MOŻE ZMIENIĆ OCENĘ</span>
+          <h3>Co warto sprawdzić?</h3>
           <p>{preview.verify}</p>
         </article>
         <article className="ctms-reading-confidence">
-          <span>04 · Co dziś wiemy</span>
+          <span>04 · PEWNOŚĆ ODCZYTU</span>
+          <h3>Jak mocny jest dziś wniosek?</h3>
           <p>{confidenceLabel(preview.confidence)}</p>
         </article>
       </section>
@@ -89,24 +93,22 @@ export function FreePreview({
         </Surface>
       )}
 
-      <Surface className="ctms-premium-offer">
+      <Surface className="ctms-premium-offer ctms-premium-teaser">
         <div>
           <Kicker>PEŁNIEJSZY OBRAZ</Kicker>
-          <h2>Ten odczyt pokazuje kierunek. Pełny raport pokazuje mechanizm, koszt i warunki realnej zmiany.</h2>
+          <h2>Ten odczyt pokazuje kierunek. Pełny raport pokazuje mechanizm, kontrhipotezę i warunki realnej zmiany.</h2>
           <p>{preview.premiumPromise}</p>
         </div>
-        <ul>
-          <li>pełna Mapa Rozbieżności;</li>
-          <li>hipoteza główna i najmocniejsza kontrhipoteza;</li>
-          <li>Profil Obciążenia i możliwy ślepy punkt;</li>
-          <li>Rejestr Granic i kryterium realnej poprawy;</li>
-          <li>bezpieczny protokół sprawdzania rzeczywistości;</li>
-          <li>prywatny link do późniejszego powrotu.</li>
-        </ul>
-        <PrimaryButton onClick={onPremium}>Zobacz pełniejszy obraz</PrimaryButton>
-        <p className="ctms-payment-note">
-          Pełny raport jest opcjonalny. Płatność jednorazowa — bez subskrypcji i automatycznych odnowień.
-        </p>
+        <div className="ctms-premium-teaser-grid">
+          <span>pełna mapa rozbieżności</span>
+          <span>hipoteza i kontrhipoteza</span>
+          <span>możliwy ślepy punkt</span>
+          <span>warunki zmiany oceny</span>
+          <span>granice i kryteria</span>
+          <span>protokół sprawdzenia</span>
+        </div>
+        <PrimaryButton onClick={onPremium}>Przejdź do pełnego raportu</PrimaryButton>
+        <p className="ctms-payment-note">Pełny raport jest opcjonalny. Płatność jest jednorazowa — bez subskrypcji i automatycznych odnowień.</p>
       </Surface>
     </div>
   );

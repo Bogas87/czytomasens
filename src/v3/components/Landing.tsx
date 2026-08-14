@@ -2,203 +2,213 @@ import React from "react";
 import { Kicker } from "./Layout";
 import "../../shared/product-consolidation.css";
 
-const articleLinks = [
+const articles = [
   {
     href: "/artykuly/czy-ten-zwiazek-ma-sens",
+    tag: "RELACJE",
     title: "Czy ten związek ma jeszcze sens?",
-    description: "Jak oddzielić pojedynczy kryzys od relacji, która od dawna nie daje Ci bezpieczeństwa.",
+    text: "Jak odróżnić chwilowy kryzys od wzorca, który naprawdę wymaga uwagi.",
   },
   {
     href: "/artykuly/czy-warto-ratowac-zwiazek",
-    title: "Czy warto ratować związek?",
-    description: "Kiedy wysiłek jest wspólną pracą, a kiedy próbą utrzymania relacji w pojedynkę.",
+    tag: "DECYZJE",
+    title: "Kiedy warto próbować dalej?",
+    text: "Co powinno być widoczne w zachowaniu, a nie tylko w deklaracjach.",
   },
   {
     href: "/artykuly/czy-ona-on-sie-mna-bawi",
-    title: "Mieszane sygnały w relacji",
-    description: "Co naprawdę wynika z kontaktu, w którym bliskość przeplata się z dystansem.",
+    tag: "SYGNAŁY",
+    title: "Bliskość, dystans i mieszane sygnały",
+    text: "Jak nie dopowiadać historii tam, gdzie nadal brakuje danych.",
   },
 ];
 
 const faqs = [
   {
     question: "Czy dostanę prostą odpowiedź: zostać czy odejść?",
-    answer: "Nie. Dostaniesz uporządkowany obraz sytuacji i konkretne rzeczy, które warto jeszcze sprawdzić. Decyzja pozostaje po Twojej stronie.",
+    answer: "Nie. Dostajesz uporządkowany materiał, główne hipotezy, niewiadome i kryteria, które można sprawdzić w zachowaniu. Decyzja pozostaje po Twojej stronie.",
   },
   {
-    question: "Czy analiza ocenia albo diagnozuje drugą osobę?",
-    answer: "Nie. Pracujemy na zdarzeniach, zachowaniach, interpretacjach, emocjach i niewiadomych. Nie przypisujemy drugiej osobie diagnozy ani intencji jako faktu.",
+    question: "Czy analiza diagnozuje drugą osobę?",
+    answer: "Nie. Pracuje na zdarzeniach, zachowaniach, znaczeniach i niewiadomych. Nie przypisuje drugiej osobie diagnozy ani intencji jako faktu.",
   },
   {
-    question: "Czym różni się analiza prywatna od Dwóch Spojrzeń?",
-    answer: "W analizie prywatnej porządkujesz własną perspektywę. W Dwóch Spojrzeniach każde z Was odpowiada osobno, a później zestawiane są punkty wspólne, różnice i rzeczy nadal nierozstrzygnięte. Surowe odpowiedzi pozostają prywatne.",
+    question: "Czym różnią się dwie ścieżki?",
+    answer: "W jednej pracujesz nad własnym materiałem. W drugiej dwie osoby odpowiadają osobno, a później zestawiane są punkty wspólne, różnice i rzeczy nadal nierozstrzygnięte.",
   },
   {
-    question: "Czy muszę podawać dane drugiej osoby?",
-    answer: "Nie. Nie wpisuj nazwisk, adresów, numerów telefonu ani innych danych identyfikujących. Do analizy wystarcza opis sytuacji własnymi słowami.",
+    question: "Czy surowe odpowiedzi są pokazywane drugiej osobie?",
+    answer: "Nie. W ścieżce dla dwojga surowe odpowiedzi pozostają prywatne. Do części wspólnej trafia dopiero uporządkowany materiał przeznaczony do pokazania.",
   },
 ];
 
 export function Landing({ onStart }: { onStart: () => void }) {
   return (
-    <div className="ctms-landing ctms-landing-atelier">
-      <section className="ctms-hero ctms-hero-atelier" aria-labelledby="ctms-hero-title">
-        <div className="ctms-hero-copy">
-          <Kicker>PRYWATNA PRZESTRZEŃ DO MYŚLENIA</Kicker>
-          <h1 id="ctms-hero-title"><span>Co chcesz</span><br />dziś <em>zrozumieć?</em></h1>
-          <p className="ctms-hero-lead">
-            Kiedy emocje mieszają fakty z domysłami, łatwo zgubić własny punkt widzenia.
-            Tutaj porządkujesz sytuację spokojnie — bez oceniania i bez udawania pewności.
+    <div className="ctms-landing ctms-prestige-home">
+      <section className="ctms-prestige-hero" aria-labelledby="ctms-hero-title">
+        <div className="ctms-prestige-hero-copy">
+          <Kicker>ZRÓB MIEJSCE NA JAŚNIEJSZY OBRAZ</Kicker>
+          <h1 id="ctms-hero-title">
+            Zrozum swoją sytuację.<br />
+            <em>Zobacz więcej.</em> Podejmuj spokojniej.
+          </h1>
+          <p>
+            Uporządkuj fakty, znaczenia i niewiadome. Bez etykiet, bez zgadywania cudzych intencji
+            i bez udawania pewności tam, gdzie jej nie ma.
           </p>
 
-          <div className="ctms-mode-choice ctms-mode-choice-atelier" aria-label="Wybierz rodzaj analizy">
-            <button className="ctms-mode-card ctms-mode-card-private" type="button" onClick={onStart}>
-              <span className="ctms-mode-mark">DLA MNIE</span>
-              <strong>Najpierw chcę zrozumieć własną perspektywę.</strong>
-              <p>Prywatna analiza jednej historii. Bez udziału drugiej osoby.</p>
-              <span className="ctms-mode-link">Rozpocznij prywatnie <i aria-hidden="true">→</i></span>
+          <div className="ctms-path-gallery" aria-label="Wybierz sposób analizy">
+            <button type="button" className="ctms-path-panel ctms-path-panel-solo" onClick={onStart}>
+              <span className="ctms-path-symbol" aria-hidden="true">01</span>
+              <span className="ctms-path-label">DLA MNIE</span>
+              <strong>Chcę uporządkować własny obraz sytuacji.</strong>
+              <p>Przejdź przez pytania, zobacz najważniejsze sygnały i sprawdź, czego nadal nie wiadomo.</p>
+              <span className="ctms-path-cta">Rozpocznij tę ścieżkę <i aria-hidden="true">→</i></span>
             </button>
 
-            <a className="ctms-mode-card ctms-mode-card-couple" href="/dla-par">
-              <span className="ctms-mode-mark">DLA NAS</span>
-              <strong>Chcemy zobaczyć tę samą relację z dwóch stron.</strong>
-              <p>Każde z Was odpowiada osobno. Surowe odpowiedzi pozostają prywatne.</p>
-              <span className="ctms-mode-link">Rozpocznij dla dwojga <i aria-hidden="true">→</i></span>
+            <a className="ctms-path-panel ctms-path-panel-pair" href="/dla-par">
+              <span className="ctms-path-symbol" aria-hidden="true">02</span>
+              <span className="ctms-path-label">DLA NAS</span>
+              <strong>Chcemy zestawić dwie perspektywy.</strong>
+              <p>Każda osoba odpowiada osobno. Później widać to, co wspólne, różne i nadal nierozstrzygnięte.</p>
+              <span className="ctms-path-cta">Rozpocznij tę ścieżkę <i aria-hidden="true">→</i></span>
             </a>
           </div>
 
-          <div className="ctms-trustline" aria-label="Najważniejsze zasady">
-            <span>bez publicznego profilu</span>
+          <div className="ctms-prestige-trustline">
             <span>bez rejestracji</span>
+            <span>prywatne surowe odpowiedzi</span>
             <span>pierwszy odczyt bezpłatny</span>
           </div>
         </div>
 
-        <figure className="ctms-hero-human ctms-hero-human-atelier">
+        <figure className="ctms-prestige-hero-visual">
           <img
             src="/v3-assets/couple-editorial-premium.webp"
-            alt="Dwie osoby stojące naprzeciw siebie w spokojnym, ciemnym wnętrzu"
+            alt="Dwie osoby w spokojnym, wieczornym wnętrzu"
             loading="eager"
             decoding="async"
           />
-          <div className="ctms-hero-photo-wash" aria-hidden="true" />
+          <div className="ctms-prestige-hero-shade" aria-hidden="true" />
           <figcaption>
             <span>RELACJA RZADKO MA TYLKO JEDNĄ WERSJĘ</span>
-            <strong>Nie szukamy winnego. Szukamy tego, co można zobaczyć wyraźniej.</strong>
-            <p>Fakt, znaczenie, emocja i niewiadoma to nie to samo.</p>
+            <strong>Nie szukamy winnego. Szukamy materiału, który można zobaczyć wyraźniej.</strong>
           </figcaption>
         </figure>
       </section>
 
-      <section className="ctms-manifesto" aria-label="Zasada CzyToMaSens">
-        <span className="ctms-manifesto-index">01</span>
-        <p>Najpierw <em>zobacz</em>. Potem nazwij. Dopiero na końcu decyduj.</p>
-      </section>
+      <section className="ctms-prestige-method" id="jak-dziala" aria-labelledby="ctms-method-title">
+        <div className="ctms-prestige-method-intro">
+          <Kicker>NASZE PODEJŚCIE</Kicker>
+          <h2 id="ctms-method-title">Nie zaczynamy od oceny. Zaczynamy od porządku.</h2>
+          <p>Każdy etap ma jeden cel: oddzielić to, co się wydarzyło, od tego, co temu przypisujesz i czego jeszcze nie można rozstrzygnąć.</p>
+        </div>
 
-      <section className="ctms-method ctms-method-atelier" id="jak-dziala" aria-labelledby="ctms-method-title">
-        <div className="ctms-method-heading">
-          <Kicker>JAK PRACUJEMY</Kicker>
-          <h2 id="ctms-method-title">Mniej etykiet. Więcej rzeczy, które da się sprawdzić.</h2>
-          <p>Jedna sytuacja może wyglądać inaczej, kiedy oddzielisz to, co się wydarzyło, od tego, co temu przypisujesz.</p>
-        </div>
-        <div className="ctms-method-steps">
-          <article className="ctms-method-step">
-            <span className="ctms-method-number">01</span>
-            <div><h3>Zdarzenie</h3><p>Co dokładnie się wydarzyło, w jakiej kolejności i jak często wraca.</p></div>
+        <div className="ctms-prestige-method-flow">
+          <article>
+            <span>01</span>
+            <h3>Opowiadasz</h3>
+            <p>Wybierasz odpowiedzi i opisujesz konkretne sytuacje własnymi słowami.</p>
           </article>
-          <article className="ctms-method-step">
-            <span className="ctms-method-number">02</span>
-            <div><h3>Znaczenie</h3><p>Co temu nadajesz, co temu przeczy i czego nadal po prostu nie wiadomo.</p></div>
+          <article>
+            <span>02</span>
+            <h3>Porządkujemy</h3>
+            <p>Oddzielamy zdarzenia, znaczenia, emocje, sprzeczności i brakujące dane.</p>
           </article>
-          <article className="ctms-method-step">
-            <span className="ctms-method-number">03</span>
-            <div><h3>Sprawdzenie</h3><p>Jakie zachowanie pokaże zmianę albo powrót starego wzorca.</p></div>
+          <article>
+            <span>03</span>
+            <h3>Otrzymujesz odczyt</h3>
+            <p>Widzisz, co dziś wynika z materiału i które wnioski nadal wymagają ostrożności.</p>
           </article>
-        </div>
-      </section>
-
-      <section className="ctms-reading-room ctms-reading-room-atelier" aria-labelledby="ctms-reading-room-title">
-        <div className="ctms-reading-room-visual" aria-hidden="true">
-          <span className="ctms-orbit ctms-orbit-one" />
-          <span className="ctms-orbit ctms-orbit-two" />
-          <b>fakt</b>
-          <i>znaczenie</i>
-        </div>
-        <div className="ctms-reading-room-copy">
-          <Kicker>NA KONKRECIE</Kicker>
-          <h2 id="ctms-reading-room-title">„On mnie ignoruje” to wniosek. Najpierw zobaczmy, co naprawdę się wydarzyło.</h2>
-          <p>Jedno zdanie potrafi mieszać obserwację, interpretację i przewidywanie. Rozdzielenie ich często zmienia obraz całej sytuacji.</p>
-          <dl>
-            <div><dt>Zdarzenie</dt><dd>Kontakt wrócił dopiero po Twojej kolejnej wiadomości.</dd></div>
-            <div><dt>Interpretacja</dt><dd>„Relacja utrzymuje się głównie dzięki mojej inicjatywie”.</dd></div>
-            <div><dt>Niewiadoma</dt><dd>Czy to stały brak inicjatywy, czy reakcja na konkretny konflikt?</dd></div>
-            <div><dt>Co sprawdzić</dt><dd>Czy własny ruch pojawi się bez kolejnego impulsu z Twojej strony.</dd></div>
-          </dl>
+          <article>
+            <span>04</span>
+            <h3>Sprawdzasz w życiu</h3>
+            <p>Najważniejsze hipotezy dostają konkretne kryteria weryfikacji w zachowaniu.</p>
+          </article>
         </div>
       </section>
 
-      <section className="ctms-offer ctms-offer-atelier" id="raport" aria-labelledby="ctms-offer-title">
-        <div className="ctms-offer-intro">
+      <section className="ctms-prestige-dossier" aria-labelledby="ctms-dossier-title">
+        <div className="ctms-prestige-dossier-copy">
+          <Kicker>PRZYKŁAD ODCZYTU</Kicker>
+          <h2 id="ctms-dossier-title">Zamiast „on mnie ignoruje” — najpierw zobacz, co naprawdę się wydarzyło.</h2>
+          <p>Jedno zdanie może mieszać obserwację, interpretację i przewidywanie. Rozdzielenie ich często zmienia obraz całej sytuacji.</p>
+        </div>
+        <div className="ctms-prestige-dossier-sheet">
+          <div><span>ZDARZENIE</span><p>Kontakt wrócił dopiero po kolejnej wiadomości.</p></div>
+          <div><span>INTERPRETACJA</span><p>„Relacja utrzymuje się głównie dzięki mojej inicjatywie”.</p></div>
+          <div><span>NAJWIĘKSZA NIEWIADOMA</span><p>Czy to stały brak inicjatywy, czy reakcja na konkretny konflikt?</p></div>
+          <div><span>CO SPRAWDZIĆ DALEJ</span><p>Czy własny ruch pojawi się bez kolejnego impulsu z drugiej strony.</p></div>
+        </div>
+      </section>
+
+      <section className="ctms-prestige-value" id="raport" aria-labelledby="ctms-value-title">
+        <div className="ctms-prestige-value-head">
           <Kicker>NAJPIERW WARTOŚĆ</Kicker>
-          <h2 id="ctms-offer-title">Sprawdź, czy ten sposób myślenia naprawdę Ci pomaga.</h2>
-          <p>Pierwszy odczyt ma już uporządkować sytuację. Pełny raport jest kolejnym poziomem pracy, nie opłatą za dokończenie zdania.</p>
+          <h2 id="ctms-value-title">Pierwszy odczyt ma już coś wyjaśnić. Pełny raport ma wejść głębiej.</h2>
         </div>
-        <div className="ctms-offer-columns">
-          <div className="ctms-offer-free">
-            <span className="ctms-offer-label">PIERWSZY ODCZYT</span>
-            <h3>Krótko, ale konkretnie.</h3>
-            <ul className="ctms-offer-list">
-              <li>sedno sytuacji i główny sygnał;</li>
+        <div className="ctms-prestige-value-grid">
+          <article>
+            <span>PIERWSZY ODCZYT</span>
+            <h3>Krótki, ale konkretny.</h3>
+            <ul>
+              <li>główny sygnał i sedno sytuacji;</li>
               <li>najważniejsza niewiadoma;</li>
-              <li>jedno kryterium sprawdzenia;</li>
+              <li>co może zmienić ocenę;</li>
               <li>pierwszy fragment uporządkowanej mapy.</li>
             </ul>
-          </div>
-          <div className="ctms-offer-premium">
-            <span className="ctms-offer-label">PEŁNY RAPORT</span>
-            <h3>Głębiej, kiedy tego potrzebujesz.</h3>
-            <ul className="ctms-offer-list">
-              <li>co wspiera Twój obecny odczyt;</li>
-              <li>co może go osłabić;</li>
-              <li>gdzie kończy się fakt, a zaczyna dopowiedzenie;</li>
-              <li>co sprawdzić w zachowaniu, nie w deklaracjach.</li>
+          </article>
+          <article>
+            <span>PEŁNY ODCZYT</span>
+            <h3>Głębia, która ma dać jasność.</h3>
+            <ul>
+              <li>pełny obraz materiału i rozbieżności;</li>
+              <li>hipoteza główna oraz kontrhipoteza;</li>
+              <li>możliwy ślepy punkt i warunki zmiany;</li>
+              <li>konkretne kryteria dalszego sprawdzenia.</li>
             </ul>
-          </div>
+          </article>
         </div>
       </section>
 
-      <section className="ctms-guides ctms-guides-atelier" aria-labelledby="ctms-guides-title">
-        <div className="ctms-section-head">
-          <Kicker>PORADNIKI</Kicker>
-          <h2 id="ctms-guides-title">Teksty do spokojnego myślenia. Bez gotowych recept.</h2>
+      <section className="ctms-prestige-guides" aria-labelledby="ctms-guides-title">
+        <div className="ctms-prestige-guides-head">
+          <div>
+            <Kicker>ARTYKUŁY I PORADNIKI</Kicker>
+            <h2 id="ctms-guides-title">Wiedza, która pomaga lepiej rozumieć.</h2>
+          </div>
+          <a href="/artykuly">Zobacz wszystkie <span aria-hidden="true">→</span></a>
         </div>
-        <div className="ctms-guides-grid ctms-guides-grid-editorial">
-          {articleLinks.map((article, index) => (
+        <div className="ctms-prestige-guides-grid">
+          {articles.map((article) => (
             <a key={article.href} href={article.href}>
-              <span className="ctms-guide-index">0{index + 1}</span>
+              <span>{article.tag}</span>
               <h3>{article.title}</h3>
-              <p>{article.description}</p>
-              <span className="ctms-guide-link">Czytaj <i aria-hidden="true">→</i></span>
+              <p>{article.text}</p>
+              <b>Czytaj <i aria-hidden="true">→</i></b>
             </a>
           ))}
         </div>
       </section>
 
-      <section className="ctms-final-callout">
+      <section className="ctms-prestige-privacy" aria-labelledby="ctms-privacy-title">
         <div>
-          <Kicker>JEDEN KROK NA RAZ</Kicker>
-          <h2>Nie potrzebujesz dziś odpowiedzi na całe życie.</h2>
-          <p>Czasem wystarczy zobaczyć jedną rzecz wyraźniej niż wczoraj.</p>
+          <Kicker>PRYWATNOŚĆ</Kicker>
+          <h2 id="ctms-privacy-title">To jest miejsce do szczerego opisu, nie do wystawiania historii na widok.</h2>
         </div>
-        <button type="button" onClick={onStart}>Rozpocznij prywatną analizę <span aria-hidden="true">→</span></button>
+        <div className="ctms-prestige-privacy-points">
+          <p><strong>Surowe odpowiedzi pozostają prywatne.</strong><span>W ścieżce dla dwojga druga osoba nie dostaje Twojego tekstu pytanie po pytaniu.</span></p>
+          <p><strong>Nie wpisuj danych identyfikujących.</strong><span>Do analizy wystarcza opis zdarzeń, zachowań i własnego doświadczenia.</span></p>
+          <p><strong>Nie diagnozujemy ludzi.</strong><span>Opisujemy materiał, różnice znaczeń, niewiadome i możliwe kryteria sprawdzenia.</span></p>
+        </div>
       </section>
 
-      <section className="ctms-faq" aria-labelledby="ctms-faq-title">
-        <div className="ctms-section-head">
-          <Kicker>PRZED ANALIZĄ</Kicker>
-          <h2 id="ctms-faq-title">Jasne zasady przed wpisaniem osobistej historii.</h2>
+      <section className="ctms-prestige-faq" aria-labelledby="ctms-faq-title">
+        <div>
+          <Kicker>NAJCZĘSTSZE PYTANIA</Kicker>
+          <h2 id="ctms-faq-title">Zanim zaczniesz.</h2>
         </div>
-        <div className="ctms-faq-grid">
+        <div className="ctms-prestige-faq-list">
           {faqs.map((item) => (
             <details key={item.question}>
               <summary>{item.question}<span aria-hidden="true">+</span></summary>

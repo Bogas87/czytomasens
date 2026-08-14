@@ -19,18 +19,24 @@ export function ClosedQuestions({
   if (!question) return null;
 
   return (
-    <Surface className="ctms-question">
+    <Surface className="ctms-question ctms-question-prestige">
       <aside className="ctms-question-header">
-        <span className="ctms-question-path">ANALIZA RELACJI</span>
-        <strong className="ctms-question-stage-number">{String(index + 1).padStart(2, "0")}</strong>
+        <span className="ctms-question-path">ANALIZA PRYWATNA</span>
+        <div className="ctms-question-orbit" aria-hidden="true">
+          <strong>{String(index + 1).padStart(2, "0")}</strong>
+          <span>/ {String(path.questions.length).padStart(2, "0")}</span>
+        </div>
         <Progress current={index + 1} total={path.questions.length} label="Pytanie" />
         <div className="ctms-question-rail-copy">
-          <span>Wybrana ścieżka</span>
+          <span>Wybrany obszar</span>
           <p>{path.title}</p>
         </div>
-        <div className="ctms-question-rail-note">
-          <strong>Nie ma dobrych ani złych odpowiedzi.</strong>
-          <p>Wybierz to, co najlepiej opisuje powtarzający się układ — nie pojedynczy dzień.</p>
+        <div className="ctms-question-private-note">
+          <span aria-hidden="true">◇</span>
+          <div>
+            <strong>Twoje odpowiedzi pozostają prywatne.</strong>
+            <p>Wybierz to, co najlepiej opisuje powtarzający się układ, a nie pojedynczy dzień.</p>
+          </div>
         </div>
       </aside>
 
@@ -41,10 +47,13 @@ export function ClosedQuestions({
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.18 }}
+          transition={{ duration: 0.22 }}
         >
-          <p className="ctms-question-lead">{question.lead}</p>
-          <h1>{question.text}</h1>
+          <div className="ctms-question-copy">
+            <p className="ctms-question-lead">{question.lead}</p>
+            <h1>{question.text}</h1>
+            <p className="ctms-question-helper">Nie szukaj idealnej odpowiedzi. Wybierz tę, która najczęściej pasuje do Twojego doświadczenia.</p>
+          </div>
 
           <div className="ctms-answer-list">
             {question.options.map((option, optionIndex) => {
@@ -59,13 +68,13 @@ export function ClosedQuestions({
                 >
                   <span className="ctms-answer-index">{String(optionIndex + 1).padStart(2, "0")}</span>
                   <strong>{option.label}</strong>
-                  <span className="ctms-answer-check" aria-hidden="true">{selected ? "✓" : "→"}</span>
+                  <span className="ctms-answer-check" aria-hidden="true">{selected ? "✓" : ""}</span>
                 </button>
               );
             })}
           </div>
 
-          <p className="ctms-question-note">Wybierz odpowiedź, aby przejść dalej.</p>
+          <p className="ctms-question-note">Wybór zapisuje się automatycznie. Możesz wrócić do poprzedniego pytania.</p>
         </motion.div>
       </AnimatePresence>
     </Surface>
