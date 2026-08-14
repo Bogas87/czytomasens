@@ -75,6 +75,7 @@ async function analyzeTurn({ participantId, questionId, question, answer, contex
   return structured({
     name: "couple_turn_analysis",
     schema,
+    model: process.env.OPENAI_INTERVIEW_MODEL || process.env.OPENAI_MODEL,
     system: `${SYSTEM_CORE}\nAnalizujesz wyłącznie jedną odpowiedź autora. Nie porównujesz jej jeszcze z partnerem. Zwróć neutralną refleksję i najwyżej jedno pytanie doprecyzowujące. Nie zawstydzaj autora.`,
     user: JSON.stringify({ questionId, question, answer: safeText(answer), recentContext: context || [] }),
     effort: "low",
@@ -139,6 +140,7 @@ async function buildPerspective({ participantId, slot, answers }) {
   return structured({
     name: "couple_private_perspective",
     schema,
+    model: process.env.OPENAI_REASONING_MODEL || process.env.OPENAI_MODEL,
     system: `${SYSTEM_CORE}
 Tworzysz PRYWATNY model perspektywy jednej osoby (${slot}).
 Surowe odpowiedzi NIE trafią do partnera. Przygotuj też shareDraft — neutralne podsumowanie w pierwszej osobie, które autor później może edytować i zatwierdzić.
@@ -181,6 +183,7 @@ async function comparePerspectives({ pairId, a, b }) {
   return structured({
     name: "couple_perspective_comparison",
     schema,
+    model: process.env.OPENAI_REPORT_MODEL || process.env.OPENAI_REASONING_MODEL || process.env.OPENAI_MODEL,
     system: `${SYSTEM_CORE}
 Porównujesz dwa PRYWATNE modele perspektyw. Nie ujawniasz surowych tekstów. Nie rozstrzygasz, kto ma rację.
 Szukaj wspólnej rzeczywistości, różnicy znaczeń, sporu o fakt, błędnych przewidywań o partnerze, możliwej pętli reakcji i zasobów.
@@ -225,6 +228,7 @@ async function buildFinalSynthesis({ pairId, comparison, shareA, shareB, reflect
   return structured({
     name:"couple_final_synthesis",
     schema,
+    model: process.env.OPENAI_REPORT_MODEL || process.env.OPENAI_REASONING_MODEL || process.env.OPENAI_MODEL,
     system:`${SYSTEM_CORE}
 To DRUGA SYNTEZA — po tym, jak obie osoby przeczytały zatwierdzoną perspektywę partnera i odniosły się do niej.
 Najcenniejszą zmianą jest aktualizacja rozumienia, nie zgoda. Dopuszczaj wynik: „rozumiemy się lepiej, ale nadal się nie zgadzamy”.
@@ -251,6 +255,7 @@ async function evaluateExperiment({ pairId, plan, checkinA, checkinB }) {
   return structured({
     name:"couple_experiment_evaluation",
     schema,
+    model: process.env.OPENAI_REASONING_MODEL || process.env.OPENAI_MODEL,
     system:`${SYSTEM_CORE}
 Porównujesz DWIE NIEZALEŻNE oceny tego samego eksperymentu relacyjnego. Nie nagradzaj deklaracji; szukaj opisanych zachowań i zgodności obu obserwacji.
 Jeśli oceny są sprzeczne, zachowaj rozbieżność zamiast uśredniać.`,

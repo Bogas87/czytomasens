@@ -106,7 +106,7 @@ async function generateMirror(payload) {
     return await structured({
       name: "ctms_v3_mirror",
       schema: schemas.mirror,
-      model: process.env.OPENAI_MODEL,
+      model: process.env.OPENAI_PREVIEW_MODEL || process.env.OPENAI_MODEL,
       effort: "low",
       timeoutMs: 12000,
       safetyId: payload.sessionToken,
@@ -141,7 +141,7 @@ async function nextInterviewQuestion(payload) {
     return await structured({
       name: "ctms_v3_interview",
       schema,
-      model: process.env.OPENAI_MODEL,
+      model: process.env.OPENAI_INTERVIEW_MODEL || process.env.OPENAI_MODEL,
       effort: "low",
       timeoutMs: 15000,
       safetyId: payload.sessionToken,
@@ -340,7 +340,7 @@ async function analyzeCase({ sessionToken, input }) {
   const ai = structured({
     name: "ctms_v3_case_model",
     schema: schemas.caseModel,
-    model: process.env.OPENAI_MODEL,
+    model: process.env.OPENAI_REASONING_MODEL || process.env.OPENAI_MODEL,
     effort: "low",
     timeoutMs: 16000,
     safetyId: sessionToken,
