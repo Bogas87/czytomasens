@@ -23,23 +23,23 @@ const articleLinks = [
 const faqs = [
   {
     question: "Czy dostanę prostą odpowiedź: zostać czy odejść?",
-    answer: "Nie. Otrzymasz uporządkowany materiał, hipotezę i kontrhipotezę oraz kryterium, które pozwala sprawdzić sytuację w zachowaniu — bez udawania pewności, której nie ma.",
+    answer: "Nie. Dostaniesz uporządkowany obraz sytuacji, możliwe wyjaśnienia i konkretne rzeczy, które warto jeszcze sprawdzić. Decyzja pozostaje po Twojej stronie.",
   },
   {
-    question: "Czy analiza diagnozuje drugą osobę?",
-    answer: "Nie. System pracuje na tym, co opisujesz, i oddziela zdarzenia od interpretacji, emocji oraz informacji, których nadal brakuje. Nie przypisuje partnerowi diagnozy ani ukrytych intencji jako faktu.",
+    question: "Czy analiza ocenia albo diagnozuje drugą osobę?",
+    answer: "Nie. Pracujemy na tym, co opisujesz: zdarzeniach, zachowaniach, interpretacjach, emocjach i niewiadomych. Nie przypisujemy drugiej osobie diagnozy ani intencji jako faktu.",
   },
   {
     question: "Czym różni się analiza prywatna od Dwóch Spojrzeń?",
-    answer: "W analizie prywatnej porządkujesz własną sytuację bez udziału drugiej osoby. W Dwóch Spojrzeniach każde z Was odpowiada osobno, a dopiero później system zestawia punkty wspólne, różnice i niewiadome. Surowe odpowiedzi nie są automatycznie pokazywane partnerowi.",
+    answer: "W analizie prywatnej porządkujesz własną perspektywę. W Dwóch Spojrzeniach każde z Was odpowiada osobno, a później zestawiane są punkty wspólne, różnice i rzeczy nadal nierozstrzygnięte. Surowe odpowiedzi pozostają prywatne.",
   },
   {
     question: "Czy muszę podawać dane drugiej osoby?",
-    answer: "Nie. Nie wpisuj nazwisk, adresów, numerów telefonu ani innych danych pozwalających zidentyfikować drugą osobę. Do analizy wystarcza opis sytuacji własnymi słowami.",
+    answer: "Nie. Nie wpisuj nazwisk, adresów, numerów telefonu ani innych danych identyfikujących. Do analizy wystarcza opis sytuacji własnymi słowami.",
   },
   {
     question: "Co jest bezpłatne?",
-    answer: "W obu trybach najpierw otrzymujesz krótki odczyt, który pozwala ocenić, czy ten sposób porządkowania sytuacji jest dla Ciebie użyteczny. Pełne raporty są opcjonalne.",
+    answer: "Najpierw dostajesz krótki odczyt, który ma już uporządkować sytuację. Pełny raport jest opcjonalny i pojawia się dopiero później.",
   },
 ];
 
@@ -48,51 +48,40 @@ export function Landing({ onStart }: { onStart: () => void }) {
     <div className="ctms-landing">
       <section className="ctms-hero ctms-hero-2031" aria-labelledby="ctms-hero-title">
         <div className="ctms-hero-copy">
-          <Kicker>PRYWATNA PRZESTRZEŃ DO MYŚLENIA</Kicker>
+          <Kicker>PRYWATNA PRZESTRZEŃ DO SPOKOJNEGO MYŚLENIA</Kicker>
           <h1 id="ctms-hero-title">Co chcesz dziś <em>zrozumieć?</em></h1>
           <p>
-            Nie szukamy winnego i nie stawiamy diagnoz. Porządkujemy to, co się wydarzyło,
-            co z tego wynika i czego nadal nie da się uczciwie rozstrzygnąć.
+            Bez etykietowania i bez udawania pewności. Najpierw porządkujemy to, co się wydarzyło,
+            co z tego wynika i czego nadal uczciwie nie wiadomo.
           </p>
 
           <div className="ctms-mode-choice" aria-label="Wybierz rodzaj analizy">
             <button className="ctms-mode-card ctms-mode-card-private" type="button" onClick={onStart}>
               <span className="ctms-mode-mark">DLA MNIE</span>
-              <span className="ctms-mode-eyebrow">PRYWATNA ANALIZA</span>
-              <strong>Najpierw zobacz własną sytuację wyraźniej.</strong>
-              <p>Pracujesz samodzielnie. Oddzielasz zdarzenia od interpretacji i sprawdzasz, co naprawdę powtarza się w relacji.</p>
+              <strong>Chcę uporządkować własną perspektywę.</strong>
+              <p>Przechodzisz przez analizę samodzielnie. Pomaga oddzielić zdarzenia od interpretacji i zobaczyć, co rzeczywiście powtarza się w relacji.</p>
               <span className="ctms-mode-link">Rozpocznij prywatnie <i aria-hidden="true">→</i></span>
             </button>
 
             <a className="ctms-mode-card ctms-mode-card-couple" href="/dla-par">
-              <span className="ctms-mode-mark">DLA DWOJGA</span>
-              <span className="ctms-mode-eyebrow">DWA SPOJRZENIA</span>
-              <strong>Zobaczcie tę samą relację z dwóch stron.</strong>
+              <span className="ctms-mode-mark">DLA NAS</span>
+              <strong>Chcemy zobaczyć dwie perspektywy obok siebie.</strong>
               <p>Każde z Was odpowiada osobno. Dopiero później spotykają się punkty wspólne, różnice i rzeczy nadal nierozstrzygnięte.</p>
               <span className="ctms-mode-link">Rozpocznij dla dwojga <i aria-hidden="true">→</i></span>
             </a>
           </div>
 
-          <div className="ctms-hero-proof" aria-label="Najważniejsze zasady">
-            <div><strong>Bez publicznego profilu</strong><span>Twoja historia nie jest publikowana.</span></div>
-            <div><strong>Bez rejestracji</strong><span>Zaczynasz bez tworzenia konta.</span></div>
-            <div><strong>Najpierw wartość</strong><span>Pierwszy odczyt jest bezpłatny.</span></div>
+          <div className="ctms-trustline" aria-label="Najważniejsze zasady">
+            <span>bez publicznego profilu</span>
+            <span>bez rejestracji</span>
+            <span>pierwszy odczyt bezpłatny</span>
           </div>
         </div>
-
-        <aside className="ctms-hero-editorial" aria-label="O czym jest CzyToMaSens">
-          <div className="ctms-hero-editorial-image" aria-hidden="true" />
-          <div className="ctms-hero-editorial-copy">
-            <span>JEDNA RELACJA · WIELE ZNACZEŃ</span>
-            <blockquote>Nie chodzi o to, kto ma rację. Chodzi o to, co naprawdę dzieje się między ludźmi.</blockquote>
-            <p>CzyToMaSens pomaga oddzielić zachowanie od dopowiedzenia i emocję od faktu — bez odbierania znaczenia żadnej z tych rzeczy.</p>
-          </div>
-        </aside>
       </section>
 
       <section className="ctms-method" id="jak-dziala" aria-labelledby="ctms-method-title">
         <div className="ctms-method-heading">
-          <Kicker>JAK PRACUJEMY</Kicker>
+          <Kicker>JAK TO DZIAŁA</Kicker>
           <h2 id="ctms-method-title">Mniej etykiet. Więcej rzeczy, które można sprawdzić w realnym życiu.</h2>
         </div>
         <div className="ctms-method-steps">
@@ -112,9 +101,8 @@ export function Landing({ onStart }: { onStart: () => void }) {
       </section>
 
       <section className="ctms-reading-room" aria-labelledby="ctms-reading-room-title">
-        <div className="ctms-reading-room-visual" aria-hidden="true" />
         <div className="ctms-reading-room-copy">
-          <Kicker>PRZYKŁADOWY SPOSÓB MYŚLENIA</Kicker>
+          <Kicker>PRZYKŁAD</Kicker>
           <h2 id="ctms-reading-room-title">Nie „on mnie ignoruje”. Najpierw: co naprawdę się wydarzyło?</h2>
           <dl>
             <div><dt>Zdarzenie</dt><dd>Kontakt wrócił dopiero po Twojej kolejnej wiadomości.</dd></div>
@@ -127,9 +115,9 @@ export function Landing({ onStart }: { onStart: () => void }) {
 
       <Surface className="ctms-offer" id="raport">
         <div className="ctms-offer-intro">
-          <Kicker>NAJPIERW SPRAWDŹ, CZY TO CI POMAGA</Kicker>
-          <h2>Bez sztucznego niedosytu.</h2>
-          <p>Bezpłatny odczyt ma już porządkować sytuację. Pełny raport jest kolejnym poziomem pracy, nie opłatą za zakończenie zdania.</p>
+          <Kicker>NAJPIERW WARTOŚĆ</Kicker>
+          <h2>Najpierw sprawdź, czy ten sposób myślenia Ci pomaga.</h2>
+          <p>Bezpłatny odczyt ma już porządkować sytuację. Pełny raport jest kolejnym poziomem pracy, nie opłatą za dokończenie zdania.</p>
         </div>
         <div className="ctms-offer-columns">
           <div className="ctms-offer-free">
@@ -157,7 +145,7 @@ export function Landing({ onStart }: { onStart: () => void }) {
 
       <section className="ctms-guides" aria-labelledby="ctms-guides-title">
         <div className="ctms-section-head">
-          <Kicker>BIBLIOTEKA RELACJI</Kicker>
+          <Kicker>PORADNIKI</Kicker>
           <h2 id="ctms-guides-title">Teksty do spokojnego myślenia, nie gotowe recepty.</h2>
         </div>
         <div className="ctms-guides-grid ctms-guides-grid-editorial">

@@ -1932,3 +1932,849 @@ button.ctms-mode-card {
     line-height: 1.78 !important;
   }
 }
+
+/* ================================================================
+   FINAL ART DIRECTION — HUMAN, QUIET, EDITORIAL
+   This is the intentional final pass after visual QA.
+   ================================================================ */
+
+:root {
+  --ctms-content: 1440px;
+  --ctms-reading: 1120px;
+  --ctms-type-hero: clamp(48px, 4.2vw, 60px);
+  --ctms-type-section: clamp(30px, 2.5vw, 36px);
+  --ctms-type-question: clamp(30px, 2.2vw, 34px);
+}
+
+/* Header: no button-like logo, no wrapping navigation */
+.ctms-header,
+.couple-header {
+  width: min(calc(100% - 72px), var(--ctms-content)) !important;
+  min-height: 72px !important;
+  margin-inline: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 28px !important;
+}
+
+button.ctms-brand,
+.ctms-brand-button,
+.ctms-brand,
+.couple-brand {
+  width: auto !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  flex: 0 0 auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  white-space: nowrap !important;
+}
+
+.ctms-header-right,
+.ctms-header-nav,
+.couple-nav {
+  min-width: 0 !important;
+  flex-wrap: nowrap !important;
+}
+
+.ctms-header-nav a,
+.couple-nav a,
+.ctms-header-trust,
+.ctms-home-link,
+.couple-home-link,
+.couple-home-quick {
+  white-space: nowrap !important;
+}
+
+.ctms-header-right {
+  margin-left: auto !important;
+  gap: 30px !important;
+}
+
+.ctms-header-nav {
+  gap: 24px !important;
+}
+
+.ctms-header-trust {
+  min-height: 38px !important;
+  padding-inline: 14px !important;
+  border-radius: 10px !important;
+  color: var(--ctms-ink-soft) !important;
+  background: transparent !important;
+}
+
+/* Home: one clear focal point. No stock-like editorial panel. */
+.ctms-hero-2031 {
+  width: min(calc(100% - 72px), var(--ctms-content)) !important;
+  min-height: 610px !important;
+  margin-inline: auto !important;
+  padding: clamp(62px, 7vw, 96px) 0 82px !important;
+  display: block !important;
+}
+
+.ctms-hero-copy {
+  width: 100% !important;
+  max-width: 1180px !important;
+  margin: 0 !important;
+}
+
+.ctms-hero h1,
+.ctms-hero-copy h1 {
+  max-width: 900px !important;
+  margin: 16px 0 0 !important;
+  color: var(--ctms-ink) !important;
+  font-size: var(--ctms-type-hero) !important;
+  line-height: 1.02 !important;
+  letter-spacing: -.035em !important;
+}
+
+.ctms-hero-copy > p {
+  max-width: 760px !important;
+  margin: 20px 0 0 !important;
+  color: var(--ctms-ink-soft) !important;
+  font-size: 17px !important;
+  line-height: 1.68 !important;
+}
+
+.ctms-hero-editorial,
+.ctms-hero-vase {
+  display: none !important;
+}
+
+.ctms-mode-choice {
+  max-width: 1120px !important;
+  margin-top: 38px !important;
+  gap: 16px !important;
+}
+
+.ctms-mode-card,
+.ctms-mode-card-private,
+.ctms-mode-card-couple {
+  min-height: 214px !important;
+  padding: 25px 26px 23px !important;
+  border: 1px solid rgba(228,195,125,.30) !important;
+  border-radius: 16px !important;
+  background: linear-gradient(145deg, rgba(26,26,22,.88), rgba(11,12,10,.97)) !important;
+  box-shadow: 0 18px 48px rgba(0,0,0,.16) !important;
+}
+
+.ctms-mode-card::before {
+  display: none !important;
+}
+
+.ctms-mode-card:hover {
+  transform: translateY(-2px) !important;
+  border-color: rgba(228,195,125,.58) !important;
+  background: linear-gradient(145deg, rgba(31,30,25,.94), rgba(13,13,11,.99)) !important;
+  box-shadow: 0 24px 60px rgba(0,0,0,.22) !important;
+}
+
+.ctms-mode-mark {
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: var(--ctms-gold-bright) !important;
+  background: transparent !important;
+  font-size: 11px !important;
+  font-weight: 760 !important;
+  letter-spacing: .11em !important;
+}
+
+.ctms-mode-eyebrow {
+  display: none !important;
+}
+
+.ctms-mode-card > strong {
+  max-width: 460px !important;
+  margin-top: 13px !important;
+  font-size: clamp(21px,1.55vw,24px) !important;
+  line-height: 1.18 !important;
+}
+
+.ctms-mode-card > p {
+  max-width: 470px !important;
+  margin: 12px 0 22px !important;
+  color: #c5bdb2 !important;
+  font-size: 13.5px !important;
+  line-height: 1.62 !important;
+}
+
+.ctms-mode-link {
+  font-size: 12.5px !important;
+  font-weight: 680 !important;
+}
+
+.ctms-trustline {
+  max-width: 1120px;
+  margin-top: 20px;
+  padding-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+  border-top: 1px solid var(--ctms-line-soft);
+  color: var(--ctms-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.ctms-trustline span {
+  position: relative;
+}
+
+.ctms-trustline span + span::before {
+  content: "·";
+  position: absolute;
+  left: -13px;
+  color: var(--ctms-gold-muted);
+}
+
+/* Sections: editorial rhythm, fewer boxes */
+.ctms-method,
+.ctms-reading-room,
+.ctms-offer,
+.ctms-guides,
+.ctms-faq {
+  width: min(calc(100% - 72px), var(--ctms-content)) !important;
+}
+
+.ctms-method {
+  padding: 88px 0 74px !important;
+}
+
+.ctms-method-heading {
+  max-width: 720px !important;
+}
+
+.ctms-method-heading h2,
+.ctms-section-head h2,
+.ctms-offer-intro h2,
+.ctms-reading-room h2 {
+  margin-top: 12px !important;
+  font-size: var(--ctms-type-section) !important;
+  line-height: 1.08 !important;
+}
+
+.ctms-method-steps {
+  margin-top: 44px !important;
+  border-top: 1px solid var(--ctms-line) !important;
+  border-bottom: 1px solid var(--ctms-line) !important;
+}
+
+.ctms-method-step {
+  min-height: 174px !important;
+  padding: 28px 26px !important;
+  background: transparent !important;
+}
+
+.ctms-method-number,
+.ctms-guide-index,
+.ctms-report-section-no {
+  color: var(--ctms-gold-muted) !important;
+  font-family: var(--ctms-body) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: .08em !important;
+}
+
+.ctms-reading-room {
+  margin-top: 66px !important;
+  padding: 52px 0 !important;
+  border: 0 !important;
+  border-top: 1px solid var(--ctms-line) !important;
+  border-bottom: 1px solid var(--ctms-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.ctms-reading-room-visual {
+  display: none !important;
+}
+
+.ctms-reading-room-copy {
+  width: 100% !important;
+  padding: 0 !important;
+  display: grid !important;
+  grid-template-columns: minmax(280px,.8fr) minmax(0,1.2fr) !important;
+  column-gap: clamp(54px,7vw,108px) !important;
+  align-items: start !important;
+}
+
+.ctms-reading-room-copy > .ctms-kicker,
+.ctms-reading-room-copy > h2 {
+  grid-column: 1 !important;
+}
+
+.ctms-reading-room-copy > dl {
+  grid-column: 2 !important;
+  grid-row: 1 / span 3 !important;
+  margin: 0 !important;
+}
+
+.ctms-reading-room dl > div {
+  padding: 15px 0 !important;
+  border-bottom: 1px solid var(--ctms-line-soft) !important;
+}
+
+.ctms-reading-room dt {
+  font-size: 11px !important;
+}
+
+.ctms-reading-room dd {
+  font-size: 14px !important;
+  line-height: 1.58 !important;
+}
+
+.ctms-offer {
+  margin-top: 84px !important;
+  padding: 54px 0 !important;
+  border: 0 !important;
+  border-top: 1px solid var(--ctms-line) !important;
+  border-bottom: 1px solid var(--ctms-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.ctms-offer-intro {
+  max-width: 760px !important;
+}
+
+.ctms-offer-intro p,
+.ctms-offer-list,
+.ctms-guides p,
+.ctms-faq p {
+  font-size: 13.5px !important;
+  line-height: 1.65 !important;
+}
+
+.ctms-offer-columns {
+  margin-top: 40px !important;
+}
+
+.ctms-offer-free,
+.ctms-offer-premium {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.ctms-guides {
+  padding-top: 92px !important;
+}
+
+.ctms-guides-grid-editorial,
+.ctms-guides-grid {
+  margin-top: 38px !important;
+  border-top: 1px solid var(--ctms-line) !important;
+  border-bottom: 1px solid var(--ctms-line) !important;
+}
+
+.ctms-guides-grid-editorial > a,
+.ctms-guides-grid > a {
+  min-height: 210px !important;
+  padding: 26px 28px !important;
+  background: transparent !important;
+}
+
+.ctms-faq {
+  padding: 92px 0 110px !important;
+}
+
+/* Individual analysis: calm, legible, no oversized ornaments */
+.ctms-question,
+.ctms-interview,
+.couple-question-card {
+  border-radius: 22px !important;
+  border-color: rgba(244,236,220,.10) !important;
+  background: linear-gradient(135deg, rgba(15,16,14,.985), rgba(8,9,8,.99)) !important;
+  box-shadow: 0 26px 74px rgba(0,0,0,.27) !important;
+}
+
+.ctms-question-stage-number,
+.couple-question-number {
+  font-size: 46px !important;
+  line-height: .96 !important;
+}
+
+.ctms-question-content h1,
+.ctms-interview-content h1,
+.couple-question-content h1 {
+  font-size: var(--ctms-type-question) !important;
+  line-height: 1.14 !important;
+}
+
+.ctms-question-lead,
+.couple-question-lead,
+.ctms-question-content > p,
+.couple-question-helper,
+.couple-question-content > p {
+  color: var(--ctms-muted) !important;
+  font-size: 13.5px !important;
+  line-height: 1.58 !important;
+}
+
+.ctms-answer-list button {
+  min-height: 66px !important;
+  border-radius: 12px !important;
+  background: rgba(255,255,255,.012) !important;
+}
+
+.ctms-answer-list strong {
+  font-size: 16px !important;
+  line-height: 1.43 !important;
+}
+
+.ctms-answer-list button.is-selected {
+  border-color: rgba(228,195,125,.55) !important;
+  background: rgba(205,163,89,.075) !important;
+}
+
+/* Couple analysis: privacy is a promise, not a technical warning */
+.couple-privacy-note-strong,
+.couple-rail-private,
+.couple-privacy-note {
+  border-color: rgba(228,195,125,.20) !important;
+  background: rgba(205,163,89,.035) !important;
+  box-shadow: none !important;
+}
+
+.couple-privacy-note-strong strong,
+.couple-rail-private strong,
+.couple-rail-private > span {
+  color: var(--ctms-gold-bright) !important;
+}
+
+.couple-safety-grid {
+  gap: 10px !important;
+}
+
+.couple-safety-grid > label {
+  min-height: 68px !important;
+  padding: 13px 15px !important;
+  border-color: rgba(244,236,220,.11) !important;
+  border-radius: 11px !important;
+  background: rgba(255,255,255,.012) !important;
+}
+
+.couple-safety-grid > label > span {
+  color: #ddd5ca !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  font-weight: 500 !important;
+}
+
+.couple-safety-grid button {
+  min-width: 48px !important;
+  min-height: 34px !important;
+  border-radius: 8px !important;
+  font-size: 12.5px !important;
+}
+
+.couple-safety-grid button.active:not(.risk) {
+  border-color: rgba(154,178,154,.42) !important;
+  color: #d9e4d9 !important;
+  background: rgba(154,178,154,.09) !important;
+}
+
+.couple-safety-grid button.active.risk,
+.couple-safety-grid button.risk {
+  border-color: rgba(185,111,95,.50) !important;
+  color: #e6c2b9 !important;
+  background: rgba(185,111,95,.10) !important;
+}
+
+/* Reports: dossier, not card wall */
+.ctms-premium-report,
+.couple-report,
+.couple-final-report {
+  width: min(calc(100% - 72px), 1120px) !important;
+  margin-inline: auto !important;
+}
+
+.ctms-report-cover,
+.couple-report-hero,
+.couple-joint-hero {
+  padding: 56px 0 44px !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--ctms-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.ctms-report-cover h1,
+.couple-report-hero h1,
+.couple-joint-hero h1 {
+  max-width: 820px !important;
+  font-size: clamp(38px,3.4vw,50px) !important;
+  line-height: 1.06 !important;
+}
+
+.ctms-report-section,
+.couple-report-section,
+.couple-map-card,
+.couple-cycle-card,
+.couple-reality-ledger,
+.couple-experiment-card {
+  border-radius: 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid var(--ctms-line-soft) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.ctms-report-section {
+  padding: 38px 0 !important;
+}
+
+.ctms-report-section p,
+.couple-report-section p,
+.couple-map-card p,
+.couple-cycle-card p,
+.couple-reality-ledger p,
+.couple-experiment-card p {
+  font-size: 14px !important;
+  line-height: 1.66 !important;
+}
+
+/* Articles and legal: one brand, quiet reading experience */
+.articles-section,
+.legal-page {
+  box-shadow: none !important;
+}
+
+.article-card-btn {
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.legal-page {
+  width: min(calc(100% - 72px), 920px) !important;
+  padding: 54px 0 72px !important;
+  border: 0 !important;
+  border-top: 1px solid var(--ctms-line) !important;
+  border-bottom: 1px solid var(--ctms-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.legal-page h1 {
+  font-size: clamp(38px,3.4vw,48px) !important;
+}
+
+/* Mobile */
+@media (max-width: 900px) {
+  .ctms-header-nav { display: none !important; }
+  .ctms-hero-2031 { min-height: auto !important; }
+  .ctms-reading-room-copy { grid-template-columns: 1fr !important; }
+  .ctms-reading-room-copy > .ctms-kicker,
+  .ctms-reading-room-copy > h2,
+  .ctms-reading-room-copy > dl {
+    grid-column: 1 !important;
+    grid-row: auto !important;
+  }
+  .ctms-reading-room-copy > dl { margin-top: 28px !important; }
+}
+
+@media (max-width: 760px) {
+  :root {
+    --ctms-type-hero: clamp(40px,10.5vw,48px);
+    --ctms-type-question: clamp(27px,7.5vw,31px);
+    --ctms-type-section: clamp(27px,7.4vw,32px);
+  }
+
+  .ctms-header,
+  .couple-header,
+  .ctms-hero-2031,
+  .ctms-method,
+  .ctms-reading-room,
+  .ctms-offer,
+  .ctms-guides,
+  .ctms-faq,
+  .ctms-premium-report,
+  .couple-report,
+  .couple-final-report,
+  .legal-page {
+    width: min(calc(100% - 28px), 100%) !important;
+  }
+
+  .ctms-header-trust { display: none !important; }
+  .ctms-brand small,
+  .couple-brand small { display: none !important; }
+
+  .ctms-hero-2031 {
+    padding: 38px 0 54px !important;
+  }
+
+  .ctms-hero-copy > p {
+    font-size: 15.5px !important;
+    line-height: 1.62 !important;
+  }
+
+  .ctms-mode-choice {
+    grid-template-columns: 1fr !important;
+    margin-top: 30px !important;
+  }
+
+  .ctms-mode-card {
+    min-height: 0 !important;
+    padding: 21px 20px !important;
+  }
+
+  .ctms-mode-card > strong {
+    font-size: 21px !important;
+  }
+
+  .ctms-mode-card > p {
+    font-size: 13px !important;
+  }
+
+  .ctms-trustline {
+    display: grid;
+    gap: 6px;
+    font-size: 11.5px;
+  }
+
+  .ctms-trustline span + span::before { display: none; }
+
+  .ctms-method,
+  .ctms-guides,
+  .ctms-faq {
+    padding-top: 68px !important;
+  }
+
+  .ctms-reading-room,
+  .ctms-offer {
+    margin-top: 54px !important;
+    padding: 38px 0 !important;
+  }
+
+  .ctms-question-content,
+  .ctms-interview-content,
+  .couple-question-content {
+    padding: 26px 18px 22px !important;
+  }
+
+  .ctms-question-stage-number,
+  .couple-question-number {
+    font-size: 39px !important;
+  }
+
+  .couple-safety-grid > label {
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+
+  .couple-safety-grid > label > span {
+    font-size: 12.5px !important;
+  }
+
+  .ctms-report-cover,
+  .couple-report-hero,
+  .couple-joint-hero {
+    padding: 38px 0 30px !important;
+  }
+
+  .legal-page {
+    padding: 38px 0 54px !important;
+  }
+}
+
+/* QA corrections after desktop + mobile render */
+button.ctms-brand {
+  display: inline-block !important;
+  line-height: .96 !important;
+}
+button.ctms-brand > span {
+  display: inline !important;
+}
+button.ctms-brand > small {
+  display: block !important;
+}
+
+.ctms-hero-2031 {
+  min-height: 560px !important;
+  padding-bottom: 58px !important;
+}
+
+.articles-section {
+  border: 0 !important;
+  border-top: 1px solid var(--ctms-line) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 760px) {
+  button.ctms-brand > small { display: none !important; }
+  .ctms-hero-2031 { padding-bottom: 42px !important; }
+}
+
+.couple-result-human {
+  margin-top: 26px !important;
+  padding-top: 26px !important;
+  border-top: 1px solid var(--ctms-line) !important;
+}
+
+.couple-result-human > span,
+.couple-result-human section > span {
+  display: block !important;
+  margin-bottom: 8px !important;
+  color: var(--ctms-gold-muted) !important;
+  font: 720 10.5px/1.35 var(--ctms-body) !important;
+  letter-spacing: .10em !important;
+}
+
+.couple-result-human h3 {
+  max-width: 760px !important;
+  margin: 0 0 24px !important;
+  color: var(--ctms-ink) !important;
+  font-size: 24px !important;
+  line-height: 1.2 !important;
+}
+
+.couple-result-human section {
+  padding: 18px 0 !important;
+  border-top: 1px solid var(--ctms-line-soft) !important;
+}
+
+.couple-result-human p,
+.couple-result-human li {
+  color: var(--ctms-ink-soft) !important;
+  font-size: 13.5px !important;
+  line-height: 1.62 !important;
+}
+
+.couple-result-human ul {
+  margin: 8px 0 0 !important;
+  padding-left: 18px !important;
+}
+
+/* Couple start: the role choice must be visible without hunting or decorative detours. */
+.couple-intro {
+  gap: 34px !important;
+}
+
+.couple-hero {
+  min-height: 0 !important;
+  padding: 46px 0 40px !important;
+  grid-template-columns: 1fr !important;
+  gap: 0 !important;
+}
+
+.couple-hero-copy {
+  max-width: 900px !important;
+  padding-left: 18px !important;
+}
+
+.couple-hero-copy h1 {
+  font-size: clamp(46px, 4vw, 60px) !important;
+}
+
+.couple-hero-visual {
+  display: none !important;
+}
+
+.couple-entry-card {
+  margin-top: 0 !important;
+}
+
+@media (max-width: 760px) {
+  .couple-hero {
+    padding: 28px 0 30px !important;
+  }
+  .couple-hero-copy {
+    padding-left: 0 !important;
+  }
+}
+
+/* Final couple-entry hierarchy: role selection is the task, intro is context. */
+.couple-intro > .couple-hero {
+  padding: 30px 0 26px !important;
+}
+.couple-intro > .couple-hero .couple-hero-copy {
+  max-width: 820px !important;
+}
+.couple-intro > .couple-hero .couple-hero-copy h1 {
+  margin-top: 14px !important;
+  font-size: clamp(42px,3.7vw,54px) !important;
+  line-height: 1.03 !important;
+}
+.couple-intro > .couple-hero .couple-hero-copy > p {
+  max-width: 720px !important;
+  margin-top: 20px !important;
+  font-size: 15px !important;
+  line-height: 1.62 !important;
+}
+.couple-intro > .couple-hero .couple-hero-proof {
+  display: none !important;
+}
+.couple-intro > .couple-entry-card {
+  width: min(980px,100%) !important;
+  margin-inline: auto !important;
+  padding: 34px 38px 38px !important;
+}
+.couple-intro > .couple-entry-card .couple-entry-start > h2 {
+  margin-top: 14px !important;
+  font-size: 30px !important;
+  line-height: 1.15 !important;
+}
+.couple-intro > .couple-entry-card .couple-entry-start > p {
+  max-width: 760px !important;
+  margin: 14px 0 24px !important;
+  font-size: 14px !important;
+  line-height: 1.58 !important;
+}
+.couple-intro > .couple-entry-card .couple-role-card {
+  min-height: 132px !important;
+}
+
+@media (max-width:760px) {
+  .couple-intro { gap: 22px !important; }
+  .couple-intro > .couple-hero {
+    padding: 22px 0 20px !important;
+  }
+  .couple-intro > .couple-hero .couple-hero-copy h1 {
+    margin-top: 12px !important;
+    font-size: clamp(36px,10.2vw,42px) !important;
+  }
+  .couple-intro > .couple-hero .couple-hero-copy > p {
+    margin-top: 16px !important;
+    font-size: 14px !important;
+    line-height: 1.58 !important;
+  }
+  .couple-intro > .couple-entry-card {
+    padding: 25px 20px 24px !important;
+    border-radius: 18px !important;
+  }
+  .couple-intro > .couple-entry-card .couple-entry-start > h2 {
+    font-size: 25px !important;
+  }
+  .couple-intro > .couple-entry-card .couple-entry-start > p {
+    margin: 12px 0 20px !important;
+    font-size: 13.5px !important;
+  }
+  .couple-intro > .couple-entry-card .couple-role-choice {
+    gap: 10px !important;
+  }
+  .couple-intro > .couple-entry-card .couple-role-card {
+    min-height: 112px !important;
+    padding: 16px !important;
+  }
+}
+@media (max-width:760px) {
+  .couple-intro { gap: 18px !important; }
+  .couple-intro > .couple-entry-card .couple-entry-start > p { margin-bottom: 18px !important; }
+  .couple-intro > .couple-entry-card .couple-role-choice { gap: 8px !important; }
+  .couple-intro > .couple-entry-card .couple-role-card {
+    min-height: 102px !important;
+    padding: 14px 15px !important;
+  }
+  .couple-intro > .couple-entry-card .couple-role-card strong { font-size: 18px !important; }
+  .couple-intro > .couple-entry-card .couple-role-card small { font-size: 12px !important; }
+}
