@@ -167,7 +167,7 @@ export function ContextMap({
                           })}
                         >
                           <span className="ctms-scale-dot" aria-hidden="true" />
-                          <strong>{option.short}</strong>
+                          <small>{option.short}</small>
                         </button>
                       );
                     })}

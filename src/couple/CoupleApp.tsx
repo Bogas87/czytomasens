@@ -42,7 +42,7 @@ const QUESTIONS: Question[] = [
   {
     id: "desired_direction",
     title: "Czego najbardziej chcesz po tym procesie?",
-    helper: "To nie jest obietnica wyniku. System porówna później, czy oboje pracujecie nad tym samym celem.",
+    helper: "To nie jest obietnica wyniku. Później sprawdzimy, czy oboje pracujecie nad tym samym celem.",
     type: "choice",
     options: [
       { value: "understand", label: "Lepiej się zrozumieć" },
@@ -83,13 +83,13 @@ const QUESTIONS: Question[] = [
   {
     id: "meaning",
     title: "Co wtedy pomyślałeś, że to znaczy?",
-    helper: "Tu wolno interpretować. System oddzieli znaczenie, które nadałeś sytuacji, od samego zdarzenia.",
+    helper: "Tu wolno interpretować. Znaczenie, które nadałeś sytuacji, zostanie oddzielone od samego zdarzenia.",
     type: "text",
   },
   {
     id: "emotion_need",
     title: "Co wtedy czułeś i czego potrzebowałeś?",
-    helper: "Napisz własnymi słowami. System może podsunąć możliwe wyjaśnienie, ale nie uzna go za fakt bez Twojego potwierdzenia.",
+    helper: "Napisz własnymi słowami. Może pojawić się hipoteza potrzeby, ale nie zostanie potraktowana jako fakt bez Twojego potwierdzenia.",
     type: "text",
   },
   {
@@ -107,7 +107,7 @@ const QUESTIONS: Question[] = [
   {
     id: "predict_partner",
     title: "Jak myślisz, co partner wskaże jako Twój udział w tym problemie?",
-    helper: "Nie zobaczysz jeszcze jego odpowiedzi. Później system porówna Twoje przewidywanie z jego rzeczywistą perspektywą.",
+    helper: "Nie zobaczysz jeszcze jego odpowiedzi. Później porównamy Twoje przewidywanie z rzeczywistą perspektywą drugiej osoby.",
     type: "text",
   },
   {
@@ -177,28 +177,20 @@ function Header() {
   return (
     <header className="couple-header">
       <a href="/" className="couple-brand">CzyToMaSens<span>·</span><small>DWA SPOJRZENIA</small></a>
-      <div className="couple-header-actions">
-        <nav className="couple-nav">
-          <a href="/#jak-dziala">Jak to działa</a>
-          <a href="/polityka-prywatnosci">Prywatność</a>
-        </nav>
-        <a className="couple-home-quick" href="/" aria-label="Wróć do strony głównej CzyToMaSens">
-          <span aria-hidden="true">⌂</span> Strona główna
-        </a>
-      </div>
+      <nav className="couple-nav">
+        <a href="/#jak-dziala">Jak to działa</a>
+        <a href="/polityka-prywatnosci">Prywatność</a>
+        <a href="/">Analiza prywatna</a>
+      </nav>
     </header>
   );
 }
 
 function PrivacyNote() {
   return (
-    <div className="couple-privacy-note couple-privacy-note-strong" role="note" aria-label="Prywatność odpowiedzi">
-      <span className="couple-privacy-label">PRYWATNA PRZESTRZEŃ</span>
-      <div>
-        <strong>Partner nie zobaczy tego, co wpisujesz tutaj.</strong>
-        <p>Twoja pełna odpowiedź zostaje po Twojej stronie. Do wspólnej części trafia dopiero spokojne podsumowanie, które najpierw zobaczysz i zaakceptujesz.</p>
-        <small>Nie wpisuj nazwisk, adresów, telefonów ani innych danych pozwalających zidentyfikować drugą osobę.</small>
-      </div>
+    <div className="couple-privacy-note">
+      <span>MINIMALIZUJ DANE</span>
+      <p>Nie wpisuj nazwisk, adresów, telefonów, e-maili ani danych pozwalających zidentyfikować partnera. Do analizy wystarczą role A/B i opis zachowania.</p>
     </div>
   );
 }
@@ -257,13 +249,13 @@ function Intro({ onCreated, savedToken, onContinue }: { onCreated: (token: strin
           <span className="couple-kicker">WSPÓLNA ANALIZA RELACJI DLA DWOJGA</span>
           <h1>Ta sama relacja.<br/><em>Dwie perspektywy.</em></h1>
           <p>
-            Każde z Was odpowiada osobno. System porównuje nie tylko treść, ale również to, co jest faktem,
+            Każde z Was odpowiada osobno. Porównujemy nie tylko treść, ale również to, co jest faktem,
             interpretacją, niewiadomą i powtarzalną reakcją. Nie szuka zwycięzcy.
           </p>
           <div className="couple-hero-proof">
-            <div><strong>Osobno</strong><span>Bez podglądu odpowiedzi podczas wywiadu.</span></div>
-            <div><strong>Porównanie</strong><span>Wspólny grunt, rozbieżności i niewiadome.</span></div>
-            <div><strong>Dalej</strong><span>Jedna rzecz do sprawdzenia w realnym zachowaniu.</span></div>
+            <div><b>01</b><strong>Osobno</strong><span>Bez podglądu odpowiedzi podczas wywiadu.</span></div>
+            <div><b>02</b><strong>Porównanie</strong><span>Wspólny grunt, rozbieżności i niewiadome.</span></div>
+            <div><b>03</b><strong>Zmiana</strong><span>Nie tylko rozmowa — także weryfikacja zachowania.</span></div>
           </div>
         </div>
         <div className="couple-hero-visual" aria-hidden="true">
@@ -273,7 +265,7 @@ function Intro({ onCreated, savedToken, onContinue }: { onCreated: (token: strin
               <h2>Jedno zdarzenie.<br/>Dwa znaczenia.</h2>
               <div><b>A</b><p>„Brak wiadomości odbieram jako brak priorytetu.”</p></div>
               <div><b>B</b><p>„Powtarzające się pytania odbieram jako presję.”</p></div>
-              <small>System nie rozstrzyga intencji. Szuka pytania, które można bezpiecznie sprawdzić.</small>
+              <small>Nie rozstrzygamy intencji. Szukamy pytania, które można bezpiecznie sprawdzić.</small>
             </div>
             <div className="couple-visual-image" />
           </div>
@@ -295,18 +287,18 @@ function Intro({ onCreated, savedToken, onContinue }: { onCreated: (token: strin
           </div>
         ) : mode === "choose" ? (
           <div className="couple-entry-start">
-            <span className="couple-step">NA POCZĄTEK</span>
-            <h2>Jak wchodzisz do tej analizy?</h2>
-            <p>Pierwsza osoba tworzy wspólną przestrzeń i dostaje kod. Druga osoba dołącza do tej samej analizy tym kodem — w dowolnym momencie.</p>
+            <span className="couple-step">START · WYBIERZ SWOJĄ ROLĘ</span>
+            <h2>Czy tworzysz analizę, czy dołączasz do partnera?</h2>
+            <p>To ważne rozróżnienie. Pierwsza osoba tworzy wspólną przestrzeń i dostaje kod. Druga osoba wchodzi tym kodem do tej samej analizy.</p>
             <div className="couple-role-choice">
               <button className="couple-role-card couple-role-card-a" type="button" onClick={() => setMode("create")}>
                 <b>A</b>
-                <span><strong>Zaczynam tę analizę</strong><small>Tworzę nową przestrzeń i zapraszam drugą osobę.</small></span>
+                <span><strong>Jestem pierwszą osobą</strong><small>Tworzę nową analizę i zapraszam partnera.</small></span>
                 <i aria-hidden="true">→</i>
               </button>
               <button className="couple-role-card couple-role-card-b" type="button" onClick={() => setMode("join")}>
                 <b>B</b>
-                <span><strong>Dołączam do analizy</strong><small>Mam kod zaproszenia od drugiej osoby.</small></span>
+                <span><strong>Jestem drugą osobą</strong><small>Mam kod zaproszenia od partnera.</small></span>
                 <i aria-hidden="true">→</i>
               </button>
             </div>
@@ -435,14 +427,13 @@ function Intake({ token, state, inviteCode, onState }: { token: string; state: C
           <div className="couple-progress"><span style={{ width: `${((index + 1) / QUESTIONS.length) * 100}%` }} /></div>
           <p>{index + 1} z {QUESTIONS.length}</p>
           <div className="couple-rail-topic"><small>PERSPEKTYWA</small><b>{state.participant.slot}</b></div>
-          <div className="couple-rail-trust"><span>PRYWATNIE</span><strong>Twoja pełna odpowiedź zostaje po Twojej stronie.</strong><p>Do wspólnej części trafia dopiero podsumowanie, które najpierw zaakceptujesz.</p></div>
+          <div className="couple-rail-trust"><span>PRYWATNE</span><p>Partner nie widzi tej odpowiedzi. Surowy tekst nie jest udostępniany drugiej stronie.</p></div>
         </aside>
         <div className="couple-question-content">
-          <span className="couple-kicker">TWOJA PERSPEKTYWA</span>
+          <span className="couple-kicker">TWOJA PERSPEKTYWA · ETAP {index + 1}</span>
           <h1>{q.title}</h1>
           <p className="couple-question-lead">{q.helper}</p>
-          <PrivacyNote/>
-          {q.type === "text" && <textarea className="couple-main-textarea" rows={7} value={typeof value === "string" ? value : (value?.primary || "")} onChange={(e) => setValue(e.target.value)} placeholder="Napisz własnymi słowami…" />}
+          {q.type === "text" && <><PrivacyNote/><textarea className="couple-main-textarea" rows={7} value={typeof value === "string" ? value : (value?.primary || "")} onChange={(e) => setValue(e.target.value)} placeholder="Napisz własnymi słowami…" /></>}
           {q.type === "choice" && <div className="couple-choice-grid">{q.options?.map((o) => <button type="button" key={o.value} className={value === o.value ? "active" : ""} onClick={() => setValue(o.value)}>{o.label}<span>→</span></button>)}</div>}
           {q.type === "ratings" && <Ratings value={value} onChange={setValue} />}
           {q.type === "safety" && <SafetyAnswer value={value} onChange={setValue} />}

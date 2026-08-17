@@ -72,23 +72,19 @@ export function OpenInterview({
       </aside>
 
       <div className="ctms-interview-content" data-focus={focus || undefined}>
-        {(previous && step > 0) || observation ? (
-          <div className="ctms-interview-notes">
-            {previous && step > 0 && (
-              <aside className="ctms-previous-answer">
-                <span>Fragment poprzedniej odpowiedzi</span>
-                <p>{previous.answer.length > 260 ? `${previous.answer.slice(0, 259)}…` : previous.answer}</p>
-              </aside>
-            )}
+        {previous && step > 0 && (
+          <aside className="ctms-previous-answer">
+            <span>Fragment poprzedniej odpowiedzi</span>
+            <p>{previous.answer.length > 260 ? `${previous.answer.slice(0, 259)}…` : previous.answer}</p>
+          </aside>
+        )}
 
-            {observation && (
-              <aside className="ctms-observation">
-                <span>Dlaczego pytamy właśnie o to</span>
-                <p>{observation}</p>
-              </aside>
-            )}
-          </div>
-        ) : null}
+        {observation && (
+          <aside className="ctms-observation">
+            <span>Dlaczego pytamy właśnie o to</span>
+            <p>{observation}</p>
+          </aside>
+        )}
 
         <h1>{currentQuestion}</h1>
 

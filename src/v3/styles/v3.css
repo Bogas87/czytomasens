@@ -1607,29 +1607,3 @@
   .ctms-force-options { grid-template-columns: repeat(2,minmax(0,1fr)) !important; }
   .ctms-context-frame { grid-template-columns: 1fr !important; }
 }
-
-/* Dwa Spojrzenia - second mode on landing */
-.ctms-couple-cta {
-  min-height: 52px;
-  padding: 0 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  border: 1px solid rgba(222,180,105,.34);
-  border-radius: 13px;
-  color: var(--ctms-ink-soft);
-  background: rgba(255,255,255,.018);
-  text-decoration: none;
-  font-size: 13px;
-  font-weight: 700;
-  transition: .18s ease;
-}
-.ctms-couple-cta:hover {
-  color: var(--ctms-gold-2);
-  border-color: rgba(239,203,137,.6);
-  background: rgba(215,168,91,.055);
-  transform: translateY(-1px);
-}
-.ctms-couple-cta span { color: var(--ctms-gold); font-size: 17px; }
-@media (max-width: 700px) { .ctms-couple-cta { width: 100%; } }
