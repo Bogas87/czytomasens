@@ -7,18 +7,9 @@ import { Kicker, PrimaryButton, Progress, SecondaryButton, Surface } from "./Lay
 const MIN_LENGTH = 20;
 
 const stepMeta = [
-  {
-    label: "Konkretne zdarzenie",
-    description: "Jedna scena, którą da się odtworzyć bez zgadywania intencji.",
-  },
-  {
-    label: "Mechanizm i odpowiedzialność",
-    description: "Kto wykonuje kolejny ruch i kto ponosi koszt utrzymania kontaktu albo spokoju.",
-  },
-  {
-    label: "Kontrsygnał",
-    description: "Fakt, który może osłabić Twoje pierwsze wyjaśnienie sytuacji.",
-  },
+  { label: "Konkretne zdarzenie", description: "Jedna scena, którą da się odtworzyć bez zgadywania intencji." },
+  { label: "Mechanizm i odpowiedzialność", description: "Kto wykonuje kolejny ruch i kto ponosi koszt utrzymania kontaktu albo spokoju." },
+  { label: "Kontrsygnał", description: "Fakt, który może osłabić Twoje pierwsze wyjaśnienie sytuacji." },
 ];
 
 function fallbackQuestion(path: EntryConfig, step: number): string {
@@ -58,37 +49,50 @@ export function OpenInterview({
   const canSubmit = length >= MIN_LENGTH;
 
   return (
-    <Surface className="ctms-interview">
-      <aside className="ctms-interview-header">
+    <Surface className="ctms-v9-interview">
+      <aside className="ctms-v9-interview-rail">
+        <div className="ctms-v9-interview-progress">
+          <span>DOPRECYZOWANIE</span>
+          <strong>{String(step + 1).padStart(2, "0")} <i>/ 03</i></strong>
+        </div>
         <Progress current={step + 1} total={3} label="Doprecyzowanie" />
-        <div>
+
+        <div className="ctms-v9-interview-meta">
           <Kicker>{meta.label}</Kicker>
           <p>{meta.description}</p>
         </div>
-        <div className="ctms-interview-side-note">
+
+        <div className="ctms-v9-interview-note">
           <strong>Twoje słowa są materiałem.</strong>
-          <p>Nie musisz pisać ładnie. Liczy się kolejność zdarzeń i konkret.</p>
+          <p>Nie musisz pisać ładnie. Liczy się kolejność, konkret i to, co rzeczywiście się wydarzyło.</p>
         </div>
+
+        <div className="ctms-v9-interview-art" aria-hidden="true" />
       </aside>
 
-      <div className="ctms-interview-content" data-focus={focus || undefined}>
+      <div className="ctms-v9-interview-main" data-focus={focus || undefined}>
+        <div className="ctms-v9-interview-photo" aria-hidden="true" />
+
         {previous && step > 0 && (
-          <aside className="ctms-previous-answer">
-            <span>Fragment poprzedniej odpowiedzi</span>
-            <p>{previous.answer.length > 260 ? `${previous.answer.slice(0, 259)}…` : previous.answer}</p>
+          <aside className="ctms-v9-previous">
+            <span>WCZEŚNIEJ NAPISAŁEŚ / NAPISAŁAŚ</span>
+            <p>{previous.answer.length > 220 ? `${previous.answer.slice(0, 219)}…` : previous.answer}</p>
           </aside>
         )}
 
         {observation && (
-          <aside className="ctms-observation">
-            <span>Dlaczego pytamy właśnie o to</span>
+          <aside className="ctms-v9-observation">
+            <span>DLACZEGO PYTAMY WŁAŚNIE O TO</span>
             <p>{observation}</p>
           </aside>
         )}
 
-        <h1>{currentQuestion}</h1>
+        <div className="ctms-v9-interview-copy">
+          <Kicker>{meta.label}</Kicker>
+          <h1>{currentQuestion}</h1>
+        </div>
 
-        <label className="ctms-writing-field">
+        <label className="ctms-v9-writing">
           <span>Twoja odpowiedź</span>
           <textarea
             value={draft}
@@ -103,10 +107,10 @@ export function OpenInterview({
             rows={8}
             maxLength={5000}
           />
-          <div className="ctms-field-meta">
+          <div className="ctms-v9-field-meta">
             <span>
               {length === 0
-                ? "Minimum 20 znaków albo pomiń pytanie, jeżeli nie masz wystarczających danych."
+                ? "Minimum 20 znaków albo pomiń pytanie, jeśli nie masz wystarczających danych."
                 : length < MIN_LENGTH
                   ? `Dopisz jeszcze ${MIN_LENGTH - length} znaków albo pomiń pytanie.`
                   : "Wystarczy. Możesz przejść dalej."}
@@ -115,7 +119,7 @@ export function OpenInterview({
           </div>
         </label>
 
-        <div className="ctms-actions ctms-actions-split">
+        <div className="ctms-v9-interview-actions">
           <PrimaryButton onClick={onSubmit} disabled={loading || !canSubmit}>
             {loading ? "Przygotowujemy kolejne pytanie…" : step < 2 ? "Przejdź dalej" : "Zamknij ten wątek"}
           </PrimaryButton>
@@ -147,50 +151,53 @@ export function FinalContext({
   const hasValidText = length >= MIN_LENGTH;
 
   return (
-    <Surface className="ctms-stage ctms-final-context">
-      <div className="ctms-stage-head">
+    <Surface className="ctms-v9-final">
+      <div className="ctms-v9-final-copy">
         <Kicker>OSTATNI KONTEKST</Kicker>
         <h1>Czy jest coś, co mogłoby uczciwie zmienić znaczenie tej historii?</h1>
         <p>{PATH_CONTEXT[path.key].finalPrompt}</p>
       </div>
 
-      <div className="ctms-context-hints">
-        <article><strong>Dodaj</strong><p>ważne próby naprawy, konkretne zmiany i fakty, które wspierają Twój odczyt.</p></article>
-        <article><strong>Uwzględnij</strong><p>własne błędy i zdarzenia, które osłabiają pierwszą wersję.</p></article>
-        <article><strong>Pomiń dane osobowe</strong><p>nazwiska, adresy, telefony i inne informacje identyfikujące drugą osobę.</p></article>
-      </div>
+      <div className="ctms-v9-final-layout">
+        <aside className="ctms-v9-final-guidance">
+          <article><span>01</span><div><strong>Dodaj</strong><p>ważne próby naprawy, konkretne zmiany i fakty, które wspierają Twój odczyt.</p></div></article>
+          <article><span>02</span><div><strong>Uwzględnij</strong><p>własne błędy i zdarzenia, które osłabiają pierwszą wersję.</p></div></article>
+          <article><span>03</span><div><strong>Pomiń dane osobowe</strong><p>nazwiska, adresy, telefony i inne informacje identyfikujące drugą osobę.</p></div></article>
+          <div className="ctms-v9-final-art" aria-hidden="true" />
+        </aside>
 
-      <label className="ctms-writing-field">
-        <span>Dodatkowy kontekst — opcjonalny</span>
-        <textarea
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder="Dopisz tylko informacje, które mogą realnie zmienić ocenę opisanych zdarzeń."
-          rows={9}
-          maxLength={9000}
-        />
-        <div className="ctms-field-meta">
-          <span>
-            {length === 0
-              ? "Możesz uzupełnić minimum 20 znaków albo pominąć ten etap."
-              : length < MIN_LENGTH
-                ? `Dopisz jeszcze ${MIN_LENGTH - length} znaków albo pomiń etap.`
-                : "Kontekst zostanie uwzględniony w pierwszym odczycie."}
-          </span>
-          <strong>{length}/9000</strong>
+        <div className="ctms-v9-final-work">
+          <label className="ctms-v9-writing">
+            <span>Dodatkowy kontekst — opcjonalny</span>
+            <textarea
+              value={value}
+              onChange={(event) => onChange(event.target.value)}
+              placeholder="Dopisz tylko informacje, które mogą realnie zmienić ocenę opisanych zdarzeń."
+              rows={9}
+              maxLength={9000}
+            />
+            <div className="ctms-v9-field-meta">
+              <span>
+                {length === 0
+                  ? "Możesz uzupełnić minimum 20 znaków albo pominąć ten etap."
+                  : length < MIN_LENGTH
+                    ? `Dopisz jeszcze ${MIN_LENGTH - length} znaków albo pomiń etap.`
+                    : "Kontekst zostanie uwzględniony w pierwszym odczycie."}
+              </span>
+              <strong>{length}/9000</strong>
+            </div>
+          </label>
+
+          <label className="ctms-v9-consent">
+            <input type="checkbox" checked={consent} onChange={(event) => onConsent(event.target.checked)} />
+            <span>Zgadzam się na przetworzenie podanych treści wyłącznie w celu przygotowania wyniku oraz akceptuję Regulamin i Politykę prywatności.</span>
+          </label>
+
+          <div className="ctms-v9-final-actions">
+            <PrimaryButton onClick={onSubmit} disabled={!consent || !hasValidText}>Uwzględnij i przygotuj odczyt</PrimaryButton>
+            <SecondaryButton onClick={onSkip} disabled={!consent}>Pomiń dodatkowy kontekst</SecondaryButton>
+          </div>
         </div>
-      </label>
-
-      <label className="ctms-consent">
-        <input type="checkbox" checked={consent} onChange={(event) => onConsent(event.target.checked)} />
-        <span>
-          Zgadzam się na przetworzenie podanych treści wyłącznie w celu przygotowania wyniku oraz akceptuję Regulamin i Politykę prywatności.
-        </span>
-      </label>
-
-      <div className="ctms-actions ctms-actions-split">
-        <PrimaryButton onClick={onSubmit} disabled={!consent || !hasValidText}>Uwzględnij i przygotuj odczyt</PrimaryButton>
-        <SecondaryButton onClick={onSkip} disabled={!consent}>Pomiń dodatkowy kontekst</SecondaryButton>
       </div>
     </Surface>
   );

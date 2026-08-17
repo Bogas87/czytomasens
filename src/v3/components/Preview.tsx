@@ -16,18 +16,18 @@ export function FreePreview({
   onPremium: () => void;
 }) {
   return (
-    <div className="ctms-v7-free">
-      <section className="ctms-v7-free-hero">
-        <div>
-          <Kicker>TWÓJ DARMOWY RAPORT</Kicker>
+    <div className="ctms-v9-free">
+      <section className="ctms-v9-free-hero">
+        <div className="ctms-v9-free-copy">
+          <Kicker>TWÓJ PIERWSZY ODCZYT</Kicker>
           <h1>Pierwszy wgląd.<br/><em>Więcej jasności.</em></h1>
-          <p>To Twój bezpłatny raport — skrócona analiza oparta na materiale, który podałeś. Pełny raport rozwija najważniejsze wnioski i kryteria dalszego sprawdzenia.</p>
-          <div className="ctms-v7-free-meta">
-            <span><b>◫</b><small>Typ odczytu</small><strong>Podstawowy</strong></span>
-            <span><b>◷</b><small>Pewność</small><strong>{confidenceLabel(preview.confidence)}</strong></span>
+          <p>To nie jest ocena relacji. To pierwszy uporządkowany obraz materiału, który podałeś: co dziś wygląda na istotne, co może mieć inne wyjaśnienie i czego nadal nie wiadomo.</p>
+          <div className="ctms-v9-free-meta">
+            <span><small>PEWNOŚĆ</small><strong>{confidenceLabel(preview.confidence)}</strong></span>
+            <span><small>CHARAKTER</small><strong>pierwszy odczyt</strong></span>
           </div>
         </div>
-        <div className="ctms-v7-free-hero-art" aria-hidden="true" />
+        <div className="ctms-v9-free-photo" aria-hidden="true" />
       </section>
 
       {preview.safety && preview.safety.level !== "clear" && (
@@ -38,60 +38,75 @@ export function FreePreview({
         </Surface>
       )}
 
-      <Surface className="ctms-v7-free-summary">
-        <div className="ctms-v7-summary-symbol">✦</div>
+      <section className="ctms-v9-free-lead">
+        <div className="ctms-v9-free-mark">✦</div>
         <div>
-          <Kicker>PODSUMOWANIE</Kicker>
+          <Kicker>SEDNO ODCZYTU</Kicker>
           <h2>{preview.headline}</h2>
         </div>
-        <div>
-          <p>{preview.essence}</p>
-          <div className="ctms-v7-summary-stats">
-            <span><b>♡</b><small>Główny sygnał</small><strong>{preview.observedSignal}</strong></span>
-            <span><b>⚖</b><small>Pewność</small><strong>{confidenceLabel(preview.confidence)}</strong></span>
-            <span><b>⌁</b><small>Kierunek</small><strong>{preview.verify}</strong></span>
-          </div>
-        </div>
-      </Surface>
-
-      <h2 className="ctms-v7-free-section-title">Pierwszy wgląd w Twoją sytuację</h2>
-      <section className="ctms-v7-free-grid">
-        <article className="free-card-a"><span>01 · ZDARZENIE</span><h3>Co się wydarzyło?</h3><p>{preview.observedSignal}</p></article>
-        <article className="free-card-b"><span>02 · INTERPRETACJA</span><h3>Co to może znaczyć?</h3><p>{preview.essence}</p></article>
-        <article className="free-card-c"><span>03 · NAJWIĘKSZA NIEWIADOMA</span><h3>Czego jeszcze nie wiemy?</h3><p>{preview.unknown}</p></article>
-        <article className="free-card-d"><span>04 · CO SPRAWDZIĆ DALEJ</span><h3>Jakie są kolejne kroki?</h3><p>{preview.verify}</p></article>
+        <p>{preview.essence}</p>
       </section>
 
-      <Surface className="ctms-v7-free-map">
-        <div>
-          <Kicker>MAPA RELACJI · PODGLĄD</Kicker>
-          <h2>Gdzie jesteś dziś?</h2>
-          <p>To tylko fragment obrazu. Pełny raport pokazuje zależności pomiędzy faktami, znaczeniami, niewiadomymi i możliwymi kierunkami.</p>
-        </div>
-        <div className="ctms-v7-map-line">
-          <span><b>♡</b><small>WIĘŹ</small><strong>Do sprawdzenia</strong></span>
-          <i />
-          <span><b>◌</b><small>KOMUNIKACJA</small><strong>Wymaga uwagi</strong></span>
-          <i />
-          <span><b>◇</b><small>ZAUFANIE</small><strong>Niewiadoma</strong></span>
-          <i />
-          <span><b>♧</b><small>WSPÓLNY KIERUNEK</small><strong>Do doprecyzowania</strong></span>
-        </div>
-      </Surface>
+      <section className="ctms-v9-free-dossier">
+        <article>
+          <span>01 · ZDARZENIE / SYGNAŁ</span>
+          <h3>Co dziś widać?</h3>
+          <p>{preview.observedSignal}</p>
+        </article>
+        <article>
+          <span>02 · ALTERNATYWNE ZNACZENIE</span>
+          <h3>Co jeszcze może to wyjaśniać?</h3>
+          <p>{preview.essence}</p>
+        </article>
+        <article>
+          <span>03 · NAJWIĘKSZA NIEWIADOMA</span>
+          <h3>Czego jeszcze nie wiemy?</h3>
+          <p>{preview.unknown}</p>
+        </article>
+        <article>
+          <span>04 · KRYTERIUM SPRAWDZENIA</span>
+          <h3>Co może zmienić ocenę?</h3>
+          <p>{preview.verify}</p>
+        </article>
+      </section>
 
-      <Surface className="ctms-v7-free-premium">
-        <div>
-          <h2>Co znajdziesz w pełnym raporcie</h2>
-          <PrimaryButton onClick={onPremium}>Zobacz pełny raport</PrimaryButton>
-        </div>
-        <span><b>▤</b><strong>Pełna analiza zdarzeń</strong><small>Kluczowe sytuacje i wzorce.</small></span>
-        <span><b>⌕</b><strong>Głębsza interpretacja</strong><small>Mechanizmy wpływające na relację.</small></span>
-        <span><b>♡</b><strong>Ukryte potrzeby</strong><small>Potrzeby i obawy wynikające z materiału.</small></span>
-        <span><b>↗</b><strong>Rekomendacje</strong><small>Kroki dopasowane do sytuacji.</small></span>
-        <span><b>◌</b><strong>Plan rozmów</strong><small>Tematy warte spokojnego sprawdzenia.</small></span>
-      </Surface>
+      {preview.discrepancySample.length > 0 && (
+        <section className="ctms-v9-free-reality">
+          <div>
+            <Kicker>RÓŻNICA MIĘDZY ODCZUCIEM A MATERIAŁEM</Kicker>
+            <h2>Najważniejsze jest nie to, co brzmi przekonująco, ale to, co da się dziś podeprzeć opisem.</h2>
+          </div>
+          <div className="ctms-v9-free-reality-list">
+            {preview.discrepancySample.slice(0, 2).map((row, index) => (
+              <article key={`${row.userMeaning}-${index}`}>
+                <div><span>Twoje znaczenie</span><p>{row.userMeaning}</p></div>
+                <div><span>Materiał</span><p>{row.observedMaterial}</p></div>
+                <div><span>Nadal nie wiadomo</span><p>{row.unknown}</p></div>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
-      <p className="ctms-v7-private-footer">▣ Twoja prywatność jest chroniona. Raport widzisz tylko Ty.</p>
+      <section className="ctms-v9-free-next">
+        <div className="ctms-v9-free-next-copy">
+          <Kicker>PEŁNY RAPORT</Kicker>
+          <h2>Pełny odczyt nie dodaje „więcej tekstu”. Dodaje strukturę, kontrhipotezę i konkretne warunki sprawdzenia.</h2>
+          <p>{preview.premiumPromise}</p>
+        </div>
+        <div className="ctms-v9-free-next-grid">
+          <span>pełna mapa rozbieżności</span>
+          <span>hipoteza główna i kontrhipoteza</span>
+          <span>możliwy ślepy punkt</span>
+          <span>warunki zmiany oceny</span>
+          <span>granice i kryteria</span>
+          <span>sprawdzenie w rzeczywistości</span>
+        </div>
+        <PrimaryButton onClick={onPremium}>Zobacz pełny raport</PrimaryButton>
+        <small>Opcjonalnie. Jednorazowa płatność, bez subskrypcji i automatycznych odnowień.</small>
+      </section>
+
+      <p className="ctms-v9-private-footer">▣ Ten odczyt jest prywatny. Surowe odpowiedzi nie są publikowane ani pokazywane innym osobom.</p>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { Kicker, PrimaryButton, SecondaryButton, Surface } from "./Layout";
 
 const forceItems = [
   { key: "initiative", label: "Kto częściej inicjuje kontakt lub ważną rozmowę?" },
-  { key: "repair", label: "Kto częściej wraca po konflikcie i próbuje naprawić sytuację?" },
+  { key: "repair", label: "Kto częściej wraca po konflikcie i próbuje domknąć temat?" },
   { key: "emotionalLabor", label: "Kto częściej pilnuje atmosfery i emocji obu stron?" },
   { key: "clarity", label: "Kto częściej domaga się jasności i konkretu?" },
 ];
@@ -54,6 +54,13 @@ const truthsByPath: Record<EntryKey, string[]> = {
   loop: ["Ulga po powrocie nie jest jeszcze naprawą.", "Granica przesuwa się po każdym kolejnym cyklu.", "Wiem, w którym momencie zwykle rezygnuję z własnego kryterium."],
 };
 
+const stepMeta = [
+  { index: "01", title: "Rozkład odpowiedzialności", label: "KTO WYKONUJE RUCH", note: "Zobacz proporcje bez robienia z nich wyniku." },
+  { index: "02", title: "Koszt relacji", label: "CO ZABIERA ENERGIĘ", note: "Wybierz maksymalnie trzy rzeczy, które naprawdę wracają." },
+  { index: "03", title: "To, co uruchamia się w Tobie", label: "CO DZIEJE SIĘ W ŚRODKU", note: "Nazwij stany, nie ocenę siebie." },
+  { index: "04", title: "Zdanie, którego nie chcesz już omijać", label: "NAJMOCNIEJSZA TEZA", note: "Raport sprawdzi również kontrargument." },
+];
+
 function ChoiceGrid({
   options,
   selected,
@@ -66,7 +73,7 @@ function ChoiceGrid({
   onChange: (next: string[]) => void;
 }) {
   return (
-    <div className="ctms-choice-grid">
+    <div className="ctms-v9-choice-grid">
       {options.map((option, index) => {
         const active = selected.includes(option);
         const blocked = !active && selected.length >= limit;
@@ -83,21 +90,15 @@ function ChoiceGrid({
               onChange([...selected, option]);
             }}
           >
-            <span>{active ? "✓" : String(index + 1).padStart(2, "0")}</span>
+            <span className="ctms-v9-choice-number">{String(index + 1).padStart(2, "0")}</span>
             <strong>{option}</strong>
+            <span className="ctms-v9-choice-mark">{active ? "✓" : ""}</span>
           </button>
         );
       })}
     </div>
   );
 }
-
-const steps = [
-  { title: "Rozkład odpowiedzialności", subtitle: "Zobacz, kto częściej uruchamia i podtrzymuje ważne procesy w relacji." },
-  { title: "Koszt relacji", subtitle: "Wybierz maksymalnie trzy rzeczy, które zabierają Ci najwięcej energii." },
-  { title: "To, co uruchamia się w Tobie", subtitle: "Nazwij maksymalnie trzy stany, które najczęściej towarzyszą tej sytuacji." },
-  { title: "Zdanie, którego nie chcesz już omijać", subtitle: "Wybierz jedno. Raport sprawdzi również najmocniejszy kontrargument." },
-];
 
 export function ContextMap({
   path,
@@ -121,37 +122,47 @@ export function ContextMap({
     else if (complete) onContinue();
   };
 
+  const prev = () => setStep((current) => Math.max(0, current - 1));
+
   return (
-    <Surface className="ctms-stage ctms-context ctms-context-flow">
-      <div className="ctms-context-progress" aria-label={`Mapa relacji: etap ${step + 1} z 4`}>
+    <Surface className="ctms-stage ctms-context-flow ctms-v9-context">
+      <div className="ctms-v9-context-top">
         <div>
           <Kicker>MAPA RELACJI · KROK 3 Z 4</Kicker>
-          <span>{String(step + 1).padStart(2, "0")} / 04</span>
+          <p>Nie tworzymy punktacji. Zbieramy proporcje, koszt i to, co powtarza się w Twoim doświadczeniu.</p>
         </div>
-        <div className="ctms-context-progress-track"><span style={{ width: `${((step + 1) / 4) * 100}%` }} /></div>
+        <div className="ctms-v9-context-counter">{String(step + 1).padStart(2, "0")} <span>/ 04</span></div>
       </div>
+      <div className="ctms-v9-progress"><span style={{ width: `${((step + 1) / 4) * 100}%` }} /></div>
 
-      <div className="ctms-context-frame">
-        <aside className="ctms-context-intro">
-          <span className="ctms-context-step-index">{String(step + 1).padStart(2, "0")}</span>
-          <h1>{steps[step].title}</h1>
-          <p>{steps[step].subtitle}</p>
-          <div className="ctms-context-quiet-note">
-            <strong>Nie tworzymy punktacji.</strong>
-            <span>Tu chodzi o proporcje, koszt i to, co faktycznie wraca — nie o ocenę Ciebie ani drugiej osoby.</span>
+      <div className="ctms-v9-context-layout">
+        <aside className="ctms-v9-context-side">
+          <span className="ctms-v9-context-index">{stepMeta[step].index}</span>
+          <Kicker>{stepMeta[step].label}</Kicker>
+          <h1>{stepMeta[step].title}</h1>
+          <p>{stepMeta[step].note}</p>
+
+          <div className="ctms-v9-side-divider" />
+          <div className="ctms-v9-context-principle">
+            <strong>Co tu sprawdzamy?</strong>
+            <p>
+              Nie to, kto ma rację. Interesuje nas rozkład wysiłku, powtarzalność i to,
+              czy pojedyncze emocje układają się w stabilny mechanizm.
+            </p>
           </div>
+          <div className="ctms-v9-context-art" aria-hidden="true" />
         </aside>
 
-        <div className="ctms-context-workspace">
+        <div className="ctms-v9-context-main">
           {step === 0 && (
-            <div className="ctms-force-list ctms-force-list-premium">
+            <div className="ctms-v9-force-list">
               {forceItems.map((item, itemIndex) => (
-                <div className="ctms-force-row" key={item.key}>
-                  <div className="ctms-force-question">
+                <article key={item.key} className="ctms-v9-force-row">
+                  <div className="ctms-v9-force-question">
                     <span>{String(itemIndex + 1).padStart(2, "0")}</span>
                     <strong>{item.label}</strong>
                   </div>
-                  <div className="ctms-force-options" role="group" aria-label={item.label}>
+                  <div className="ctms-v9-force-scale" role="group" aria-label={item.label}>
                     {forceOptions.map((option) => {
                       const active = value.forceMap[item.key] === option.value;
                       return (
@@ -166,57 +177,68 @@ export function ContextMap({
                             forceMap: { ...value.forceMap, [item.key]: option.value },
                           })}
                         >
-                          <span className="ctms-scale-dot" aria-hidden="true" />
-                          <small>{option.short}</small>
+                          <i />
+                          <span>{option.short}</span>
                         </button>
                       );
                     })}
                   </div>
-                </div>
+                </article>
               ))}
             </div>
           )}
 
           {step === 1 && (
-            <ChoiceGrid
-              options={burdensByPath[path]}
-              selected={value.burdens}
-              limit={3}
-              onChange={(burdens) => onChange({ ...value, burdens })}
-            />
+            <>
+              <div className="ctms-v9-workspace-heading">
+                <strong>Co najbardziej obciąża tę relację?</strong>
+                <span>{value.burdens.length}/3 wybrane</span>
+              </div>
+              <ChoiceGrid options={burdensByPath[path]} selected={value.burdens} limit={3} onChange={(burdens) => onChange({ ...value, burdens })} />
+            </>
           )}
 
           {step === 2 && (
-            <ChoiceGrid
-              options={emotionsByPath[path]}
-              selected={value.emotions}
-              limit={3}
-              onChange={(emotions) => onChange({ ...value, emotions })}
-            />
+            <>
+              <div className="ctms-v9-workspace-heading">
+                <strong>Co najczęściej pojawia się w Tobie?</strong>
+                <span>{value.emotions.length}/3 wybrane</span>
+              </div>
+              <ChoiceGrid options={emotionsByPath[path]} selected={value.emotions} limit={3} onChange={(emotions) => onChange({ ...value, emotions })} />
+            </>
           )}
 
           {step === 3 && (
-            <div className="ctms-truth-list">
-              {truthsByPath[path].map((truth, index) => {
-                const active = value.truth === truth;
-                return (
-                  <button
-                    type="button"
-                    key={truth}
-                    className={active ? "is-selected" : ""}
-                    aria-pressed={active}
-                    onClick={() => onChange({ ...value, truth })}
-                  >
-                    <span>{active ? "✓" : String(index + 1).padStart(2, "0")}</span>
-                    <strong>„{truth}”</strong>
-                  </button>
-                );
-              })}
-            </div>
+            <>
+              <div className="ctms-v9-workspace-heading">
+                <strong>Które zdanie jest dziś najbliżej tego, czego nie chcesz już omijać?</strong>
+                <span>wybierz jedno</span>
+              </div>
+              <div className="ctms-v9-truth-list">
+                {truthsByPath[path].map((truth, index) => {
+                  const active = value.truth === truth;
+                  return (
+                    <button
+                      key={truth}
+                      type="button"
+                      className={active ? "is-selected" : ""}
+                      onClick={() => onChange({ ...value, truth })}
+                    >
+                      <span>{String(index + 1).padStart(2, "0")}</span>
+                      <strong>{truth}</strong>
+                      <i>{active ? "✓" : ""}</i>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
 
-          <div className="ctms-context-actions">
-            {step > 0 ? <SecondaryButton onClick={() => setStep((current) => Math.max(0, current - 1))}>Wstecz</SecondaryButton> : <span />}
+          <div className="ctms-v9-context-actions">
+            <SecondaryButton onClick={prev} disabled={step === 0}>Wstecz</SecondaryButton>
+            <div className="ctms-v9-context-stepdots">
+              {[0, 1, 2, 3].map((dot) => <i key={dot} className={dot <= step ? "is-active" : ""} />)}
+            </div>
             <PrimaryButton onClick={next} disabled={!canAdvance}>
               {step < 3 ? "Dalej" : "Przejdź do konkretnej historii"}
             </PrimaryButton>
