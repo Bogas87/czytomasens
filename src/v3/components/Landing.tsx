@@ -2,187 +2,162 @@ import React from "react";
 import { Kicker } from "./Layout";
 import "../../shared/product-consolidation.css";
 
-const guides = [
+const articles = [
   {
-    href: "/artykuly/czy-ten-zwiazek-ma-sens",
-    tag: "RELACJE",
-    title: "Czy ten związek ma jeszcze sens?",
-    text: "Jak odróżnić chwilowy kryzys od wzorca, który naprawdę wymaga uwagi.",
+    href: "/artykuly/jak-mowic-zeby-byc-naprawde-sluchanym",
+    title: "Jak mówić, żeby być naprawdę słuchanym",
+    fallback: "/artykuly/czy-ten-zwiazek-ma-sens",
   },
   {
-    href: "/artykuly/czy-warto-ratowac-zwiazek",
-    tag: "DECYZJE",
-    title: "Kiedy warto próbować dalej?",
-    text: "Co powinno być widoczne w zachowaniu, a nie tylko w deklaracjach.",
+    href: "/artykuly/granice-w-relacji-z-miloscia-do-siebie-i-do-nas",
+    title: "Granice w relacji — z miłością do siebie i do nas",
+    fallback: "/artykuly/czy-warto-ratowac-zwiazek",
   },
   {
     href: "/artykuly/mieszane-sygnaly-w-relacji-co-robic-gdy-raz-jest-blisko-a-raz-sie-mna-bawi",
-    tag: "SYGNAŁY",
-    title: "Bliskość, dystans i mieszane sygnały",
-    text: "Jak nie dopowiadać historii tam, gdzie nadal brakuje danych.",
-  },
-];
-
-const faqs = [
-  {
-    question: "Czy dostanę prostą odpowiedź: zostać czy odejść?",
-    answer: "Nie. Dostajesz uporządkowany materiał, alternatywne wyjaśnienia, niewiadome i kryteria, które można sprawdzić w zachowaniu.",
-  },
-  {
-    question: "Czy analiza diagnozuje drugą osobę?",
-    answer: "Nie. Pracujemy na zdarzeniach, zachowaniach, znaczeniach i niewiadomych. Nie przypisujemy diagnoz ani cudzych intencji jako faktu.",
-  },
-  {
-    question: "Czym różnią się dwie ścieżki?",
-    answer: "W jednej pracujesz nad własnym materiałem. W drugiej dwie osoby odpowiadają osobno, a później zestawiane są punkty wspólne, różnice i rzeczy nadal nierozstrzygnięte.",
-  },
-  {
-    question: "Czy druga osoba zobaczy mój surowy tekst?",
-    answer: "Nie. W ścieżce dla dwojga surowe odpowiedzi pozostają prywatne. Do części wspólnej trafia dopiero uporządkowany materiał.",
+    title: "Cisza, dystans, chłód — co naprawdę znaczą?",
+    fallback: "/artykuly/mieszane-sygnaly-w-relacji-co-robic-gdy-raz-jest-blisko-a-raz-sie-mna-bawi",
   },
 ];
 
 export function Landing({ onStart }: { onStart: () => void }) {
   return (
-    <div className="ctms-landing ctms-v6-home">
-      <section className="ctms-v6-hero" aria-labelledby="ctms-v6-title">
-        <div className="ctms-v6-hero-copy">
-          <Kicker>ZROZUM · UPORZĄDKUJ · ZDECYDUJ</Kicker>
-          <h1 id="ctms-v6-title">
-            Zrozum swoją sytuację.<br />
+    <div className="ctms-v7-page">
+      <section className="ctms-v7-hero" aria-labelledby="ctms-v7-title">
+        <div className="ctms-v7-copy">
+          <Kicker>ZROZUM. UPORZĄDKUJ. ZDECYDUJ.</Kicker>
+          <h1 id="ctms-v7-title">
+            Zrozum swoją relację.<br />
             Zobacz więcej. <em>Podejmuj spokojniej.</em>
           </h1>
           <p>
-            Spójrz na to, co się dzieje z większym dystansem. Uporządkuj fakty, znaczenia i niewiadome —
-            bez etykiet i bez udawania pewności.
+            Spójrz na swoją sytuację z dystansu, nazwij to, co ważne
+            i zobacz dynamikę wyraźniej — bez oceniania, w pełnej dyskrecji.
           </p>
 
-          <div className="ctms-v6-paths">
-            <button type="button" className="ctms-v6-path ctms-v6-path-solo" onClick={onStart}>
-              <span className="ctms-v6-path-round">◉</span>
-              <span className="ctms-v6-path-label">DLA MNIE</span>
-              <strong>Chcę uporządkować własny obraz sytuacji.</strong>
-              <p>Zobacz, co wynika z materiału, gdzie zaczyna się interpretacja i czego nadal nie wiadomo.</p>
-              <div className="ctms-v6-path-meta">
-                <span>moja perspektywa</span><span>ważne sygnały</span><span>kierunek sprawdzenia</span>
+          <div className="ctms-v7-route-grid">
+            <button type="button" className="ctms-v7-route ctms-v7-route-self" onClick={onStart}>
+              <div className="ctms-v7-route-icon" aria-hidden="true">◯</div>
+              <span className="ctms-v7-route-label">DLA MNIE</span>
+              <strong>Zbadaj swoją sytuację, uporządkuj fakty i zobacz, co naprawdę się dzieje.</strong>
+              <div className="ctms-v7-route-features">
+                <div><b>◉</b><span>Twoja perspektywa<br/>w centrum</span></div>
+                <div><b>◇</b><span>Jasność w emocjach<br/>i myślach</span></div>
+                <div><b>⌁</b><span>Kierunek dopasowany<br/>do Ciebie</span></div>
               </div>
-              <b>Rozpocznij tę ścieżkę <i>→</i></b>
+              <span className="ctms-v7-route-action">Zacznij analizę dla siebie <i>→</i></span>
             </button>
 
-            <a className="ctms-v6-path ctms-v6-path-pair" href="/dla-par">
-              <span className="ctms-v6-path-round">◎</span>
-              <span className="ctms-v6-path-label">DLA NAS</span>
-              <strong>Chcemy zestawić dwie perspektywy.</strong>
-              <p>Każda osoba odpowiada osobno. Później widać to, co wspólne, różne i nadal nierozstrzygnięte.</p>
-              <div className="ctms-v6-path-meta">
-                <span>dwie perspektywy</span><span>punkty wspólne</span><span>różnice znaczeń</span>
+            <a className="ctms-v7-route ctms-v7-route-pair" href="/dla-par">
+              <div className="ctms-v7-route-icon" aria-hidden="true">◎</div>
+              <span className="ctms-v7-route-label">DLA NAS</span>
+              <strong>Zrozumcie dynamikę relacji, dostrzeżcie wzorce i odbudujcie porozumienie.</strong>
+              <div className="ctms-v7-route-features">
+                <div><b>∞</b><span>Dynamika relacji<br/>w pełnym obrazie</span></div>
+                <div><b>♡</b><span>Lepsza komunikacja<br/>i zrozumienie</span></div>
+                <div><b>⌘</b><span>Świadome decyzje<br/>na przyszłość</span></div>
               </div>
-              <b>Rozpocznij tę ścieżkę <i>→</i></b>
+              <span className="ctms-v7-route-action">Zacznij analizę dla nas <i>→</i></span>
             </a>
-          </div>
-
-          <div className="ctms-v6-trustline">
-            <span>bez rejestracji</span><span>surowe odpowiedzi prywatne</span><span>pierwszy odczyt bezpłatny</span>
           </div>
         </div>
 
-        <figure className="ctms-v6-hero-visual">
-          <img src="/v3-assets/ctms-approved-couple.webp" alt="" aria-hidden="true" />
-          <div className="ctms-v6-photo-shade" />
-          <figcaption>
-            <span>RELACJA RZADKO MA TYLKO JEDNĄ WERSJĘ</span>
-            <strong>Nie szukamy winnego. Szukamy tego, co można zobaczyć wyraźniej.</strong>
-          </figcaption>
+        <figure className="ctms-v7-hero-image">
+          <img src="/v3-assets/v7-home-couple.webp" alt="" aria-hidden="true" />
+          <div className="ctms-v7-image-shade" />
         </figure>
       </section>
 
-      <section className="ctms-v6-method" id="jak-dziala">
-        <div className="ctms-v6-method-title">
+      <section className="ctms-v7-approach" id="jak-dziala">
+        <div className="ctms-v7-approach-intro">
           <Kicker>NASZE PODEJŚCIE</Kicker>
-          <h2>Jak pracujemy nad zrozumieniem sytuacji.</h2>
-          <p>Nie zaczynamy od werdyktu. Najpierw porządkujemy materiał, później sprawdzamy, co z niego naprawdę wynika.</p>
+          <h2>Jak pracujemy nad zrozumieniem relacji</h2>
+          <p>Metoda oparta na doświadczeniu, uważności i psychologicznej precyzji.</p>
+          <a href="#pelny-odczyt">Poznaj całe podejście <span>→</span></a>
         </div>
 
-        <div className="ctms-v6-method-step">
-          <div className="ctms-v6-step-image is-one" />
-          <span>01</span><h3>Opowiadasz</h3>
-          <p>Wybierasz odpowiedzi i opisujesz konkretne zdarzenia własnymi słowami.</p>
-        </div>
-        <div className="ctms-v6-method-step">
-          <div className="ctms-v6-step-image is-two" />
-          <span>02</span><h3>Porządkujemy</h3>
-          <p>Oddzielamy fakty, znaczenia, emocje, sprzeczności i brakujące dane.</p>
-        </div>
-        <div className="ctms-v6-method-step">
-          <div className="ctms-v6-step-image is-three" />
-          <span>03</span><h3>Otrzymujesz odczyt</h3>
-          <p>Widzisz główne wnioski, alternatywy i rzeczy nadal nierozstrzygnięte.</p>
-        </div>
-        <div className="ctms-v6-method-step">
-          <div className="ctms-v6-step-image is-four" />
-          <span>04</span><h3>Sprawdzasz</h3>
-          <p>Najważniejsze hipotezy dostają konkretne kryteria weryfikacji w zachowaniu.</p>
-        </div>
+        <article className="ctms-v7-step">
+          <div className="ctms-v7-step-art art-1" />
+          <div><span>01</span><h3>Ty opowiadasz</h3><p>Dzielisz się swoją historią w bezpiecznej przestrzeni.</p></div>
+        </article>
+        <article className="ctms-v7-step">
+          <div className="ctms-v7-step-art art-2" />
+          <div><span>02</span><h3>My analizujemy</h3><p>Porządkujemy fakty, wyłapujemy wzorce i kluczowe punkty relacji.</p></div>
+        </article>
+        <article className="ctms-v7-step">
+          <div className="ctms-v7-step-art art-3" />
+          <div><span>03</span><h3>Otrzymujesz wgląd</h3><p>Dostajesz klarowny obraz sytuacji, interpretację i rekomendacje.</p></div>
+        </article>
+        <article className="ctms-v7-step">
+          <div className="ctms-v7-step-art art-4" />
+          <div><span>04</span><h3>Działasz świadomie</h3><p>Masz wiedzę, by podejmować decyzje w zgodzie ze sobą.</p></div>
+        </article>
       </section>
 
-      <section className="ctms-v6-depth">
-        <div className="ctms-v6-depth-image" aria-hidden="true" />
-        <div className="ctms-v6-depth-copy">
+      <section className="ctms-v7-depth" id="pelny-odczyt">
+        <div className="ctms-v7-depth-art art-left" />
+        <div className="ctms-v7-depth-main">
           <Kicker>PEŁNY ODCZYT</Kicker>
-          <h2>Głębia, która ma dać jasność.</h2>
-          <p>Nie kolekcjonujemy kart. Budujemy jeden spójny obraz: co wiemy, co interpretujemy, czego nadal nie wiadomo i co może zmienić ocenę.</p>
-          <div className="ctms-v6-depth-list">
-            <span>pełny obraz materiału</span><span>hipoteza i kontrhipoteza</span>
-            <span>możliwy ślepy punkt</span><span>warunki zmiany oceny</span>
-            <span>granice i kryteria</span><span>protokół sprawdzenia</span>
+          <h2>Głębia, która daje jasność</h2>
+          <p>Każdy raport to starannie opracowany wgląd w Twoją relację.</p>
+          <div className="ctms-v7-checks">
+            <span>Pełny obraz sytuacji</span>
+            <span>Rekomendacje dopasowane do Was</span>
+            <span>Fakty i interpretacje</span>
+            <span>Praktyczne kroki naprawcze</span>
+            <span>Kluczowe wnioski</span>
+            <span>Poukładana ścieżka dalszych działań</span>
           </div>
         </div>
-        <aside className="ctms-v6-depth-logic">
+        <aside className="ctms-v7-depth-side">
           <Kicker>DLACZEGO TO DZIAŁA</Kicker>
-          <h3>Oddzielamy fakt od interpretacji.</h3>
-          <div><b>ZDARZENIE</b><p>Co zostało opisane.</p></div>
-          <div><b>ZNACZENIE</b><p>Jakie znaczenie temu nadajesz.</p></div>
-          <div><b>NIEWIADOMA</b><p>Czego materiał jeszcze nie rozstrzyga.</p></div>
+          <h3>Oddzielamy fakty od interpretacji</h3>
+          <p>Nie pracujemy na domysłach. Porządkujemy fakty, rozpoznajemy wzorce i dopiero wtedy formułujemy interpretacje.</p>
+          <div className="ctms-v7-three">
+            <span><b>◉</b>Fakty i historia<br/>bez zniekształceń</span>
+            <span><b>✣</b>Interpretacje oparte<br/>na psychologii relacji</span>
+            <span><b>⌁</b>Wnioski, które<br/>naprawdę pomagają</span>
+          </div>
         </aside>
       </section>
 
-      <section className="ctms-v6-guides">
-        <div className="ctms-v6-section-head">
-          <div><Kicker>ARTYKUŁY I PORADNIKI</Kicker><h2>Wiedza, która pomaga lepiej rozumieć.</h2></div>
-          <a href="/artykuly">Zobacz wszystkie <span>→</span></a>
+      <section className="ctms-v7-knowledge">
+        <div className="ctms-v7-knowledge-lead">
+          <Kicker>ARTYKUŁY I PORADNIKI</Kicker>
+          <h2>Wiedza, która pomaga lepiej rozumieć</h2>
+          <a href="/artykuly">Zobacz wszystkie artykuły <span>→</span></a>
         </div>
-        <div className="ctms-v6-guide-grid">
-          {guides.map((guide) => (
-            <a key={guide.href} href={guide.href}>
-              <span>{guide.tag}</span><h3>{guide.title}</h3><p>{guide.text}</p><b>Czytaj <i>→</i></b>
-            </a>
-          ))}
-        </div>
+        {articles.map((item, index) => (
+          <a key={item.title} className={`ctms-v7-article article-${index + 1}`} href={item.fallback}>
+            <h3>{item.title}</h3>
+            <span>Czytaj artykuł <i>→</i></span>
+          </a>
+        ))}
+        <a className="ctms-v7-faq-card" href="#faq">
+          <Kicker>NAJCZĘSTSZE PYTANIA</Kicker>
+          <h3>Masz pytania?<br/>Jesteśmy tu.</h3>
+          <span>Zobacz odpowiedzi <i>→</i></span>
+        </a>
       </section>
 
-      <section className="ctms-v6-privacy">
-        <div>
-          <Kicker>PRYWATNOŚĆ I DYSKRECJA</Kicker>
-          <h2>Szczerość wymaga poczucia bezpieczeństwa.</h2>
+      <footer className="ctms-v7-footer" id="faq">
+        <div className="ctms-v7-footer-brand">
+          <strong>CzyToMaSens</strong>
+          <span>SPOKOJNA ANALIZA RELACJI</span>
         </div>
         <div>
-          <p><strong>Surowe odpowiedzi pozostają prywatne.</strong><span>W ścieżce dla dwojga druga osoba nie widzi Twojego tekstu pytanie po pytaniu.</span></p>
-          <p><strong>Nie potrzebujemy danych identyfikujących.</strong><span>Do analizy wystarcza opis zdarzeń, zachowań i własnego doświadczenia.</span></p>
-          <p><strong>Nie diagnozujemy ludzi.</strong><span>Opisujemy materiał, różnice znaczeń, niewiadome i kryteria sprawdzenia.</span></p>
+          <b>◈</b>
+          <p><strong>Prywatność i dyskrecja</strong><br/>Twoje dane są chronione.<br/>Pracujemy z pełną dyskrecją.</p>
         </div>
-      </section>
-
-      <section className="ctms-v6-faq">
-        <div><Kicker>NAJCZĘSTSZE PYTANIA</Kicker><h2>Zanim zaczniesz.</h2></div>
         <div>
-          {faqs.map((item) => (
-            <details key={item.question}>
-              <summary>{item.question}<span>+</span></summary>
-              <p>{item.answer}</p>
-            </details>
-          ))}
+          <b>✉</b>
+          <p><strong>Kontakt</strong><br/>Napisz do nas — odpowiemy<br/>na każde pytanie.</p>
         </div>
-      </section>
+        <div>
+          <p><strong>Najczęstsze pytania</strong><br/><a href="/polityka-prywatnosci">Prywatność</a> · <a href="/regulamin">Regulamin</a></p>
+        </div>
+        <small>© CzyToMaSens. Wszelkie prawa zastrzeżone.</small>
+      </footer>
     </div>
   );
 }

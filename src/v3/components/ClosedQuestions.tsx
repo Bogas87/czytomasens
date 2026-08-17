@@ -4,6 +4,14 @@ import type { EntryConfig } from "../data/paths";
 import type { AnswerMap } from "../types";
 import { Progress, Surface } from "./Layout";
 
+const stageLabels = [
+  "Wasza dynamika",
+  "Komunikacja",
+  "Bliskość i potrzeby",
+  "Wyzwania",
+  "Kontekst i przyszłość",
+];
+
 export function ClosedQuestions({
   path,
   index,
@@ -17,47 +25,57 @@ export function ClosedQuestions({
 }) {
   const question = path.questions[index];
   if (!question) return null;
+  const total = path.questions.length;
+  const activeStage = Math.min(stageLabels.length - 1, Math.floor((index / Math.max(total, 1)) * stageLabels.length));
 
   return (
-    <Surface className="ctms-question ctms-question-prestige">
-      <aside className="ctms-question-header">
-        <span className="ctms-question-path">ANALIZA PRYWATNA</span>
-        <div className="ctms-question-orbit" aria-hidden="true">
-          <strong>{String(index + 1).padStart(2, "0")}</strong>
-          <span>/ {String(path.questions.length).padStart(2, "0")}</span>
+    <Surface className="ctms-question ctms-v7-question">
+      <aside className="ctms-v7-question-rail">
+        <span className="ctms-v7-rail-label">TWÓJ PROCES ZROZUMIENIA</span>
+        <div className="ctms-v7-counter"><strong>{String(index + 1).padStart(2, "0")}</strong><span>/ {String(total).padStart(2, "0")}</span></div>
+        <Progress current={index + 1} total={total} label="Pytanie" />
+        <p>Na podstawie Twoich odpowiedzi powstaje dopasowana analiza.</p>
+
+        <div className="ctms-v7-stage-list">
+          {stageLabels.map((label, i) => (
+            <div key={label} className={i === activeStage ? "is-active" : i < activeStage ? "is-done" : ""}>
+              <b>{String(i + 2).padStart(2, "0")}</b><span>{label}</span>
+            </div>
+          ))}
         </div>
-        <Progress current={index + 1} total={path.questions.length} label="Pytanie" />
-        <div className="ctms-question-rail-copy">
-          <span>Wybrany obszar</span>
-          <p>{path.title}</p>
-        </div>
-        <div className="ctms-question-private-note">
-          <span aria-hidden="true">◇</span>
+
+        <div className="ctms-v7-private">
+          <b>▣</b>
           <div>
-            <strong>Twoje odpowiedzi pozostają prywatne.</strong>
-            <p>Wybierz to, co najlepiej opisuje powtarzający się układ, a nie pojedynczy dzień.</p>
+            <strong>Twoje surowe odpowiedzi pozostają prywatne</strong>
+            <p>Odpowiadasz tylko Ty. Szczegóły nie są udostępniane innym osobom.</p>
           </div>
         </div>
+
+        <div className="ctms-v7-rail-art" aria-hidden="true" />
       </aside>
 
       <AnimatePresence mode="wait">
         <motion.div
           key={question.id}
-          className="ctms-question-content"
+          className="ctms-v7-question-main"
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
           transition={{ duration: 0.22 }}
         >
-          <div className="ctms-question-copy">
-            <p className="ctms-question-lead">{question.lead}</p>
+          <div className="ctms-v7-question-image" aria-hidden="true" />
+
+          <div className="ctms-v7-question-copy">
+            <span className="ctms-v7-question-kicker">{question.lead || stageLabels[activeStage]}</span>
             <h1>{question.text}</h1>
-            <p className="ctms-question-helper">Nie szukaj idealnej odpowiedzi. Wybierz tę, która najczęściej pasuje do Twojego doświadczenia.</p>
+            <p>Wybierz to, co jest najbliższe Twojemu doświadczeniu z ostatnich tygodni.</p>
           </div>
 
-          <div className="ctms-answer-list">
+          <div className="ctms-v7-answer-list">
             {question.options.map((option, optionIndex) => {
               const selected = answers[question.id] === option.id;
+              const icon = ["☼","⚖","☁","ϟ","?"][optionIndex % 5];
               return (
                 <button
                   key={option.id}
@@ -66,15 +84,17 @@ export function ClosedQuestions({
                   aria-pressed={selected}
                   onClick={() => onAnswer(question.id, option.id, option.score)}
                 >
-                  <span className="ctms-answer-index">{String(optionIndex + 1).padStart(2, "0")}</span>
+                  <span className="ctms-v7-answer-icon">{icon}</span>
                   <strong>{option.label}</strong>
-                  <span className="ctms-answer-check" aria-hidden="true">{selected ? "✓" : ""}</span>
+                  <span className="ctms-v7-answer-radio">{selected ? "✓" : ""}</span>
                 </button>
               );
             })}
           </div>
 
-          <p className="ctms-question-note">Wybór zapisuje się automatycznie. Możesz wrócić do poprzedniego pytania.</p>
+          <div className="ctms-v7-question-foot">
+            <span>▣ Możesz wrócić do poprzednich odpowiedzi w każdej chwili.</span>
+          </div>
         </motion.div>
       </AnimatePresence>
     </Surface>

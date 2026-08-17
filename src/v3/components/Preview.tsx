@@ -3,9 +3,9 @@ import type { BoundaryDraft, V3Preview } from "../types";
 import { Kicker, PrimaryButton, Surface } from "./Layout";
 
 function confidenceLabel(value: V3Preview["confidence"]): string {
-  if (value === "high") return "wysoka — kilka niezależnych elementów wskazuje podobny kierunek";
-  if (value === "medium") return "umiarkowana — obraz jest spójny, ale ważna niewiadoma nadal pozostaje";
-  return "ograniczona — materiał dopuszcza więcej niż jedno wyjaśnienie";
+  if (value === "high") return "wysoka";
+  if (value === "medium") return "umiarkowana";
+  return "ograniczona";
 }
 
 export function FreePreview({
@@ -16,25 +16,19 @@ export function FreePreview({
   onPremium: () => void;
 }) {
   return (
-    <div className="ctms-preview ctms-preview-prestige">
-      <Surface className="ctms-preview-hero">
-        <div className="ctms-preview-hero-copy">
-          <Kicker>TWÓJ PIERWSZY ODCZYT</Kicker>
-          <h1>Pierwszy wgląd.<br /><em>Więcej jasności.</em></h1>
-          <p>
-            To skrócony obraz oparty wyłącznie na materiale, który podałeś. Nie jest wyrokiem ani etykietą —
-            pokazuje, co dziś wynika z opisu i czego nadal nie można rozstrzygnąć.
-          </p>
-          <div className="ctms-confidence">
-            <span>PEWNOŚĆ ODCZYTU</span>
-            <strong>{confidenceLabel(preview.confidence)}</strong>
+    <div className="ctms-v7-free">
+      <section className="ctms-v7-free-hero">
+        <div>
+          <Kicker>TWÓJ DARMOWY RAPORT</Kicker>
+          <h1>Pierwszy wgląd.<br/><em>Więcej jasności.</em></h1>
+          <p>To Twój bezpłatny raport — skrócona analiza oparta na materiale, który podałeś. Pełny raport rozwija najważniejsze wnioski i kryteria dalszego sprawdzenia.</p>
+          <div className="ctms-v7-free-meta">
+            <span><b>◫</b><small>Typ odczytu</small><strong>Podstawowy</strong></span>
+            <span><b>◷</b><small>Pewność</small><strong>{confidenceLabel(preview.confidence)}</strong></span>
           </div>
         </div>
-        <aside className="ctms-preview-signal">
-          <span>GŁÓWNY SYGNAŁ</span>
-          <p>{preview.headline}</p>
-        </aside>
-      </Surface>
+        <div className="ctms-v7-free-hero-art" aria-hidden="true" />
+      </section>
 
       {preview.safety && preview.safety.level !== "clear" && (
         <Surface className="ctms-safety-warning">
@@ -44,72 +38,60 @@ export function FreePreview({
         </Surface>
       )}
 
-      <Surface className="ctms-preview-essence">
-        <div className="ctms-preview-essence-mark" aria-hidden="true">01</div>
+      <Surface className="ctms-v7-free-summary">
+        <div className="ctms-v7-summary-symbol">✦</div>
         <div>
-          <Kicker>SEDNO ODCZYTU</Kicker>
+          <Kicker>PODSUMOWANIE</Kicker>
+          <h2>{preview.headline}</h2>
+        </div>
+        <div>
           <p>{preview.essence}</p>
+          <div className="ctms-v7-summary-stats">
+            <span><b>♡</b><small>Główny sygnał</small><strong>{preview.observedSignal}</strong></span>
+            <span><b>⚖</b><small>Pewność</small><strong>{confidenceLabel(preview.confidence)}</strong></span>
+            <span><b>⌁</b><small>Kierunek</small><strong>{preview.verify}</strong></span>
+          </div>
         </div>
       </Surface>
 
-      <section className="ctms-reading-grid ctms-reading-grid-four">
-        <article>
-          <span>01 · ZDARZENIE / SYGNAŁ</span>
-          <h3>Co dziś widać?</h3>
-          <p>{preview.observedSignal}</p>
-        </article>
-        <article>
-          <span>02 · NAJWIĘKSZA NIEWIADOMA</span>
-          <h3>Czego jeszcze nie wiemy?</h3>
-          <p>{preview.unknown}</p>
-        </article>
-        <article className="ctms-reading-verify">
-          <span>03 · CO MOŻE ZMIENIĆ OCENĘ</span>
-          <h3>Co warto sprawdzić?</h3>
-          <p>{preview.verify}</p>
-        </article>
-        <article className="ctms-reading-confidence">
-          <span>04 · PEWNOŚĆ ODCZYTU</span>
-          <h3>Jak mocny jest dziś wniosek?</h3>
-          <p>{confidenceLabel(preview.confidence)}</p>
-        </article>
+      <h2 className="ctms-v7-free-section-title">Pierwszy wgląd w Twoją sytuację</h2>
+      <section className="ctms-v7-free-grid">
+        <article className="free-card-a"><span>01 · ZDARZENIE</span><h3>Co się wydarzyło?</h3><p>{preview.observedSignal}</p></article>
+        <article className="free-card-b"><span>02 · INTERPRETACJA</span><h3>Co to może znaczyć?</h3><p>{preview.essence}</p></article>
+        <article className="free-card-c"><span>03 · NAJWIĘKSZA NIEWIADOMA</span><h3>Czego jeszcze nie wiemy?</h3><p>{preview.unknown}</p></article>
+        <article className="free-card-d"><span>04 · CO SPRAWDZIĆ DALEJ</span><h3>Jakie są kolejne kroki?</h3><p>{preview.verify}</p></article>
       </section>
 
-      {preview.discrepancySample.length > 0 && (
-        <Surface className="ctms-discrepancy-preview">
-          <div className="ctms-section-head">
-            <Kicker>FRAGMENT MAPY ROZBIEŻNOŚCI</Kicker>
-            <h2>To, co czujesz, i to, co można dziś potwierdzić, nie zawsze jest tym samym.</h2>
-          </div>
-          <div className="ctms-discrepancy-list">
-            {preview.discrepancySample.slice(0, 2).map((row, index) => (
-              <article key={`${row.userMeaning}-${index}`}>
-                <div><span>Twoje rozumienie</span><p>{row.userMeaning}</p></div>
-                <div><span>Opisany materiał</span><p>{row.observedMaterial}</p></div>
-                <div><span>Niewiadoma</span><p>{row.unknown}</p></div>
-              </article>
-            ))}
-          </div>
-        </Surface>
-      )}
-
-      <Surface className="ctms-premium-offer ctms-premium-teaser">
+      <Surface className="ctms-v7-free-map">
         <div>
-          <Kicker>PEŁNIEJSZY OBRAZ</Kicker>
-          <h2>Ten odczyt pokazuje kierunek. Pełny raport pokazuje mechanizm, kontrhipotezę i warunki realnej zmiany.</h2>
-          <p>{preview.premiumPromise}</p>
+          <Kicker>MAPA RELACJI · PODGLĄD</Kicker>
+          <h2>Gdzie jesteś dziś?</h2>
+          <p>To tylko fragment obrazu. Pełny raport pokazuje zależności pomiędzy faktami, znaczeniami, niewiadomymi i możliwymi kierunkami.</p>
         </div>
-        <div className="ctms-premium-teaser-grid">
-          <span>pełna mapa rozbieżności</span>
-          <span>hipoteza i kontrhipoteza</span>
-          <span>możliwy ślepy punkt</span>
-          <span>warunki zmiany oceny</span>
-          <span>granice i kryteria</span>
-          <span>protokół sprawdzenia</span>
+        <div className="ctms-v7-map-line">
+          <span><b>♡</b><small>WIĘŹ</small><strong>Do sprawdzenia</strong></span>
+          <i />
+          <span><b>◌</b><small>KOMUNIKACJA</small><strong>Wymaga uwagi</strong></span>
+          <i />
+          <span><b>◇</b><small>ZAUFANIE</small><strong>Niewiadoma</strong></span>
+          <i />
+          <span><b>♧</b><small>WSPÓLNY KIERUNEK</small><strong>Do doprecyzowania</strong></span>
         </div>
-        <PrimaryButton onClick={onPremium}>Przejdź do pełnego raportu</PrimaryButton>
-        <p className="ctms-payment-note">Pełny raport jest opcjonalny. Płatność jest jednorazowa — bez subskrypcji i automatycznych odnowień.</p>
       </Surface>
+
+      <Surface className="ctms-v7-free-premium">
+        <div>
+          <h2>Co znajdziesz w pełnym raporcie</h2>
+          <PrimaryButton onClick={onPremium}>Zobacz pełny raport</PrimaryButton>
+        </div>
+        <span><b>▤</b><strong>Pełna analiza zdarzeń</strong><small>Kluczowe sytuacje i wzorce.</small></span>
+        <span><b>⌕</b><strong>Głębsza interpretacja</strong><small>Mechanizmy wpływające na relację.</small></span>
+        <span><b>♡</b><strong>Ukryte potrzeby</strong><small>Potrzeby i obawy wynikające z materiału.</small></span>
+        <span><b>↗</b><strong>Rekomendacje</strong><small>Kroki dopasowane do sytuacji.</small></span>
+        <span><b>◌</b><strong>Plan rozmów</strong><small>Tematy warte spokojnego sprawdzenia.</small></span>
+      </Surface>
+
+      <p className="ctms-v7-private-footer">▣ Twoja prywatność jest chroniona. Raport widzisz tylko Ty.</p>
     </div>
   );
 }
