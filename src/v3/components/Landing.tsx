@@ -139,25 +139,6 @@ export function Landing({ onStart }: { onStart: () => void }) {
           <span>Zobacz odpowiedzi <i>→</i></span>
         </a>
       </section>
-
-      <footer className="ctms-v7-footer" id="faq">
-        <div className="ctms-v7-footer-brand">
-          <strong>CzyToMaSens</strong>
-          <span>SPOKOJNA ANALIZA RELACJI</span>
-        </div>
-        <div>
-          <b>◈</b>
-          <p><strong>Prywatność i dyskrecja</strong><br/>Twoje dane są chronione.<br/>Pracujemy z pełną dyskrecją.</p>
-        </div>
-        <div>
-          <b>✉</b>
-          <p><strong>Kontakt</strong><br/>Napisz do nas — odpowiemy<br/>na każde pytanie.</p>
-        </div>
-        <div>
-          <p><strong>Najczęstsze pytania</strong><br/><a href="/polityka-prywatnosci">Prywatność</a> · <a href="/regulamin">Regulamin</a></p>
-        </div>
-        <small>© CzyToMaSens. Wszelkie prawa zastrzeżone.</small>
-      </footer>
     </div>
   );
 }

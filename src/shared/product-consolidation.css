@@ -2333,3 +2333,225 @@ button.ctms-v7-route{width:100%;cursor:pointer;font:inherit}
   .ctms-v7-depth-main,.ctms-v7-depth-side,.ctms-v7-knowledge-lead{padding:20px}
   .ctms-v7-free-hero>div:first-child,.ctms-v7-premium-hero>div:first-child{padding:34px 18px 22px}.ctms-v7-free-hero h1{font-size:43px}.ctms-v7-free-summary{padding:20px!important}.ctms-v7-summary-stats{grid-template-columns:1fr}.ctms-v7-free-grid article{min-height:165px}.ctms-v7-premium-meta{gap:6px}.ctms-v7-premium-meta span{min-width:130px}.ctms-v7-gap-cols,.ctms-v7-reflection-row{grid-template-columns:1fr}
 }
+
+/* ============================================================
+   CTMS V8 — HOME FIT / FINAL WIDTH AUTHORITY
+   Fixes the non-immersive HOME shell so it matches the accepted
+   mockup proportions and does not inherit a compressed nested width.
+   ============================================================ */
+
+/* HOME shell must use the viewport, not a second nested content width. */
+.ctms-shell:not(.is-immersive) .ctms-main{
+  width:100vw !important;
+  max-width:none !important;
+  margin-left:50% !important;
+  transform:translateX(-50%) !important;
+  padding:18px 0 28px !important;
+}
+
+/* Header matching the accepted mockup, full desktop width. */
+.ctms-shell:not(.is-immersive) .ctms-header{
+  width:min(calc(100vw - 72px),1480px) !important;
+  min-height:76px !important;
+  margin:0 auto !important;
+  padding:0 2px !important;
+  border-bottom:1px solid rgba(205,151,69,.18) !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-brand{
+  font-size:25px !important;
+  color:#d9c9b2 !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-brand small{
+  margin-top:7px !important;
+  color:#967343 !important;
+  font-size:8.5px !important;
+  letter-spacing:.17em !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-header-right{
+  gap:34px !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-header-nav{
+  gap:28px !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-header-nav a{
+  color:#b8ad9f !important;
+  font-size:12px !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-header-trust{
+  min-height:42px !important;
+  padding:0 18px !important;
+  border:1px solid rgba(222,180,105,.48) !important;
+  border-radius:8px !important;
+  color:#d7ab62 !important;
+  background:rgba(22,17,11,.28) !important;
+  font-size:11.5px !important;
+}
+
+/* The actual homepage gets a single viewport-based width. */
+.ctms-shell:not(.is-immersive) .ctms-v7-page{
+  width:min(calc(100vw - 72px),1480px) !important;
+  max-width:1480px !important;
+  margin:0 auto !important;
+  padding:0 0 18px !important;
+}
+
+/* Accepted desktop proportions. */
+.ctms-shell:not(.is-immersive) .ctms-v7-hero{
+  min-height:650px !important;
+  grid-template-columns:minmax(0,1.06fr) minmax(500px,.94fr) !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-v7-copy{
+  padding:62px 48px 30px 44px !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-v7-copy h1{
+  max-width:840px !important;
+  font-size:clamp(54px,4.25vw,68px) !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-v7-copy>p{
+  max-width:650px !important;
+  font-size:15.5px !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-v7-route-grid{
+  max-width:790px !important;
+  gap:16px !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-v7-route{
+  min-height:300px !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-v7-hero-image,
+.ctms-shell:not(.is-immersive) .ctms-v7-hero-image img{
+  min-height:650px !important;
+}
+
+/* Give the lower sections the same physical width and stronger density. */
+.ctms-shell:not(.is-immersive) .ctms-v7-approach,
+.ctms-shell:not(.is-immersive) .ctms-v7-depth,
+.ctms-shell:not(.is-immersive) .ctms-v7-knowledge{
+  width:100% !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-v7-approach{
+  grid-template-columns:290px repeat(4,minmax(0,1fr)) !important;
+  min-height:232px !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-v7-approach-intro h2{
+  font-size:30px !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-v7-step{
+  min-height:232px !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-v7-depth{
+  grid-template-columns:270px minmax(0,1.35fr) minmax(340px,.9fr) !important;
+  min-height:245px !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-v7-knowledge{
+  grid-template-columns:330px repeat(3,minmax(0,1fr)) 235px !important;
+  min-height:170px !important;
+}
+
+/* Use only the Shell footer. Make it match the approved page footer. */
+.ctms-shell:not(.is-immersive) .ctms-footer{
+  width:min(calc(100vw - 72px),1480px) !important;
+  margin:0 auto !important;
+  padding:22px 0 28px !important;
+  grid-template-columns:1.05fr 1.2fr 1fr !important;
+  gap:42px !important;
+  border-top:1px solid rgba(205,151,69,.24) !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-footer-brand p{
+  max-width:360px !important;
+  color:#8f867b !important;
+  font-size:10.5px !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-brand-footer{
+  font-size:22px !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-footer nav{
+  gap:9px 20px !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-footer nav a{
+  color:#9d9386 !important;
+  font-size:10.5px !important;
+}
+.ctms-shell:not(.is-immersive) .ctms-footer-copy{
+  color:#8b8379 !important;
+  font-size:10px !important;
+}
+
+/* Prevent the old custom footer block from ever creating a second footer. */
+.ctms-v7-footer{display:none !important}
+
+/* Medium desktop/tablet. */
+@media(max-width:1180px){
+  .ctms-shell:not(.is-immersive) .ctms-header,
+  .ctms-shell:not(.is-immersive) .ctms-v7-page,
+  .ctms-shell:not(.is-immersive) .ctms-footer{
+    width:min(calc(100vw - 36px),100%) !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-v7-hero{
+    grid-template-columns:1fr !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-v7-hero-image,
+  .ctms-shell:not(.is-immersive) .ctms-v7-hero-image img{
+    min-height:520px !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-v7-approach{
+    grid-template-columns:1fr repeat(2,minmax(0,1fr)) !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-v7-approach-intro{
+    grid-row:span 2 !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-v7-depth{
+    grid-template-columns:240px 1fr !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-v7-depth-side{
+    grid-column:1/-1 !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-v7-knowledge{
+    grid-template-columns:1fr repeat(2,minmax(0,1fr)) !important;
+  }
+}
+
+/* Mobile is its own layout, not scaled desktop. */
+@media(max-width:800px){
+  .ctms-shell:not(.is-immersive) .ctms-main{
+    width:100% !important;
+    margin-left:0 !important;
+    transform:none !important;
+    padding:10px 0 22px !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-header,
+  .ctms-shell:not(.is-immersive) .ctms-v7-page,
+  .ctms-shell:not(.is-immersive) .ctms-footer{
+    width:min(calc(100% - 22px),100%) !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-header{
+    min-height:66px !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-header-nav{
+    display:none !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-header-right{
+    gap:0 !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-v7-copy{
+    padding:28px 2px 22px !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-v7-copy h1{
+    font-size:clamp(43px,12vw,56px) !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-v7-route-grid,
+  .ctms-shell:not(.is-immersive) .ctms-v7-approach,
+  .ctms-shell:not(.is-immersive) .ctms-v7-depth,
+  .ctms-shell:not(.is-immersive) .ctms-v7-knowledge{
+    grid-template-columns:1fr !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-v7-approach-intro{
+    grid-row:auto !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-v7-depth-side{
+    grid-column:auto !important;
+  }
+  .ctms-shell:not(.is-immersive) .ctms-footer{
+    grid-template-columns:1fr !important;
+  }
+}
